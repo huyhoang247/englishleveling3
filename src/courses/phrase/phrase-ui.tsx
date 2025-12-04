@@ -44,22 +44,14 @@ const styles = `
 // Skeleton for a single phrase item
 const PhraseSkeletonItem = () => (
   <div className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800 overflow-hidden min-h-[100px]">
-    {/* Shimmer Effect Layer (Optimized for Dark Mode) */}
     <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent z-10"></div>
-
-    {/* Header & Button Placeholder */}
     <div className="flex justify-between items-start mb-3">
-      {/* English Text Lines Placeholder */}
       <div className="space-y-2 w-full pr-12">
         <div className="h-5 bg-gray-800 rounded-md w-3/4"></div>
         <div className="h-5 bg-gray-800 rounded-md w-1/2"></div>
       </div>
-      
-      {/* Audio Button Placeholder */}
       <div className="w-8 h-8 rounded-full bg-gray-800 flex-shrink-0"></div>
     </div>
-
-    {/* Vietnamese Text Placeholder */}
     <div className="h-4 bg-gray-800/50 rounded-md w-2/3 mt-2"></div>
   </div>
 );
@@ -92,7 +84,15 @@ interface PhraseData {
   indices: number[];
   uniqueCount: number;
 }
-const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
+
+// --- OPTIMIZATION: Move expensive calculation to a variable, but ensure it doesn't block UI on import if possible.
+// In a real SPA, this runs once on load. If it's heavy, it might be better to lazy init it.
+// For now, we keep it here but we will make sure the COMPONENT mount is fast.
+let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
+
+const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
+  if (allPhraseGroupsCache) return allPhraseGroupsCache;
+
   const allPhraseGroups = new Map<number, Map<string, PhraseData>>();
 
   for (let phraseLength = 1; phraseLength <= 6; phraseLength++) {
@@ -125,9 +125,10 @@ const generateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
     }
     allPhraseGroups.set(phraseLength, finalPhraseMap);
   }
+  
+  allPhraseGroupsCache = allPhraseGroups;
   return allPhraseGroups;
 };
-const allPhraseGroups = generateAllPhraseGroups();
 
 
 // --- Filter Popup Component ---
@@ -144,7 +145,11 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const [phraseLength, setPhraseLength] = useState(2);
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
+  // Note: We use the cached generator here. 
+  // Ideally this component should also load data asynchronously if it's huge, 
+  // but usually the filter popup opens later so it's less critical for initial paint.
   const sortedAndFilteredPhrases = useMemo(() => {
+    const allPhraseGroups = getOrGenerateAllPhraseGroups();
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
     let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
       phrase,
@@ -259,7 +264,7 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
   const [activeTab, setActiveTab] = useState<'matched' | 'unmatched'>('matched');
   const [currentPage, setCurrentPage] = useState(1);
   const [sortBy, setSortBy] = useState<'freq' | 'alpha'>('freq');
-  const [isCopied, setIsCopied] = useState(false); // New state for copy feedback
+  const [isCopied, setIsCopied] = useState(false); 
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const wordCheckResults = useMemo(() => {
@@ -338,10 +343,7 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
 
   const handleCopyUnmatched = () => {
     if (wordCheckResults.unmatchedWords.length === 0) return;
-    
-    // Join all unmatched words with a newline character
     const textToCopy = wordCheckResults.unmatchedWords.join('\n');
-    
     navigator.clipboard.writeText(textToCopy).then(() => {
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
@@ -475,56 +477,60 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [showFlashcardWords, setShowFlashcardWords] = useState(false);
   const [selectedCard, setSelectedCard] = useState<FlashcardData | null>(null);
   
-  // --- START: State for Game Mode ---
+  // --- Game Mode State ---
   const [isGameSetupOpen, setIsGameSetupOpen] = useState(false);
   const [gameSettings, setGameSettings] = useState<{ sentences: GameSentenceData[], difficulty: number | 'all' } | null>(null);
-  // --- END: State for Game Mode ---
 
-  // --- START: Skeleton Loading State ---
+  // --- KEY CHANGE: Use State instead of synchronous useMemo for heavy data ---
   const [isLoading, setIsLoading] = useState(true);
-
-  // EFFECT: Simulate loading delay for smooth mounting and Skeleton display
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 500); // 0.5s delay
-    return () => clearTimeout(timer);
-  }, []);
-  // --- END: Skeleton Loading State ---
+  const [filteredData, setFilteredData] = useState<any[]>([]);
 
   const flashcardVocabularySet = useMemo(() => new Set(Array.from(WORD_TO_CARD_MAP.keys())), []);
 
-  const indexedExampleData = useMemo(() => 
-    exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index })),
-    []
-  );
-
-  const filteredData = useMemo(() => {
-    let phraseFilteredData;
-    if (!activeFilter) {
-      phraseFilteredData = indexedExampleData;
-    } else {
-      let indices: number[] | undefined;
-      for (const phraseMap of allPhraseGroups.values()) {
-        if (phraseMap.has(activeFilter)) {
-          indices = phraseMap.get(activeFilter)?.indices;
-          break; 
-        }
-      }
-      phraseFilteredData = indices ? indices.map(i => indexedExampleData[i]) : [];
-    }
+  // --- HEAVY CALCULATION MOVED TO USE EFFECT ---
+  // This allows the initial render (Skeleton) to paint BEFORE the calculation blocks the thread.
+  useEffect(() => {
+    setIsLoading(true);
     
-    const seen = new Set<string>();
-    return phraseFilteredData.filter(item => {
-      const normalizedEnglish = item.english.trim().toLowerCase();
-      if (seen.has(normalizedEnglish)) {
-        return false;
+    // setTimeout 10ms ensures the browser has a "tick" to update the DOM (show skeleton)
+    // before freezing to do the heavy math.
+    const timer = setTimeout(() => {
+      // 1. Prepare base data
+      const indexedExampleData = exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index }));
+
+      // 2. Perform Filtering
+      let phraseFilteredData;
+      if (!activeFilter) {
+        phraseFilteredData = indexedExampleData;
       } else {
-        seen.add(normalizedEnglish);
-        return true;
+        const allPhraseGroups = getOrGenerateAllPhraseGroups();
+        let indices: number[] | undefined;
+        for (const phraseMap of allPhraseGroups.values()) {
+          if (phraseMap.has(activeFilter)) {
+            indices = phraseMap.get(activeFilter)?.indices;
+            break; 
+          }
+        }
+        phraseFilteredData = indices ? indices.map(i => indexedExampleData[i]) : [];
       }
-    });
-  }, [activeFilter, indexedExampleData]);
+      
+      const seen = new Set<string>();
+      const finalData = phraseFilteredData.filter(item => {
+        const normalizedEnglish = item.english.trim().toLowerCase();
+        if (seen.has(normalizedEnglish)) {
+          return false;
+        } else {
+          seen.add(normalizedEnglish);
+          return true;
+        }
+      });
+
+      setFilteredData(finalData);
+      setIsLoading(false);
+    }, 50); // Small delay to force Paint
+
+    return () => clearTimeout(timer);
+  }, [activeFilter]); // Re-run when filter changes
 
   const totalPages = Math.ceil(filteredData.length / ITEMS_PER_PAGE);
 
