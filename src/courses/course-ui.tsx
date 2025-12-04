@@ -1,23 +1,28 @@
 // --- START OF FILE: course-ui.tsx ---
 
 // quiz-app-home.tsx
-import React, { useMemo, memo, useCallback, useState, useEffect } from 'react';
+import React, { useMemo, memo, useCallback, useState, useEffect, Suspense, lazy } from 'react';
 import QuizApp from './multiple-choice/multiple-ui.tsx';
 import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
 import AnalysisDashboard from './analysis-dashboard/analysis-ui.tsx';
 import WordChainGame from './word-chain-game/word-chain-ui.tsx';
-import PhraseViewer from './phrase/phrase-ui.tsx'; // <--- Đã bật lại Import tĩnh
 import TopicViewer from './topic/topic-ui.tsx'; 
 import PracticeListLoadingSkeleton from './course-loading.tsx';
 import HomeButton from '../ui/home-button.tsx';
 import BackButton from '../ui/back-button.tsx';
+
+// --- 1. IMPORT SKELETON NHẸ (Load ngay lập tức) ---
+import PhraseSkeletonList from './phrase/phrase-loading.tsx';
 
 // --- IMPORT CONTEXT VÀ CÁC DỊCH VỤ ---
 import { QuizAppProvider, useQuizApp } from './course-context.tsx';
 import { fetchPracticeListProgress, claimQuizReward } from './course-data-service.ts';
 import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
+
+// --- 2. LAZY IMPORT PHRASEVIEWER (Load sau để tránh đơ) ---
+const PhraseViewer = lazy(() => import('./phrase/phrase-ui.tsx'));
 
 // --- Props cho component chính ---
 interface QuizAppHomeProps {
@@ -71,9 +76,13 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
           
-          // --- SỬ DỤNG TRỰC TIẾP (Sẽ dùng Skeleton nội bộ của PhraseViewer) ---
+          // --- 3. DÙNG SUSPENSE VỚI SKELETON NHẸ ---
           case 'exampleView':
-              ViewComponent = <PhraseViewer onGoBack={goBack} />;
+              ViewComponent = (
+                <Suspense fallback={<PhraseSkeletonList />}>
+                   <PhraseViewer onGoBack={goBack} />
+                </Suspense>
+              );
               break;
           
           case 'topics':
