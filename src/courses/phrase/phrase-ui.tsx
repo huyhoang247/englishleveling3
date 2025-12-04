@@ -31,7 +31,6 @@ const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
 // --- INTERNAL SKELETON DEFINITION ---
-// Định nghĩa Skeleton ngay tại đây để không cần import file ngoài
 const styles = `
   @keyframes shimmer {
     100% { transform: translateX(100%); }
@@ -41,7 +40,6 @@ const styles = `
   }
 `;
 
-// Component hiển thị danh sách Skeleton
 const PhraseSkeletonList = () => (
   <div className="h-full w-full bg-slate-900 flex flex-col p-4 sm:p-6 space-y-4">
     <style>{styles}</style>
@@ -87,7 +85,6 @@ interface PhraseData {
 // Biến Cache để lưu trữ kết quả tính toán, tránh tính lại khi mở lại trang
 let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
 
-// Hàm này có thể nặng, chúng ta sẽ gọi nó bên trong useEffect để không chặn UI
 const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
   if (allPhraseGroupsCache) return allPhraseGroupsCache;
 
@@ -144,7 +141,10 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const sortedAndFilteredPhrases = useMemo(() => {
-    // Lưu ý: Hàm này được gọi trong Popup, lúc này UI chính đã load xong nên không lo bị chặn
+    // --- FIX: CHỈ TÍNH TOÁN KHI POPUP MỞ ---
+    if (!isOpen) return []; 
+
+    // Logic này nặng, chỉ chạy khi isOpen = true
     const allPhraseGroups = getOrGenerateAllPhraseGroups();
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
     let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
@@ -161,7 +161,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
       phrases.sort((a, b) => b.count - a.count || a.phrase.localeCompare(b.phrase));
     }
     return phrases;
-  }, [debouncedSearchTerm, sortBy, phraseLength]);
+  }, [debouncedSearchTerm, sortBy, phraseLength, isOpen]); // Thêm isOpen vào dependencies
   
   useEffect(() => {
     setCurrentPage(1);
@@ -264,6 +264,9 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const wordCheckResults = useMemo(() => {
+    // --- FIX: CHỈ TÍNH TOÁN KHI POPUP MỞ ---
+    if (!isOpen) return { matchedWords: [], unmatchedWords: [], total: 0 };
+
     const wordSentenceMap = new Map<string, Set<string>>();
     exampleData.forEach(sentence => {
       const uniqueWordsInSentence = new Set(
@@ -297,7 +300,7 @@ const VocabularyCheckPopup: React.FC<VocabularyCheckPopupProps> = ({ isOpen, onC
       unmatchedWords: unmatchedWords.sort(),
       total: uniqueVocabulary.length,
     };
-  }, []);
+  }, [isOpen]); // Thêm isOpen vào dependencies
 
   const sortedAndFilteredItems = useMemo(() => {
     if (activeTab === 'matched') {
