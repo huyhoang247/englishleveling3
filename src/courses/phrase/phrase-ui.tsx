@@ -6,9 +6,6 @@ import { exampleData } from '../../voca-data/example-data.ts';
 import { generateAudioUrlsForExamSentence } from '../../voca-data/audio-quiz-generator.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 
-// --- 1. IMPORT SKELETON TỪ FILE RIÊNG (Để đồng bộ giao diện) ---
-import PhraseSkeletonList from './phrase-loading.tsx';
-
 // --- START: Imports for Flashcard functionality ---
 import FlashcardDetailModal from '../../story/flashcard.tsx';
 import { WORD_TO_CARD_MAP, Flashcard as FlashcardData, exampleData as allExampleSentences } from '../../story/flashcard-data.ts';
@@ -33,6 +30,42 @@ const ClipboardIcon = ({ className }: { className: string }) => ( <svg xmlns="ht
 const ITEMS_PER_PAGE = 50;
 const PHRASES_PER_PAGE = 20;
 
+// --- INTERNAL SKELETON DEFINITION ---
+// Định nghĩa Skeleton ngay tại đây để không cần import file ngoài
+const styles = `
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
+`;
+
+// Component hiển thị danh sách Skeleton
+const PhraseSkeletonList = () => (
+  <div className="h-full w-full bg-slate-900 flex flex-col p-4 sm:p-6 space-y-4">
+    <style>{styles}</style>
+    {/* Fake Header */}
+    <div className="h-14 w-full bg-slate-800/50 rounded-lg animate-pulse mb-4 opacity-50"></div>
+    
+    <div className="max-w-4xl mx-auto space-y-4 w-full">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="relative bg-gray-900/70 p-4 rounded-xl border border-gray-800 overflow-hidden min-h-[100px]">
+            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/5 to-transparent z-10"></div>
+            <div className="flex justify-between items-start mb-3">
+              <div className="space-y-2 w-full pr-12">
+                <div className="h-5 bg-gray-800 rounded-md w-3/4"></div>
+                <div className="h-5 bg-gray-800 rounded-md w-1/2"></div>
+              </div>
+              <div className="w-8 h-8 rounded-full bg-gray-800 flex-shrink-0"></div>
+            </div>
+            <div className="h-4 bg-gray-800/50 rounded-md w-2/3 mt-2"></div>
+          </div>
+        ))}
+    </div>
+  </div>
+);
+
 function useDebounce<T>(value: T, delay: number): T {
     const [debouncedValue, setDebouncedValue] = useState<T>(value);
     useEffect(() => {
@@ -51,9 +84,10 @@ interface PhraseData {
   uniqueCount: number;
 }
 
-// --- OPTIMIZATION: Cache variable for phrase groups to avoid re-calculation if user comes back
+// Biến Cache để lưu trữ kết quả tính toán, tránh tính lại khi mở lại trang
 let allPhraseGroupsCache: Map<number, Map<string, PhraseData>> | null = null;
 
+// Hàm này có thể nặng, chúng ta sẽ gọi nó bên trong useEffect để không chặn UI
 const getOrGenerateAllPhraseGroups = (): Map<number, Map<string, PhraseData>> => {
   if (allPhraseGroupsCache) return allPhraseGroupsCache;
 
@@ -110,6 +144,7 @@ const FilterPopup: React.FC<FilterPopupProps> = ({ isOpen, onClose, onSelectFilt
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
   const sortedAndFilteredPhrases = useMemo(() => {
+    // Lưu ý: Hàm này được gọi trong Popup, lúc này UI chính đã load xong nên không lo bị chặn
     const allPhraseGroups = getOrGenerateAllPhraseGroups();
     const currentPhraseMap = allPhraseGroups.get(phraseLength) || new Map();
     let phrases = Array.from(currentPhraseMap.entries()).map(([phrase, data]) => ({
@@ -442,28 +477,29 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
   const [isGameSetupOpen, setIsGameSetupOpen] = useState(false);
   const [gameSettings, setGameSettings] = useState<{ sentences: GameSentenceData[], difficulty: number | 'all' } | null>(null);
 
-  // --- KEY CHANGE: Use State instead of synchronous useMemo for heavy data ---
+  // --- QUAN TRỌNG: State quản lý loading & dữ liệu lọc ---
+  // Mặc định loading là TRUE để hiện Skeleton ngay lập tức khi component được mount
   const [isLoading, setIsLoading] = useState(true);
   const [filteredData, setFilteredData] = useState<any[]>([]);
 
   const flashcardVocabularySet = useMemo(() => new Set(Array.from(WORD_TO_CARD_MAP.keys())), []);
 
-  // --- HEAVY CALCULATION MOVED TO USE EFFECT ---
-  // This allows the initial render (Skeleton from Suspense) to transition into this component,
-  // then shows internal skeleton while calculating data without freezing.
+  // --- XỬ LÝ DỮ LIỆU NẶNG (DEFERRED PROCESSING) ---
+  // Sử dụng useEffect để việc tính toán không chặn lần render đầu tiên (Skeleton)
   useEffect(() => {
     setIsLoading(true);
     
-    // setTimeout 50ms ensures the browser has a "tick" to update the DOM
+    // setTimeout 50ms: Nhường luồng cho trình duyệt vẽ Skeleton lên màn hình trước
     const timer = setTimeout(() => {
-      // 1. Prepare base data
+      // 1. Chuẩn bị dữ liệu gốc
       const indexedExampleData = exampleData.map((sentence, index) => ({ ...sentence, originalIndex: index }));
 
-      // 2. Perform Filtering
+      // 2. Thực hiện Lọc (Logic nặng)
       let phraseFilteredData;
       if (!activeFilter) {
         phraseFilteredData = indexedExampleData;
       } else {
+        // Chỉ tạo phrase groups khi cần thiết
         const allPhraseGroups = getOrGenerateAllPhraseGroups();
         let indices: number[] | undefined;
         for (const phraseMap of allPhraseGroups.values()) {
@@ -487,7 +523,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
       });
 
       setFilteredData(finalData);
-      setIsLoading(false);
+      setIsLoading(false); // Xong xuôi thì tắt Skeleton, hiện nội dung
     }, 50); 
 
     return () => clearTimeout(timer);
@@ -702,7 +738,7 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
         <main ref={listRef} className="flex-grow overflow-y-auto bg-black p-4 sm:p-6">
           
-          {/* LOGIC HIỂN THỊ SKELETON (Được import từ file riêng) HOẶC NỘI DUNG CHÍNH */}
+          {/* LOGIC: HIỂN THỊ SKELETON KHI DỮ LIỆU ĐANG ĐƯỢC XỬ LÝ NGẦM */}
           {isLoading ? (
             <PhraseSkeletonList />
           ) : (
