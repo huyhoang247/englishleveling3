@@ -617,37 +617,37 @@ const PhraseViewer: React.FC<PhraseViewerProps> = ({ onGoBack }) => {
 
       <div className="h-full w-full bg-slate-900 flex flex-col text-white">
         <audio ref={audioRef} preload="auto" className="hidden" />
-        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md flex-shrink-0">
+        <header className="sticky top-0 z-50 bg-slate-900/95 backdrop-blur-sm shadow-md border-b border-slate-700/50 flex-shrink-0">
           <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
             <div className="flex h-14 items-center">
               <div className="w-24 flex"><BackButton onClick={onGoBack} /></div>
               <div className="flex-1 flex justify-center items-center">
               </div>
-              <div className="w-auto flex justify-end items-center gap-1">
+              <div className="w-auto flex justify-end items-center gap-2">
                  <button 
                   onClick={() => setIsGameSetupOpen(true)} 
-                  className="p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                   title="Game Mode"
                 >
                     <GameControllerIcon className="w-6 h-6" />
                 </button>
                  <button 
                   onClick={() => setIsVocaCheckOpen(true)} 
-                  className="p-2 rounded-full text-slate-400 hover:bg-slate-700 hover:text-white transition-colors"
+                  className="p-2 rounded-full text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                   title="Check Vocabulary"
                 >
                     <CheckBadgeIcon className="w-6 h-6" />
                 </button>
                 <button
                   onClick={() => setShowFlashcardWords(prev => !prev)}
-                  className={`p-2 rounded-full transition-colors ${showFlashcardWords ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}
+                  className={`p-2 rounded-full transition-colors ${showFlashcardWords ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
                   title="Highlight Flashcard Words"
                 >
                     <SparklesIcon className="w-5 h-5" />
                 </button>
                 <button 
                   onClick={() => setIsFilterOpen(true)} 
-                  className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-400 hover:bg-slate-700 hover:text-white'}`}
+                  className={`p-2 rounded-full transition-colors ${activeFilter ? 'bg-blue-600 text-white hover:bg-blue-500' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
                   title="Filter by phrase"
                 >
                     <FunnelIcon className="w-5 h-5" />
