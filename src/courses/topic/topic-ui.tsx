@@ -167,7 +167,8 @@ const TopicSkeleton = () => (
   </div>
 );
 
-// <<< THAY ĐỔI 1: CẬP NHẬT FAVORITE BUTTON DÙNG ẢNH PNG >>>
+// <<< THAY ĐỔI 1: ICON FAVORITE GIỐNG VerticalFlashcardGallery >>>
+// Loại bỏ shadow, dùng opacity 75/100
 const FavoriteButton = ({ 
   isFavorite, 
   onToggle, 
@@ -188,7 +189,7 @@ const FavoriteButton = ({
         isToggling ? 'cursor-wait' : 'hover:scale-110 active:scale-95'
       }`}
     >
-      {/* Background mờ nhẹ để icon nổi bật */}
+      {/* Nền mờ nhẹ để icon dễ nhìn trên mọi ảnh */}
       <div className="absolute inset-0 bg-black/20 blur-sm rounded-full transform scale-75"></div>
       
       {isToggling ? (
@@ -203,7 +204,8 @@ const FavoriteButton = ({
             : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"
           }
           alt={isFavorite ? "Favorited" : "Add to favorites"}
-          className={`w-8 h-8 relative z-10 drop-shadow-md transition-all duration-300 ${
+          // <<< KEY CHANGE: No shadow, opacity transition logic >>>
+          className={`w-8 h-8 relative z-10 transition-all duration-300 ${
             isFavorite 
                 ? 'opacity-100 animate-heart-beat' 
                 : 'opacity-75 hover:opacity-100 hover:scale-110'
@@ -283,7 +285,6 @@ const LevelMapModal = ({
   const [localTab, setLocalTab] = useState<'all' | 'favorites'>('all');
   const [currentMapPage, setCurrentMapPage] = useState(1);
 
-  // Sync state khi mở modal
   useEffect(() => {
     if (isOpen) {
       setLocalTab(currentParentViewMode);
@@ -294,26 +295,21 @@ const LevelMapModal = ({
 
   if (!isOpen) return null;
 
-  // Tính toán số trang
   const totalPagesInLocalTab = localTab === 'all' 
      ? Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE)
      : Math.max(1, Math.ceil(favoritesCount / ITEMS_PER_PAGE));
 
   const totalMapPages = Math.ceil(totalPagesInLocalTab / LEVELS_PER_MAP_PAGE);
 
-  // <<< THAY ĐỔI 2: LOGIC GRID 5x5 CỐ ĐỊNH >>>
-  // Luôn tạo ra một mảng 25 phần tử cho mỗi trang bản đồ (Map Page)
-  // Các phần tử vượt quá số trang thực tế sẽ là null (để render ô trống)
   const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
   
-  // Tạo mảng 25 ô cố định
+  // Logic lưới 5x5 cố định
   const gridCells = Array.from({ length: LEVELS_PER_MAP_PAGE }, (_, i) => {
       const levelNum = startLevel + i;
-      // Chỉ trả về số trang nếu nó nằm trong phạm vi cho phép
       if (levelNum <= totalPagesInLocalTab) {
           return levelNum;
       }
-      return null; // Ô trống
+      return null;
   });
 
   const handleTabChange = (tab: 'all' | 'favorites') => {
@@ -370,7 +366,6 @@ const LevelMapModal = ({
 
         {/* GRID CONTENT */}
         <div className="flex-1 p-5 min-h-[300px]">
-           {/* Kiểm tra nếu không có trang nào trong tab hiện tại */}
            {totalPagesInLocalTab === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-2">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 opacity-50">
@@ -381,7 +376,6 @@ const LevelMapModal = ({
            ) : (
                <div className="grid grid-cols-5 gap-3">
                   {gridCells.map((pageNum, index) => {
-                     // Nếu là ô trống (null), render div giữ chỗ
                      if (pageNum === null) {
                          return <div key={`empty-${index}`} className="aspect-square"></div>;
                      }
@@ -918,12 +912,13 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                     </svg>
                     </button>
 
+                    {/* <<< THAY ĐỔI 2: LOẠI BỎ ICON TIM Ở ĐÂY >>> */}
                     <button
                         onClick={() => setIsMapOpen(true)}
                         className="relative group font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2 text-white bg-slate-800/70 hover:bg-slate-800"
                     >
                         <span>
-                            {viewMode === 'favorites' ? '❤️ ' : ''}
+                            {/* Đã xóa điều kiện icon trái tim, chỉ hiện text Page */}
                             Page {currentPage} / {totalPages}
                         </span>
                         {viewMode === 'all' && currentPage > maxUnlockedPage ? (
