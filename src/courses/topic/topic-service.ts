@@ -1,6 +1,6 @@
-// --- START OF FILE: src/services/topic-service.ts ---
+// --- START OF FILE: topic-service.ts ---
 
-import { db } from '../../firebase';
+import { db } from '../../firebase'; // Đảm bảo đường dẫn import đúng với dự án của bạn
 import { 
   doc, 
   runTransaction, 
@@ -11,9 +11,10 @@ import {
 export interface TopicProgressData {
   maxUnlockedPage: number;
   dailyReward: {
-    date: string; // Format YYYY-MM-DD
+    date: string;
     count: number;
   };
+  favorites: string; // NEW: Chuỗi lưu trữ ID, vd: "1,5,10"
 }
 
 const DEFAULT_FREE_PAGES = 5;
@@ -34,20 +35,21 @@ export const listenToTopicData = (userId: string, callback: (data: TopicProgress
         dailyReward: {
           date: topicProgress.dailyReward?.date || '',
           count: topicProgress.dailyReward?.count || 0
-        }
+        },
+        favorites: topicProgress.favorites || "" // NEW: Mặc định là chuỗi rỗng
       });
     } else {
-      // Mặc định nếu chưa có data
       callback({
         maxUnlockedPage: DEFAULT_FREE_PAGES,
-        dailyReward: { date: '', count: 0 }
+        dailyReward: { date: '', count: 0 },
+        favorites: ""
       });
     }
   });
 };
 
 /**
- * Transaction mở khóa page: Trừ tiền và cập nhật maxPage cùng lúc.
+ * Transaction mở khóa page
  */
 export const unlockTopicPageTransaction = async (userId: string, targetPage: number, cost: number) => {
   const userRef = doc(db, 'users', userId);
@@ -55,15 +57,13 @@ export const unlockTopicPageTransaction = async (userId: string, targetPage: num
   try {
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userRef);
-      if (!userDoc.exists()) {
-        throw new Error("User does not exist!");
-      }
+      if (!userDoc.exists()) throw new Error("User does not exist!");
 
       const userData = userDoc.data();
       const currentCoins = userData.coins || 0;
       const currentMaxPage = userData.topicProgress?.maxUnlockedPage || DEFAULT_FREE_PAGES;
 
-      if (targetPage <= currentMaxPage) return; // Đã mở rồi thì thôi
+      if (targetPage <= currentMaxPage) return;
       if (currentCoins < cost) throw new Error("Not enough coins!");
 
       transaction.update(userRef, {
@@ -78,7 +78,7 @@ export const unlockTopicPageTransaction = async (userId: string, targetPage: num
 };
 
 /**
- * Transaction nhận thưởng: Kiểm tra ngày, số lần nhận và cộng tiền.
+ * Transaction nhận thưởng
  */
 export const claimTopicRewardTransaction = async (userId: string, rewardAmount: number, maxDailyRewards: number) => {
   const userRef = doc(db, 'users', userId);
@@ -87,8 +87,7 @@ export const claimTopicRewardTransaction = async (userId: string, rewardAmount: 
   try {
     await runTransaction(db, async (transaction) => {
       const userDoc = await transaction.get(userRef);
-      
-      if (!userDoc.exists()) return; // Should handle create logic if needed, but user usually exists here
+      if (!userDoc.exists()) return;
 
       const userData = userDoc.data();
       const currentCoins = userData.coins || 0;
@@ -96,14 +95,8 @@ export const claimTopicRewardTransaction = async (userId: string, rewardAmount: 
       const lastDate = topicProgress.dailyReward?.date || '';
       let currentCount = topicProgress.dailyReward?.count || 0;
 
-      // Reset nếu sang ngày mới
-      if (lastDate !== today) {
-        currentCount = 0;
-      }
-
-      if (currentCount >= maxDailyRewards) {
-        throw new Error("Daily limit reached");
-      }
+      if (lastDate !== today) currentCount = 0;
+      if (currentCount >= maxDailyRewards) throw new Error("Daily limit reached");
 
       transaction.update(userRef, {
         coins: currentCoins + rewardAmount,
@@ -116,5 +109,45 @@ export const claimTopicRewardTransaction = async (userId: string, rewardAmount: 
   } catch (e) {
     console.error("Reward transaction failed: ", e);
     throw e;
+  }
+};
+
+/**
+ * NEW: Transaction Toggle Favorite (Thêm/Xóa ID khỏi chuỗi)
+ */
+export const toggleTopicFavoriteTransaction = async (userId: string, imageId: number) => {
+  const userRef = doc(db, 'users', userId);
+
+  try {
+    await runTransaction(db, async (transaction) => {
+      const userDoc = await transaction.get(userRef);
+      if (!userDoc.exists()) return;
+
+      const userData = userDoc.data();
+      const currentFavString: string = userData.topicProgress?.favorites || "";
+      
+      // Chuyển chuỗi "1,2,3" thành mảng [1, 2, 3]
+      let favArray = currentFavString ? currentFavString.split(',').map(Number) : [];
+      
+      if (favArray.includes(imageId)) {
+        // Nếu có rồi thì xóa
+        favArray = favArray.filter(id => id !== imageId);
+      } else {
+        // Chưa có thì thêm
+        favArray.push(imageId);
+        // Sắp xếp lại cho đẹp (tuỳ chọn)
+        favArray.sort((a, b) => a - b);
+      }
+
+      // Chuyển lại thành chuỗi "1,2,5"
+      const newFavString = favArray.join(',');
+
+      transaction.update(userRef, {
+        'topicProgress.favorites': newFavString
+      });
+    });
+  } catch (e) {
+    console.error("Toggle favorite failed: ", e);
+    throw e; // Ném lỗi để UI có thể xử lý nếu cần
   }
 };
