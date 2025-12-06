@@ -60,6 +60,7 @@ const styles = `
     75% { transform: translateX(5px); }
   }
 
+  /* Hiệu ứng nhịp tim khi active */
   @keyframes heart-beat {
     0% { transform: scale(1); }
     25% { transform: scale(1.2); }
@@ -167,8 +168,11 @@ const TopicSkeleton = () => (
   </div>
 );
 
-// <<< THAY ĐỔI 1: ICON FAVORITE GIỐNG VerticalFlashcardGallery >>>
-// Loại bỏ shadow, dùng opacity 75/100
+// <<< THAY ĐỔI 1: FavoriteButton giống hệt VerticalFlashcardGallery >>>
+// - Có background trắng mờ (bg-white/90)
+// - Có shadow cho container (shadow-md)
+// - Icon nhỏ (w-5 h-5), không đổ bóng icon
+// - Hiệu ứng scale khi active
 const FavoriteButton = ({ 
   isFavorite, 
   onToggle, 
@@ -185,30 +189,30 @@ const FavoriteButton = ({
         if (!isToggling) onToggle();
       }}
       disabled={isToggling}
-      className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-200 z-10 ${
-        isToggling ? 'cursor-wait' : 'hover:scale-110 active:scale-95'
-      }`}
+      // Container: Tròn, trắng mờ, có bóng, padding vừa phải
+      className={`absolute top-3 right-3 z-10 flex items-center justify-center p-2 rounded-full shadow-md transition-all duration-300 
+        ${isToggling ? 'cursor-wait bg-gray-100' : 'bg-white/90 hover:bg-white'} 
+        ${isFavorite ? 'scale-110' : 'scale-100'}
+      `}
     >
-      {/* Nền mờ nhẹ để icon dễ nhìn trên mọi ảnh */}
-      <div className="absolute inset-0 bg-black/20 blur-sm rounded-full transform scale-75"></div>
-      
       {isToggling ? (
-         <svg className="animate-spin-custom h-7 w-7 text-white relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+         // Spinner nhỏ gọn
+         <svg className="animate-spin-custom h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
          </svg>
       ) : (
+        // Icon ảnh PNG, điều chỉnh opacity
         <img 
           src={isFavorite 
             ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png" 
             : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"
           }
           alt={isFavorite ? "Favorited" : "Add to favorites"}
-          // <<< KEY CHANGE: No shadow, opacity transition logic >>>
-          className={`w-8 h-8 relative z-10 transition-all duration-300 ${
+          className={`w-5 h-5 transition-all duration-300 ${
             isFavorite 
                 ? 'opacity-100 animate-heart-beat' 
-                : 'opacity-75 hover:opacity-100 hover:scale-110'
+                : 'opacity-50 hover:opacity-100'
           }`}
         />
       )}
@@ -285,6 +289,7 @@ const LevelMapModal = ({
   const [localTab, setLocalTab] = useState<'all' | 'favorites'>('all');
   const [currentMapPage, setCurrentMapPage] = useState(1);
 
+  // Sync state khi mở modal
   useEffect(() => {
     if (isOpen) {
       setLocalTab(currentParentViewMode);
@@ -301,15 +306,16 @@ const LevelMapModal = ({
 
   const totalMapPages = Math.ceil(totalPagesInLocalTab / LEVELS_PER_MAP_PAGE);
 
+  // <<< THAY ĐỔI 2: GRID LOGIC ỔN ĐỊNH >>>
+  // Luôn render đủ 25 ô để tránh layout shift
   const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
   
-  // Logic lưới 5x5 cố định
   const gridCells = Array.from({ length: LEVELS_PER_MAP_PAGE }, (_, i) => {
       const levelNum = startLevel + i;
       if (levelNum <= totalPagesInLocalTab) {
           return levelNum;
       }
-      return null;
+      return null; // Trả về null cho các ô trống
   });
 
   const handleTabChange = (tab: 'all' | 'favorites') => {
@@ -376,6 +382,7 @@ const LevelMapModal = ({
            ) : (
                <div className="grid grid-cols-5 gap-3">
                   {gridCells.map((pageNum, index) => {
+                     // RENDER Ô TRỐNG ĐỂ GIỮ LAYOUT
                      if (pageNum === null) {
                          return <div key={`empty-${index}`} className="aspect-square"></div>;
                      }
@@ -912,13 +919,12 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                     </svg>
                     </button>
 
-                    {/* <<< THAY ĐỔI 2: LOẠI BỎ ICON TIM Ở ĐÂY >>> */}
                     <button
                         onClick={() => setIsMapOpen(true)}
                         className="relative group font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2 text-white bg-slate-800/70 hover:bg-slate-800"
                     >
                         <span>
-                            {/* Đã xóa điều kiện icon trái tim, chỉ hiện text Page */}
+                            {/* Chỉ hiển thị text Page, xóa điều kiện icon */}
                             Page {currentPage} / {totalPages}
                         </span>
                         {viewMode === 'all' && currentPage > maxUnlockedPage ? (
