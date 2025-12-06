@@ -1,6 +1,6 @@
 // --- START OF FILE: topic.tsx ---
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
@@ -14,6 +14,7 @@ import {
   unlockTopicPageTransaction, 
   claimTopicRewardTransaction,
   toggleTopicFavoriteTransaction, 
+  saveTopicCurrentPage, // <--- Import hàm lưu page
   TopicProgressData 
 } from './topic-service.ts';
 
@@ -185,7 +186,7 @@ const FavoriteButton = ({
   return (
     <button
       onClick={(e) => {
-        e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+        e.stopPropagation();
         if (!isToggling) onToggle();
       }}
       disabled={isToggling}
@@ -193,28 +194,24 @@ const FavoriteButton = ({
         isToggling ? 'cursor-wait' : 'hover:scale-110 active:scale-95'
       }`}
     >
-      {/* Background mờ nhẹ để icon nổi bật trên mọi nền ảnh */}
       <div className="absolute inset-0 bg-black/20 blur-sm rounded-full transform scale-75"></div>
       
       {isToggling ? (
-         // Loading Spinner
          <svg className="animate-spin-custom h-7 w-7 text-white relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
          </svg>
       ) : (
-        // Heart Icon
         <svg 
           xmlns="http://www.w3.org/2000/svg" 
           viewBox="0 0 24 24" 
-          /* Nếu favorite: Màu đỏ. Nếu không: Màu trắng */
           fill={isFavorite ? "#ef4444" : "white"} 
           stroke={isFavorite ? "#ef4444" : "currentColor"}
           strokeWidth="1.5"
           className={`w-8 h-8 relative z-10 drop-shadow-md transition-all duration-300 ${
             isFavorite 
                 ? 'opacity-100 animate-heart-beat' 
-                : 'opacity-50 hover:opacity-100 hover:scale-110' // Opacity 50% khi chưa chọn
+                : 'opacity-50 hover:opacity-100 hover:scale-110'
           }`}
         >
           <path fillRule="evenodd" d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.132 2 12.216 2 9.006a6.5 6.5 0 0111.458-3.322 6.5 6.5 0 0111.458 3.322c0 3.21-2.688 6.126-5.088 8.502a25.18 25.18 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" clipRule="evenodd" />
@@ -251,7 +248,6 @@ const TopicImageCard = React.memo(({
           : 'relative opacity-100 z-0'
       }`}>
         
-        {/* Nút Favorite nằm đè lên góc phải ảnh */}
         <FavoriteButton 
             isFavorite={isFavorite} 
             onToggle={() => onToggleFavorite(index)} 
@@ -271,7 +267,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- UPDATED LEVEL MAP MODAL WITH TABS ---
+// --- LEVEL MAP MODAL WITH TABS ---
 interface LevelMapModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -298,7 +294,6 @@ const LevelMapModal = ({
   const [currentMapPage, setCurrentMapPage] = useState(1);
   const totalMapPages = Math.ceil(totalPages / LEVELS_PER_MAP_PAGE);
 
-  // Reset map page khi mở modal hoặc đổi tab
   useEffect(() => {
     if (isOpen) {
       const mapPageForCurrentLevel = Math.ceil(currentPage / LEVELS_PER_MAP_PAGE);
@@ -311,7 +306,6 @@ const LevelMapModal = ({
   const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
   const endLevel = Math.min(currentMapPage * LEVELS_PER_MAP_PAGE, totalPages);
   
-  // Tạo mảng các level cần hiển thị (xử lý trường hợp rỗng nếu không có favorite)
   const levelsToShow = startLevel <= endLevel 
     ? Array.from({ length: endLevel - startLevel + 1 }, (_, i) => startLevel + i)
     : [];
@@ -338,7 +332,6 @@ const LevelMapModal = ({
                 </button>
             </div>
 
-            {/* THANH TAB CHUYỂN ĐỔI */}
             <div className="flex px-4 pb-0 gap-1">
                 <button 
                     onClick={() => onChangeViewMode('all')}
@@ -376,19 +369,15 @@ const LevelMapModal = ({
            ) : (
                <div className="grid grid-cols-5 gap-3">
                   {levelsToShow.map(pageNum => {
-                     // Logic khóa chỉ áp dụng cho chế độ 'all'
                      const isLocked = viewMode === 'all' && pageNum > maxUnlockedPage;
                      const isCurrent = pageNum === currentPage;
                      const isDeepLocked = viewMode === 'all' && pageNum > maxUnlockedPage + 1;
-                     
-                     // Ở chế độ Favorites, các trang chỉ là chỉ mục (1, 2, 3...) nên không bao giờ bị khóa
                      const isDisabled = viewMode === 'all' ? isDeepLocked : false;
 
                      let bgClass = "";
                      if (isCurrent) {
                         bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
                      } else if (!isLocked) {
-                        // Đã mở khóa hoặc là trang Favorite
                         bgClass = viewMode === 'favorites' 
                             ? "bg-red-500 border-red-700 text-white hover:bg-red-400"
                             : "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
@@ -469,7 +458,6 @@ const UnlockModal = ({ targetPage, cost, currentCoins, isUnlocking, onConfirm, o
 
   const handleAttemptUnlock = () => {
     if (isUnlocking) return;
-
     if (canAfford) {
       onConfirm();
     } else {
@@ -632,22 +620,20 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   // Lấy User data từ Context
   const { user, userCoins, masteryCount } = useQuizApp();
   
-  // --- STATE 1: Trạng thái dữ liệu Topic (bao gồm Favorites) ---
+  // --- STATE 1: Trạng thái dữ liệu Topic ---
   const [topicData, setTopicData] = useState<TopicProgressData>({
     maxUnlockedPage: FREE_PAGES,
+    currentPage: 1, // Mặc định DB
     dailyReward: { date: '', count: 0 },
-    favorites: [] // Mảng ID được convert từ string trong Service
+    favorites: [] 
   });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
   // --- STATE 2: View Mode (All vs Favorites) ---
   const [viewMode, setViewMode] = useState<'all' | 'favorites'>('all');
 
-  // --- STATE 3: Trang hiện tại ---
-  const [currentPage, setCurrentPage] = useState(() => {
-     const saved = localStorage.getItem('topic_current_page');
-     return saved ? parseInt(saved, 10) : 1;
-  });
+  // --- STATE 3: Trang hiện tại (UI State) ---
+  const [currentPage, setCurrentPage] = useState(1);
 
   // --- STATE 4: Loading cho Favorite Button ---
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
@@ -657,59 +643,63 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     if (user) {
       const unsubscribe = listenToTopicData(user.uid, (data) => {
         setTopicData(data);
-        setIsDataLoaded(true);
+        
+        // CHỈ set trang lần đầu tiên khi dữ liệu load xong
+        // Để tránh việc người dùng đang bấm mà DB cập nhật lại làm nhảy trang
+        if (!isDataLoaded) {
+            setCurrentPage(data.currentPage > 0 ? data.currentPage : 1);
+            setIsDataLoaded(true);
+        }
       });
       return () => unsubscribe();
     } else {
-        setTopicData({ maxUnlockedPage: FREE_PAGES, dailyReward: { date: '', count: 0 }, favorites: [] });
+        setTopicData({ maxUnlockedPage: FREE_PAGES, currentPage: 1, dailyReward: { date: '', count: 0 }, favorites: [] });
         setIsDataLoaded(false);
     }
-  }, [user]);
+  }, [user, isDataLoaded]);
 
   const maxUnlockedPage = topicData.maxUnlockedPage;
   const favorites = topicData.favorites;
+
+  // --- LOGIC LƯU TRANG HIỆN TẠI VÀO FIRESTORE (DEBOUNCE) ---
+  useEffect(() => {
+    // Chỉ lưu nếu đang ở chế độ 'all', đã load data và có user
+    if (isDataLoaded && user && viewMode === 'all') {
+        const timeoutId = setTimeout(() => {
+            saveTopicCurrentPage(user.uid, currentPage);
+        }, 1000); // Đợi 1s sau khi dừng bấm mới lưu
+
+        return () => clearTimeout(timeoutId);
+    }
+  }, [currentPage, viewMode, isDataLoaded, user]);
 
   // --- TÍNH TOÁN SỐ TRANG ---
   const totalPages = useMemo(() => {
     if (viewMode === 'all') {
         return Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
     } else {
-        // Chế độ Favorites: Tính số trang dựa trên số lượng item yêu thích
         return Math.max(1, Math.ceil(favorites.length / ITEMS_PER_PAGE));
     }
   }, [viewMode, favorites.length]);
 
-  // --- EFFECT: Reset trang về 1 khi đổi Mode ---
+  // --- EFFECT: Reset trang về 1 khi đổi Mode sang Favorites ---
   useEffect(() => {
-      // Khi đổi sang Favorites, reset về trang 1. 
-      // Khi quay lại All, có thể muốn giữ trang cũ hoặc reset (ở đây reset cho đơn giản)
-      setCurrentPage(1);
-  }, [viewMode]);
-
-  // --- EFFECT: Sync dữ liệu (chỉ áp dụng cho View Mode 'all') ---
-  useEffect(() => {
-      if (!isDataLoaded || viewMode === 'favorites') return;
-
-      if (currentPage > maxUnlockedPage) {
-          setCurrentPage(maxUnlockedPage);
-      }
-      if (currentPage < 1) {
+      if (viewMode === 'favorites') {
           setCurrentPage(1);
+      } else if (isDataLoaded && viewMode === 'all') {
+          // Khi quay lại All, có thể lấy lại trang đã lưu trong topicData (nếu muốn)
+          // hoặc giữ nguyên state currentPage hiện tại (nếu chưa bị unmount).
+          // Ở đây ta ưu tiên state hiện tại nếu hợp lệ.
+          if (currentPage > maxUnlockedPage) setCurrentPage(maxUnlockedPage);
       }
-  }, [maxUnlockedPage, isDataLoaded, viewMode]);
+  }, [viewMode, maxUnlockedPage, isDataLoaded]);
 
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false); 
 
-  useEffect(() => {
-      // Chỉ lưu trang hiện tại nếu đang ở chế độ All
-      if (viewMode === 'all') {
-          localStorage.setItem('topic_current_page', currentPage.toString());
-      }
-  }, [currentPage, viewMode]);
-
+  // Reset Scroll
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
     if (scrollContainer) {
@@ -734,7 +724,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
         return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
     } else {
-        // Cắt mảng favorites dựa trên trang hiện tại
         const start = (currentPage - 1) * ITEMS_PER_PAGE;
         const end = start + ITEMS_PER_PAGE;
         return favorites.slice(start, end);
@@ -744,18 +733,13 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   // --- HANDLE TOGGLE FAVORITE ---
   const handleToggleFavorite = useCallback(async (id: number) => {
       if (!user) return;
-      
-      // Đặt state loading cục bộ
       setTogglingIds(prev => new Set(prev).add(id));
-
       try {
           await toggleTopicFavoriteTransaction(user.uid, id);
-          // UI sẽ tự cập nhật nhờ listener
       } catch (error) {
           console.error("Error toggling favorite:", error);
           alert("Failed to update favorite");
       } finally {
-          // Xóa state loading
           setTogglingIds(prev => {
               const next = new Set(prev);
               next.delete(id);
@@ -768,12 +752,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
     
-    // Logic điều hướng
     if (viewMode === 'favorites') {
-        // Favorites không có khóa
         setCurrentPage(page);
     } else {
-        // All Topics có khóa
         if (page <= maxUnlockedPage) {
             setCurrentPage(page);
         } else if (page === maxUnlockedPage + 1) {
@@ -843,13 +824,11 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
          dailyCountFromServer={topicData.dailyReward.count}
          lastDateFromServer={topicData.dailyReward.date}
          onReward={handleReward}
-         forceHide={isAtBottom || viewMode === 'favorites'} /* Ẩn timer ở chế độ favorites nếu muốn */
+         forceHide={isAtBottom || viewMode === 'favorites'} 
       />
       
-      {/* Header */}
-      <header className={`flex-shrink-0 sticky top-0 backdrop-blur-sm z-30 shadow-md border-b transition-colors duration-300 ${
-          viewMode === 'favorites' ? 'bg-red-900/95 border-red-700' : 'bg-slate-900/95 border-slate-700'
-      }`}>
+      {/* Header: Giữ nguyên style bg-slate-900 bất kể mode */}
+      <header className="flex-shrink-0 sticky top-0 backdrop-blur-sm z-30 shadow-md border-b transition-colors duration-300 bg-slate-900/95 border-slate-700">
         <div className="flex h-14 items-center justify-between px-4 w-full">
             <div className="flex justify-start">
                <HomeButton onClick={onGoBack} label="Back" />
@@ -857,7 +836,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             
             <div className="hidden md:flex flex-col items-center">
                 <span className={`text-xs font-bold uppercase tracking-widest ${
-                    viewMode === 'favorites' ? 'text-red-200' : 'text-slate-400'
+                    viewMode === 'favorites' ? 'text-red-400' : 'text-slate-400'
                 }`}>
                     {viewMode === 'favorites' ? '❤️ Favorites Collection' : 'Topic Browser'}
                 </span>
@@ -910,7 +889,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             </div>
           )}
 
-          {/* Controls Navigation (Chỉ hiện khi có item) */}
+          {/* Controls Navigation: Giữ nguyên style Slate/Gray */}
           {(viewMode === 'all' || favorites.length > 0) && (
             <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
                 <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
@@ -929,14 +908,10 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                     </svg>
                     </button>
 
-                    {/* 3D MAP TRIGGER BUTTON */}
+                    {/* 3D MAP TRIGGER BUTTON: Giữ màu tối (slate) */}
                     <button
                         onClick={() => setIsMapOpen(true)}
-                        className={`relative group font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2 text-white ${
-                            viewMode === 'favorites' 
-                                ? 'bg-red-600 hover:bg-red-700' 
-                                : 'bg-slate-800/70 hover:bg-slate-800'
-                        }`}
+                        className="relative group font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2 text-white bg-slate-800/70 hover:bg-slate-800"
                     >
                         <span>
                             {viewMode === 'favorites' ? '❤️ ' : ''}
@@ -958,7 +933,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                         : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white'
                     }`}
                     >
-                        {/* Chỉ hiện khóa nếu trang tiếp theo bị khóa ở mode ALL */}
                         {viewMode === 'all' && currentPage + 1 > maxUnlockedPage ? (
                              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-orange-500">
                                 <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
