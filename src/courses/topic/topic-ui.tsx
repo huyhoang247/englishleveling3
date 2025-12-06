@@ -8,12 +8,12 @@ import HomeButton from '../../ui/home-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 
-// --- UPDATED IMPORTS: Include toggle function ---
+// --- NEW IMPORTS: Direct from Topic Service ---
 import { 
   listenToTopicData, 
   unlockTopicPageTransaction, 
-  claimTopicRewardTransaction, 
-  toggleTopicFavoriteTransaction, // <--- NEW
+  claimTopicRewardTransaction,
+  toggleTopicFavoriteTransaction, 
   TopicProgressData 
 } from './topic-service.ts';
 
@@ -58,22 +58,12 @@ const styles = `
     25% { transform: translateX(-5px); }
     75% { transform: translateX(5px); }
   }
-  
-  @keyframes popup-fade-up {
-    0% { opacity: 0; transform: translateY(10px) scale(0.9); }
-    20% { opacity: 1; transform: translateY(0) scale(1); }
-    80% { opacity: 1; transform: translateY(0) scale(1); }
-    100% { opacity: 0; transform: translateY(-20px) scale(0.95); }
-  }
-  
-  /* Heart Beat Animation */
+
   @keyframes heart-beat {
     0% { transform: scale(1); }
-    50% { transform: scale(1.3); }
+    25% { transform: scale(1.2); }
+    50% { transform: scale(0.95); }
     100% { transform: scale(1); }
-  }
-  .animate-heart-beat {
-    animation: heart-beat 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
 
   /* --- NEW ANIMATION: SPIN --- */
@@ -82,6 +72,10 @@ const styles = `
   }
   .animate-spin-custom {
     animation: spin 1s linear infinite;
+  }
+  
+  .animate-heart-beat {
+    animation: heart-beat 0.3s ease-in-out;
   }
 
   .animate-popup-zoom {
@@ -100,7 +94,7 @@ const styles = `
     animation: popup-fade-up 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
   }
   
-  /* Game Button 3D Effect - Green */
+  /* Buttons */
   .btn-game-green {
     background: linear-gradient(to bottom, #4ade80, #22c55e);
     border-bottom: 4px solid #15803d;
@@ -111,7 +105,6 @@ const styles = `
     border-bottom: 0px solid transparent;
   }
   
-  /* Game Button 3D Effect - Gray */
   .btn-game-gray {
     background: #f1f5f9;
     color: #64748b;
@@ -123,7 +116,6 @@ const styles = `
     border-bottom: 0px solid transparent;
   }
 
-  /* Navigation Arrow Button 3D */
   .btn-nav {
     transition: all 0.1s;
     box-shadow: 0px 3px 0px 0px rgba(0,0,0,0.1);
@@ -133,7 +125,6 @@ const styles = `
     box-shadow: none;
   }
 
-  /* Select Button 3D (Dark) */
   .btn-select-3d {
     transition: all 0.1s;
     box-shadow: 0px 4px 0px 0px #0f172a; 
@@ -143,7 +134,6 @@ const styles = `
     box-shadow: none;
   }
 
-  /* Level Node Button */
   .level-node {
     transition: transform 0.1s, filter 0.2s;
     box-shadow: 0px 3px 0px 0px rgba(0,0,0,0.3);
@@ -175,136 +165,171 @@ const calculatePageCost = (page: number): number => {
 
 // --- SUB-COMPONENTS ---
 const TopicSkeleton = () => (
-  <div className="w-full h-full bg-gray-200 relative overflow-hidden">
-    <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
+  <div className="w-full bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden relative">
+    <div className="w-full h-72 sm:h-96 bg-gray-200 relative overflow-hidden">
+      <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-10"></div>
+    </div>
   </div>
 );
 
-// --- MODIFIED: TopicImageCard to support Favorite ---
-interface TopicImageCardProps {
-  index: number;
-  isFavorite: boolean;
-  onToggleFavorite: (id: number) => void;
-  isSmall?: boolean; // New prop for Map modal usage
-}
+// --- COMPONENT: Favorite Button with Loading ---
+const FavoriteButton = ({ 
+  isFavorite, 
+  onToggle, 
+  isToggling 
+}: { 
+  isFavorite: boolean; 
+  onToggle: () => void;
+  isToggling: boolean;
+}) => {
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation(); // Ngăn sự kiện click lan ra ngoài
+        if (!isToggling) onToggle();
+      }}
+      disabled={isToggling}
+      className={`absolute top-3 right-3 p-2 rounded-full transition-all duration-200 z-10 ${
+        isToggling ? 'cursor-wait' : 'hover:scale-110 active:scale-95'
+      }`}
+    >
+      {/* Background mờ nhẹ để icon nổi bật trên mọi nền ảnh */}
+      <div className="absolute inset-0 bg-black/20 blur-sm rounded-full transform scale-75"></div>
+      
+      {isToggling ? (
+         // Loading Spinner
+         <svg className="animate-spin-custom h-7 w-7 text-white relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+         </svg>
+      ) : (
+        // Heart Icon
+        <svg 
+          xmlns="http://www.w3.org/2000/svg" 
+          viewBox="0 0 24 24" 
+          /* Nếu favorite: Màu đỏ. Nếu không: Màu trắng */
+          fill={isFavorite ? "#ef4444" : "white"} 
+          stroke={isFavorite ? "#ef4444" : "currentColor"}
+          strokeWidth="1.5"
+          className={`w-8 h-8 relative z-10 drop-shadow-md transition-all duration-300 ${
+            isFavorite 
+                ? 'opacity-100 animate-heart-beat' 
+                : 'opacity-50 hover:opacity-100 hover:scale-110' // Opacity 50% khi chưa chọn
+          }`}
+        >
+          <path fillRule="evenodd" d="M11.645 20.91l-.007-.003-.022-.012a15.247 15.247 0 01-.383-.218 25.18 25.18 0 01-4.244-3.17C4.688 15.132 2 12.216 2 9.006a6.5 6.5 0 0111.458-3.322 6.5 6.5 0 0111.458 3.322c0 3.21-2.688 6.126-5.088 8.502a25.18 25.18 0 01-4.244 3.17 15.247 15.247 0 01-.383.219l-.022.012-.007.004-.003.001a.752.752 0 01-.704 0l-.003-.001z" clipRule="evenodd" />
+        </svg>
+      )}
+    </button>
+  );
+};
 
-const TopicImageCard = React.memo(({ index, isFavorite, onToggleFavorite, isSmall = false }: TopicImageCardProps) => {
+// --- MODIFIED TopicImageCard ---
+const TopicImageCard = React.memo(({ 
+    index, 
+    isFavorite, 
+    onToggleFavorite, 
+    isTogglingFavorite 
+}: { 
+    index: number, 
+    isFavorite: boolean, 
+    onToggleFavorite: (id: number) => void,
+    isTogglingFavorite: boolean
+}) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const imageUrl = useMemo(() => getTopicImageUrl(index), [index]);
 
-  const handleHeartClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    onToggleFavorite(index);
-  };
-
   if (hasError) return null;
 
   return (
-    <div className={`relative group w-full ${isSmall ? 'rounded-lg' : 'rounded-2xl'} bg-white shadow-lg border border-gray-200 overflow-hidden`}>
-      {/* Container aspect ratio */}
-      <div className={`${isSmall ? 'aspect-[4/3]' : ''} relative`}>
-        {isLoading && (
-            <div className={`absolute inset-0 ${isSmall ? 'h-full' : 'h-72 sm:h-96'}`}>
-                <TopicSkeleton />
-            </div>
-        )}
+    <div className="relative group w-full">
+      {isLoading && <TopicSkeleton />}
+      <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-500 ${
+        isLoading 
+          ? 'absolute top-0 left-0 w-full opacity-0 pointer-events-none -z-10' 
+          : 'relative opacity-100 z-0'
+      }`}>
         
+        {/* Nút Favorite nằm đè lên góc phải ảnh */}
+        <FavoriteButton 
+            isFavorite={isFavorite} 
+            onToggle={() => onToggleFavorite(index)} 
+            isToggling={isTogglingFavorite}
+        />
+
         <img
           src={imageUrl}
           alt={`Topic ${index}`}
           loading="lazy" 
-          className={`w-full h-auto block transition-all duration-500 ${
-            isLoading ? 'opacity-0' : 'opacity-100'
-          }`}
+          className="w-full h-auto block"
           onLoad={() => setIsLoading(false)}
           onError={() => setHasError(true)}
         />
-
-        {/* --- FAVORITE BUTTON --- */}
-        {!isLoading && (
-          <button 
-            onClick={handleHeartClick}
-            className={`absolute top-2 right-2 p-2 rounded-full transition-all duration-300 z-10
-              ${isFavorite 
-                ? 'bg-red-50/80 text-red-500 scale-100 opacity-100' 
-                : 'bg-black/20 text-white opacity-50 hover:opacity-100 hover:scale-110 hover:bg-black/40'
-              }
-              ${isFavorite ? 'animate-heart-beat' : ''}
-            `}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={isFavorite ? "currentColor" : "none"} stroke="currentColor" strokeWidth={2.5} className="w-6 h-6">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-            </svg>
-          </button>
-        )}
       </div>
     </div>
   );
 });
 
-// --- LEVEL MAP MODAL (WITH TABS) ---
+// --- UPDATED LEVEL MAP MODAL WITH TABS ---
 interface LevelMapModalProps {
   isOpen: boolean;
   onClose: () => void;
   currentPage: number;
   totalPages: number;
   maxUnlockedPage: number;
+  viewMode: 'all' | 'favorites';
+  favoritesCount: number;
   onSelectPage: (page: number) => void;
-  // New props for Favorites
-  favorites: Set<number>;
-  onToggleFavorite: (id: number) => void;
+  onChangeViewMode: (mode: 'all' | 'favorites') => void;
 }
 
 const LevelMapModal = ({ 
-  isOpen, 
-  onClose, 
-  currentPage, 
-  totalPages, 
-  maxUnlockedPage, 
-  onSelectPage,
-  favorites,
-  onToggleFavorite
+    isOpen, 
+    onClose, 
+    currentPage, 
+    totalPages, 
+    maxUnlockedPage, 
+    onSelectPage,
+    viewMode,
+    favoritesCount,
+    onChangeViewMode
 }: LevelMapModalProps) => {
-  
-  const [activeTab, setActiveTab] = useState<'map' | 'favorites'>('map');
   const [currentMapPage, setCurrentMapPage] = useState(1);
-  
   const totalMapPages = Math.ceil(totalPages / LEVELS_PER_MAP_PAGE);
 
+  // Reset map page khi mở modal hoặc đổi tab
   useEffect(() => {
     if (isOpen) {
       const mapPageForCurrentLevel = Math.ceil(currentPage / LEVELS_PER_MAP_PAGE);
-      setCurrentMapPage(mapPageForCurrentLevel);
-      // Reset tab when opening
-      setActiveTab('map'); 
+      setCurrentMapPage(mapPageForCurrentLevel || 1);
     }
-  }, [isOpen, currentPage]);
+  }, [isOpen, currentPage, viewMode]);
 
   if (!isOpen) return null;
 
-  // Logic for MAP tab
   const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
   const endLevel = Math.min(currentMapPage * LEVELS_PER_MAP_PAGE, totalPages);
-  const levelsToShow = Array.from({ length: endLevel - startLevel + 1 }, (_, i) => startLevel + i);
-
-  // Logic for FAVORITES tab
-  const favoriteList = Array.from(favorites).sort((a, b) => a - b);
+  
+  // Tạo mảng các level cần hiển thị (xử lý trường hợp rỗng nếu không có favorite)
+  const levelsToShow = startLevel <= endLevel 
+    ? Array.from({ length: endLevel - startLevel + 1 }, (_, i) => startLevel + i)
+    : [];
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end sm:justify-center sm:items-center">
       <div className="absolute inset-0 bg-black/80 transition-opacity animate-[fade-in_0.2s]" onClick={onClose} />
       
-      <div className="relative bg-slate-900 w-full sm:w-[450px] sm:h-[600px] h-[80vh] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-popup-slide-up sm:animate-popup-zoom border-t border-slate-700 sm:border">
+      <div className="relative bg-slate-900 w-full sm:w-[420px] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col animate-popup-slide-up sm:animate-popup-zoom border-t border-slate-700 sm:border">
         
         {/* HEADER & TABS */}
         <div className="bg-slate-800 border-b border-slate-700 shrink-0">
             <div className="flex items-center justify-between p-4 pb-2">
                 <h3 className="text-white font-black text-lg flex items-center gap-2">
-                    <span className="text-2xl">
-                        {activeTab === 'map' ? '🗺️' : '❤️'}
+                    <span className="text-orange-500 text-2xl">
+                        {viewMode === 'all' ? '🗺️' : '❤️'}
                     </span> 
-                    {activeTab === 'map' ? 'Level Map' : 'My Favorites'}
+                    {viewMode === 'all' ? 'Level Map' : 'Favorites'}
                 </h3>
                 <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center hover:bg-slate-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -313,40 +338,60 @@ const LevelMapModal = ({
                 </button>
             </div>
 
-            {/* TAB BUTTONS */}
-            <div className="flex px-4 gap-4 mt-2">
+            {/* THANH TAB CHUYỂN ĐỔI */}
+            <div className="flex px-4 pb-0 gap-1">
                 <button 
-                    onClick={() => setActiveTab('map')}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-colors flex-1 text-center ${activeTab === 'map' ? 'border-orange-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                    onClick={() => onChangeViewMode('all')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 ${
+                        viewMode === 'all' 
+                            ? 'bg-slate-700 text-white border-orange-500' 
+                            : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
+                    }`}
                 >
-                    Map
+                    All Topics
                 </button>
                 <button 
-                    onClick={() => setActiveTab('favorites')}
-                    className={`pb-3 text-sm font-bold border-b-2 transition-colors flex-1 text-center flex items-center justify-center gap-2 ${activeTab === 'favorites' ? 'border-red-500 text-white' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
+                    onClick={() => onChangeViewMode('favorites')}
+                    className={`flex-1 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 flex justify-center items-center gap-2 ${
+                        viewMode === 'favorites' 
+                            ? 'bg-slate-700 text-white border-red-500' 
+                            : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
+                    }`}
                 >
-                    Favorites <span className="bg-slate-700 px-2 py-0.5 rounded-full text-xs text-slate-300">{favorites.size}</span>
+                    Favorites
+                    <span className="bg-slate-900 text-xs px-1.5 py-0.5 rounded-full text-slate-400">{favoritesCount}</span>
                 </button>
             </div>
         </div>
 
-        {/* CONTENT AREA */}
-        <div className="flex-1 overflow-y-auto p-5 min-h-0 bg-slate-900 scroll-smooth">
-           
-           {/* TAB: MAP */}
-           {activeTab === 'map' && (
+        {/* GRID CONTENT */}
+        <div className="flex-1 p-5 min-h-[300px]">
+           {levelsToShow.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-12 h-12 opacity-50">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+                    </svg>
+                    <p className="font-medium">No pages found</p>
+                </div>
+           ) : (
                <div className="grid grid-cols-5 gap-3">
                   {levelsToShow.map(pageNum => {
-                     const isLocked = pageNum > maxUnlockedPage;
+                     // Logic khóa chỉ áp dụng cho chế độ 'all'
+                     const isLocked = viewMode === 'all' && pageNum > maxUnlockedPage;
                      const isCurrent = pageNum === currentPage;
-                     const isUnlocked = !isLocked;
-                     const isDeepLocked = pageNum > maxUnlockedPage + 1;
+                     const isDeepLocked = viewMode === 'all' && pageNum > maxUnlockedPage + 1;
+                     
+                     // Ở chế độ Favorites, các trang chỉ là chỉ mục (1, 2, 3...) nên không bao giờ bị khóa
+                     const isDisabled = viewMode === 'all' ? isDeepLocked : false;
 
                      let bgClass = "";
                      if (isCurrent) {
                         bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
-                     } else if (isUnlocked) {
-                        bgClass = "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
+                     } else if (!isLocked) {
+                        // Đã mở khóa hoặc là trang Favorite
+                        bgClass = viewMode === 'favorites' 
+                            ? "bg-red-500 border-red-700 text-white hover:bg-red-400"
+                            : "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
                      } else if (isDeepLocked) {
                         bgClass = "bg-slate-800 border-slate-950 text-slate-600 opacity-50 cursor-not-allowed";
                      } else {
@@ -356,9 +401,9 @@ const LevelMapModal = ({
                      return (
                        <button
                          key={pageNum}
-                         disabled={isDeepLocked}
+                         disabled={isDisabled}
                          onClick={() => {
-                            if (!isDeepLocked) {
+                            if (!isDisabled) {
                                 onSelectPage(pageNum);
                                 onClose();
                             }
@@ -377,71 +422,38 @@ const LevelMapModal = ({
                   })}
                </div>
            )}
-
-           {/* TAB: FAVORITES */}
-           {activeTab === 'favorites' && (
-               <div className="w-full h-full">
-                   {favoriteList.length === 0 ? (
-                       <div className="flex flex-col items-center justify-center h-full text-slate-500 gap-3 min-h-[200px]">
-                           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 opacity-30">
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
-                           </svg>
-                           <p>No favorites yet!</p>
-                       </div>
-                   ) : (
-                       <div className="grid grid-cols-2 gap-4">
-                           {favoriteList.map((id) => (
-                               <div key={id} className="relative">
-                                    <TopicImageCard 
-                                        index={id} 
-                                        isFavorite={true} 
-                                        onToggleFavorite={onToggleFavorite}
-                                        isSmall={true}
-                                    />
-                                    <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 backdrop-blur-sm rounded text-xs text-white font-mono">
-                                        #{id}
-                                    </div>
-                               </div>
-                           ))}
-                       </div>
-                   )}
-               </div>
-           )}
-
         </div>
         
-        {/* FOOTER (Only for Map pagination) */}
-        {activeTab === 'map' && (
-            <div className="p-3 bg-slate-800 border-t border-slate-700 flex items-center justify-between shrink-0">
-                <button 
-                    onClick={() => setCurrentMapPage(prev => Math.max(1, prev - 1))}
-                    disabled={currentMapPage === 1}
-                    className={`p-2 rounded-lg font-bold text-sm flex items-center gap-1 ${currentMapPage === 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
-                >
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Prev
-                </button>
+        {/* FOOTER NAVIGATION */}
+        <div className="p-3 bg-slate-800 border-t border-slate-700 flex items-center justify-between shrink-0">
+            <button 
+                onClick={() => setCurrentMapPage(prev => Math.max(1, prev - 1))}
+                disabled={currentMapPage === 1}
+                className={`p-2 rounded-lg font-bold text-sm flex items-center gap-1 ${currentMapPage === 1 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+            >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7"></path></svg>
+                Prev
+            </button>
 
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full">
-                    Map {currentMapPage} / {totalMapPages}
-                </span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-widest bg-slate-900 px-3 py-1 rounded-full">
+                {totalMapPages > 0 ? `Page ${currentMapPage} / ${totalMapPages}` : 'Empty'}
+            </span>
 
-                <button 
-                    onClick={() => setCurrentMapPage(prev => Math.min(totalMapPages, prev + 1))}
-                    disabled={currentMapPage === totalMapPages}
-                    className={`p-2 rounded-lg font-bold text-sm flex items-center gap-1 ${currentMapPage === totalMapPages ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
-                >
-                    Next
-                    <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
-                </button>
-            </div>
-        )}
+            <button 
+                onClick={() => setCurrentMapPage(prev => Math.min(totalMapPages, prev + 1))}
+                disabled={currentMapPage === totalMapPages || totalMapPages === 0}
+                className={`p-2 rounded-lg font-bold text-sm flex items-center gap-1 ${currentMapPage === totalMapPages || totalMapPages === 0 ? 'text-slate-600 cursor-not-allowed' : 'text-slate-300 hover:bg-slate-700 hover:text-white'}`}
+            >
+                Next
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path></svg>
+            </button>
+        </div>
       </div>
     </div>
   );
 };
 
-// --- UNLOCK MODAL (Keep as is) ---
+// --- UNLOCK MODAL ---
 interface UnlockModalProps {
   targetPage: number;
   cost: number;
@@ -528,7 +540,7 @@ const UnlockModal = ({ targetPage, cost, currentCoins, isUnlocking, onConfirm, o
   );
 };
 
-// --- STUDY TIMER (Keep as is) ---
+// --- STUDY TIMER ---
 const StudyTimer = React.memo(({ 
     currentPage, 
     masteryCount, 
@@ -620,73 +632,83 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   // Lấy User data từ Context
   const { user, userCoins, masteryCount } = useQuizApp();
   
-  // --- STATE 1: Trạng thái dữ liệu Topic ---
+  // --- STATE 1: Trạng thái dữ liệu Topic (bao gồm Favorites) ---
   const [topicData, setTopicData] = useState<TopicProgressData>({
     maxUnlockedPage: FREE_PAGES,
     dailyReward: { date: '', count: 0 },
-    favorites: "" // Init favorite string
+    favorites: [] // Mảng ID được convert từ string trong Service
   });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
+
+  // --- STATE 2: View Mode (All vs Favorites) ---
+  const [viewMode, setViewMode] = useState<'all' | 'favorites'>('all');
+
+  // --- STATE 3: Trang hiện tại ---
+  const [currentPage, setCurrentPage] = useState(() => {
+     const saved = localStorage.getItem('topic_current_page');
+     return saved ? parseInt(saved, 10) : 1;
+  });
+
+  // --- STATE 4: Loading cho Favorite Button ---
+  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
   // --- EFFECT: Lắng nghe dữ liệu Topic ---
   useEffect(() => {
     if (user) {
       const unsubscribe = listenToTopicData(user.uid, (data) => {
         setTopicData(data);
-        setIsDataLoaded(true); 
+        setIsDataLoaded(true);
       });
       return () => unsubscribe();
     } else {
-        setTopicData({ maxUnlockedPage: FREE_PAGES, dailyReward: { date: '', count: 0 }, favorites: "" });
+        setTopicData({ maxUnlockedPage: FREE_PAGES, dailyReward: { date: '', count: 0 }, favorites: [] });
         setIsDataLoaded(false);
     }
   }, [user]);
 
   const maxUnlockedPage = topicData.maxUnlockedPage;
+  const favorites = topicData.favorites;
 
-  // --- CONVERT FAVORITES STRING TO SET (For fast lookup) ---
-  const favoriteSet = useMemo(() => {
-      if (!topicData.favorites) return new Set<number>();
-      const ids = topicData.favorites.split(',').map(s => parseInt(s, 10)).filter(n => !isNaN(n));
-      return new Set(ids);
-  }, [topicData.favorites]);
+  // --- TÍNH TOÁN SỐ TRANG ---
+  const totalPages = useMemo(() => {
+    if (viewMode === 'all') {
+        return Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
+    } else {
+        // Chế độ Favorites: Tính số trang dựa trên số lượng item yêu thích
+        return Math.max(1, Math.ceil(favorites.length / ITEMS_PER_PAGE));
+    }
+  }, [viewMode, favorites.length]);
 
-  // --- HANDLER: Toggle Favorite ---
-  const handleToggleFavorite = useCallback((id: number) => {
-      if (!user) return;
-      // Optimistic update (optional, but data is fast enough via listener)
-      toggleTopicFavoriteTransaction(user.uid, id).catch(err => {
-          console.error("Failed to toggle fav", err);
-      });
-  }, [user]);
-
-  // --- STATE 2: Trang hiện tại ---
-  const [currentPage, setCurrentPage] = useState(() => {
-     const saved = localStorage.getItem('topic_current_page');
-     return saved ? parseInt(saved, 10) : 1;
-  });
-
-  // --- EFFECT QUAN TRỌNG: Sync dữ liệu ---
+  // --- EFFECT: Reset trang về 1 khi đổi Mode ---
   useEffect(() => {
-      if (!isDataLoaded) return; 
+      // Khi đổi sang Favorites, reset về trang 1. 
+      // Khi quay lại All, có thể muốn giữ trang cũ hoặc reset (ở đây reset cho đơn giản)
+      setCurrentPage(1);
+  }, [viewMode]);
+
+  // --- EFFECT: Sync dữ liệu (chỉ áp dụng cho View Mode 'all') ---
+  useEffect(() => {
+      if (!isDataLoaded || viewMode === 'favorites') return;
+
       if (currentPage > maxUnlockedPage) {
           setCurrentPage(maxUnlockedPage);
       }
       if (currentPage < 1) {
           setCurrentPage(1);
       }
-  }, [maxUnlockedPage, isDataLoaded]); 
+  }, [maxUnlockedPage, isDataLoaded, viewMode]);
 
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false); 
 
-  const totalPages = Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE);
-
   useEffect(() => {
-    localStorage.setItem('topic_current_page', currentPage.toString());
-  }, [currentPage]);
+      // Chỉ lưu trang hiện tại nếu đang ở chế độ All
+      if (viewMode === 'all') {
+          localStorage.setItem('topic_current_page', currentPage.toString());
+      }
+  }, [currentPage, viewMode]);
 
   useEffect(() => {
     const scrollContainer = document.getElementById('topic-scroll-container');
@@ -694,7 +716,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         scrollContainer.scrollTop = 0;
         setIsAtBottom(false);
     }
-  }, [currentPage]);
+  }, [currentPage, viewMode]);
 
   const handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
     const bottomThreshold = 150; 
@@ -706,20 +728,58 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     }
   };
 
+  // --- TÍNH TOÁN ITEM HIỂN THỊ ---
   const currentItems = useMemo(() => {
-    const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
-    return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
-  }, [currentPage]);
+    if (viewMode === 'all') {
+        const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+        return Array.from({ length: ITEMS_PER_PAGE }, (_, i) => start + i);
+    } else {
+        // Cắt mảng favorites dựa trên trang hiện tại
+        const start = (currentPage - 1) * ITEMS_PER_PAGE;
+        const end = start + ITEMS_PER_PAGE;
+        return favorites.slice(start, end);
+    }
+  }, [currentPage, viewMode, favorites]);
 
+  // --- HANDLE TOGGLE FAVORITE ---
+  const handleToggleFavorite = useCallback(async (id: number) => {
+      if (!user) return;
+      
+      // Đặt state loading cục bộ
+      setTogglingIds(prev => new Set(prev).add(id));
+
+      try {
+          await toggleTopicFavoriteTransaction(user.uid, id);
+          // UI sẽ tự cập nhật nhờ listener
+      } catch (error) {
+          console.error("Error toggling favorite:", error);
+          alert("Failed to update favorite");
+      } finally {
+          // Xóa state loading
+          setTogglingIds(prev => {
+              const next = new Set(prev);
+              next.delete(id);
+              return next;
+          });
+      }
+  }, [user]);
+
+  // --- NAVIGATION ---
   const tryNavigateToPage = (page: number) => {
     if (page > totalPages || page < 1) return;
     
     // Logic điều hướng
-    if (page <= maxUnlockedPage) {
-      setCurrentPage(page);
-    } else if (page === maxUnlockedPage + 1) {
-      const cost = calculatePageCost(page);
-      setUnlockModalData({ targetPage: page, cost });
+    if (viewMode === 'favorites') {
+        // Favorites không có khóa
+        setCurrentPage(page);
+    } else {
+        // All Topics có khóa
+        if (page <= maxUnlockedPage) {
+            setCurrentPage(page);
+        } else if (page === maxUnlockedPage + 1) {
+            const cost = calculatePageCost(page);
+            setUnlockModalData({ targetPage: page, cost });
+        }
     }
   };
 
@@ -758,22 +818,23 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
           targetPage={unlockModalData.targetPage}
           cost={unlockModalData.cost}
           currentCoins={userCoins}
-          isUnlocking={isUnlocking} 
+          isUnlocking={isUnlocking}
           onConfirm={handleConfirmUnlock}
           onCancel={() => !isUnlocking && setUnlockModalData(null)}
         />
       )}
 
-      {/* Map Modal - Passed favorite props */}
+      {/* Map Modal with Tabs */}
       <LevelMapModal 
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
         currentPage={currentPage}
         totalPages={totalPages}
         maxUnlockedPage={maxUnlockedPage}
+        viewMode={viewMode}
+        favoritesCount={favorites.length}
+        onChangeViewMode={setViewMode}
         onSelectPage={tryNavigateToPage}
-        favorites={favoriteSet}
-        onToggleFavorite={handleToggleFavorite}
       />
 
       <StudyTimer 
@@ -782,19 +843,25 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
          dailyCountFromServer={topicData.dailyReward.count}
          lastDateFromServer={topicData.dailyReward.date}
          onReward={handleReward}
-         forceHide={isAtBottom} 
+         forceHide={isAtBottom || viewMode === 'favorites'} /* Ẩn timer ở chế độ favorites nếu muốn */
       />
       
       {/* Header */}
-      <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-30 shadow-md border-b border-slate-700">
+      <header className={`flex-shrink-0 sticky top-0 backdrop-blur-sm z-30 shadow-md border-b transition-colors duration-300 ${
+          viewMode === 'favorites' ? 'bg-red-900/95 border-red-700' : 'bg-slate-900/95 border-slate-700'
+      }`}>
         <div className="flex h-14 items-center justify-between px-4 w-full">
             <div className="flex justify-start">
                <HomeButton onClick={onGoBack} label="Back" />
             </div>
             
             <div className="hidden md:flex flex-col items-center">
-                <span className="text-slate-400 text-xs font-bold uppercase tracking-widest">Topic Browser</span>
-                <span className="text-white font-bold text-sm">Page {currentPage} <span className="text-slate-500">/ {totalPages}</span></span>
+                <span className={`text-xs font-bold uppercase tracking-widest ${
+                    viewMode === 'favorites' ? 'text-red-200' : 'text-slate-400'
+                }`}>
+                    {viewMode === 'favorites' ? '❤️ Favorites Collection' : 'Topic Browser'}
+                </span>
+                <span className="text-white font-bold text-sm">Page {currentPage} <span className="opacity-60">/ {totalPages}</span></span>
             </div>
 
             <div className="flex items-center gap-3">
@@ -812,69 +879,99 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
       >
         <div className="max-w-2xl mx-auto space-y-4 pb-2">
 
-          <div className="flex flex-col gap-6">
-            {currentItems.map((itemIndex) => (
-              <TopicImageCard 
-                key={itemIndex} 
-                index={itemIndex} 
-                isFavorite={favoriteSet.has(itemIndex)}
-                onToggleFavorite={handleToggleFavorite}
-              />
-            ))}
-          </div>
-
-          {/* Controls Navigation */}
-          <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
-            <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
-                
-                <button
-                onClick={() => tryNavigateToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-                className={`w-10 h-10 flex items-center justify-center rounded-full btn-nav ${
-                    currentPage === 1
-                    ? 'bg-gray-100 text-gray-300'
-                    : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white'
-                }`}
+          {/* Empty State for Favorites */}
+          {viewMode === 'favorites' && favorites.length === 0 ? (
+             <div className="flex flex-col items-center justify-center py-20 text-gray-400 animate-popup-zoom">
+                <div className="w-20 h-20 bg-gray-200 rounded-full flex items-center justify-center mb-4">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z" />
+                    </svg>
+                </div>
+                <h2 className="text-lg font-bold text-gray-600">No Favorites Yet</h2>
+                <p className="text-sm">Click the heart icon on any topic to save it here.</p>
+                <button 
+                    onClick={() => setViewMode('all')}
+                    className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-lg font-bold text-sm shadow-md hover:bg-blue-600 transition-colors"
                 >
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                </svg>
+                    Browse All Topics
                 </button>
-
-                {/* 3D MAP TRIGGER BUTTON */}
-                <button
-                    onClick={() => setIsMapOpen(true)}
-                    className="relative group bg-slate-800/70 hover:bg-slate-800 text-white font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2"
-                >
-                    <span>Page {currentPage} / {totalPages}</span>
-                    {currentPage > maxUnlockedPage ? (
-                        <span className="text-sm">🔒</span>
-                    ) : (
-                         <svg className="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-                    )}
-                </button>
-
-                <button
-                onClick={() => tryNavigateToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className={`w-10 h-10 flex items-center justify-center rounded-full btn-nav ${
-                    currentPage === totalPages
-                    ? 'bg-gray-100 text-gray-300'
-                    : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white'
-                }`}
-                >
-                    {currentPage + 1 > maxUnlockedPage ? (
-                         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-orange-500">
-                            <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
-                         </svg>
-                    ) : (
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                        </svg>
-                    )}
-                </button>
+             </div>
+          ) : (
+            <div className="flex flex-col gap-6">
+                {currentItems.map((itemIndex) => (
+                <TopicImageCard 
+                    key={itemIndex} 
+                    index={itemIndex} 
+                    isFavorite={favorites.includes(itemIndex)}
+                    onToggleFavorite={handleToggleFavorite}
+                    isTogglingFavorite={togglingIds.has(itemIndex)}
+                />
+                ))}
             </div>
-          </div>
+          )}
+
+          {/* Controls Navigation (Chỉ hiện khi có item) */}
+          {(viewMode === 'all' || favorites.length > 0) && (
+            <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
+                <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
+                    
+                    <button
+                    onClick={() => tryNavigateToPage(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full btn-nav ${
+                        currentPage === 1
+                        ? 'bg-gray-100 text-gray-300'
+                        : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white'
+                    }`}
+                    >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                    </button>
+
+                    {/* 3D MAP TRIGGER BUTTON */}
+                    <button
+                        onClick={() => setIsMapOpen(true)}
+                        className={`relative group font-bold py-2 pl-4 pr-3 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-between gap-2 text-white ${
+                            viewMode === 'favorites' 
+                                ? 'bg-red-600 hover:bg-red-700' 
+                                : 'bg-slate-800/70 hover:bg-slate-800'
+                        }`}
+                    >
+                        <span>
+                            {viewMode === 'favorites' ? '❤️ ' : ''}
+                            Page {currentPage} / {totalPages}
+                        </span>
+                        {viewMode === 'all' && currentPage > maxUnlockedPage ? (
+                            <span className="text-sm">🔒</span>
+                        ) : (
+                             <svg className="w-4 h-4 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+                        )}
+                    </button>
+
+                    <button
+                    onClick={() => tryNavigateToPage(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    className={`w-10 h-10 flex items-center justify-center rounded-full btn-nav ${
+                        currentPage === totalPages
+                        ? 'bg-gray-100 text-gray-300'
+                        : 'bg-slate-100 text-slate-700 hover:bg-orange-500 hover:text-white'
+                    }`}
+                    >
+                        {/* Chỉ hiện khóa nếu trang tiếp theo bị khóa ở mode ALL */}
+                        {viewMode === 'all' && currentPage + 1 > maxUnlockedPage ? (
+                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-orange-500">
+                                <path fillRule="evenodd" d="M12 1.5a5.25 5.25 0 00-5.25 5.25v3a3 3 0 00-3 3v6.75a3 3 0 003 3h10.5a3 3 0 003-3v-6.75a3 3 0 00-3-3v-3c0-2.9-2.35-5.25-5.25-5.25zm3.75 8.25v-3a3.75 3.75 0 10-7.5 0v3h7.5z" clipRule="evenodd" />
+                             </svg>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                        )}
+                    </button>
+                </div>
+            </div>
+          )}
 
         </div>
       </div>
