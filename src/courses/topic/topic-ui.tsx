@@ -1,6 +1,6 @@
 // --- START OF FILE: topic.tsx ---
 
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
@@ -14,7 +14,7 @@ import {
   unlockTopicPageTransaction, 
   claimTopicRewardTransaction,
   toggleTopicFavoriteTransaction, 
-  saveTopicCurrentPage, // <--- Import hàm lưu page
+  saveTopicCurrentPage, 
   TopicProgressData 
 } from './topic-service.ts';
 
@@ -67,7 +67,6 @@ const styles = `
     100% { transform: scale(1); }
   }
 
-  /* --- NEW ANIMATION: SPIN --- */
   @keyframes spin {
     to { transform: rotate(360deg); }
   }
@@ -91,11 +90,6 @@ const styles = `
     animation: shake 0.3s ease-in-out;
   }
   
-  .animate-popup {
-    animation: popup-fade-up 2.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-  }
-  
-  /* Buttons */
   .btn-game-green {
     background: linear-gradient(to bottom, #4ade80, #22c55e);
     border-bottom: 4px solid #15803d;
@@ -173,7 +167,6 @@ const TopicSkeleton = () => (
   </div>
 );
 
-// --- COMPONENT: Favorite Button with Loading ---
 const FavoriteButton = ({ 
   isFavorite, 
   onToggle, 
@@ -221,7 +214,6 @@ const FavoriteButton = ({
   );
 };
 
-// --- MODIFIED TopicImageCard ---
 const TopicImageCard = React.memo(({ 
     index, 
     isFavorite, 
@@ -267,48 +259,68 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- LEVEL MAP MODAL WITH TABS ---
+// --- UPDATED LEVEL MAP MODAL ---
+// Modal này giờ đây quản lý "tab cục bộ" và chỉ báo cáo lại cho cha khi người dùng chọn trang.
 interface LevelMapModalProps {
   isOpen: boolean;
   onClose: () => void;
-  currentPage: number;
-  totalPages: number;
+  // Các thông tin từ cha để modal tự tính toán
+  currentParentPage: number;
+  currentParentViewMode: 'all' | 'favorites';
   maxUnlockedPage: number;
-  viewMode: 'all' | 'favorites';
   favoritesCount: number;
-  onSelectPage: (page: number) => void;
-  onChangeViewMode: (mode: 'all' | 'favorites') => void;
+  
+  // Callback khi người dùng CHỐT chọn một trang
+  onConfirmSelection: (page: number, mode: 'all' | 'favorites') => void;
 }
 
 const LevelMapModal = ({ 
     isOpen, 
     onClose, 
-    currentPage, 
-    totalPages, 
+    currentParentPage,
+    currentParentViewMode,
     maxUnlockedPage, 
-    onSelectPage,
-    viewMode,
     favoritesCount,
-    onChangeViewMode
+    onConfirmSelection
 }: LevelMapModalProps) => {
+  
+  // STATE CỤC BỘ: Tab đang xem trong Modal (không ảnh hưởng trang chủ)
+  const [localTab, setLocalTab] = useState<'all' | 'favorites'>('all');
+  
+  // STATE CỤC BỘ: Trang map (phân trang của các nút level 1-25, 26-50...)
   const [currentMapPage, setCurrentMapPage] = useState(1);
-  const totalMapPages = Math.ceil(totalPages / LEVELS_PER_MAP_PAGE);
 
+  // Sync khi mở Modal: Reset về trạng thái hiện tại của cha
   useEffect(() => {
     if (isOpen) {
-      const mapPageForCurrentLevel = Math.ceil(currentPage / LEVELS_PER_MAP_PAGE);
+      setLocalTab(currentParentViewMode);
+      const mapPageForCurrentLevel = Math.ceil(currentParentPage / LEVELS_PER_MAP_PAGE);
       setCurrentMapPage(mapPageForCurrentLevel || 1);
     }
-  }, [isOpen, currentPage, viewMode]);
+  }, [isOpen, currentParentPage, currentParentViewMode]);
 
   if (!isOpen) return null;
 
+  // Tính toán số trang dựa trên Tab cục bộ
+  const totalPagesInLocalTab = localTab === 'all' 
+     ? Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE)
+     : Math.max(1, Math.ceil(favoritesCount / ITEMS_PER_PAGE));
+
+  const totalMapPages = Math.ceil(totalPagesInLocalTab / LEVELS_PER_MAP_PAGE);
+
+  // Tính toán các nút level cần hiển thị
   const startLevel = (currentMapPage - 1) * LEVELS_PER_MAP_PAGE + 1;
-  const endLevel = Math.min(currentMapPage * LEVELS_PER_MAP_PAGE, totalPages);
+  const endLevel = Math.min(currentMapPage * LEVELS_PER_MAP_PAGE, totalPagesInLocalTab);
   
   const levelsToShow = startLevel <= endLevel 
     ? Array.from({ length: endLevel - startLevel + 1 }, (_, i) => startLevel + i)
     : [];
+
+  // Reset về map page 1 khi đổi tab trong modal
+  const handleTabChange = (tab: 'all' | 'favorites') => {
+      setLocalTab(tab);
+      setCurrentMapPage(1); 
+  };
 
   return (
     <div className="fixed inset-0 z-[70] flex flex-col justify-end sm:justify-center sm:items-center">
@@ -321,9 +333,9 @@ const LevelMapModal = ({
             <div className="flex items-center justify-between p-4 pb-2">
                 <h3 className="text-white font-black text-lg flex items-center gap-2">
                     <span className="text-orange-500 text-2xl">
-                        {viewMode === 'all' ? '🗺️' : '❤️'}
+                        {localTab === 'all' ? '🗺️' : '❤️'}
                     </span> 
-                    {viewMode === 'all' ? 'Level Map' : 'Favorites'}
+                    {localTab === 'all' ? 'Level Map' : 'Favorites'}
                 </h3>
                 <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-700 text-slate-300 flex items-center justify-center hover:bg-slate-600 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-5 h-5">
@@ -332,11 +344,12 @@ const LevelMapModal = ({
                 </button>
             </div>
 
+            {/* THANH TAB CỤC BỘ */}
             <div className="flex px-4 pb-0 gap-1">
                 <button 
-                    onClick={() => onChangeViewMode('all')}
+                    onClick={() => handleTabChange('all')}
                     className={`flex-1 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 ${
-                        viewMode === 'all' 
+                        localTab === 'all' 
                             ? 'bg-slate-700 text-white border-orange-500' 
                             : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
                     }`}
@@ -344,9 +357,9 @@ const LevelMapModal = ({
                     All Topics
                 </button>
                 <button 
-                    onClick={() => onChangeViewMode('favorites')}
+                    onClick={() => handleTabChange('favorites')}
                     className={`flex-1 py-2 text-sm font-bold rounded-t-lg transition-colors border-b-2 flex justify-center items-center gap-2 ${
-                        viewMode === 'favorites' 
+                        localTab === 'favorites' 
                             ? 'bg-slate-700 text-white border-red-500' 
                             : 'bg-transparent text-slate-500 border-transparent hover:text-slate-300'
                     }`}
@@ -369,16 +382,18 @@ const LevelMapModal = ({
            ) : (
                <div className="grid grid-cols-5 gap-3">
                   {levelsToShow.map(pageNum => {
-                     const isLocked = viewMode === 'all' && pageNum > maxUnlockedPage;
-                     const isCurrent = pageNum === currentPage;
-                     const isDeepLocked = viewMode === 'all' && pageNum > maxUnlockedPage + 1;
-                     const isDisabled = viewMode === 'all' ? isDeepLocked : false;
+                     // Logic hiển thị trạng thái nút level
+                     // Lưu ý: Chỉ so sánh "isCurrent" nếu tab cục bộ trùng với tab viewMode của cha
+                     const isLocked = localTab === 'all' && pageNum > maxUnlockedPage;
+                     const isCurrent = (localTab === currentParentViewMode) && (pageNum === currentParentPage);
+                     const isDeepLocked = localTab === 'all' && pageNum > maxUnlockedPage + 1;
+                     const isDisabled = localTab === 'all' ? isDeepLocked : false;
 
                      let bgClass = "";
                      if (isCurrent) {
                         bgClass = "bg-yellow-400 border-yellow-600 text-yellow-900 ring-2 ring-yellow-200 ring-offset-2 ring-offset-slate-900 z-10 scale-110";
                      } else if (!isLocked) {
-                        bgClass = viewMode === 'favorites' 
+                        bgClass = localTab === 'favorites' 
                             ? "bg-red-500 border-red-700 text-white hover:bg-red-400"
                             : "bg-blue-500 border-blue-700 text-white hover:bg-blue-400";
                      } else if (isDeepLocked) {
@@ -393,7 +408,8 @@ const LevelMapModal = ({
                          disabled={isDisabled}
                          onClick={() => {
                             if (!isDisabled) {
-                                onSelectPage(pageNum);
+                                // CHỈ KHI BẤM NÚT NÀY MỚI GỌI RA CHA ĐỂ ĐỔI VIEW
+                                onConfirmSelection(pageNum, localTab);
                                 onClose();
                             }
                          }}
@@ -623,7 +639,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   // --- STATE 1: Trạng thái dữ liệu Topic ---
   const [topicData, setTopicData] = useState<TopicProgressData>({
     maxUnlockedPage: FREE_PAGES,
-    currentPage: 1, // Mặc định DB
+    currentPage: 1, 
     dailyReward: { date: '', count: 0 },
     favorites: [] 
   });
@@ -645,7 +661,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         setTopicData(data);
         
         // CHỈ set trang lần đầu tiên khi dữ liệu load xong
-        // Để tránh việc người dùng đang bấm mà DB cập nhật lại làm nhảy trang
         if (!isDataLoaded) {
             setCurrentPage(data.currentPage > 0 ? data.currentPage : 1);
             setIsDataLoaded(true);
@@ -663,11 +678,11 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   // --- LOGIC LƯU TRANG HIỆN TẠI VÀO FIRESTORE (DEBOUNCE) ---
   useEffect(() => {
-    // Chỉ lưu nếu đang ở chế độ 'all', đã load data và có user
+    // Chỉ lưu nếu đang ở chế độ 'all'
     if (isDataLoaded && user && viewMode === 'all') {
         const timeoutId = setTimeout(() => {
             saveTopicCurrentPage(user.uid, currentPage);
-        }, 1000); // Đợi 1s sau khi dừng bấm mới lưu
+        }, 1000); 
 
         return () => clearTimeout(timeoutId);
     }
@@ -681,18 +696,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         return Math.max(1, Math.ceil(favorites.length / ITEMS_PER_PAGE));
     }
   }, [viewMode, favorites.length]);
-
-  // --- EFFECT: Reset trang về 1 khi đổi Mode sang Favorites ---
-  useEffect(() => {
-      if (viewMode === 'favorites') {
-          setCurrentPage(1);
-      } else if (isDataLoaded && viewMode === 'all') {
-          // Khi quay lại All, có thể lấy lại trang đã lưu trong topicData (nếu muốn)
-          // hoặc giữ nguyên state currentPage hiện tại (nếu chưa bị unmount).
-          // Ở đây ta ưu tiên state hiện tại nếu hợp lệ.
-          if (currentPage > maxUnlockedPage) setCurrentPage(maxUnlockedPage);
-      }
-  }, [viewMode, maxUnlockedPage, isDataLoaded]);
 
   const [unlockModalData, setUnlockModalData] = useState<{ targetPage: number, cost: number } | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
@@ -749,10 +752,21 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   }, [user]);
 
   // --- NAVIGATION ---
-  const tryNavigateToPage = (page: number) => {
-    if (page > totalPages || page < 1) return;
+  // Hàm này giờ đây xử lý cả việc chuyển trang và chuyển mode nếu cần
+  const handleNavigation = (page: number, mode: 'all' | 'favorites' = viewMode) => {
+    // Nếu chuyển mode, cập nhật mode trước
+    if (mode !== viewMode) {
+        setViewMode(mode);
+    }
+
+    // Sau đó cập nhật trang
+    const targetTotalPages = mode === 'all' 
+        ? Math.ceil(MAX_TOTAL_ITEMS / ITEMS_PER_PAGE)
+        : Math.max(1, Math.ceil(favorites.length / ITEMS_PER_PAGE));
+
+    if (page > targetTotalPages || page < 1) return;
     
-    if (viewMode === 'favorites') {
+    if (mode === 'favorites') {
         setCurrentPage(page);
     } else {
         if (page <= maxUnlockedPage) {
@@ -805,17 +819,16 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         />
       )}
 
-      {/* Map Modal with Tabs */}
+      {/* Map Modal with Local Tabs Logic */}
       <LevelMapModal 
         isOpen={isMapOpen}
         onClose={() => setIsMapOpen(false)}
-        currentPage={currentPage}
-        totalPages={totalPages}
+        currentParentPage={currentPage}
+        currentParentViewMode={viewMode}
         maxUnlockedPage={maxUnlockedPage}
-        viewMode={viewMode}
         favoritesCount={favorites.length}
-        onChangeViewMode={setViewMode}
-        onSelectPage={tryNavigateToPage}
+        // Khi người dùng click nút trong modal, hàm này sẽ chạy, cập nhật cả trang và mode
+        onConfirmSelection={handleNavigation}
       />
 
       <StudyTimer 
@@ -895,7 +908,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                 <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                     
                     <button
-                    onClick={() => tryNavigateToPage(currentPage - 1)}
+                    onClick={() => handleNavigation(currentPage - 1)}
                     disabled={currentPage === 1}
                     className={`w-10 h-10 flex items-center justify-center rounded-full btn-nav ${
                         currentPage === 1
@@ -925,7 +938,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                     </button>
 
                     <button
-                    onClick={() => tryNavigateToPage(currentPage + 1)}
+                    onClick={() => handleNavigation(currentPage + 1)}
                     disabled={currentPage === totalPages}
                     className={`w-10 h-10 flex items-center justify-center rounded-full btn-nav ${
                         currentPage === totalPages
