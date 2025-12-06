@@ -1,12 +1,66 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Trophy, Play, RotateCcw, Zap, Skull, Box, Hexagon, Triangle, Palette, ChevronLeft, ChevronRight } from 'lucide-react';
+
+// --- ICON COMPONENTS (Thay thế Lucide React) ---
+const IconTrophy = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+    <path d="M4 22h16" />
+    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+  </svg>
+);
+
+const IconPlay = ({ size = 24, className = "", fill = "none" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="5 3 19 12 5 21 5 3" />
+  </svg>
+);
+
+const IconRotateCcw = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+    <path d="M3 3v5h5" />
+  </svg>
+);
+
+const IconSkull = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M12 12v.01" />
+    <path d="M16 12v.01" />
+    <path d="M8 12v.01" />
+    <path d="M5.5 12a6.5 6.5 0 1 1 13 0" />
+    <path d="M8 20v2h8v-2" />
+    <path d="M16 20a2 2 0 0 0 1.56-3.25 8 8 0 1 0-11.12 0A2 2 0 0 0 8 20" />
+  </svg>
+);
+
+const IconPalette = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <circle cx="13.5" cy="6.5" r=".5" fill="currentColor" />
+    <circle cx="17.5" cy="10.5" r=".5" fill="currentColor" />
+    <circle cx="8.5" cy="7.5" r=".5" fill="currentColor" />
+    <circle cx="6.5" cy="12.5" r=".5" fill="currentColor" />
+    <path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z" />
+  </svg>
+);
+
+const IconChevronLeft = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polyline points="15 18 9 12 15 6" />
+  </svg>
+);
+
+const IconChevronRight = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polyline points="9 18 15 12 9 6" />
+  </svg>
+);
 
 /**
  * NEON RUNNER - SKIN SHOP EDITION
- * New Features:
- * - Skin Selector in Menu
- * - Real-time Character Preview
- * - 5 Unique Robot Skins
+ * NO LUCIDE DEPENDENCY
  */
 
 // --- DỮ LIỆU SKIN ---
@@ -410,7 +464,6 @@ const NeonRunner = () => {
           }
 
           // Move Entities
-          // ... (Giữ nguyên logic Obstacle & Coin như cũ nhưng rút gọn cho gọn code hiển thị)
           // Obstacles
           for (let i = game.obstacles.length - 1; i >= 0; i--) {
             const obj = game.obstacles[i];
@@ -525,10 +578,7 @@ const NeonRunner = () => {
       setScore(0);
       
       for(let i = 0; i < 8; i++) { 
-        // Re-use spawn logic manually or extract it. 
-        // For simplicity, just clearing and letting loop handle logic or simple manual spawn:
-        // (Copied spawn logic logic briefly for reset)
-        // Note: In real app, define spawn functions outside useEffect or useRefs
+        // Logic spawn đã được xử lý trong vòng lặp game chính khi array rỗng hoặc thông qua logic game
       }
       // Trigger re-render to restart loop logic correctly
       setGameState('PLAYING');
@@ -585,7 +635,7 @@ const NeonRunner = () => {
         </div>
         {highScore > 0 && (
           <div className="bg-black/40 backdrop-blur border border-yellow-500/30 p-3 rounded-xl flex items-center gap-3">
-             <Trophy size={18} className="text-yellow-400" />
+             <IconTrophy size={18} className="text-yellow-400" />
              <div>
                 <div className="text-xs text-yellow-400 uppercase tracking-widest opacity-80">Best</div>
                 <div className="text-xl font-mono font-bold text-yellow-50">{highScore}</div>
@@ -608,11 +658,11 @@ const NeonRunner = () => {
             {/* SKIN CARD */}
             <div className="bg-black/80 border border-cyan-500/50 p-4 rounded-2xl w-full flex flex-col items-center gap-3 shadow-[0_0_30px_rgba(0,255,255,0.2)]">
                 <div className="text-xs text-cyan-400 uppercase tracking-widest font-bold flex items-center gap-2">
-                    <Palette size={14} /> Character Skin
+                    <IconPalette size={14} /> Character Skin
                 </div>
                 
                 <div className="flex items-center justify-between w-full">
-                    <button onClick={prevSkin} className="p-2 hover:bg-white/10 rounded-full transition"><ChevronLeft /></button>
+                    <button onClick={prevSkin} className="p-2 hover:bg-white/10 rounded-full transition"><IconChevronLeft /></button>
                     
                     <div className="text-center">
                         <div className="text-xl font-bold text-white font-mono" style={{ color: '#' + SKINS[currentSkinIndex].colors.armor.toString(16) }}>
@@ -621,7 +671,7 @@ const NeonRunner = () => {
                         <div className="text-[10px] text-gray-400 uppercase tracking-wide">Robot Model T-{currentSkinIndex + 1}00</div>
                     </div>
                     
-                    <button onClick={nextSkin} className="p-2 hover:bg-white/10 rounded-full transition"><ChevronRight /></button>
+                    <button onClick={nextSkin} className="p-2 hover:bg-white/10 rounded-full transition"><IconChevronRight /></button>
                 </div>
 
                 {/* Color Indicators */}
@@ -637,7 +687,7 @@ const NeonRunner = () => {
               onClick={resetGame}
               className="w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:scale-105 transition-transform p-4 rounded-xl font-bold text-lg shadow-[0_0_20px_rgba(6,182,212,0.4)] flex items-center justify-center gap-2 mt-2"
             >
-              <Play fill="currentColor" size={20}/> START MISSION
+              <IconPlay fill="currentColor" size={20}/> START MISSION
             </button>
             
             {/* Tutorial Icons */}
@@ -654,14 +704,14 @@ const NeonRunner = () => {
       {gameState === 'GAMEOVER' && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-red-950/60 backdrop-blur-md">
            <div className="text-center p-8 bg-black/60 border border-red-500/30 rounded-3xl shadow-2xl max-w-xs w-full">
-              <Skull size={64} className="mx-auto text-red-500 mb-4 animate-bounce" />
+              <IconSkull size={64} className="mx-auto text-red-500 mb-4 animate-bounce" />
               <h2 className="text-2xl font-bold text-red-100">CRASHED!</h2>
               <div className="text-5xl font-black text-white my-4">{score}</div>
               <button 
                 onClick={resetGame}
                 className="w-full bg-red-600 hover:bg-red-500 p-3 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 transition"
               >
-                <RotateCcw size={20}/> RETRY
+                <IconRotateCcw size={20}/> RETRY
               </button>
               <button 
                 onClick={() => setGameState('MENU')}
