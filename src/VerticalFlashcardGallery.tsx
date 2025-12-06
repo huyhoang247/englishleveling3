@@ -4,13 +4,11 @@ import { useRef, useState, useEffect, useMemo, memo, useCallback } from 'react';
 import FlashcardDetailModal from './story/flashcard.tsx';
 import AddToPlaylistModal from './AddToPlaylistModal.tsx';
 import { auth, db } from './firebase.js';
-// <<< THAY ĐỔI 1: XÓA CÁC IMPORT KHÔNG CẦN THIẾT TỪ FIRESTORE (collection, query, orderBy) >>>
 import { doc, updateDoc, onSnapshot } from 'firebase/firestore';
 import { User } from 'firebase/auth';
 import { SidebarLayout } from './sidebar-story.tsx';
 
-// <<< THAY ĐỔI 2: IMPORT localDB SERVICE ĐỂ ĐỌC DỮ LIỆU TỪ INDEXEDDB >>>
-import { localDB } from './local-data/local-vocab-db.ts'; // <= CHÚ Ý: CHỈNH LẠI ĐƯỢNG DẪN NÀY NẾU CẦN
+import { localDB } from './local-data/local-vocab-db.ts'; 
 
 import { ALL_CARDS_MAP, exampleData, Flashcard } from './story/flashcard-data.ts';
 import { quizHomeAssets } from './game-assets.ts';
@@ -44,9 +42,17 @@ const animations = `
   @keyframes animeSparkle { 0%, 100% { opacity: 0; } 50% { opacity: 1; } }
   @keyframes comicPop { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
   @keyframes realisticShine { 0% { background-position: -100% 0; } 100% { background-position: 200% 0; } }
+  
+  /* --- NEW: Shimmer Effect for Skeleton --- */
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+  .animate-shimmer {
+    animation: shimmer 1.5s infinite;
+  }
 `;
 
-// --- START: ICONS SAO CHÉP TỪ course-ui.tsx ---
+// --- START: ICONS ---
 const HomeIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLineCap="round" strokeLineJoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" /></svg> );
 const BackIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLineCap="round" strokeLineJoin="round" d="M15 19l-7-7 7-7" /></svg> );
 const SettingsIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/settings.webp" alt="Settings Icon" className={className} /> );
@@ -54,7 +60,7 @@ const MenuIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <img s
 // --- END: ICONS ---
 
 
-// --- START: GALLERY HEADER COMPONENT MỚI ---
+// --- START: GALLERY HEADER COMPONENT ---
 interface GalleryHeaderProps {
   activeScreen: string;
   onGoBack: () => void;
@@ -104,7 +110,7 @@ function GalleryHeader({ activeScreen, onGoBack, onGoHome, toggleSidebar, setSho
 // --- END: GALLERY HEADER COMPONENT ---
 
 
-// Tách FlashcardItem ra component riêng và memoize nó.
+// --- FLASHCARD ITEM WITH SKELETON LOADING ---
 interface FlashcardItemProps {
   card: Flashcard;
   isFavorite: boolean;
@@ -115,6 +121,17 @@ interface FlashcardItemProps {
 }
 
 const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFavoriteClick, getImageUrlForStyle }: FlashcardItemProps) => {
+  // State quản lý loading ảnh
+  const [isImageLoading, setIsImageLoading] = useState(true);
+  
+  // Lấy URL ảnh hiện tại dựa trên style
+  const currentImageUrl = getImageUrlForStyle(card, visualStyle);
+
+  // Reset loading khi URL ảnh thay đổi (người dùng đổi style)
+  useEffect(() => {
+    setIsImageLoading(true);
+  }, [currentImageUrl]);
+
   const comicDotPattern = {
     backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4'%3E%3Ccircle cx='2' cy='2' r='0.5' fill='rgba(0,0,0,0.2)'/%3E%3C/svg%3E")`,
   };
@@ -123,22 +140,39 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
 
   return (
     <div id={`flashcard-${card.id}`} className="flex flex-col items-center bg-white dark:bg-gray-800 shadow-xl overflow-hidden relative group">
-      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300"></div>
-      <div className="absolute top-3 right-3 z-10 flex items-center space-x-2">
+      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-300 z-20 pointer-events-none"></div>
+      
+      {/* Nút Favorite */}
+      <div className="absolute top-3 right-3 z-30 flex items-center space-x-2">
         <button className={`transition-all duration-300 flex items-center justify-center p-1.5 bg-white/80 dark:bg-gray-900/80 rounded-full shadow-md hover:bg-white dark:hover:bg-gray-900 ${isFavorite ? 'scale-110' : 'scale-100'}`}
                 onClick={() => onFavoriteClick(card.id)}
                 aria-label={isFavorite ? "Quản lý trong Playlist" : "Thêm vào Playlist"}>
             <img src={isFavorite ? "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite-active.png" : "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/image/favorite.png"} alt={isFavorite ? "Favorite icon" : "Unfavorite icon"} className={`h-4 w-4 transition-all duration-300 ${isFavorite ? 'opacity-100' : 'opacity-75'}`} />
         </button>
       </div>
+
       <div className="w-full">
         <div className={`relative w-full ${visualStyle === 'realistic' ? 'p-2 bg-amber-50/70 dark:bg-gray-800' : ''}`}>
-          {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none"></div>}
-          {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900" style={comicDotPattern}></div>}
-          {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none"></div>}
+          
+          {/* SKELETON LOADING OVERLAY */}
+          {isImageLoading && (
+            <div className="absolute inset-0 z-10 bg-gray-200 dark:bg-gray-700 overflow-hidden">
+               {/* Hiệu ứng Shimmer chạy qua */}
+               <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent"></div>
+            </div>
+          )}
+
+          {/* Các lớp phủ hiệu ứng Visual Style (chỉ hiện khi ảnh đã load xong để tránh đè lên skeleton xấu) */}
+          {!isImageLoading && (
+            <>
+              {visualStyle === 'anime' && <div className="absolute inset-0 bg-pink-300/20 dark:bg-purple-400/10 pointer-events-none z-10"></div>}
+              {visualStyle === 'comic' && <div className="absolute inset-0 bg-blue-100 opacity-20 mix-blend-multiply pointer-events-none dark:bg-blue-900 z-10" style={comicDotPattern}></div>}
+              {visualStyle === 'realistic' && <div className="absolute inset-2 shadow-inner rounded-md pointer-events-none z-10"></div>}
+            </>
+          )}
           
           <img
-            src={getImageUrlForStyle(card, visualStyle)}
+            src={currentImageUrl}
             alt={`Flashcard ${card.id}`}
             className={`
               w-full h-auto
@@ -147,13 +181,21 @@ const FlashcardItem = memo(({ card, isFavorite, visualStyle, onImageClick, onFav
               ${visualStyle === 'comic' ? 'contrast-125 brightness-105' : ''}
               ${visualStyle === 'realistic' ? 'saturate-105 contrast-110 shadow-md' : ''}
               cursor-pointer
+              transition-opacity duration-500 ease-in-out
+              ${isImageLoading ? 'opacity-0' : 'opacity-100'} 
             `}
             style={{
               aspectRatio: isPhotography ? '1 / 1' : '1024 / 1536',
               filter: visualStyle === 'comic' ? 'grayscale(0.1)' : 'none'
             }}
             onClick={() => onImageClick(card)}
-            onError={(e) => { e.currentTarget.onerror = null; e.currentTarget.src = card.imageUrl.default; }}
+            // Khi ảnh tải xong -> tắt loading -> opacity chuyển từ 0 sang 100
+            onLoad={() => setIsImageLoading(false)}
+            onError={(e) => { 
+                e.currentTarget.onerror = null; 
+                e.currentTarget.src = card.imageUrl.default; 
+                setIsImageLoading(false); // Tắt loading nếu lỗi để hiện ảnh fallback
+            }}
             loading="lazy"
           />
         </div>
@@ -203,9 +245,8 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
 
     setLoading(true);
     let unsubscribePlaylists: () => void;
-    // <<< THAY ĐỔI 3: XÓA BIẾN unsubscribeOpenedCards KHÔNG CẦN THIẾT >>>
 
-    // Logic lấy playlists từ Firestore không thay đổi, vẫn giữ nguyên
+    // Logic lấy playlists từ Firestore không thay đổi
     const userDocRef = doc(db, 'users', currentUser.uid);
     unsubscribePlaylists = onSnapshot(userDocRef, (docSnap) => {
       if (docSnap.exists()) {
@@ -218,7 +259,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
       console.error("Error fetching user playlists:", error);
     });
 
-    // <<< THAY ĐỔI 4: THAY THẾ TOÀN BỘ LOGIC LẤY DỮ LIỆU TỪ SUBCOLLECTION BẰNG LOCAL DB >>>
+    // Lấy dữ liệu từ Local DB
     const fetchOpenedCardsFromLocalDB = async () => {
         try {
             // Lấy toàn bộ object từ IndexedDB
@@ -234,7 +275,7 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
             console.error("Error fetching opened cards from Local DB:", error);
             setOpenedImageIds([]); // Reset nếu có lỗi
         } finally {
-            // Đánh dấu là đã tải xong, bất kể thành công hay thất bại
+            // Đánh dấu là đã tải xong
             setLoading(false);
         }
     };
@@ -243,7 +284,6 @@ export default function VerticalFlashcardGallery({ hideNavBar, showNavBar, curre
     
     return () => {
       if (unsubscribePlaylists) unsubscribePlaylists();
-      // <<< THAY ĐỔI 5: XÓA CLEANUP CỦA openedCards >>>
     };
   }, [currentUser]);
 
