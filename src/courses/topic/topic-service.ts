@@ -5,23 +5,24 @@ import {
   doc, 
   runTransaction, 
   onSnapshot, 
+  updateDoc,
   Unsubscribe
 } from 'firebase/firestore';
 
 export interface TopicProgressData {
   maxUnlockedPage: number;
+  currentPage: number; // <--- NEW: Lưu trang hiện tại
   dailyReward: {
     date: string; // Format YYYY-MM-DD
     count: number;
   };
-  favorites: number[]; // Mảng chứa các ID hình ảnh yêu thích (UI dùng mảng, DB lưu chuỗi)
+  favorites: number[];
 }
 
 const DEFAULT_FREE_PAGES = 5;
 
 /**
  * Lắng nghe dữ liệu Topic của user realtime.
- * Tự động chuyển đổi chuỗi "1,2,3" từ Firestore thành mảng [1, 2, 3] cho UI.
  */
 export const listenToTopicData = (userId: string, callback: (data: TopicProgressData) => void): Unsubscribe => {
   const userRef = doc(db, 'users', userId);
@@ -39,11 +40,12 @@ export const listenToTopicData = (userId: string, callback: (data: TopicProgress
         favArray = favString
           .split(',')
           .map((s: string) => parseInt(s, 10))
-          .filter((n: number) => !isNaN(n)); // Lọc bỏ NaN để đảm bảo dữ liệu sạch
+          .filter((n: number) => !isNaN(n));
       }
       
       callback({
         maxUnlockedPage: topicProgress.maxUnlockedPage || DEFAULT_FREE_PAGES,
+        currentPage: topicProgress.currentPage || 1, // Mặc định là 1 nếu chưa lưu
         dailyReward: {
           date: topicProgress.dailyReward?.date || '',
           count: topicProgress.dailyReward?.count || 0
@@ -54,11 +56,27 @@ export const listenToTopicData = (userId: string, callback: (data: TopicProgress
       // Mặc định nếu chưa có data
       callback({
         maxUnlockedPage: DEFAULT_FREE_PAGES,
+        currentPage: 1,
         dailyReward: { date: '', count: 0 },
         favorites: []
       });
     }
   });
+};
+
+/**
+ * Lưu trang hiện tại (chỉ dùng cho All Topics mode).
+ * Sử dụng updateDoc thay vì Transaction để nhẹ nhàng hơn.
+ */
+export const saveTopicCurrentPage = async (userId: string, page: number) => {
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, {
+      'topicProgress.currentPage': page
+    });
+  } catch (e) {
+    console.error("Error saving current page:", e);
+  }
 };
 
 /**
@@ -136,10 +154,6 @@ export const claimTopicRewardTransaction = async (userId: string, rewardAmount: 
 
 /**
  * Transaction Toggle Favorite:
- * - Đọc chuỗi hiện tại (VD: "1,2,5").
- * - Chuyển thành Set để thêm/xóa ID.
- * - Sắp xếp lại và join thành chuỗi (VD: "1,2,3,5") để lưu vào Firestore.
- * - Giúp tiết kiệm chi phí lưu trữ so với lưu mảng object.
  */
 export const toggleTopicFavoriteTransaction = async (userId: string, imageId: number) => {
   const userRef = doc(db, 'users', userId);
@@ -153,7 +167,6 @@ export const toggleTopicFavoriteTransaction = async (userId: string, imageId: nu
       const topicProgress = userData.topicProgress || {};
       const favString = topicProgress.favorites || "";
       
-      // Parse string thành Set<number> để xử lý unique và tìm kiếm nhanh
       let favIds: Set<number> = new Set();
       if (favString.length > 0) {
         favString.split(',').forEach((s: string) => {
@@ -162,17 +175,13 @@ export const toggleTopicFavoriteTransaction = async (userId: string, imageId: nu
         });
       }
 
-      // Logic Toggle: Có rồi thì xóa, chưa có thì thêm
       if (favIds.has(imageId)) {
         favIds.delete(imageId);
       } else {
         favIds.add(imageId);
       }
 
-      // Convert lại thành mảng, sort tăng dần (1, 2, 3...) cho đẹp string trong DB
       const sortedArray = Array.from(favIds).sort((a, b) => a - b);
-      
-      // Join thành chuỗi
       const newFavString = sortedArray.join(',');
 
       transaction.update(userRef, {
