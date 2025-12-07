@@ -64,17 +64,68 @@ const IconHeart = ({ size = 24, className = "", fill="currentColor" }) => (
   </svg>
 );
 
-// Icon Coin đơn giản cho UI
+const IconRocket = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <path d="M4.5 14a5 5 0 0 1 7 7" />
+    <path d="M20 9.5a5 5 0 0 0-7-7" />
+    <path d="M8.5 2.5a11 11 0 0 0 12.9 13.05" />
+    <path d="M2.5 8.5a11 11 0 0 0 13.05 12.9" />
+    <path d="M12 12l9 9" />
+  </svg>
+);
+
 const IconCoin = ({ size = 24, className = "" }) => (
   <div className={`rounded-full border-2 border-yellow-300 bg-yellow-500 flex items-center justify-center font-bold text-yellow-900 shadow-lg ${className}`} style={{width: size, height: size, fontSize: size * 0.7}}>
     $
   </div>
 );
 
-/**
- * COMPONENT: FLOATING COIN ANIMATION
- * Đồng xu bay từ vị trí nhặt được (startPos) đến vị trí UI (targetPos)
- */
+// --- CIRCULAR PROGRESS BAR COMPONENT ---
+const CircularProgress = ({ percentage, size = 40, strokeWidth = 4, icon: Icon }) => {
+    const radius = (size - strokeWidth) / 2;
+    const circumference = radius * 2 * Math.PI;
+    const offset = circumference - (percentage / 100) * circumference;
+
+    return (
+        <div className="relative flex items-center justify-center" style={{ width: size, height: size }}>
+            {/* Background Circle */}
+            <svg className="absolute transform -rotate-90" width={size} height={size}>
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="rgba(255,255,255,0.1)"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                />
+            </svg>
+            {/* Progress Circle */}
+            <svg className="absolute transform -rotate-90" width={size} height={size}>
+                <circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke="url(#gradient)"
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={offset}
+                    strokeLinecap="round"
+                    className="transition-all duration-300 ease-linear"
+                />
+                <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                        <stop offset="0%" stopColor="#06b6d4" />
+                        <stop offset="100%" stopColor="#3b82f6" />
+                    </linearGradient>
+                </defs>
+            </svg>
+            {/* Icon Center */}
+            {Icon && <Icon size={size * 0.5} className="text-cyan-400 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />}
+        </div>
+    );
+};
+
 const FloatingCoin = ({ startPos, onComplete }) => {
     const [style, setStyle] = useState({ 
         top: startPos.y, 
@@ -84,19 +135,16 @@ const FloatingCoin = ({ startPos, onComplete }) => {
     });
 
     useEffect(() => {
-        // Sau khi mount, set timeout để kích hoạt animation bay về góc phải
-        // Giả sử vị trí coin counter UI ở khoảng: top: 90px, right: 30px
-        // (Chúng ta dùng class CSS fixed để căn chỉnh đích đến)
         const timer = setTimeout(() => {
             setStyle({
-                top: '90px', // Vị trí Y của Coin Counter trong HUD
-                left: 'calc(100% - 40px)', // Vị trí X của Coin Counter (cách phải 40px)
-                opacity: 0.2, // Mờ dần khi tới nơi
-                transform: 'scale(0.5)' // Nhỏ dần
+                top: '90px', 
+                left: 'calc(100% - 40px)', 
+                opacity: 0.2, 
+                transform: 'scale(0.5)' 
             });
         }, 50);
 
-        const removeTimer = setTimeout(onComplete, 800); // Xoá sau khi bay xong
+        const removeTimer = setTimeout(onComplete, 800); 
 
         return () => { clearTimeout(timer); clearTimeout(removeTimer); };
     }, []);
@@ -110,10 +158,6 @@ const FloatingCoin = ({ startPos, onComplete }) => {
         </div>
     );
 };
-
-/**
- * NEON RUNNER - BRIGHT COIN EDITION
- */
 
 const SKINS = [
   { 
@@ -149,9 +193,9 @@ const NeonRunner = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [health, setHealth] = useState(100); 
-  const [coinCount, setCoinCount] = useState(0); // Số coin đã nhặt
-  const [floatingCoins, setFloatingCoins] = useState([]); // Mảng chứa các coin đang bay
-
+  const [coinCount, setCoinCount] = useState(0); 
+  const [floatingCoins, setFloatingCoins] = useState([]); 
+  const [flightFuel, setFlightFuel] = useState(0); 
   const [loaded, setLoaded] = useState(false);
   const [currentSkinIndex, setCurrentSkinIndex] = useState(0);
 
@@ -162,6 +206,7 @@ const NeonRunner = () => {
     camera: null,
     renderer: null,
     player: null,
+    playerContainer: null, 
     playerParts: {}, 
     materials: {}, 
     lanes: [-2, 0, 2],
@@ -170,19 +215,26 @@ const NeonRunner = () => {
     speed: 0.15,
     obstacles: [],
     coins: [],
-    particles: [],
+    rockets: [],
+    speedLines: [], // New speed lines array
     shards: [],
     frameId: null,
+    frameCount: 0, 
     isJumping: false,
     isDead: false,
     healthInternal: 100,
     isInvincible: false,
     invincibleTimer: 0,
     jumpVelocity: 0,
-    gravity: 0.018,
+    gravity: 0.025, 
+    jumpPower: 0.42, 
+    flightTimer: 0, 
+    maxFlightTime: 600, 
     scoreInternal: 0,
     time: 0,
     geometries: {},
+    cachedMaterials: {},
+    cameraShake: 0
   });
 
   const touchStart = useRef({ x: 0, y: 0 });
@@ -196,24 +248,20 @@ const NeonRunner = () => {
     return () => document.body.removeChild(script);
   }, []);
 
-  // --- SKIN UPDATE EFFECT ---
+  // Skin Logic
   useEffect(() => {
       if (!loaded || !gameRef.current.materials.armor) return;
-      
       const skin = SKINS[currentSkinIndex];
       const mats = gameRef.current.materials;
-
       mats.armor.color.setHex(skin.colors.armor);
       mats.armor.emissive.setHex(skin.colors.armor);
       mats.joint.color.setHex(skin.colors.joint);
       mats.visor.color.setHex(skin.colors.visor);
       mats.visor.emissive.setHex(skin.colors.visor);
-
       if (gameRef.current.playerLight) {
           gameRef.current.playerLight.color.setHex(skin.colors.light);
       }
   }, [currentSkinIndex, loaded]);
-
 
   useEffect(() => {
     if (!loaded || !mountRef.current) return;
@@ -221,57 +269,53 @@ const NeonRunner = () => {
     const THREE = window.THREE;
     const game = gameRef.current;
     
-    // 1. Scene
+    // Setup Scene
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x1a103c); 
-    scene.fog = new THREE.FogExp2(0x1a103c, 0.02);
+    scene.fog = new THREE.FogExp2(0x1a103c, 0.025); 
 
-    // 2. Camera
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
     camera.position.set(0, 5, 9);
     camera.lookAt(0, 0, -4);
 
-    // 3. Renderer
-    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     mountRef.current.appendChild(renderer.domElement);
 
-    // 4. Lights
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
     scene.add(ambientLight);
 
     const dirLight = new THREE.DirectionalLight(0xff00ff, 0.9);
     dirLight.position.set(-10, 25, 10);
     dirLight.castShadow = true;
+    dirLight.shadow.mapSize.width = 1024;
+    dirLight.shadow.mapSize.height = 1024;
     scene.add(dirLight);
     
-    // 5. Grid Floor
     const gridHelper = new THREE.GridHelper(200, 50, 0x00d5ff, 0x2d004d);
     gridHelper.position.y = -0.5;
     scene.add(gridHelper);
 
-    // --- 6. CHARACTER CREATION ---
-    const createCharacter = () => {
-        const group = new THREE.Group();
-        const initialSkin = SKINS[0];
-        
-        const armorMat = new THREE.MeshStandardMaterial({ 
-            color: initialSkin.colors.armor, 
-            emissive: initialSkin.colors.armor, 
-            emissiveIntensity: 0.5, 
-            roughness: 0.3, 
-            metalness: 0.8 
-        });
-        const jointMat = new THREE.MeshStandardMaterial({ 
-            color: initialSkin.colors.joint, roughness: 0.8 
-        });
-        const visorMat = new THREE.MeshStandardMaterial({ 
-            color: initialSkin.colors.visor, emissive: initialSkin.colors.visor, emissiveIntensity: 2.0 
-        });
+    // --- MATERIALS FOR THRUSTER ---
+    const thrusterMat = new THREE.MeshBasicMaterial({ 
+        color: 0x00ffff, 
+        transparent: true, 
+        opacity: 0.8,
+        blending: THREE.AdditiveBlending 
+    });
 
+    // Character
+    const createCharacter = () => {
+        const container = new THREE.Group(); 
+        const group = new THREE.Group();
+        container.add(group);
+        const initialSkin = SKINS[0];
+        const armorMat = new THREE.MeshStandardMaterial({ color: initialSkin.colors.armor, emissive: initialSkin.colors.armor, emissiveIntensity: 0.5, roughness: 0.3, metalness: 0.8 });
+        const jointMat = new THREE.MeshStandardMaterial({ color: initialSkin.colors.joint, roughness: 0.8 });
+        const visorMat = new THREE.MeshStandardMaterial({ color: initialSkin.colors.visor, emissive: initialSkin.colors.visor, emissiveIntensity: 2.0 });
         game.materials = { armor: armorMat, joint: jointMat, visor: visorMat };
 
         const bodyGeo = new THREE.BoxGeometry(0.4, 0.5, 0.25);
@@ -282,7 +326,6 @@ const NeonRunner = () => {
 
         const headGroup = new THREE.Group();
         headGroup.position.set(0, 0.85, 0);
-        
         const headGeo = new THREE.BoxGeometry(0.25, 0.25, 0.3);
         const head = new THREE.Mesh(headGeo, armorMat);
         head.castShadow = true;
@@ -293,7 +336,7 @@ const NeonRunner = () => {
         headGroup.add(visor);
         group.add(headGroup);
 
-        const createLimb = (w, h, d, x, y, z) => {
+        const createLimb = (w, h, d, x, y, z, isLeg = false) => {
             const limbGroup = new THREE.Group();
             limbGroup.position.set(x, y, z);
             const geo = new THREE.BoxGeometry(w, h, d);
@@ -301,67 +344,82 @@ const NeonRunner = () => {
             const mesh = new THREE.Mesh(geo, armorMat);
             mesh.castShadow = true;
             limbGroup.add(mesh);
-            return limbGroup;
+
+            // --- ADD THRUSTER TO LEGS ---
+            let thruster = null;
+            if (isLeg) {
+                const tGeo = new THREE.ConeGeometry(0.08, 0.6, 8, 1, true); // Open ended cone
+                tGeo.translate(0, -0.3, 0); // Pivot at top
+                tGeo.rotateX(Math.PI); // Point down
+                thruster = new THREE.Mesh(tGeo, thrusterMat);
+                thruster.position.set(0, -0.45, 0); // Bottom of foot
+                thruster.visible = false; // Hidden by default
+                limbGroup.add(thruster);
+            }
+
+            return { group: limbGroup, thruster };
         };
 
-        const leftArm = createLimb(0.12, 0.4, 0.12, -0.3, 0.7, 0);
-        const rightArm = createLimb(0.12, 0.4, 0.12, 0.3, 0.7, 0);
+        const leftArm = createLimb(0.12, 0.4, 0.12, -0.3, 0.7, 0).group;
+        const rightArm = createLimb(0.12, 0.4, 0.12, 0.3, 0.7, 0).group;
         group.add(leftArm);
         group.add(rightArm);
 
-        const leftLeg = createLimb(0.14, 0.5, 0.14, -0.12, 0.25, 0);
-        const rightLeg = createLimb(0.14, 0.5, 0.14, 0.12, 0.25, 0);
-        group.add(leftLeg);
-        group.add(rightLeg);
+        const lLegData = createLimb(0.14, 0.5, 0.14, -0.12, 0.25, 0, true);
+        const rLegData = createLimb(0.14, 0.5, 0.14, 0.12, 0.25, 0, true);
+        group.add(lLegData.group);
+        group.add(rLegData.group);
 
         const light = new THREE.PointLight(initialSkin.colors.light, 0.8, 3);
         light.position.set(0, 0.5, 0);
         group.add(light);
         game.playerLight = light;
+        
+        // Extra light for flight mode
+        const flightLight = new THREE.PointLight(0x00ffff, 0, 4);
+        flightLight.position.set(0, -0.5, 0);
+        container.add(flightLight);
+        game.flightLight = flightLight;
 
-        return { mesh: group, parts: { body, head: headGroup, leftArm, rightArm, leftLeg, rightLeg } };
+        return { 
+            container, 
+            mesh: group, 
+            parts: { 
+                body, head: headGroup, leftArm, rightArm, 
+                leftLeg: lLegData.group, rightLeg: rLegData.group,
+                leftThruster: lLegData.thruster, rightThruster: rLegData.thruster 
+            } 
+        };
     };
 
     const charData = createCharacter();
-    const player = charData.mesh;
+    game.player = charData.mesh;
+    game.playerContainer = charData.container;
     game.playerParts = charData.parts;
-    player.position.y = 0;
-    scene.add(player);
+    charData.container.position.y = 0;
+    scene.add(charData.container);
 
-    // Cache Geometries
     game.geometries = {
       cube: new THREE.BoxGeometry(0.7, 0.7, 0.7),
       core: new THREE.BoxGeometry(0.35, 0.35, 0.35),
-      // NEW COIN GEOMETRY: Cylinder (Đồng xu)
       coin: new THREE.CylinderGeometry(0.3, 0.3, 0.05, 32), 
       shard: new THREE.BoxGeometry(0.2, 0.2, 0.2), 
-      smallShard: new THREE.BoxGeometry(0.1, 0.1, 0.1)
+      smallShard: new THREE.BoxGeometry(0.1, 0.1, 0.1),
+      rocketBody: new THREE.CylinderGeometry(0.15, 0.15, 0.6, 16),
+      rocketNose: new THREE.ConeGeometry(0.15, 0.2, 16),
+      rocketFin: new THREE.BoxGeometry(0.1, 0.2, 0.4),
+      speedLine: new THREE.BoxGeometry(0.05, 0.05, 4) // Long thin line
     };
-
-    // Particle System (Dust)
-    const particleGeometry = new THREE.BufferGeometry();
-    const particlesCount = 80;
-    const positions = new Float32Array(particlesCount * 3);
-    const colors = new Float32Array(particlesCount * 3);
-    const pMaterial = new THREE.PointsMaterial({
-      size: 0.15,
-      vertexColors: true,
-      blending: THREE.AdditiveBlending,
-      transparent: true,
-      opacity: 0.8,
-      depthWrite: false,
-    });
-    for (let i = 0; i < particlesCount * 3; i++) positions[i] = 0;
-    particleGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    particleGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-    const particleSystem = new THREE.Points(particleGeometry, pMaterial);
-    scene.add(particleSystem);
-    game.particleSystem = particleSystem;
+    
+    game.cachedMaterials.explosion = new THREE.MeshBasicMaterial({ color: 0xff0066, transparent: true });
+    game.cachedMaterials.dust = new THREE.MeshBasicMaterial({ color: 0xaaaaaa, transparent: true, opacity: 0.5 });
+    game.cachedMaterials.rocketBody = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.8 });
+    game.cachedMaterials.rocketNose = new THREE.MeshStandardMaterial({ color: 0xff0000, emissive: 0x550000 });
+    game.cachedMaterials.speedLine = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
 
     game.scene = scene;
     game.camera = camera;
     game.renderer = renderer;
-    game.player = player;
     game.grid = gridHelper;
 
     const handleResize = () => {
@@ -380,145 +438,152 @@ const NeonRunner = () => {
     };
   }, [loaded]);
 
-  // Game Logic
+  // Main Loop
   useEffect(() => {
     if (!loaded) return;
-    
     const THREE = window.THREE;
     const game = gameRef.current;
 
-    const triggerExplosion = (pos, colorHex = 0xffffff) => {
-        const shardMat = new THREE.MeshBasicMaterial({ 
-            color: colorHex, 
-            transparent: true,
-            opacity: 1
-        });
+    const triggerExplosion = (pos, colorHex = 0xffffff, isDust = false) => {
+        let shardMat = isDust ? game.cachedMaterials.dust.clone() : game.cachedMaterials.explosion.clone();
+        if (!isDust) shardMat.color.setHex(colorHex);
         
-        for (let i = 0; i < 20; i++) {
-            const geom = Math.random() > 0.5 ? game.geometries.shard : game.geometries.smallShard;
+        const count = isDust ? 8 : 15; 
+        for (let i = 0; i < count; i++) {
+            const geom = isDust ? game.geometries.smallShard : (Math.random() > 0.5 ? game.geometries.shard : game.geometries.smallShard);
             const mesh = new THREE.Mesh(geom, shardMat);
-            
             mesh.position.copy(pos);
             mesh.position.x += (Math.random() - 0.5) * 0.5;
             mesh.position.y += (Math.random() - 0.5) * 0.5;
             mesh.position.z += (Math.random() - 0.5) * 0.5;
-            
-            mesh.userData.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 1.0,  
-                Math.random() * 0.5 + 0.3,    
-                game.speed * 2 + Math.random() * 0.5 
-            );
-            
-            mesh.userData.rotVel = {
-                x: (Math.random() - 0.5) * 0.8,
-                y: (Math.random() - 0.5) * 0.8,
-                z: (Math.random() - 0.5) * 0.8
-            };
-            
+            const forceY = isDust ? Math.random() * 0.2 : Math.random() * 0.5 + 0.3;
+            const forceZ = isDust ? 0 : game.speed * 2 + Math.random() * 0.5;
+            mesh.userData.velocity = new THREE.Vector3((Math.random() - 0.5) * (isDust ? 0.5 : 1.0), forceY, forceZ);
+            mesh.userData.rotVel = { x: (Math.random() - 0.5) * 0.8, y: (Math.random() - 0.5) * 0.8, z: (Math.random() - 0.5) * 0.8 };
             game.scene.add(mesh);
             game.shards.push(mesh);
         }
     }
 
+    // --- NEW: SPEED LINES SPAWNER ---
+    const spawnSpeedLine = () => {
+        const mesh = new THREE.Mesh(game.geometries.speedLine, game.cachedMaterials.speedLine);
+        // Random position around player
+        const range = 10;
+        mesh.position.set(
+            (Math.random() - 0.5) * range,
+            Math.random() * range,
+            game.camera.position.z - 5 - Math.random() * 10 // Start in front
+        );
+        game.scene.add(mesh);
+        game.speedLines.push(mesh);
+    }
+
+    const spawnRocket = (zPos) => {
+        const group = new THREE.Group();
+        const body = new THREE.Mesh(game.geometries.rocketBody, game.cachedMaterials.rocketBody);
+        const nose = new THREE.Mesh(game.geometries.rocketNose, game.cachedMaterials.rocketNose);
+        nose.position.y = 0.4;
+        const fin1 = new THREE.Mesh(game.geometries.rocketFin, game.cachedMaterials.rocketNose);
+        fin1.position.y = -0.2;
+        group.add(body, nose, fin1);
+        const light = new THREE.PointLight(0xff0000, 1, 3);
+        light.position.y = 0;
+        group.add(light);
+        
+        const laneIndex = Math.floor(Math.random() * 3);
+        group.position.x = game.lanes[laneIndex];
+        group.position.z = zPos;
+        group.position.y = 1.0; 
+        group.userData = { type: 'rocket', isRotator: true };
+        game.scene.add(group);
+        game.rockets.push(group);
+    };
+
     const spawnObstacle = (zPos) => {
       const neonPink = 0xff0066;
       const mesh = new THREE.Group();
-
-      const shellMat = new THREE.MeshPhysicalMaterial({
-             color: 0x000000, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.4, transmission: 0.3
-      });
+      const shellMat = new THREE.MeshPhysicalMaterial({ color: 0x000000, metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.4, transmission: 0.3 });
       const shell = new THREE.Mesh(game.geometries.cube, shellMat);
       mesh.add(shell);
-
       const edges = new THREE.EdgesGeometry(game.geometries.cube);
       const cageMat = new THREE.LineBasicMaterial({ color: neonPink });
       const cage = new THREE.LineSegments(edges, cageMat);
       mesh.add(cage);
-
-      const coreMat = new THREE.MeshStandardMaterial({ 
-          color: 0x000000, emissive: 0x000000, roughness: 0.0, metalness: 1.0 
-      }); 
+      const coreMat = new THREE.MeshStandardMaterial({ color: 0x000000, emissive: 0x000000, roughness: 0.0, metalness: 1.0 }); 
       const core = new THREE.Mesh(game.geometries.core, coreMat);
       core.userData = { isRotator: true }; 
       mesh.add(core);
-
       mesh.position.y = 0.35;
       const laneIndex = Math.floor(Math.random() * 3);
       mesh.position.x = game.lanes[laneIndex];
       mesh.position.z = zPos;
-      
-      mesh.children.forEach(c => {
-          if (c.type === 'Mesh') {
-              c.castShadow = true;
-              c.receiveShadow = true;
-          }
-      });
-
       mesh.userData = { type: 'obstacle', shape: 'CUBE', height: 0.7 };
       game.scene.add(mesh);
       game.obstacles.push(mesh);
     };
 
-    // --- NEW COIN SPAWNER (BRIGHTER) ---
     const spawnCoin = (zPos) => {
-      const goldMat = new THREE.MeshStandardMaterial({ 
-        color: 0xffd700, 
-        emissive: 0xffd700, // Cùng màu với color để sáng rực lên
-        emissiveIntensity: 0.8, // Tăng cường độ phát sáng
-        metalness: 0.8, // Giảm kim loại một chút để màu hiển thị rõ hơn trong tối
-        roughness: 0.1 // Rất bóng
-      });
-
-      // Tạo đồng xu (Cylinder)
+      if (Math.random() < 0.05) {
+          spawnRocket(zPos);
+          return;
+      }
+      const goldMat = new THREE.MeshStandardMaterial({ color: 0xffd700, emissive: 0xffd700, emissiveIntensity: 0.8, metalness: 0.8, roughness: 0.1 });
       const coinMesh = new THREE.Mesh(game.geometries.coin, goldMat);
-      
-      // Xoay cylinder để mặt tròn hướng ra ngoài (như đồng xu đứng)
       coinMesh.rotation.x = Math.PI / 2; 
-      
       const coinGroup = new THREE.Group();
       coinGroup.add(coinMesh);
-      
       coinGroup.userData = { isCoin: true, mesh: coinMesh };
-
       const laneIndex = Math.floor(Math.random() * 3);
       coinGroup.position.x = game.lanes[laneIndex];
       coinGroup.position.z = zPos;
-
       const isAirCoin = Math.random() > 0.6;
-      coinGroup.position.y = isAirCoin ? 2.2 : 0.6; // Cao hơn một chút
-
+      coinGroup.position.y = isAirCoin ? 2.5 : 0.6; 
       coinGroup.userData = { ...coinGroup.userData, type: 'coin', isAir: isAirCoin };
-      
       game.scene.add(coinGroup);
       game.coins.push(coinGroup);
     }
 
     const animate = () => {
       const parts = game.playerParts;
-      
-      // Update Shards
+      game.frameCount++;
+
+      // Update Speed Lines
+      for (let i = game.speedLines.length - 1; i >= 0; i--) {
+          const line = game.speedLines[i];
+          line.position.z += game.speed * 3; // Move faster than world
+          if (line.position.z > game.camera.position.z + 5) {
+              game.scene.remove(line);
+              game.speedLines.splice(i, 1);
+          }
+      }
+
       for (let i = game.shards.length - 1; i >= 0; i--) {
         const shard = game.shards[i];
         shard.position.add(shard.userData.velocity);
         shard.rotation.x += shard.userData.rotVel.x;
         shard.rotation.y += shard.userData.rotVel.y;
-        shard.rotation.z += shard.userData.rotVel.z;
         shard.userData.velocity.y -= 0.03; 
-        
-        if (shard.position.y < 0) {
-            shard.position.y = 0;
-            shard.userData.velocity.y *= -0.5; 
-            shard.userData.velocity.x *= 0.95; 
-        }
-
-        if (shard.position.y < -5 || Math.abs(shard.position.z - game.player.position.z) > 25) {
+        if (shard.position.y < -5 || Math.abs(shard.position.z - game.playerContainer.position.z) > 25) {
             game.scene.remove(shard);
             game.shards.splice(i, 1);
         }
       }
 
-      // Smooth Camera Follow
-      game.camera.position.x += (game.player.position.x * 0.3 - game.camera.position.x) * 0.1;
+      let targetCamX = game.playerContainer.position.x * 0.4;
+      game.camera.position.x += (targetCamX - game.camera.position.x) * 0.1;
+      
+      const targetCamY = game.flightTimer > 0 ? 8 : 5;
+      const targetLookAtY = game.flightTimer > 0 ? 2 : 0;
+      
+      if (game.cameraShake > 0) {
+          game.camera.position.y = targetCamY + (Math.random() - 0.5) * game.cameraShake;
+          game.cameraShake *= 0.9;
+          if (game.cameraShake < 0.05) game.cameraShake = 0;
+      } else {
+          game.camera.position.y += (targetCamY - game.camera.position.y) * 0.05;
+      }
+      game.camera.lookAt(0, targetLookAtY, -4 + game.playerContainer.position.z * 0.1); 
 
       if (gameState === 'PLAYING') {
           if (game.isDead) {
@@ -527,75 +592,125 @@ const NeonRunner = () => {
               return;
           }
 
+          const isFlying = game.flightTimer > 0;
+
+          // --- UPDATE THRUSTER VISIBILITY ---
+          if (parts.leftThruster && parts.rightThruster) {
+              if (isFlying) {
+                  parts.leftThruster.visible = true;
+                  parts.rightThruster.visible = true;
+                  // Flicker effect
+                  const scale = 1 + Math.random() * 0.4;
+                  parts.leftThruster.scale.set(1, scale, 1);
+                  parts.rightThruster.scale.set(1, scale * 0.9, 1); // Slight sync offset
+                  
+                  // Pulse flight light
+                  game.flightLight.intensity = 1.0 + Math.random();
+                  
+                  // Spawn speed lines occasionally
+                  if (game.frameCount % 5 === 0) spawnSpeedLine();
+
+              } else {
+                  parts.leftThruster.visible = false;
+                  parts.rightThruster.visible = false;
+                  game.flightLight.intensity = 0;
+              }
+          }
+
           if (game.isInvincible) {
               game.invincibleTimer--;
-              game.player.visible = Math.floor(Date.now() / 50) % 2 === 0;
+              game.playerContainer.visible = Math.floor(Date.now() / 50) % 2 === 0;
               if (game.invincibleTimer <= 0) {
                   game.isInvincible = false;
-                  game.player.visible = true;
+                  game.playerContainer.visible = true;
               }
           } else {
-              game.player.visible = true;
+              game.playerContainer.visible = true;
           }
 
           const runCycle = game.time * 20;
           game.time += 0.01;
           game.scoreInternal += game.speed;
-          setScore(Math.floor(game.scoreInternal * 10));
+          
+          if (game.frameCount % 10 === 0) {
+             setScore(Math.floor(game.scoreInternal * 10));
+             if (game.flightTimer > 0) {
+                 setFlightFuel((game.flightTimer / game.maxFlightTime) * 100);
+             } else {
+                 setFlightFuel(0);
+             }
+          }
 
           if (game.speed < 0.6) game.speed += 0.00003;
           game.grid.position.z = (game.grid.position.z + game.speed) % 10;
-          game.player.position.x += (game.targetX - game.player.position.x) * 0.2;
+          game.playerContainer.position.x += (game.targetX - game.playerContainer.position.x) * 0.15;
+          const tilt = (game.playerContainer.position.x - game.targetX) * 0.1;
+          game.player.rotation.z = tilt;
 
-          // Physics & Anim
-          if (game.isJumping) {
-            game.player.position.y += game.jumpVelocity;
+          if (isFlying) {
+              game.flightTimer--;
+              game.playerContainer.position.y += (4.0 - game.playerContainer.position.y) * 0.05;
+              
+              // Smooth flight pose
+              game.player.rotation.x = Math.PI / 4; 
+              parts.leftArm.rotation.x = Math.PI; parts.rightArm.rotation.x = Math.PI;
+              parts.leftLeg.rotation.x = 0.2; parts.rightLeg.rotation.x = 0.2;
+              
+              // NO MORE EXPLOSION PARTICLES HERE, CLEAN FLIGHT
+
+              if (game.flightTimer <= 0) {
+                  game.isJumping = true; 
+                  game.jumpVelocity = 0; 
+                  game.isInvincible = true; 
+                  game.invincibleTimer = 60;
+              }
+          } else if (game.isJumping) {
+            game.playerContainer.position.y += game.jumpVelocity;
             game.jumpVelocity -= game.gravity; 
-            parts.leftArm.rotation.x = Math.PI; parts.rightArm.rotation.x = Math.PI;
-            parts.leftLeg.rotation.x = -0.5; parts.rightLeg.rotation.x = -0.2;
-
-            if (game.player.position.y <= 0) {
-              game.player.position.y = 0;
+            game.player.rotation.x -= 0.15; 
+            parts.leftArm.rotation.x = -Math.PI / 2; parts.rightArm.rotation.x = -Math.PI / 2;
+            parts.leftLeg.rotation.x = -1.5; parts.rightLeg.rotation.x = -1.5;
+            if (game.playerContainer.position.y <= 0) {
+              game.playerContainer.position.y = 0;
               game.isJumping = false;
               game.jumpVelocity = 0;
+              game.player.rotation.x = 0; 
+              game.player.rotation.z = 0;
+              triggerExplosion(game.playerContainer.position, 0xaaaaaa, true);
+              game.cameraShake = 0.2; 
             }
           } else {
-            game.player.position.y = 0;
-            game.player.rotation.z = (game.player.position.x - game.targetX) * -0.1; 
-            parts.leftLeg.rotation.x = Math.sin(runCycle) * 0.8;
-            parts.rightLeg.rotation.x = Math.sin(runCycle + Math.PI) * 0.8;
-            parts.leftArm.rotation.x = Math.sin(runCycle + Math.PI) * 0.6;
-            parts.rightArm.rotation.x = Math.sin(runCycle) * 0.6;
+            game.playerContainer.position.y = 0;
+            game.player.rotation.x = 0; 
+            const limbSpeed = runCycle * (1 + game.speed);
+            parts.leftLeg.rotation.x = Math.sin(limbSpeed) * 0.8;
+            parts.rightLeg.rotation.x = Math.sin(limbSpeed + Math.PI) * 0.8;
+            parts.leftArm.rotation.x = Math.sin(limbSpeed + Math.PI) * 0.6;
+            parts.rightArm.rotation.x = Math.sin(limbSpeed) * 0.6;
           }
 
-          // Move Obstacles
           for (let i = game.obstacles.length - 1; i >= 0; i--) {
             const obj = game.obstacles[i];
             obj.position.z += game.speed;
-            
-            obj.children.forEach(child => {
-                if (child.userData.isRotator) {
-                    child.rotation.x += 0.05;
-                    child.rotation.y += 0.08;
-                }
-            });
-
-            const dx = Math.abs(obj.position.x - game.player.position.x);
-            const dz = Math.abs(obj.position.z - game.player.position.z);
-            
+            if (obj.children[2]) {
+                obj.children[2].rotation.x += 0.05;
+                obj.children[2].rotation.y += 0.08;
+            }
+            const dx = Math.abs(obj.position.x - game.playerContainer.position.x);
+            const dz = Math.abs(obj.position.z - game.playerContainer.position.z);
             if (dx < 0.6 && dz < 0.6) {
-                if (game.player.position.y + 0.1 < 0.7) {
+                if (game.playerContainer.position.y < 0.8) {
                     if (!game.isInvincible && !game.isDead) {
                         triggerExplosion(obj.position, 0xff0066); 
                         game.scene.remove(obj);
                         game.obstacles.splice(i, 1);
                         game.healthInternal -= 34;
                         setHealth(Math.max(0, game.healthInternal));
-                        
+                        game.cameraShake = 0.5; 
                         if (game.healthInternal <= 0) {
                             game.isDead = true; 
-                            game.player.visible = false; 
-                            triggerExplosion(game.player.position, SKINS[currentSkinIndex].colors.armor);
+                            game.playerContainer.visible = false; 
+                            triggerExplosion(game.playerContainer.position, SKINS[currentSkinIndex].colors.armor);
                             setTimeout(() => handleGameOver(), 1200);
                         } else {
                             game.isInvincible = true;
@@ -612,38 +727,46 @@ const NeonRunner = () => {
             }
           }
 
-          // Move Coins
+          for (let i = game.rockets.length - 1; i >= 0; i--) {
+            const rocket = game.rockets[i];
+            rocket.position.z += game.speed;
+            rocket.rotation.y += 0.05;
+            const dx = Math.abs(rocket.position.x - game.playerContainer.position.x);
+            const dz = Math.abs(rocket.position.z - game.playerContainer.position.z);
+            if (dx < 0.8 && dz < 0.8) {
+                game.flightTimer = game.maxFlightTime; 
+                game.scene.remove(rocket);
+                game.rockets.splice(i, 1);
+                triggerExplosion(game.playerContainer.position, 0xffff00, false);
+                game.cameraShake = 0.3;
+                continue;
+            }
+             if (rocket.position.z > 5) {
+              game.scene.remove(rocket);
+              game.rockets.splice(i, 1);
+            }
+          }
+
           for (let i = game.coins.length - 1; i >= 0; i--) {
             const coinGroup = game.coins[i];
             coinGroup.position.z += game.speed;
-            
-            // Xoay đồng xu
-            coinGroup.rotation.y += 0.05; // Quay quanh trục thẳng đứng
-
-            const dx = Math.abs(coinGroup.position.x - game.player.position.x);
-            const dz = Math.abs(coinGroup.position.z - game.player.position.z);
+            coinGroup.rotation.y += 0.05; 
+            const dx = Math.abs(coinGroup.position.x - game.playerContainer.position.x);
+            const dz = Math.abs(coinGroup.position.z - game.playerContainer.position.z);
             let canCollect = false;
-            if (dx < 0.6 && dz < 0.6) {
-                 if (coinGroup.userData.isAir) {
-                     if (game.player.position.y > 1.2) canCollect = true;
-                 } else {
-                     if (game.player.position.y < 1.0) canCollect = true;
-                 }
+            if (isFlying && dx < 1.0 && dz < 1.0) canCollect = true;
+            else if (dx < 0.6 && dz < 0.6) {
+                 const pY = game.playerContainer.position.y;
+                 const cY = coinGroup.position.y;
+                 if (Math.abs(pY + 0.5 - cY) < 0.8) canCollect = true;
             }
             if (canCollect) {
-              // --- XỬ LÝ NHẶT COIN ---
-              // 1. Tính toán vị trí 2D của coin để tạo hiệu ứng bay
               const vector = coinGroup.position.clone();
-              vector.project(game.camera); // Project 3D -> Normalized Device Coordinates (-1 to +1)
-              
-              // Chuyển đổi sang pixel màn hình
+              vector.project(game.camera); 
               const x = (vector.x * .5 + .5) * window.innerWidth;
               const y = (-(vector.y * .5) + .5) * window.innerHeight;
-
-              // Thêm vào state React để render UI Coin bay
               setFloatingCoins(prev => [...prev, { id: Date.now(), x, y }]);
               setCoinCount(prev => prev + 1);
-
               game.scene.remove(coinGroup);
               game.coins.splice(i, 1);
               game.scoreInternal += 50; 
@@ -658,27 +781,12 @@ const NeonRunner = () => {
 
       } else if (gameState === 'MENU') {
           game.time += 0.005;
-          game.player.position.y = Math.sin(game.time * 5) * 0.05;
+          game.playerContainer.position.y = Math.sin(game.time * 5) * 0.05;
           parts.leftArm.rotation.x = Math.sin(game.time * 5) * 0.1;
           parts.rightArm.rotation.x = Math.cos(game.time * 5) * 0.1;
-          parts.leftLeg.rotation.x = 0;
-          parts.rightLeg.rotation.x = 0;
-          game.player.rotation.z = 0;
           game.player.rotation.y = Math.sin(game.time * 2) * 0.1;
           game.grid.position.z = (game.grid.position.z + 0.02) % 10;
       }
-      
-      const pPositions = game.particleSystem.geometry.attributes.position.array;
-      for (let i = game.particles.length - 1; i >= 0; i--) {
-          const p = game.particles[i];
-          pPositions[p.index * 3 + 2] += (gameState === 'PLAYING' && !game.isDead ? game.speed : 0.05) * 0.8; 
-          p.life -= 0.05;
-          if (p.life <= 0) {
-             pPositions[p.index * 3 + 1] = -100;
-             game.particles.splice(i, 1);
-          }
-      }
-      game.particleSystem.geometry.attributes.position.needsUpdate = true;
       game.renderer.render(game.scene, game.camera);
       game.frameId = requestAnimationFrame(animate);
     };
@@ -689,7 +797,6 @@ const NeonRunner = () => {
             spawnCoin(-40 - (i * 25) - 10); 
         }
     }
-
     animate();
     return () => cancelAnimationFrame(game.frameId);
   }, [gameState, loaded]);
@@ -703,17 +810,23 @@ const NeonRunner = () => {
       const game = gameRef.current;
       game.obstacles.forEach(o => game.scene.remove(o));
       game.coins.forEach(c => game.scene.remove(c));
+      game.rockets.forEach(r => game.scene.remove(r));
       game.shards.forEach(s => game.scene.remove(s)); 
+      game.speedLines.forEach(l => game.scene.remove(l)); // Clear lines
       game.obstacles = [];
       game.coins = [];
+      game.rockets = [];
       game.shards = [];
+      game.speedLines = [];
       game.currentLane = 1;
-      game.player.position.set(0, 0, 0);
-      game.player.rotation.set(0, 0, 0);
-      game.player.visible = true; 
+      game.playerContainer.position.set(0, 0, 0);
+      game.player.rotation.set(0, 0, 0); 
+      game.playerContainer.visible = true; 
       game.isDead = false; 
       game.isInvincible = false;
       game.invincibleTimer = 0;
+      game.flightTimer = 0; 
+      setFlightFuel(0);
       game.healthInternal = 100; 
       game.targetX = 0;
       game.speed = 0.15; 
@@ -723,7 +836,7 @@ const NeonRunner = () => {
       game.jumpVelocity = 0;
       setHealth(100); 
       setScore(0);
-      setCoinCount(0); // Reset coins
+      setCoinCount(0); 
       setGameState('PLAYING');
   }
 
@@ -732,9 +845,9 @@ const NeonRunner = () => {
     const game = gameRef.current;
     if (direction === 'LEFT' && game.currentLane > 0) game.currentLane--;
     else if (direction === 'RIGHT' && game.currentLane < 2) game.currentLane++;
-    else if (direction === 'UP' && !game.isJumping) {
+    else if (direction === 'UP' && !game.isJumping && gameRef.current.flightTimer <= 0) {
       game.isJumping = true;
-      game.jumpVelocity = 0.32; 
+      game.jumpVelocity = game.jumpPower; 
     }
     game.targetX = game.lanes[game.currentLane];
   };
@@ -778,10 +891,10 @@ const NeonRunner = () => {
           />
       ))}
 
-      {/* HUD - TOP: HEALTH (LEFT) & SCORE/COINS (RIGHT) */}
+      {/* HUD CONTAINER */}
       <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-10 pointer-events-none">
         
-        {/* PLAYER HEALTH BLOCK */}
+        {/* LEFT: HEALTH */}
         <div className="bg-black/40 backdrop-blur border border-red-500/30 p-2 pr-4 rounded-xl flex items-center gap-3 h-fit">
             <div className={`bg-red-500/20 p-2 rounded-lg ${health < 40 ? 'animate-pulse' : ''}`}>
                 <IconHeart size={20} className={health < 40 ? "text-red-500" : "text-red-400"} fill="currentColor" />
@@ -789,17 +902,14 @@ const NeonRunner = () => {
             <div className="flex flex-col gap-1">
                 <div className="text-[10px] text-red-300 uppercase tracking-widest font-bold leading-none">Armor</div>
                 <div className="w-24 md:w-32 h-3 bg-gray-900 rounded-full overflow-hidden border border-white/10 relative">
-                    <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)', backgroundSize: '10px 10px'}}></div>
-                    <div 
-                        className={`h-full transition-all duration-300 ease-out ${health > 60 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : health > 30 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-red-600 to-red-500'}`}
-                        style={{ width: `${health}%` }}
-                    />
+                    <div className={`h-full transition-all duration-300 ease-out ${health > 60 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : health > 30 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-red-600 to-red-500'}`} style={{ width: `${health}%` }} />
                 </div>
             </div>
         </div>
 
-        {/* SCORE & COINS BLOCK (RIGHT SIDE) */}
+        {/* RIGHT: SCORE, COINS, JETPACK STACKED */}
         <div className="flex flex-col items-end gap-2">
+            
             {/* SCORE */}
             <div className="bg-black/40 backdrop-blur border border-cyan-500/30 p-3 rounded-xl min-w-[100px] text-right">
                 <div className="text-xs text-cyan-400 uppercase tracking-widest opacity-80 leading-none mb-1">Score</div>
@@ -815,13 +925,11 @@ const NeonRunner = () => {
                  <IconCoin size={28} />
             </div>
 
-            {/* HIGH SCORE (Small) */}
-            {highScore > 0 && (
-                <div className="bg-black/20 backdrop-blur border border-white/10 p-2 rounded-lg flex items-center gap-2 mt-1">
-                    <IconTrophy size={14} className="text-yellow-400/70" />
-                    <span className="text-sm font-mono text-white/70">{highScore}</span>
-                </div>
-            )}
+            {/* JETPACK CIRCULAR INDICATOR (Only visible when has fuel) */}
+            <div className={`transition-all duration-500 transform ${flightFuel > 0 ? 'opacity-100 scale-100' : 'opacity-0 scale-50'} mt-1`}>
+                 <CircularProgress percentage={flightFuel} size={48} icon={IconRocket} strokeWidth={4} />
+            </div>
+
         </div>
       </div>
 
@@ -833,6 +941,7 @@ const NeonRunner = () => {
               <h1 className="text-5xl font-black italic tracking-tighter text-transparent bg-clip-text bg-gradient-to-br from-cyan-300 via-white to-purple-400 transform -skew-x-6">
                 NEON<br/>RUNNER
               </h1>
+              <div className="text-xs text-cyan-500 tracking-[0.5em] font-bold mt-2">JETPACK UPDATE</div>
             </div>
 
             <div className="bg-black/80 border border-cyan-500/50 p-4 rounded-2xl w-full flex flex-col items-center gap-3 shadow-[0_0_30px_rgba(0,255,255,0.2)]">
@@ -847,16 +956,9 @@ const NeonRunner = () => {
                         <div className="text-xl font-bold text-white font-mono" style={{ color: '#' + SKINS[currentSkinIndex].colors.armor.toString(16) }}>
                             {SKINS[currentSkinIndex].name}
                         </div>
-                        <div className="text-[10px] text-gray-400 uppercase tracking-wide">Robot Model T-{currentSkinIndex + 1}00</div>
                     </div>
                     
                     <button onClick={nextSkin} className="p-2 hover:bg-white/10 rounded-full transition"><IconChevronRight /></button>
-                </div>
-
-                <div className="flex gap-2 mt-1">
-                    <div className="w-4 h-4 rounded-full border border-white/30" style={{backgroundColor: '#' + SKINS[currentSkinIndex].colors.armor.toString(16)}}></div>
-                    <div className="w-4 h-4 rounded-full border border-white/30" style={{backgroundColor: '#' + SKINS[currentSkinIndex].colors.visor.toString(16)}}></div>
-                    <div className="w-4 h-4 rounded-full border border-white/30" style={{backgroundColor: '#' + SKINS[currentSkinIndex].colors.joint.toString(16)}}></div>
                 </div>
             </div>
 
@@ -866,12 +968,6 @@ const NeonRunner = () => {
             >
               <IconPlay fill="currentColor" size={20}/> START MISSION
             </button>
-            
-            <div className="grid grid-cols-3 gap-4 text-xs text-gray-400 w-full text-center">
-               <span>Jump</span>
-               <span>High Jump</span>
-               <span>Dodge</span>
-            </div>
           </div>
         </div>
       )}
