@@ -64,8 +64,55 @@ const IconHeart = ({ size = 24, className = "", fill="currentColor" }) => (
   </svg>
 );
 
+// Icon Coin đơn giản cho UI
+const IconCoin = ({ size = 24, className = "" }) => (
+  <div className={`rounded-full border-2 border-yellow-300 bg-yellow-500 flex items-center justify-center font-bold text-yellow-900 shadow-lg ${className}`} style={{width: size, height: size, fontSize: size * 0.7}}>
+    $
+  </div>
+);
+
 /**
- * NEON RUNNER - SMOOTH EDITION (NO SHAKE)
+ * COMPONENT: FLOATING COIN ANIMATION
+ * Đồng xu bay từ vị trí nhặt được (startPos) đến vị trí UI (targetPos)
+ */
+const FloatingCoin = ({ startPos, onComplete }) => {
+    const [style, setStyle] = useState({ 
+        top: startPos.y, 
+        left: startPos.x,
+        opacity: 1,
+        transform: 'scale(1)'
+    });
+
+    useEffect(() => {
+        // Sau khi mount, set timeout để kích hoạt animation bay về góc phải
+        // Giả sử vị trí coin counter UI ở khoảng: top: 90px, right: 30px
+        // (Chúng ta dùng class CSS fixed để căn chỉnh đích đến)
+        const timer = setTimeout(() => {
+            setStyle({
+                top: '90px', // Vị trí Y của Coin Counter trong HUD
+                left: 'calc(100% - 40px)', // Vị trí X của Coin Counter (cách phải 40px)
+                opacity: 0.2, // Mờ dần khi tới nơi
+                transform: 'scale(0.5)' // Nhỏ dần
+            });
+        }, 50);
+
+        const removeTimer = setTimeout(onComplete, 800); // Xoá sau khi bay xong
+
+        return () => { clearTimeout(timer); clearTimeout(removeTimer); };
+    }, []);
+
+    return (
+        <div 
+            className="fixed z-50 transition-all duration-700 ease-in-out pointer-events-none"
+            style={style}
+        >
+            <IconCoin size={24} />
+        </div>
+    );
+};
+
+/**
+ * NEON RUNNER - BRIGHT COIN EDITION
  */
 
 const SKINS = [
@@ -102,6 +149,9 @@ const NeonRunner = () => {
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
   const [health, setHealth] = useState(100); 
+  const [coinCount, setCoinCount] = useState(0); // Số coin đã nhặt
+  const [floatingCoins, setFloatingCoins] = useState([]); // Mảng chứa các coin đang bay
+
   const [loaded, setLoaded] = useState(false);
   const [currentSkinIndex, setCurrentSkinIndex] = useState(0);
 
@@ -125,18 +175,14 @@ const NeonRunner = () => {
     frameId: null,
     isJumping: false,
     isDead: false,
-    
-    // Health Logic
     healthInternal: 100,
     isInvincible: false,
     invincibleTimer: 0,
-    
     jumpVelocity: 0,
     gravity: 0.018,
     scoreInternal: 0,
     time: 0,
     geometries: {},
-    // REMOVED cameraShake
   });
 
   const touchStart = useRef({ x: 0, y: 0 });
@@ -286,8 +332,8 @@ const NeonRunner = () => {
     game.geometries = {
       cube: new THREE.BoxGeometry(0.7, 0.7, 0.7),
       core: new THREE.BoxGeometry(0.35, 0.35, 0.35),
-      coinDiamond: new THREE.OctahedronGeometry(0.2, 0), 
-      coinRing: new THREE.TorusGeometry(0.3, 0.02, 8, 24),
+      // NEW COIN GEOMETRY: Cylinder (Đồng xu)
+      coin: new THREE.CylinderGeometry(0.3, 0.3, 0.05, 32), 
       shard: new THREE.BoxGeometry(0.2, 0.2, 0.2), 
       smallShard: new THREE.BoxGeometry(0.1, 0.1, 0.1)
     };
@@ -341,7 +387,6 @@ const NeonRunner = () => {
     const THREE = window.THREE;
     const game = gameRef.current;
 
-    // --- TRIGGER EXPLOSION ---
     const triggerExplosion = (pos, colorHex = 0xffffff) => {
         const shardMat = new THREE.MeshBasicMaterial({ 
             color: colorHex, 
@@ -349,7 +394,6 @@ const NeonRunner = () => {
             opacity: 1
         });
         
-        // Tăng số lượng mảnh vỡ lên một chút để cảm giác "đã" hơn
         for (let i = 0; i < 20; i++) {
             const geom = Math.random() > 0.5 ? game.geometries.shard : game.geometries.smallShard;
             const mesh = new THREE.Mesh(geom, shardMat);
@@ -359,11 +403,10 @@ const NeonRunner = () => {
             mesh.position.y += (Math.random() - 0.5) * 0.5;
             mesh.position.z += (Math.random() - 0.5) * 0.5;
             
-            // Tinh chỉnh lực nổ để bay về phía trước theo quán tính nhiều hơn
             mesh.userData.velocity = new THREE.Vector3(
-                (Math.random() - 0.5) * 1.0,  // X spread rộng hơn
-                Math.random() * 0.5 + 0.3,    // Bay lên cao
-                game.speed * 2 + Math.random() * 0.5 // Bay theo hướng chướng ngại vật (về phía camera)
+                (Math.random() - 0.5) * 1.0,  
+                Math.random() * 0.5 + 0.3,    
+                game.speed * 2 + Math.random() * 0.5 
             );
             
             mesh.userData.rotVel = {
@@ -377,7 +420,6 @@ const NeonRunner = () => {
         }
     }
 
-    // --- OBSTACLE SPAWNER ---
     const spawnObstacle = (zPos) => {
       const neonPink = 0xff0066;
       const mesh = new THREE.Group();
@@ -417,32 +459,40 @@ const NeonRunner = () => {
       game.obstacles.push(mesh);
     };
 
-    // --- COIN SPAWNER ---
+    // --- NEW COIN SPAWNER (BRIGHTER) ---
     const spawnCoin = (zPos) => {
-      const coinGroup = new THREE.Group();
       const goldMat = new THREE.MeshStandardMaterial({ 
-        color: 0xffd700, emissive: 0xffaa00, emissiveIntensity: 0.8, metalness: 1, roughness: 0.1 
+        color: 0xffd700, 
+        emissive: 0xffd700, // Cùng màu với color để sáng rực lên
+        emissiveIntensity: 0.8, // Tăng cường độ phát sáng
+        metalness: 0.8, // Giảm kim loại một chút để màu hiển thị rõ hơn trong tối
+        roughness: 0.1 // Rất bóng
       });
 
-      const diamond = new THREE.Mesh(game.geometries.coinDiamond, goldMat);
-      coinGroup.add(diamond);
-      const ring = new THREE.Mesh(game.geometries.coinRing, goldMat);
-      coinGroup.add(ring);
+      // Tạo đồng xu (Cylinder)
+      const coinMesh = new THREE.Mesh(game.geometries.coin, goldMat);
       
-      coinGroup.userData = { isCoinGroup: true, diamond: diamond, ring: ring };
+      // Xoay cylinder để mặt tròn hướng ra ngoài (như đồng xu đứng)
+      coinMesh.rotation.x = Math.PI / 2; 
+      
+      const coinGroup = new THREE.Group();
+      coinGroup.add(coinMesh);
+      
+      coinGroup.userData = { isCoin: true, mesh: coinMesh };
 
       const laneIndex = Math.floor(Math.random() * 3);
       coinGroup.position.x = game.lanes[laneIndex];
       coinGroup.position.z = zPos;
+
       const isAirCoin = Math.random() > 0.6;
-      coinGroup.position.y = isAirCoin ? 2.2 : 0.5;
+      coinGroup.position.y = isAirCoin ? 2.2 : 0.6; // Cao hơn một chút
+
       coinGroup.userData = { ...coinGroup.userData, type: 'coin', isAir: isAirCoin };
       
       game.scene.add(coinGroup);
       game.coins.push(coinGroup);
     }
 
-    // --- GAME LOOP ---
     const animate = () => {
       const parts = game.playerParts;
       
@@ -453,12 +503,12 @@ const NeonRunner = () => {
         shard.rotation.x += shard.userData.rotVel.x;
         shard.rotation.y += shard.userData.rotVel.y;
         shard.rotation.z += shard.userData.rotVel.z;
-        shard.userData.velocity.y -= 0.03; // Trọng lực nhẹ hơn để bay lâu hơn
+        shard.userData.velocity.y -= 0.03; 
         
         if (shard.position.y < 0) {
             shard.position.y = 0;
             shard.userData.velocity.y *= -0.5; 
-            shard.userData.velocity.x *= 0.95; // Giảm ma sát để trượt trên sàn
+            shard.userData.velocity.x *= 0.95; 
         }
 
         if (shard.position.y < -5 || Math.abs(shard.position.z - game.player.position.z) > 25) {
@@ -467,7 +517,7 @@ const NeonRunner = () => {
         }
       }
 
-      // Smooth Camera Follow Only (No Shake)
+      // Smooth Camera Follow
       game.camera.position.x += (game.player.position.x * 0.3 - game.camera.position.x) * 0.1;
 
       if (gameState === 'PLAYING') {
@@ -477,11 +527,9 @@ const NeonRunner = () => {
               return;
           }
 
-          // --- INVINCIBILITY LOGIC ---
           if (game.isInvincible) {
               game.invincibleTimer--;
               game.player.visible = Math.floor(Date.now() / 50) % 2 === 0;
-              
               if (game.invincibleTimer <= 0) {
                   game.isInvincible = false;
                   game.player.visible = true;
@@ -535,36 +583,24 @@ const NeonRunner = () => {
             const dx = Math.abs(obj.position.x - game.player.position.x);
             const dz = Math.abs(obj.position.z - game.player.position.z);
             
-            // --- COLLISION DETECTION ---
             if (dx < 0.6 && dz < 0.6) {
                 if (game.player.position.y + 0.1 < 0.7) {
-                    
                     if (!game.isInvincible && !game.isDead) {
-                        
-                        // 1. NỔ CUBE (MÀU HỒNG ĐẬM)
                         triggerExplosion(obj.position, 0xff0066); 
-                        
-                        // 2. XÓA CUBE NGAY LẬP TỨC (MƯỢT)
                         game.scene.remove(obj);
                         game.obstacles.splice(i, 1);
-                        
-                        // 3. TRỪ MÁU
                         game.healthInternal -= 34;
                         setHealth(Math.max(0, game.healthInternal));
                         
-                        // 4. KIỂM TRA CHẾT
                         if (game.healthInternal <= 0) {
                             game.isDead = true; 
                             game.player.visible = false; 
                             triggerExplosion(game.player.position, SKINS[currentSkinIndex].colors.armor);
-                            // KHÔNG CÒN RUNG
                             setTimeout(() => handleGameOver(), 1200);
                         } else {
                             game.isInvincible = true;
                             game.invincibleTimer = 90; 
-                            // KHÔNG CÒN RUNG
                         }
-                        
                         continue; 
                     }
                 }
@@ -581,14 +617,8 @@ const NeonRunner = () => {
             const coinGroup = game.coins[i];
             coinGroup.position.z += game.speed;
             
-            coinGroup.rotation.y += 0.02;
-            if (coinGroup.userData.diamond) {
-                coinGroup.userData.diamond.rotation.x += 0.04;
-                coinGroup.userData.diamond.rotation.z += 0.04;
-            }
-            if (coinGroup.userData.ring) {
-                coinGroup.userData.ring.rotation.x += 0.02;
-            }
+            // Xoay đồng xu
+            coinGroup.rotation.y += 0.05; // Quay quanh trục thẳng đứng
 
             const dx = Math.abs(coinGroup.position.x - game.player.position.x);
             const dz = Math.abs(coinGroup.position.z - game.player.position.z);
@@ -601,6 +631,19 @@ const NeonRunner = () => {
                  }
             }
             if (canCollect) {
+              // --- XỬ LÝ NHẶT COIN ---
+              // 1. Tính toán vị trí 2D của coin để tạo hiệu ứng bay
+              const vector = coinGroup.position.clone();
+              vector.project(game.camera); // Project 3D -> Normalized Device Coordinates (-1 to +1)
+              
+              // Chuyển đổi sang pixel màn hình
+              const x = (vector.x * .5 + .5) * window.innerWidth;
+              const y = (-(vector.y * .5) + .5) * window.innerHeight;
+
+              // Thêm vào state React để render UI Coin bay
+              setFloatingCoins(prev => [...prev, { id: Date.now(), x, y }]);
+              setCoinCount(prev => prev + 1);
+
               game.scene.remove(coinGroup);
               game.coins.splice(i, 1);
               game.scoreInternal += 50; 
@@ -680,6 +723,7 @@ const NeonRunner = () => {
       game.jumpVelocity = 0;
       setHealth(100); 
       setScore(0);
+      setCoinCount(0); // Reset coins
       setGameState('PLAYING');
   }
 
@@ -725,50 +769,63 @@ const NeonRunner = () => {
     <div className="relative w-full h-screen overflow-hidden bg-[#1a103c] select-none touch-none font-sans text-white">
       <div ref={mountRef} className="absolute inset-0 z-0" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd} />
 
-      {/* HUD - TOP LEFT: HEALTH & SCORE */}
+      {/* RENDER FLOATING COINS */}
+      {floatingCoins.map(coin => (
+          <FloatingCoin 
+            key={coin.id} 
+            startPos={coin} 
+            onComplete={() => setFloatingCoins(prev => prev.filter(c => c.id !== coin.id))} 
+          />
+      ))}
+
+      {/* HUD - TOP: HEALTH (LEFT) & SCORE/COINS (RIGHT) */}
       <div className="absolute top-0 left-0 right-0 p-4 md:p-6 flex justify-between items-start z-10 pointer-events-none">
         
-        {/* PLAYER STATS BLOCK */}
-        <div className="flex flex-col gap-2">
-            {/* HEALTH BAR */}
-            <div className="bg-black/40 backdrop-blur border border-red-500/30 p-2 pr-4 rounded-xl flex items-center gap-3">
-                <div className={`bg-red-500/20 p-2 rounded-lg ${health < 40 ? 'animate-pulse' : ''}`}>
-                    <IconHeart size={20} className={health < 40 ? "text-red-500" : "text-red-400"} fill="currentColor" />
-                </div>
-                <div className="flex flex-col gap-1">
-                    <div className="text-[10px] text-red-300 uppercase tracking-widest font-bold leading-none">Armor Integrity</div>
-                    <div className="w-32 h-3 bg-gray-900 rounded-full overflow-hidden border border-white/10 relative">
-                        {/* Background Stripes */}
-                        <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)', backgroundSize: '10px 10px'}}></div>
-                        {/* Health Fill */}
-                        <div 
-                            className={`h-full transition-all duration-300 ease-out ${health > 60 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : health > 30 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-red-600 to-red-500'}`}
-                            style={{ width: `${health}%` }}
-                        />
-                    </div>
-                </div>
+        {/* PLAYER HEALTH BLOCK */}
+        <div className="bg-black/40 backdrop-blur border border-red-500/30 p-2 pr-4 rounded-xl flex items-center gap-3 h-fit">
+            <div className={`bg-red-500/20 p-2 rounded-lg ${health < 40 ? 'animate-pulse' : ''}`}>
+                <IconHeart size={20} className={health < 40 ? "text-red-500" : "text-red-400"} fill="currentColor" />
             </div>
-
-            {/* SCORE BLOCK */}
-            <div className="bg-black/40 backdrop-blur border border-cyan-500/30 p-3 rounded-xl w-fit">
-                <div className="text-xs text-cyan-400 uppercase tracking-widest opacity-80 leading-none mb-1">Score</div>
-                <div className="text-2xl font-mono font-bold text-cyan-50 shadow-cyan-500/50 drop-shadow-md leading-none">{score}</div>
+            <div className="flex flex-col gap-1">
+                <div className="text-[10px] text-red-300 uppercase tracking-widest font-bold leading-none">Armor</div>
+                <div className="w-24 md:w-32 h-3 bg-gray-900 rounded-full overflow-hidden border border-white/10 relative">
+                    <div className="absolute inset-0 opacity-20" style={{backgroundImage: 'linear-gradient(45deg, #000 25%, transparent 25%, transparent 50%, #000 50%, #000 75%, transparent 75%, transparent)', backgroundSize: '10px 10px'}}></div>
+                    <div 
+                        className={`h-full transition-all duration-300 ease-out ${health > 60 ? 'bg-gradient-to-r from-green-500 to-emerald-400' : health > 30 ? 'bg-gradient-to-r from-yellow-500 to-orange-500' : 'bg-gradient-to-r from-red-600 to-red-500'}`}
+                        style={{ width: `${health}%` }}
+                    />
+                </div>
             </div>
         </div>
 
-        {/* HIGH SCORE BLOCK */}
-        {highScore > 0 && (
-          <div className="bg-black/40 backdrop-blur border border-yellow-500/30 p-3 rounded-xl flex items-center gap-3">
-             <IconTrophy size={18} className="text-yellow-400" />
-             <div>
-                <div className="text-xs text-yellow-400 uppercase tracking-widest opacity-80 leading-none mb-1">Best</div>
-                <div className="text-xl font-mono font-bold text-yellow-50 leading-none">{highScore}</div>
-             </div>
-          </div>
-        )}
+        {/* SCORE & COINS BLOCK (RIGHT SIDE) */}
+        <div className="flex flex-col items-end gap-2">
+            {/* SCORE */}
+            <div className="bg-black/40 backdrop-blur border border-cyan-500/30 p-3 rounded-xl min-w-[100px] text-right">
+                <div className="text-xs text-cyan-400 uppercase tracking-widest opacity-80 leading-none mb-1">Score</div>
+                <div className="text-2xl font-mono font-bold text-cyan-50 shadow-cyan-500/50 drop-shadow-md leading-none">{score}</div>
+            </div>
+
+            {/* COIN COUNTER */}
+            <div className="bg-black/40 backdrop-blur border border-yellow-500/30 p-2 pl-3 pr-3 rounded-xl flex items-center gap-3">
+                 <div className="flex flex-col items-end">
+                    <div className="text-[10px] text-yellow-400 uppercase tracking-widest opacity-80 leading-none mb-1">Credits</div>
+                    <div className="text-xl font-mono font-bold text-yellow-50 leading-none">{coinCount}</div>
+                 </div>
+                 <IconCoin size={28} />
+            </div>
+
+            {/* HIGH SCORE (Small) */}
+            {highScore > 0 && (
+                <div className="bg-black/20 backdrop-blur border border-white/10 p-2 rounded-lg flex items-center gap-2 mt-1">
+                    <IconTrophy size={14} className="text-yellow-400/70" />
+                    <span className="text-sm font-mono text-white/70">{highScore}</span>
+                </div>
+            )}
+        </div>
       </div>
 
-      {/* MENU & SKIN SELECTOR */}
+      {/* MENU */}
       {gameState === 'MENU' && (
         <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4 p-6 w-full max-w-sm animate-in zoom-in duration-300">
@@ -825,7 +882,16 @@ const NeonRunner = () => {
            <div className="text-center p-8 bg-black/60 border border-red-500/30 rounded-3xl shadow-2xl max-w-xs w-full">
               <IconSkull size={64} className="mx-auto text-red-500 mb-4 animate-bounce" />
               <h2 className="text-2xl font-bold text-red-100">CRITICAL FAILURE</h2>
-              <div className="text-5xl font-black text-white my-4">{score}</div>
+              <div className="flex justify-center gap-4 my-4">
+                  <div className="text-center">
+                      <div className="text-xs text-cyan-400 uppercase">Score</div>
+                      <div className="text-3xl font-black text-white">{score}</div>
+                  </div>
+                  <div className="text-center border-l border-white/20 pl-4">
+                      <div className="text-xs text-yellow-400 uppercase">Credits</div>
+                      <div className="text-3xl font-black text-white">{coinCount}</div>
+                  </div>
+              </div>
               <button 
                 onClick={resetGame}
                 className="w-full bg-red-600 hover:bg-red-500 p-3 rounded-xl font-bold flex items-center justify-center gap-2 mt-4 transition"
