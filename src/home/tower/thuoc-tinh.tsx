@@ -1,7 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
 // --- BỘ ICON SVG ---
-// Đã loại bỏ icon Eye (Hắc ám)
 const Icons = {
   Skull: ({ color }: { color: string }) => (
     <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -44,7 +43,7 @@ const Icons = {
   )
 };
 
-// --- CẤU HÌNH NGUYÊN TỐ (Đã xóa shadow) ---
+// --- CẤU HÌNH NGUYÊN TỐ ---
 export const ELEMENTS = {
   fire: {
     name: 'Hỏa Ngục',
@@ -136,7 +135,7 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
 
     const createParticle = (width: number, height: number, colorRGB: string) => {
         return {
-            x: (Math.random() - 0.5) * 80, // Thu nhỏ phạm vi sinh hạt (80)
+            x: (Math.random() - 0.5) * 80, 
             y: 35, 
             speed: 0.4 + Math.random() * 0.9, 
             size: Math.random() * 1.5 + 0.5,
@@ -148,16 +147,15 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
 
     const drawMagicCircle = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rotation: number, config: typeof ELEMENTS['fire']) => {
         ctx.save();
-        ctx.translate(cx, cy + 50); 
+        // Dịch lên trên một chút (từ cy + 50 -> cy + 40)
+        ctx.translate(cx, cy + 40); 
         ctx.scale(1, 0.3); 
         
         ctx.shadowBlur = 8;
         ctx.shadowColor = config.glow;
         ctx.globalCompositeOperation = 'lighter';
-
-        // GIẢM KÍCH THƯỚC BÁN KÍNH VẼ ĐỂ VÒNG NHỎ HƠN
         
-        // 1. Vòng tròn chính (Giảm bán kính từ 100 -> 80)
+        // 1. Vòng tròn chính (Bán kính 80)
         ctx.save();
         ctx.rotate(rotation * 0.5);
         ctx.beginPath();
@@ -178,7 +176,7 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         }
         ctx.restore();
 
-        // 2. Vòng Rune (Giảm bán kính từ 80 -> 65)
+        // 2. Vòng Rune (Bán kính 65)
         ctx.save();
         ctx.rotate(-rotation * 0.3);
         ctx.beginPath();
@@ -189,12 +187,13 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         ctx.stroke();
         ctx.restore();
 
-        // 3. Hình học ma pháp (Giảm bán kính từ 85 -> 70)
+        // 3. Hình học ma pháp (Tam giác)
+        // Đã sửa bán kính từ 70 -> 65 để khớp với vòng tròn nét đứt
         ctx.save();
         ctx.rotate(rotation);
         ctx.beginPath();
         for (let i = 0; i < 3; i++) {
-            ctx.lineTo(70 * Math.cos(i * 2 * Math.PI / 3), 70 * Math.sin(i * 2 * Math.PI / 3));
+            ctx.lineTo(65 * Math.cos(i * 2 * Math.PI / 3), 65 * Math.sin(i * 2 * Math.PI / 3));
         }
         ctx.closePath();
         ctx.lineWidth = 1.5;
@@ -222,7 +221,7 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         }
 
         ctx.save();
-        ctx.translate(cx, cy + 50); 
+        ctx.translate(cx, cy + 40); 
         ctx.globalCompositeOperation = 'screen'; 
         ctx.scale(1, 1); 
 
