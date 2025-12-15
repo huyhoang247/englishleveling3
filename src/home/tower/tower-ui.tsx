@@ -62,7 +62,7 @@ const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: Combat
 });
 
 const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
-  const scale = Math.max(0, current / max); // Giá trị từ 0 đến 1
+  const scale = Math.max(0, current / max); 
   return (
     <div className="w-full">
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
@@ -307,12 +307,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // --- LOGIC CHỌN HỆ THUỘC TÍNH (ELEMENT) CHO BOSS ---
     const bossElement = useMemo(() => {
         const keys = Object.keys(ELEMENTS) as ElementKey[];
-        // Thuật toán: Dựa trên số tầng để chọn hệ một cách cố định (không random mỗi lần re-render) nhưng xáo trộn thứ tự
         const index = (currentFloor * 7 + 3) % keys.length;
         return keys[index];
     }, [currentFloor]);
 
-    // Lấy Icon tương ứng để hiển thị cạnh tên Boss
     const BossIconSVG = ELEMENTS[bossElement].Icon;
 
     // --- RENDER LOGIC CHO LỖI ---
@@ -323,9 +321,36 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         <>
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-                .font-lilita { font-family: 'Lilita One', cursive; } .font-sans { font-family: sans-serif; } .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } .animate-float-up { animation: float-up 1.5s ease-out forwards; } @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } .scrollbar-thin::-webkit-scrollbar { width: 8px; } .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } .btn-shine:hover:not(:disabled)::before { left: 125%; }
+                .font-lilita { font-family: 'Lilita One', cursive; } 
+                .font-sans { font-family: sans-serif; } 
+                .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
+                .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
+                @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } 
+                .animate-float-up { animation: float-up 1.5s ease-out forwards; } 
+                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } 
+                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } 
+                @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } 
+                .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } 
+                .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } 
+                .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } 
+                .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } 
+                .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } 
+                .scrollbar-thin::-webkit-scrollbar { width: 8px; } 
+                .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } 
+                .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } 
+                .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } 
+                .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+                
+                /* ANIMATION HOVER BOSS */
+                @keyframes hover-boss {
+                    0%, 100% { transform: translateY(0px); }
+                    50% { transform: translateY(-12px); }
+                }
+                .animate-hover-boss {
+                    animation: hover-boss 4s ease-in-out infinite;
+                }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -401,12 +426,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* --- BOSS DISPLAY AREA --- */}
                                     <div className="w-full max-w-4xl flex justify-center items-center my-8">
                                         <div 
-                                            className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-hidden" 
+                                            className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible" 
                                             onClick={() => setStatsModalTarget('boss')} 
                                             title="View Boss Stats"
                                         >
-                                            {/* MAGIC CIRCLE LAYER (Z-INDEX 0) */}
-                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] z-0 opacity-80 pointer-events-none">
+                                            {/* MAGIC CIRCLE LAYER (Z-INDEX 0) 
+                                                - Nằm dưới chân (bottom-[-10%])
+                                                - Kích thước vừa phải (120% width)
+                                            */}
+                                            <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[120%] h-[120%] z-0 opacity-80 pointer-events-none">
                                                 <MagicCircle elementKey={bossElement} />
                                             </div>
 
@@ -415,14 +443,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 <div className="relative group flex flex-col items-center justify-center">
                                                     <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
                                                     
-                                                    {/* Element Badge */}
-                                                    <div className="flex items-center gap-1 mt-1 bg-black/60 px-2 py-0.5 rounded text-xs border border-slate-700/50 backdrop-blur-md">
-                                                        <div className="w-3 h-3">
+                                                    {/* Element Badge (Icon Only) */}
+                                                    <div className="flex items-center gap-1 mt-1 bg-black/60 p-1.5 rounded-full border border-slate-700/50 backdrop-blur-md shadow-lg" title={ELEMENTS[bossElement].name}>
+                                                        <div className="w-4 h-4">
                                                             <BossIconSVG color={ELEMENTS[bossElement].primary} />
                                                         </div>
-                                                        <span style={{ color: ELEMENTS[bossElement].primary, textShadow: `0 0 5px ${ELEMENTS[bossElement].glow}` }}>
-                                                            {ELEMENTS[bossElement].name}
-                                                        </span>
                                                     </div>
 
                                                     <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
@@ -430,11 +455,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                     </div>
                                                 </div>
 
-                                                <div className="w-40 h-40 md:w-56 md:h-56 relative">
+                                                <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
+                                                    {/* BOSS IMAGE WITH ANIMATION 
+                                                        - animate-hover-boss: Lơ lửng
+                                                    */}
                                                     <img 
                                                         src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} 
                                                         alt={currentBossData.name} 
-                                                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-2xl relative z-10" 
+                                                        className="w-full h-full object-contain drop-shadow-2xl relative z-10 animate-hover-boss" 
                                                     />
                                                 </div>
                                                 
