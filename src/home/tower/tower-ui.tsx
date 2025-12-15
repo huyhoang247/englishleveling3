@@ -311,7 +311,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         return keys[index];
     }, [currentFloor]);
 
-    const BossIconSVG = ELEMENTS[bossElement].Icon;
+    // Đã xóa BossIconSVG vì không dùng icon nữa
 
     // --- RENDER LOGIC CHO LỖI ---
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
@@ -431,10 +431,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             title="View Boss Stats"
                                         >
                                             {/* MAGIC CIRCLE LAYER (Z-INDEX 0) 
-                                                - Nằm dưới chân (bottom-[-10%])
-                                                - Kích thước vừa phải (120% width)
+                                                - Nằm dưới chân (bottom-[-5%])
+                                                - Kích thước nhỏ lại (90% width)
                                             */}
-                                            <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[120%] h-[120%] z-0 opacity-80 pointer-events-none">
+                                            <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
                                                 <MagicCircle elementKey={bossElement} />
                                             </div>
 
@@ -443,12 +443,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 <div className="relative group flex flex-col items-center justify-center">
                                                     <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
                                                     
-                                                    {/* Element Badge (Icon Only) */}
-                                                    <div className="flex items-center gap-1 mt-1 bg-black/60 p-1.5 rounded-full border border-slate-700/50 backdrop-blur-md shadow-lg" title={ELEMENTS[bossElement].name}>
-                                                        <div className="w-4 h-4">
-                                                            <BossIconSVG color={ELEMENTS[bossElement].primary} />
-                                                        </div>
-                                                    </div>
+                                                    {/* ĐÃ ẨN ICON THUỘC TÍNH MẮT Ở ĐÂY */}
 
                                                     <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
                                                         {currentBossData.name.toUpperCase()}
