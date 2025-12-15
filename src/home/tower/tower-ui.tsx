@@ -1,18 +1,16 @@
-// --- START OF FILE tower-ui.tsx (6).txt ---
+// --- START OF FILE tower-ui.tsx ---
 
-// --- START OF FILE tower-ui.tsx (Full, Unabbreviated Code) ---
-
-// --- START OF FILE boss.tsx ---
-
-// --- OPTIMIZATION: Import 'memo' từ React ---
-import React, { useState, useCallback, useEffect, memo } from 'react';
-import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx'; // IMPORT CONTEXT MỚI
+import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
+import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
-import BossBattleLoader from './tower-loading.tsx'; // <-- Dòng import này đã có và rất quan trọng
-import { useAnimateValue } from '../../ui/useAnimateValue.ts'; // SỬA ĐỔI: Import useAnimateValue
+import BossBattleLoader from './tower-loading.tsx';
+import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+
+// --- IMPORT MAGIC CIRCLE VÀ LOGIC NGUYÊN TỐ ---
+import MagicCircle, { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -21,8 +19,7 @@ interface BossBattleWrapperProps {
   onFloorComplete: (newFloor: number) => void;
 }
 
-
-// --- UI HELPER COMPONENTS (Toàn bộ code được giữ nguyên và đầy đủ, đã thêm React.memo) ---
+// --- UI HELPER COMPONENTS ---
 
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
 
@@ -262,7 +259,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // --- SỬA ĐỔI: LOGIC ANIMATION CHO COIN VÀ ENERGY ---
+    // --- LOGIC ANIMATION CHO COIN VÀ ENERGY ---
     const displayableCoins = isLoading ? 0 : displayedCoins;
     const animatedCoins = useAnimateValue(displayableCoins);
 
@@ -272,7 +269,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    // --- THAY ĐỔI: Hàm showFloatingText giờ nhận thêm tham số isPlayerSide ---
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
         // Vị trí hiển thị: left-[25%] cho người chơi (bên trái), right-[25%] cho boss (bên phải)
@@ -281,7 +277,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
 
-    // --- THAY ĐỔI: Effect hiển thị floating text dựa trên sự kiện và vị trí ---
     useEffect(() => {
         if (!lastTurnEvents) return;
 
@@ -309,8 +304,20 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setIsSweeping(false);
     };
 
+    // --- LOGIC CHỌN HỆ THUỘC TÍNH (ELEMENT) CHO BOSS ---
+    const bossElement = useMemo(() => {
+        const keys = Object.keys(ELEMENTS) as ElementKey[];
+        // Thuật toán: Dựa trên số tầng để chọn hệ một cách cố định (không random mỗi lần re-render) nhưng xáo trộn thứ tự
+        const index = (currentFloor * 7 + 3) % keys.length;
+        return keys[index];
+    }, [currentFloor]);
+
+    // Lấy Icon tương ứng để hiển thị cạnh tên Boss
+    const BossIconSVG = ELEMENTS[bossElement].Icon;
+
     // --- RENDER LOGIC CHO LỖI ---
     if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
+    
     // --- RENDER ---
     return (
         <>
@@ -349,7 +356,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </button>
                                         </div>
                                         <div className="flex items-center gap-2 font-sans">
-                                            {/* SỬA ĐỔI: Sử dụng animatedEnergy */}
                                             {playerStats?.maxEnergy !== undefined && (
                                                 <EnergyDisplay 
                                                     currentEnergy={animatedEnergy} 
@@ -357,7 +363,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                     isStatsFullscreen={false}
                                                 />
                                             )}
-                                            {/* SỬA ĐỔI: Sử dụng animatedCoins */}
                                             <CoinDisplay 
                                                 displayedCoins={animatedCoins} 
                                                 isStatsFullscreen={false} 
@@ -393,16 +398,48 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
+                                    {/* --- BOSS DISPLAY AREA --- */}
                                     <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                                        <div className="bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group" onClick={() => setStatsModalTarget('boss')} title="View Boss Stats">
-                                            <div className="relative group flex justify-center">
-                                                <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                                                <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">{currentBossData.name.toUpperCase()}</div>
+                                        <div 
+                                            className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-hidden" 
+                                            onClick={() => setStatsModalTarget('boss')} 
+                                            title="View Boss Stats"
+                                        >
+                                            {/* MAGIC CIRCLE LAYER (Z-INDEX 0) */}
+                                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[160%] h-[160%] z-0 opacity-80 pointer-events-none">
+                                                <MagicCircle elementKey={bossElement} />
                                             </div>
-                                            <div className="w-40 h-40 md:w-56 md:h-56">
-                                                <img src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} alt={currentBossData.name} className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105" />
+
+                                            {/* BOSS CONTENT LAYER (Z-INDEX 10) */}
+                                            <div className="relative z-10 flex flex-col items-center gap-3 w-full">
+                                                <div className="relative group flex flex-col items-center justify-center">
+                                                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
+                                                    
+                                                    {/* Element Badge */}
+                                                    <div className="flex items-center gap-1 mt-1 bg-black/60 px-2 py-0.5 rounded text-xs border border-slate-700/50 backdrop-blur-md">
+                                                        <div className="w-3 h-3">
+                                                            <BossIconSVG color={ELEMENTS[bossElement].primary} />
+                                                        </div>
+                                                        <span style={{ color: ELEMENTS[bossElement].primary, textShadow: `0 0 5px ${ELEMENTS[bossElement].glow}` }}>
+                                                            {ELEMENTS[bossElement].name}
+                                                        </span>
+                                                    </div>
+
+                                                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                                        {currentBossData.name.toUpperCase()}
+                                                    </div>
+                                                </div>
+
+                                                <div className="w-40 h-40 md:w-56 md:h-56 relative">
+                                                    <img 
+                                                        src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} 
+                                                        alt={currentBossData.name} 
+                                                        className="w-full h-full object-contain transition-transform duration-300 group-hover:scale-105 drop-shadow-2xl relative z-10" 
+                                                    />
+                                                </div>
+                                                
+                                                <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                                             </div>
-                                            <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
                                         </div>
                                     </div>
     
@@ -446,4 +483,3 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
-// --- END OF FILE tower-ui.tsx ---
