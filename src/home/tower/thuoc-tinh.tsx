@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useMemo } from 'react';
 
-// --- BỘ ICON SVG ---
+// --- BỘ ICON SVG (Giữ nguyên) ---
 const Icons = {
   Skull: ({ color }: { color: string }) => (
     <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -49,13 +49,13 @@ const Icons = {
   )
 };
 
-// --- CẤU HÌNH NGUYÊN TỐ ---
+// --- CẤU HÌNH NGUYÊN TỐ (Giữ nguyên) ---
 export const ELEMENTS = {
   fire: {
     name: 'Hỏa Ngục',
     primary: '#ef4444', 
     secondary: '#b91c1c',
-    glow: 'rgba(239, 68, 68, 1)',
+    glow: 'rgba(239, 68, 68, 0.8)',
     particleColor: '239, 68, 68',
     Icon: Icons.Skull
   },
@@ -63,7 +63,7 @@ export const ELEMENTS = {
     name: 'Thủy Triều',
     primary: '#3b82f6', 
     secondary: '#1e3a8a', 
-    glow: 'rgba(59, 130, 246, 1)',
+    glow: 'rgba(59, 130, 246, 0.8)',
     particleColor: '59, 130, 246',
     Icon: Icons.Droplet
   },
@@ -71,7 +71,7 @@ export const ELEMENTS = {
     name: 'Lôi Điện',
     primary: '#d8b4fe', 
     secondary: '#7e22ce', 
-    glow: 'rgba(192, 132, 252, 1)',
+    glow: 'rgba(192, 132, 252, 0.8)',
     particleColor: '216, 180, 254',
     Icon: Icons.Zap
   },
@@ -79,7 +79,7 @@ export const ELEMENTS = {
     name: 'Hắc Ám',
     primary: '#94a3b8', 
     secondary: '#0f172a', 
-    glow: 'rgba(71, 85, 105, 1)', 
+    glow: 'rgba(71, 85, 105, 0.8)', 
     particleColor: '148, 163, 184', 
     Icon: Icons.Eye
   },
@@ -87,7 +87,7 @@ export const ELEMENTS = {
     name: 'Băng Giá',
     primary: '#22d3ee',
     secondary: '#0891b2',
-    glow: 'rgba(34, 211, 238, 1)',
+    glow: 'rgba(34, 211, 238, 0.8)',
     particleColor: '34, 211, 238',
     Icon: Icons.Ghost
   },
@@ -95,7 +95,7 @@ export const ELEMENTS = {
     name: 'Độc Tố',
     primary: '#a3e635',
     secondary: '#3f6212',
-    glow: 'rgba(163, 230, 53, 1)',
+    glow: 'rgba(163, 230, 53, 0.8)',
     particleColor: '163, 230, 53',
     Icon: Icons.Shield
   },
@@ -103,7 +103,7 @@ export const ELEMENTS = {
     name: 'Thánh Quang',
     primary: '#fcd34d',
     secondary: '#b45309',
-    glow: 'rgba(252, 211, 77, 1)',
+    glow: 'rgba(252, 211, 77, 0.8)',
     particleColor: '252, 211, 77',
     Icon: Icons.Sword
   }
@@ -118,16 +118,13 @@ interface MagicCircleProps {
 
 const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  
-  // Refs lưu trữ animation
   const particlesRef = useRef<any[]>([]);
   const rotationRef = useRef(0);
   const elementRef = useRef(ELEMENTS[elementKey]); 
 
-  // Cập nhật ref khi props thay đổi mà không reset toàn bộ canvas ngay lập tức
   useEffect(() => {
     elementRef.current = ELEMENTS[elementKey];
-    particlesRef.current = []; // Reset hạt khi đổi hệ
+    particlesRef.current = []; 
   }, [elementKey]);
 
   useEffect(() => {
@@ -149,28 +146,27 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
       }
     };
     setSize();
-    // Tạm bỏ resize listener để tối ưu hiệu năng trong game loop
-    
-    // --- TẠO HẠT ---
+
     const createParticle = (width: number, height: number, colorRGB: string) => {
         return {
-            x: (Math.random() - 0.5) * 140, 
+            x: (Math.random() - 0.5) * 120, // Gom hạt gần tâm hơn
             y: 35, 
             speed: 0.4 + Math.random() * 0.9, 
             size: Math.random() * 1.8 + 0.5,
             life: 1, 
-            decay: 0.005 + Math.random() * 0.012, 
+            decay: 0.01 + Math.random() * 0.02, // Hạt tan nhanh hơn chút
             colorRGB: colorRGB
         };
     };
 
-    // --- VẼ VÒNG TRÒN ---
     const drawMagicCircle = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rotation: number, config: typeof ELEMENTS['fire']) => {
         ctx.save();
-        ctx.translate(cx, cy + 30); // Hạ thấp trọng tâm xuống một chút
-        ctx.scale(1, 0.4); // Góc nhìn 3D (dẹt hình tròn)
+        // Hạ trọng tâm xuống thấp (cy + 60) để nằm dưới chân
+        ctx.translate(cx, cy + 60); 
+        // Góc nhìn 3D dẹt hơn (0.3) để giống mặt đất
+        ctx.scale(1, 0.3); 
         
-        ctx.shadowBlur = 15;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = config.glow;
         ctx.globalCompositeOperation = 'lighter';
 
@@ -179,12 +175,12 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         ctx.rotate(rotation * 0.5);
         ctx.beginPath();
         ctx.arc(0, 0, 100, 0, Math.PI * 2);
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2.5;
         ctx.strokeStyle = config.primary;
         ctx.stroke();
         
         // Họa tiết chấm tròn
-        for(let i=0; i<6; i++) { // Giảm số lượng chấm để nhẹ hơn
+        for(let i=0; i<6; i++) {
             ctx.save();
             ctx.rotate((i * Math.PI * 2) / 6);
             ctx.beginPath();
@@ -195,18 +191,18 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         }
         ctx.restore();
 
-        // 2. Vòng Rune (Nét đứt)
+        // 2. Vòng Rune
         ctx.save();
         ctx.rotate(-rotation * 0.3);
         ctx.beginPath();
         ctx.arc(0, 0, 80, 0, Math.PI * 2);
         ctx.strokeStyle = config.secondary;
-        ctx.lineWidth = 1;
-        ctx.setLineDash([10, 15]);
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([8, 12]);
         ctx.stroke();
         ctx.restore();
 
-        // 3. Hình học ma pháp (Tam giác/Đa giác)
+        // 3. Hình học ma pháp
         ctx.save();
         ctx.rotate(rotation);
         ctx.beginPath();
@@ -214,7 +210,7 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
             ctx.lineTo(85 * Math.cos(i * 2 * Math.PI / 3), 85 * Math.sin(i * 2 * Math.PI / 3));
         }
         ctx.closePath();
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 2;
         ctx.strokeStyle = config.primary;
         ctx.stroke();
         ctx.restore();
@@ -222,7 +218,6 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         ctx.restore(); 
     };
 
-    // --- RENDER LOOP ---
     const render = () => {
         const width = canvas.width / 2; 
         const height = canvas.height / 2;
@@ -231,20 +226,18 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         const config = elementRef.current;
 
         ctx.clearRect(0, 0, width, height);
-        rotationRef.current += 0.015;
+        rotationRef.current += 0.01; // Quay chậm lại chút cho mượt
 
-        // 1. Vẽ Vòng
         drawMagicCircle(ctx, cx, cy, rotationRef.current, config);
 
-        // 2. Xử lý Hạt (Particles) - GIỚI HẠN 25 HẠT
-        if (particlesRef.current.length < 25 && Math.random() < 0.08) { 
+        if (particlesRef.current.length < 20 && Math.random() < 0.1) { 
             particlesRef.current.push(createParticle(width, height, config.particleColor));
         }
 
         ctx.save();
-        ctx.translate(cx, cy + 30); 
+        ctx.translate(cx, cy + 60); 
         ctx.globalCompositeOperation = 'screen'; 
-        ctx.scale(1, 1); // Reset scale cho hạt bay lên thẳng
+        ctx.scale(1, 1); 
 
         particlesRef.current.forEach((p, index) => {
             p.y -= p.speed; 
