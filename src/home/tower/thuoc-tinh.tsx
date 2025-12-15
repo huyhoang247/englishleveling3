@@ -1,6 +1,6 @@
 import React, { useRef, useEffect } from 'react';
 
-// --- BỘ ICON SVG ---
+// --- BỘ ICON SVG (Giữ nguyên) ---
 const Icons = {
   Skull: ({ color }: { color: string }) => (
     <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -48,48 +48,48 @@ export const ELEMENTS = {
   fire: {
     name: 'Hỏa Ngục',
     primary: '#ef4444', 
-    secondary: '#b91c1c',
-    glow: 'rgba(239, 68, 68, 0.8)',
+    secondary: '#fb7185', // Màu phụ sáng hơn tí
+    glow: 'rgba(239, 68, 68, 0.6)',
     particleColor: '239, 68, 68',
     Icon: Icons.Skull
   },
   water: {
     name: 'Thủy Triều',
     primary: '#3b82f6', 
-    secondary: '#1e3a8a', 
-    glow: 'rgba(59, 130, 246, 0.8)',
+    secondary: '#60a5fa', 
+    glow: 'rgba(59, 130, 246, 0.6)',
     particleColor: '59, 130, 246',
     Icon: Icons.Droplet
   },
   lightning: {
     name: 'Lôi Điện',
     primary: '#d8b4fe', 
-    secondary: '#7e22ce', 
-    glow: 'rgba(192, 132, 252, 0.8)',
+    secondary: '#e9d5ff', 
+    glow: 'rgba(192, 132, 252, 0.6)',
     particleColor: '216, 180, 254',
     Icon: Icons.Zap
   },
   ice: {
     name: 'Băng Giá',
     primary: '#22d3ee',
-    secondary: '#0891b2',
-    glow: 'rgba(34, 211, 238, 0.8)',
+    secondary: '#67e8f9',
+    glow: 'rgba(34, 211, 238, 0.6)',
     particleColor: '34, 211, 238',
     Icon: Icons.Ghost
   },
   poison: {
     name: 'Độc Tố',
     primary: '#a3e635',
-    secondary: '#3f6212',
-    glow: 'rgba(163, 230, 53, 0.8)',
+    secondary: '#bef264',
+    glow: 'rgba(163, 230, 53, 0.6)',
     particleColor: '163, 230, 53',
     Icon: Icons.Shield
   },
   holy: {
     name: 'Thánh Quang',
     primary: '#fcd34d',
-    secondary: '#b45309',
-    glow: 'rgba(252, 211, 77, 0.8)',
+    secondary: '#fde68a',
+    glow: 'rgba(252, 211, 77, 0.6)',
     particleColor: '252, 211, 77',
     Icon: Icons.Sword
   }
@@ -106,6 +106,7 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<any[]>([]);
   const rotationRef = useRef(0);
+  const pulseRef = useRef(0); // Dùng để tạo hiệu ứng nhịp đập
   const elementRef = useRef(ELEMENTS[elementKey]); 
 
   useEffect(() => {
@@ -137,67 +138,111 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         return {
             x: (Math.random() - 0.5) * 80, 
             y: 35, 
-            speed: 0.4 + Math.random() * 0.9, 
+            speed: 0.3 + Math.random() * 0.7, 
             size: Math.random() * 1.5 + 0.5,
             life: 1, 
-            decay: 0.01 + Math.random() * 0.02, 
+            decay: 0.008 + Math.random() * 0.015, 
             colorRGB: colorRGB
         };
     };
 
-    const drawMagicCircle = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rotation: number, config: typeof ELEMENTS['fire']) => {
+    const drawMagicCircle = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rotation: number, pulse: number, config: typeof ELEMENTS['fire']) => {
         ctx.save();
-        // Dịch lên trên một chút (từ cy + 50 -> cy + 40)
+        // Giữ nguyên vị trí cy + 40 như đã thống nhất
         ctx.translate(cx, cy + 40); 
         ctx.scale(1, 0.3); 
         
-        ctx.shadowBlur = 8;
+        // Hiệu ứng Pulse: Thay đổi độ sáng/mờ theo hàm sin
+        const pulseOpacity = 0.8 + Math.sin(pulse) * 0.2;
+        
+        ctx.shadowBlur = 10;
         ctx.shadowColor = config.glow;
         ctx.globalCompositeOperation = 'lighter';
         
-        // 1. Vòng tròn chính (Bán kính 80)
+        // --- LỚP 1: VÒNG TRÒN CHÍNH (KÉP) ---
         ctx.save();
-        ctx.rotate(rotation * 0.5);
+        ctx.rotate(rotation * 0.2); // Xoay chậm
         ctx.beginPath();
         ctx.arc(0, 0, 80, 0, Math.PI * 2);
         ctx.lineWidth = 2;
         ctx.strokeStyle = config.primary;
+        ctx.globalAlpha = pulseOpacity;
         ctx.stroke();
-        
-        // Họa tiết chấm tròn
-        for(let i=0; i<6; i++) {
-            ctx.save();
-            ctx.rotate((i * Math.PI * 2) / 6);
-            ctx.beginPath();
-            ctx.arc(80, 0, 2.5, 0, Math.PI*2);
-            ctx.fillStyle = config.secondary;
-            ctx.fill();
-            ctx.restore();
-        }
-        ctx.restore();
 
-        // 2. Vòng Rune (Bán kính 65)
-        ctx.save();
-        ctx.rotate(-rotation * 0.3);
+        // Vòng tròn mỏng bên trong sát vòng chính
         ctx.beginPath();
-        ctx.arc(0, 0, 65, 0, Math.PI * 2);
+        ctx.arc(0, 0, 75, 0, Math.PI * 2);
+        ctx.lineWidth = 1;
         ctx.strokeStyle = config.secondary;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([8, 12]);
+        ctx.globalAlpha = 0.5;
         ctx.stroke();
         ctx.restore();
+        
+        // --- LỚP 2: LỤC TINH TRẬN (HEXAGRAM - 2 TAM GIÁC) ---
+        // Thay vì 1 tam giác, vẽ 2 tam giác ngược nhau để tạo ngôi sao 6 cánh
+        const drawTriangle = (r: number, offsetAngle: number) => {
+            ctx.beginPath();
+            for (let i = 0; i < 3; i++) {
+                const angle = offsetAngle + (i * 2 * Math.PI / 3);
+                ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+            }
+            ctx.closePath();
+            ctx.stroke();
+            
+            // Vẽ các chấm tròn ở đỉnh tam giác (Nodes)
+            for (let i = 0; i < 3; i++) {
+                const angle = offsetAngle + (i * 2 * Math.PI / 3);
+                ctx.save();
+                ctx.translate(r * Math.cos(angle), r * Math.sin(angle));
+                ctx.beginPath();
+                ctx.arc(0, 0, 3, 0, Math.PI * 2);
+                ctx.fillStyle = config.secondary;
+                ctx.fill();
+                ctx.restore();
+            }
+        };
 
-        // 3. Hình học ma pháp (Tam giác)
-        // Đã sửa bán kính từ 70 -> 65 để khớp với vòng tròn nét đứt
         ctx.save();
-        ctx.rotate(rotation);
-        ctx.beginPath();
-        for (let i = 0; i < 3; i++) {
-            ctx.lineTo(65 * Math.cos(i * 2 * Math.PI / 3), 65 * Math.sin(i * 2 * Math.PI / 3));
-        }
-        ctx.closePath();
+        ctx.rotate(rotation * 0.5); // Xoay cùng chiều
         ctx.lineWidth = 1.5;
         ctx.strokeStyle = config.primary;
+        
+        // Tam giác 1
+        drawTriangle(75, 0);
+        // Tam giác 2 (Xoay 180 độ so với cái kia để tạo sao 6 cánh)
+        drawTriangle(75, Math.PI); 
+        ctx.restore();
+
+        // --- LỚP 3: VÒNG RUNE (KÝ TỰ CỔ) ---
+        // Xoay ngược chiều, nét đứt tạo cảm giác văn bản ma thuật
+        ctx.save();
+        ctx.rotate(-rotation * 0.4); 
+        ctx.beginPath();
+        ctx.arc(0, 0, 55, 0, Math.PI * 2);
+        ctx.strokeStyle = config.secondary;
+        ctx.lineWidth = 3;
+        // Tạo pattern nét đứt ngẫu nhiên: [dài, khoảng, ngắn, khoảng...]
+        ctx.setLineDash([2, 5, 8, 4, 2, 6]); 
+        ctx.globalAlpha = 0.7;
+        ctx.stroke();
+        ctx.restore();
+
+        // --- LỚP 4: TÂM NĂNG LƯỢNG ---
+        // Một hình thoi xoay ở giữa
+        ctx.save();
+        ctx.rotate(-rotation);
+        ctx.beginPath();
+        const coreSize = 15;
+        ctx.moveTo(0, -coreSize);
+        ctx.lineTo(coreSize, 0);
+        ctx.lineTo(0, coreSize);
+        ctx.lineTo(-coreSize, 0);
+        ctx.closePath();
+        ctx.fillStyle = config.primary;
+        ctx.globalAlpha = 0.4;
+        ctx.fill();
+        ctx.strokeStyle = config.secondary;
+        ctx.lineWidth = 1;
         ctx.stroke();
         ctx.restore();
 
@@ -212,9 +257,12 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         const config = elementRef.current;
 
         ctx.clearRect(0, 0, width, height);
-        rotationRef.current += 0.01; 
+        
+        // Cập nhật biến animation
+        rotationRef.current += 0.012; 
+        pulseRef.current += 0.05;
 
-        drawMagicCircle(ctx, cx, cy, rotationRef.current, config);
+        drawMagicCircle(ctx, cx, cy, rotationRef.current, pulseRef.current, config);
 
         if (particlesRef.current.length < 15 && Math.random() < 0.1) { 
             particlesRef.current.push(createParticle(width, height, config.particleColor));
