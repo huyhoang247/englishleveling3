@@ -1,6 +1,7 @@
-import React, { useRef, useEffect, useMemo } from 'react';
+import React, { useRef, useEffect } from 'react';
 
-// --- BỘ ICON SVG (Giữ nguyên) ---
+// --- BỘ ICON SVG ---
+// Đã loại bỏ icon Eye (Hắc ám)
 const Icons = {
   Skull: ({ color }: { color: string }) => (
     <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -40,16 +41,10 @@ const Icons = {
       <line x1="16" y1="16" x2="20" y2="20" />
       <line x1="19" y1="21" x2="21" y2="19" />
     </svg>
-  ),
-  Eye: ({ color }: { color: string }) => (
-    <svg width="100%" height="100%" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
   )
 };
 
-// --- CẤU HÌNH NGUYÊN TỐ (Giữ nguyên) ---
+// --- CẤU HÌNH NGUYÊN TỐ (Đã xóa shadow) ---
 export const ELEMENTS = {
   fire: {
     name: 'Hỏa Ngục',
@@ -74,14 +69,6 @@ export const ELEMENTS = {
     glow: 'rgba(192, 132, 252, 0.8)',
     particleColor: '216, 180, 254',
     Icon: Icons.Zap
-  },
-  shadow: {
-    name: 'Hắc Ám',
-    primary: '#94a3b8', 
-    secondary: '#0f172a', 
-    glow: 'rgba(71, 85, 105, 0.8)', 
-    particleColor: '148, 163, 184', 
-    Icon: Icons.Eye
   },
   ice: {
     name: 'Băng Giá',
@@ -149,33 +136,33 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
 
     const createParticle = (width: number, height: number, colorRGB: string) => {
         return {
-            x: (Math.random() - 0.5) * 120, // Gom hạt gần tâm hơn
+            x: (Math.random() - 0.5) * 80, // Thu nhỏ phạm vi sinh hạt (80)
             y: 35, 
             speed: 0.4 + Math.random() * 0.9, 
-            size: Math.random() * 1.8 + 0.5,
+            size: Math.random() * 1.5 + 0.5,
             life: 1, 
-            decay: 0.01 + Math.random() * 0.02, // Hạt tan nhanh hơn chút
+            decay: 0.01 + Math.random() * 0.02, 
             colorRGB: colorRGB
         };
     };
 
     const drawMagicCircle = (ctx: CanvasRenderingContext2D, cx: number, cy: number, rotation: number, config: typeof ELEMENTS['fire']) => {
         ctx.save();
-        // Hạ trọng tâm xuống thấp (cy + 60) để nằm dưới chân
-        ctx.translate(cx, cy + 60); 
-        // Góc nhìn 3D dẹt hơn (0.3) để giống mặt đất
+        ctx.translate(cx, cy + 50); 
         ctx.scale(1, 0.3); 
         
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         ctx.shadowColor = config.glow;
         ctx.globalCompositeOperation = 'lighter';
 
-        // 1. Vòng tròn chính
+        // GIẢM KÍCH THƯỚC BÁN KÍNH VẼ ĐỂ VÒNG NHỎ HƠN
+        
+        // 1. Vòng tròn chính (Giảm bán kính từ 100 -> 80)
         ctx.save();
         ctx.rotate(rotation * 0.5);
         ctx.beginPath();
-        ctx.arc(0, 0, 100, 0, Math.PI * 2);
-        ctx.lineWidth = 2.5;
+        ctx.arc(0, 0, 80, 0, Math.PI * 2);
+        ctx.lineWidth = 2;
         ctx.strokeStyle = config.primary;
         ctx.stroke();
         
@@ -184,33 +171,33 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
             ctx.save();
             ctx.rotate((i * Math.PI * 2) / 6);
             ctx.beginPath();
-            ctx.arc(100, 0, 3, 0, Math.PI*2);
+            ctx.arc(80, 0, 2.5, 0, Math.PI*2);
             ctx.fillStyle = config.secondary;
             ctx.fill();
             ctx.restore();
         }
         ctx.restore();
 
-        // 2. Vòng Rune
+        // 2. Vòng Rune (Giảm bán kính từ 80 -> 65)
         ctx.save();
         ctx.rotate(-rotation * 0.3);
         ctx.beginPath();
-        ctx.arc(0, 0, 80, 0, Math.PI * 2);
+        ctx.arc(0, 0, 65, 0, Math.PI * 2);
         ctx.strokeStyle = config.secondary;
         ctx.lineWidth = 1.5;
         ctx.setLineDash([8, 12]);
         ctx.stroke();
         ctx.restore();
 
-        // 3. Hình học ma pháp
+        // 3. Hình học ma pháp (Giảm bán kính từ 85 -> 70)
         ctx.save();
         ctx.rotate(rotation);
         ctx.beginPath();
         for (let i = 0; i < 3; i++) {
-            ctx.lineTo(85 * Math.cos(i * 2 * Math.PI / 3), 85 * Math.sin(i * 2 * Math.PI / 3));
+            ctx.lineTo(70 * Math.cos(i * 2 * Math.PI / 3), 70 * Math.sin(i * 2 * Math.PI / 3));
         }
         ctx.closePath();
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 1.5;
         ctx.strokeStyle = config.primary;
         ctx.stroke();
         ctx.restore();
@@ -226,16 +213,16 @@ const MagicCircle: React.FC<MagicCircleProps> = ({ elementKey, className }) => {
         const config = elementRef.current;
 
         ctx.clearRect(0, 0, width, height);
-        rotationRef.current += 0.01; // Quay chậm lại chút cho mượt
+        rotationRef.current += 0.01; 
 
         drawMagicCircle(ctx, cx, cy, rotationRef.current, config);
 
-        if (particlesRef.current.length < 20 && Math.random() < 0.1) { 
+        if (particlesRef.current.length < 15 && Math.random() < 0.1) { 
             particlesRef.current.push(createParticle(width, height, config.particleColor));
         }
 
         ctx.save();
-        ctx.translate(cx, cy + 60); 
+        ctx.translate(cx, cy + 50); 
         ctx.globalCompositeOperation = 'screen'; 
         ctx.scale(1, 1); 
 
