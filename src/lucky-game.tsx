@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 
-// --- SVG Icons (Giữ nguyên) ---
+// --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -59,89 +59,97 @@ interface RewardPopupProps {
 // --- UTILITY FUNCTIONS ---
 const getRarityColor = (rarity: Item['rarity']) => {
     switch(rarity) {
-      case 'common': return '#9ca3af'; // gray
-      case 'uncommon': return '#34d399'; // emerald
-      case 'rare': return '#38bdf8'; // sky
-      case 'epic': return '#a78bfa'; // violet
-      case 'legendary': return '#fbbf24'; // amber
-      case 'jackpot': return '#f59e0b'; // orange
+      case 'common': return '#9ca3af'; 
+      case 'uncommon': return '#34d399'; 
+      case 'rare': return '#38bdf8'; 
+      case 'epic': return '#a78bfa'; 
+      case 'legendary': return '#fbbf24'; 
+      case 'jackpot': return '#f59e0b'; 
       default: return '#9ca3af';
     }
 };
 
-// Style thẻ giống vong-quay.tsx nhưng map theo rarity của lucky-game
 const getCardStyle = (rarity: Item['rarity']) => {
     switch(rarity) {
-      case 'common': return { bg: 'bg-gradient-to-b from-slate-800 to-slate-900', border: 'border-slate-600', glow: 'shadow-none' };
-      case 'uncommon': return { bg: 'bg-gradient-to-b from-emerald-900/40 to-slate-900', border: 'border-emerald-600', glow: 'shadow-[0_0_10px_rgba(16,185,129,0.2)]' };
-      case 'rare': return { bg: 'bg-gradient-to-b from-cyan-900/40 to-slate-900', border: 'border-cyan-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]' };
-      case 'epic': return { bg: 'bg-gradient-to-b from-fuchsia-900/40 to-slate-900', border: 'border-fuchsia-500', glow: 'shadow-[0_0_20px_rgba(232,121,249,0.4)]' };
-      case 'legendary': return { bg: 'bg-gradient-to-b from-amber-700/40 to-slate-900', border: 'border-amber-400', glow: 'shadow-[0_0_30px_rgba(251,191,36,0.5)]' };
-      case 'jackpot': return { bg: 'bg-gradient-to-b from-red-600 via-amber-600 to-slate-900', border: 'border-yellow-300', glow: 'shadow-[0_0_40px_rgba(252,211,77,0.6)]' };
+      case 'common': return { bg: 'bg-gradient-to-b from-slate-800 to-slate-900', border: 'border-slate-600', glow: '' };
+      case 'uncommon': return { bg: 'bg-gradient-to-b from-emerald-900/50 to-slate-900', border: 'border-emerald-600', glow: 'shadow-[0_0_10px_rgba(16,185,129,0.3)]' };
+      case 'rare': return { bg: 'bg-gradient-to-b from-cyan-900/50 to-slate-900', border: 'border-cyan-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.4)]' };
+      case 'epic': return { bg: 'bg-gradient-to-b from-fuchsia-900/50 to-slate-900', border: 'border-fuchsia-500', glow: 'shadow-[0_0_20px_rgba(232,121,249,0.5)]' };
+      case 'legendary': return { bg: 'bg-gradient-to-b from-amber-700/50 to-slate-900', border: 'border-amber-400', glow: 'shadow-[0_0_30px_rgba(251,191,36,0.6)]' };
+      case 'jackpot': return { bg: 'bg-gradient-to-b from-red-600 via-amber-600 to-slate-900', border: 'border-yellow-300', glow: 'shadow-[0_0_40px_rgba(252,211,77,0.8)]' };
       default: return { bg: 'bg-slate-800', border: 'border-slate-700', glow: '' };
     }
 };
 
 // --- CONFIG ---
-const CARD_WIDTH = 120; // Kích thước thẻ lớn hơn như vong-quay.tsx
-const CARD_GAP = 16;
-const VISIBLE_CARDS = 5; // Số thẻ nhìn thấy
+const CARD_WIDTH = 110;
+const CARD_GAP = 12;
+const VISIBLE_CARDS = 5;
 const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
 
-// --- POPUP ---
+// --- REWARD POPUP (Design của phiên bản trước - Icon nổi lên trên) ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
+
     return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
-        className={`relative w-80 bg-slate-900/90 border rounded-xl shadow-2xl animate-fade-in-scale-fast text-white flex flex-col items-center p-6 text-center
-            ${jackpotWon ? 'border-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.4)]' : 'border-slate-600'}`
+        className={`relative w-80 bg-slate-900 border-2 rounded-2xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
+            ${jackpotWon ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-slate-600'}`
         }
         onClick={(e) => e.stopPropagation()}
       >
-        <button onClick={onClose} className="absolute top-2 right-2 text-slate-400 hover:text-white">✕</button>
-        
-        {jackpotWon ? (
-          <>
-            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png" alt="Jackpot" className="w-24 h-24 mb-2 animate-bounce-subtle drop-shadow-[0_0_15px_rgba(250,204,21,0.8)]" />
-            <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-2">JACKPOT!</h2>
-            <p className="text-yellow-100/80 text-sm mb-4">Bạn đã trúng toàn bộ quỹ thưởng!</p>
-            <div className="flex items-center justify-center gap-2 bg-slate-800/60 w-full py-3 rounded-lg border border-yellow-500/30 mb-6">
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
-                <span className="text-3xl font-bold text-yellow-400">{item.value.toLocaleString()}</span>
-            </div>
-          </>
-        ) : (
-          <>
-            <h2 className="text-xl font-bold uppercase mb-6 tracking-wider" style={{ color: rarityColor }}>You received</h2>
-            <div className={`w-24 h-24 rounded-2xl flex items-center justify-center mb-4 bg-slate-800 shadow-xl border-2`} style={{borderColor: rarityColor}}>
+        {/* Floating Icon */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2">
+             <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-lg ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
-                    <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain drop-shadow-lg" />
+                    <img src={item.icon} alt={item.name} className="w-14 h-14 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
                 ) : (
-                    <item.icon className={`w-16 h-16 ${item.color} drop-shadow-lg`} />
+                    <item.icon className={`w-14 h-14 ${item.color}`} />
                 )}
-            </div>
-            
-            <p className="font-bold text-lg uppercase tracking-wide mb-1" style={{ color: rarityColor }}>{item.rarity}</p>
-            <p className="text-slate-400 text-sm mb-6 uppercase tracking-widest">{item.name || 'Reward'}</p>
+             </div>
+        </div>
 
-            {(item.rewardType === 'coin' || item.rewardAmount) && (
-                <div className="flex items-center justify-center gap-2 bg-slate-800/60 px-6 py-2 rounded-lg border border-slate-700 mb-6">
-                    {item.rewardType === 'coin' && <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5" />}
-                    {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-5 h-5" />}
-                    <span className="text-xl font-bold text-white">
-                        {item.rewardType === 'coin' ? item.value.toLocaleString() : `x${item.rewardAmount}`}
-                    </span>
-                </div>
+        <div className="mt-12 mb-2">
+            {jackpotWon ? (
+                <>
+                    <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-1 drop-shadow-md animate-pulse">JACKPOT!</h2>
+                    <p className="font-sans text-yellow-200/80 text-sm">Bạn đã trúng toàn bộ quỹ thưởng!</p>
+                </>
+            ) : (
+                <>
+                    <h2 className="text-2xl font-bold uppercase tracking-wide" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
+                    <p className="font-sans text-slate-400 text-xs uppercase tracking-widest mt-1">{item.rarity} Reward</p>
+                </>
             )}
-          </>
-        )}
+        </div>
+
+        <div className="flex flex-col gap-2 w-full my-6">
+            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700 flex flex-col items-center justify-center">
+                 <span className="text-slate-400 text-xs font-sans mb-1">PHẦN THƯỞNG</span>
+                 <div className="flex items-center gap-2">
+                    {item.rewardType === 'coin' && (
+                        <>
+                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-6 h-6" />
+                            <span className="text-2xl font-bold text-yellow-400">{item.value.toLocaleString()}</span>
+                        </>
+                    )}
+                    {(item.rewardType === 'pickaxe' || item.rewardType === 'other') && (
+                        <>
+                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-6 h-6" />}
+                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-6 h-6 ${item.color}`} />}
+                            <span className="text-2xl font-bold text-white">x{item.rewardAmount?.toLocaleString()}</span>
+                        </>
+                    )}
+                 </div>
+            </div>
+        </div>
         
         <button
           onClick={onClose}
-          className="w-full py-3 bg-blue-600 hover:bg-blue-500 rounded-lg font-bold text-white uppercase tracking-wider transition-all active:scale-95"
+          className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl font-bold text-white tracking-wider uppercase shadow-lg transform active:scale-95 transition-all"
         >
-          Collect
+          Nhận Quà
         </button>
       </div>
     </div>
@@ -181,10 +189,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     return fillerItems[Math.floor(Math.random() * fillerItems.length)];
   }, [items]);
 
-  // Init Strip
+  // Initial Strip (Visual only)
   useEffect(() => {
     const initStrip: StripItem[] = [];
-    // Tạo strip tĩnh ban đầu để hiển thị đẹp
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${i}` });
     }
@@ -194,7 +201,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const spinChest = useCallback(() => {
     if (isSpinning || currentCoins < 100) return;
 
-    // Logic tiền
+    // Logic Cost
     onUpdateCoins(-100);
     const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
     onUpdateJackpotPool(randomCoinsToAdd);
@@ -203,7 +210,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     setJackpotWon(false);
     setShowRewardPopup(false);
 
-    // Xác định kết quả
+    // Winner Logic
     let winner: Item;
     if (Math.random() < 0.01) { // 1% Jackpot
         winner = items.find(i => i.rarity === 'jackpot')!;
@@ -212,18 +219,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         winner = others[Math.floor(Math.random() * others.length)];
     }
 
-    // Tạo strip mới cho vòng quay
-    // Bắt đầu từ 0, người thắng ở vị trí TARGET_INDEX
-    const TARGET_INDEX = 40; 
+    // Prepare Spin Strip
+    const TARGET_INDEX = 50; 
     const newStrip: StripItem[] = [];
     
-    // Fillers trước
     for (let i = 0; i < TARGET_INDEX; i++) {
         newStrip.push({ ...getRandomFiller(), uniqueId: `spin-pre-${Date.now()}-${i}` });
     }
-    // Người thắng
     newStrip.push({ ...winner, uniqueId: `winner-${Date.now()}` });
-    // Fillers sau
     for (let i = 0; i < 15; i++) {
         newStrip.push({ ...getRandomFiller(), uniqueId: `spin-post-${Date.now()}-${i}` });
     }
@@ -232,23 +235,17 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     setTransitionDuration(0);
     setOffset(0);
 
-    // Tính toán vị trí offset để đưa winner vào chính giữa
-    // Công thức: -(Vị trí thẻ thắng) + (Một nửa chiều rộng container) - (Một nửa chiều rộng thẻ)
-    // Thêm Jitter để kim không trỏ chính giữa tuyệt đối (tạo cảm giác thật)
+    // Animation Trigger
     setTimeout(() => {
         const jitter = Math.floor(Math.random() * (CARD_WIDTH * 0.4)) - (CARD_WIDTH * 0.2); 
-        
-        // Giả sử container width dựa trên VISIBLE_CARDS
         const CONTAINER_WIDTH = (VISIBLE_CARDS * ITEM_FULL_WIDTH) - CARD_GAP;
         const CENTER_OFFSET = CONTAINER_WIDTH / 2;
-        
         const targetX = (TARGET_INDEX * ITEM_FULL_WIDTH) + (CARD_WIDTH / 2);
         const finalOffset = -(targetX - CENTER_OFFSET) + jitter;
 
-        setTransitionDuration(5); // 5 giây quay
+        setTransitionDuration(5);
         setOffset(finalOffset);
         
-        // Xử lý khi quay xong
         setTimeout(() => {
             setIsSpinning(false);
             
@@ -269,8 +266,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
             setWonRewardDetails({ ...winner, value: actualValue });
             setShowRewardPopup(true);
-
-        }, 5100); // Đợi hơn 5s một chút
+        }, 5100);
     }, 50);
 
   }, [isSpinning, currentCoins, items, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, currentJackpotPool, getRandomFiller]);
@@ -278,7 +274,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   return (
     <div className="min-h-screen bg-[#050505] bg-grid-pattern flex flex-col items-center font-sans pb-4 overflow-hidden relative">
       
-      {/* Background Ambience (Giống vong-quay.tsx) */}
+      {/* Background Ambience */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,#1e1b4b_0%,#000000_70%)] opacity-60" />
       </div>
@@ -286,7 +282,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
       <header className="relative w-full flex items-center justify-between py-2 px-4 bg-black/40 backdrop-blur-md z-20 border-b border-slate-800">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
           <HomeIcon className="w-5 h-5 text-slate-300" />
-          <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
+          <span className="hidden sm:inline text-sm font-semibold text-slate-300">Quay lại</span>
         </button>
         <CoinDisplay 
           displayedCoins={currentCoins}
@@ -294,7 +290,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         />
       </header>
 
-      <div className="w-full max-w-5xl px-4 pt-8 flex-1 flex flex-col items-center">
+      <div className="w-full max-w-5xl px-4 pt-8 flex-1 flex flex-col items-center justify-center">
         
         {/* --- JACKPOT UI (GIỮ NGUYÊN TỪ FILE GỐC) --- */}
         <div className="text-center mb-10 w-full max-w-lg z-10">
@@ -309,7 +305,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             </div>
         </div>
         
-        {/* --- NEW SPINNER UI (GIỐNG vong-quay.tsx) --- */}
+        {/* --- SPINNER UI (STYLE vong-quay.tsx) --- */}
         <div className="relative w-full max-w-4xl mb-12">
             
             {/* Decorative Rails */}
@@ -317,14 +313,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             <div className="absolute -bottom-3 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-700 to-transparent opacity-50"></div>
 
             {/* Main Window */}
-            <div className="relative h-56 w-full overflow-hidden bg-slate-950/80 backdrop-blur-sm border-y border-slate-800 shadow-2xl"
+            <div className="relative h-52 w-full overflow-hidden bg-slate-950/80 backdrop-blur-sm border-y border-slate-800 shadow-2xl"
                  style={{ maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)' }}>
                 
                 {/* The Strip */}
                 <div 
                     className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform"
                     style={{
-                        transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, // Center alignment fix
+                        transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
                         transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.12, 0.8, 0.3, 1.0)` : 'none',
                     }}
                 >
@@ -342,7 +338,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                     border ${style.border}
                                     flex flex-col items-center justify-center gap-2
                                     ${style.glow}
-                                    transition-all duration-300
                                     shadow-lg
                                     ${isSpinning ? 'opacity-90' : 'opacity-100'}
                                 `}>
@@ -350,11 +345,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                     <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
                                     {/* Icon Container */}
-                                    <div className="relative z-10 p-2 rounded-full bg-slate-950/40 ring-1 ring-white/10 w-14 h-14 flex items-center justify-center">
+                                    <div className="relative z-10 p-2 rounded-full bg-slate-950/40 ring-1 ring-white/10 w-12 h-12 flex items-center justify-center">
                                         {typeof item.icon === 'string' ? (
-                                            <img src={item.icon} alt={item.name} className="w-10 h-10 object-contain drop-shadow-md" />
+                                            <img src={item.icon} alt={item.name} className="w-8 h-8 object-contain drop-shadow-md" />
                                         ) : (
-                                            <item.icon className={`w-10 h-10 ${item.color} drop-shadow-md`} />
+                                            <item.icon className={`w-8 h-8 ${item.color} drop-shadow-md`} />
                                         )}
                                     </div>
                                     
@@ -367,7 +362,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                                             {item.rarity === 'jackpot' ? '$$$' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                                         </div>
                                     </div>
-
+                                    
+                                    {/* Rarity Bar */}
+                                    <div className="absolute bottom-0 left-0 right-0 h-1 rounded-b-lg" style={{ backgroundColor: getRarityColor(item.rarity) }}></div>
                                 </div>
                             </div>
                         )
@@ -375,53 +372,37 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 </div>
             </div>
 
-            {/* --- CENTER TARGET (The Laser Pointer) --- */}
+            {/* --- CENTER TARGET (Pointer) --- */}
             <div className="absolute top-0 bottom-0 left-1/2 -translate-x-1/2 w-[140px] pointer-events-none z-20">
-                {/* Top Marker */}
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-cyan-500 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-                
-                {/* Bottom Marker */}
-                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[12px] border-b-cyan-500 drop-shadow-[0_0_8px_rgba(6,182,212,0.8)]"></div>
-                
-                {/* Center Laser Line */}
-                <div className="absolute top-2 bottom-2 left-1/2 w-[2px] bg-cyan-500/40 shadow-[0_0_10px_rgba(6,182,212,0.6)]"></div>
-
-                {/* Side Brackets (Tech feel) */}
-                <div className="absolute inset-y-4 left-0 w-2 border-l border-y border-cyan-500/20 rounded-l-lg"></div>
-                <div className="absolute inset-y-4 right-0 w-2 border-r border-y border-cyan-500/20 rounded-r-lg"></div>
+                {/* Top Arrow */}
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-t-[12px] border-t-yellow-500 drop-shadow-lg"></div>
+                {/* Bottom Arrow */}
+                <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[8px] border-l-transparent border-r-[8px] border-r-transparent border-b-[12px] border-b-yellow-500 drop-shadow-lg"></div>
+                {/* Center Line */}
+                <div className="absolute top-2 bottom-2 left-1/2 w-[2px] bg-yellow-500/50 shadow-[0_0_10px_rgba(234,179,8,0.6)]"></div>
             </div>
         </div>
 
-        {/* --- CONTROLS --- */}
+        {/* --- CONTROLS (NÚT SPIN CỦA PHIÊN BẢN TRƯỚC) --- */}
         <div className="flex flex-col items-center justify-center z-20">
               <button
                 onClick={spinChest}
                 disabled={isSpinning || currentCoins < 100}
-                className={`
-                    relative group w-48 py-4 rounded-sm font-bold text-lg uppercase tracking-[0.2em]
-                    transition-all duration-300
-                    flex items-center justify-center overflow-hidden
-                    ${isSpinning || currentCoins < 100
-                        ? 'bg-slate-900 text-slate-600 border border-slate-800 cursor-not-allowed' 
-                        : 'bg-cyan-600 text-white hover:bg-cyan-500 hover:shadow-[0_0_30px_rgba(8,145,178,0.5)] border border-cyan-400'
-                    }
-                `}
-                style={{ clipPath: 'polygon(10% 0, 100% 0, 100% 70%, 90% 100%, 0 100%, 0 30%)' }}
+                className="group relative w-48 h-16 rounded-xl bg-slate-900 border-2 border-cyan-600 overflow-hidden transition-all duration-200
+                           disabled:border-slate-700 disabled:opacity-70 disabled:cursor-not-allowed
+                           active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]"
               >
-                {/* Shine Effect */}
-                {!isSpinning && currentCoins >= 100 && (
-                    <div className="absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shine" />
-                )}
-
-                <div className="relative z-10 flex flex-col items-center">
+                <div className={`absolute inset-0 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'}`}></div>
+                
+                <div className="relative z-10 flex flex-col items-center justify-center h-full">
                     {isSpinning ? (
-                        <span className="text-sm">ROLLING...</span>
+                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">ROLLING...</span>
                     ) : (
                         <>
-                            <span className="mb-0.5">SPIN</span>
-                            <div className="flex items-center gap-1.5 text-xs opacity-90 bg-black/20 px-2 py-0.5 rounded">
-                                <span>100</span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3" />
+                            <span className="font-lilita text-2xl text-cyan-400 uppercase tracking-widest drop-shadow-md group-hover:text-cyan-300">SPIN</span>
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <span className={`text-sm font-bold ${currentCoins < 100 ? 'text-red-500' : 'text-slate-300'}`}>100</span>
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
                             </div>
                         </>
                     )}
@@ -429,8 +410,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               </button>
               
               {currentCoins < 100 && !isSpinning && (
-                  <p className="text-red-500 text-xs mt-3 font-semibold uppercase tracking-wide bg-red-950/40 px-3 py-1 rounded border border-red-900/50">
-                      Not enough coins
+                  <p className="text-red-500 text-sm mt-3 font-semibold bg-red-950/30 px-3 py-1 rounded-full border border-red-900/50">
+                      Không đủ xu để quay!
                   </p>
               )}
         </div>
@@ -449,18 +430,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
           background-size: 2rem 2rem;
         }
         
-        @keyframes shine {
-          0% { left: -100%; }
-          100% { left: 100%; }
-        }
-        .animate-shine { animation: shine 1s linear infinite; }
-        
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; }
-        @keyframes bounce-subtle { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
-        .animate-bounce-subtle { animation: bounce-subtle 2s ease-in-out infinite; }
       `}</style>
     </div>
   );
