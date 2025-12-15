@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 
-// --- SVG Icons (Giữ nguyên) ---
+// --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -69,8 +69,7 @@ const getRarityColor = (rarity: Item['rarity']) => {
     }
 };
 
-// Cập nhật style cho thẻ bài trong vòng quay đẹp hơn, 
-// nhưng vẫn giữ cấu trúc trả về để logic hoạt động
+// Style cho thẻ bài trong vòng quay (Đẹp hơn, có gradient)
 const getCardStyle = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return { bg: 'bg-gradient-to-br from-slate-800 to-slate-900', border: 'border-slate-600', glow: 'shadow-inner' };
@@ -86,10 +85,10 @@ const getCardStyle = (rarity: Item['rarity']) => {
 // --- CONFIG ---
 const CARD_WIDTH = 110;
 const CARD_GAP = 12;
-const VISIBLE_CARDS = 5;
 const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
+const VISIBLE_CARDS = 5;
 
-// --- REWARD POPUP (GIỮ NGUYÊN HOÀN TOÀN) ---
+// --- REWARD POPUP (GIỮ NGUYÊN BẢN CŨ THEO YÊU CẦU) ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
 
@@ -222,14 +221,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     }
 
     // Prepare Spin Strip
-    const TARGET_INDEX = 50; 
+    const TARGET_INDEX = 40; 
     const newStrip: StripItem[] = [];
     
     for (let i = 0; i < TARGET_INDEX; i++) {
         newStrip.push({ ...getRandomFiller(), uniqueId: `spin-pre-${Date.now()}-${i}` });
     }
     newStrip.push({ ...winner, uniqueId: `winner-${Date.now()}` });
-    for (let i = 0; i < 15; i++) {
+    for (let i = 0; i < 5; i++) {
         newStrip.push({ ...getRandomFiller(), uniqueId: `spin-post-${Date.now()}-${i}` });
     }
 
@@ -239,13 +238,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
     // Animation Trigger
     setTimeout(() => {
-        const jitter = Math.floor(Math.random() * (CARD_WIDTH * 0.4)) - (CARD_WIDTH * 0.2); 
-        const CONTAINER_WIDTH = (VISIBLE_CARDS * ITEM_FULL_WIDTH) - CARD_GAP;
-        const CENTER_OFFSET = CONTAINER_WIDTH / 2;
-        const targetX = (TARGET_INDEX * ITEM_FULL_WIDTH) + (CARD_WIDTH / 2);
-        const finalOffset = -(targetX - CENTER_OFFSET) + jitter;
+        // --- FIX LỆCH Ô ---
+        // Đưa dải băng sang trái một khoảng đúng bằng vị trí của ô trúng thưởng.
+        // CSS transform sẽ lo việc căn giữa thẻ (trừ đi 1/2 chiều rộng thẻ).
+        const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
 
-        setTransitionDuration(5);
+        setTransitionDuration(5.5); // Thời gian quay
         setOffset(finalOffset);
         
         setTimeout(() => {
@@ -268,7 +266,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
             setWonRewardDetails({ ...winner, value: actualValue });
             setShowRewardPopup(true);
-        }, 5100);
+        }, 5600); // Đợi quay xong
     }, 50);
 
   }, [isSpinning, currentCoins, items, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, currentJackpotPool, getRandomFiller]);
@@ -276,7 +274,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
-      {/* --- NEW: Background Ambience (Đẹp hơn) --- */}
+      {/* --- BACKGROUND AMBIENCE (Mới) --- */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Radial Gradient nền */}
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,#1e1b4b_0%,#000000_80%)]" />
@@ -286,7 +284,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/20 blur-[100px] rounded-full"></div>
       </div>
 
-      {/* --- Header (Giữ chức năng, làm gọn) --- */}
+      {/* --- Header --- */}
       <header className="relative w-full flex items-center justify-between py-3 px-4 z-20">
         <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors backdrop-blur-sm">
           <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -300,7 +298,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10">
         
-        {/* --- JACKPOT UI (Cải tiến giao diện nhưng giữ logic) --- */}
+        {/* --- JACKPOT UI (Giao diện mới) --- */}
         <div className="text-center mb-8 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
@@ -326,13 +324,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             </div>
         </div>
         
-        {/* --- SPINNER UI (Cải tiến khung máy) --- */}
+        {/* --- SPINNER UI (Khung máy mới) --- */}
         <div className="relative w-full max-w-4xl mb-12">
             
-            {/* Máy quay hiện đại hơn */}
+            {/* Máy quay hiện đại */}
             <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden">
                 
-                {/* Bóng đổ bên trong (Inset Shadow) tạo chiều sâu */}
+                {/* Bóng đổ bên trong (Inset Shadow) */}
                 <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] rounded-xl"></div>
                 
                 {/* Lớp mờ 2 bên (Fade Mask) */}
@@ -346,6 +344,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 <div 
                     className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
+                        // LOGIC CĂN GIỮA: offset đưa mép trái ô trúng về giữa màn hình, trừ đi 1 nửa chiều rộng thẻ để tâm thẻ vào giữa
                         transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
                         transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.12, 0.8, 0.3, 1.0)` : 'none',
                     }}
@@ -399,7 +398,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 </div>
             </div>
 
-            {/* --- CENTER TARGET (Scanner Line Style) --- */}
+            {/* --- CENTER TARGET (Scanner Style) --- */}
             <div className="absolute inset-0 pointer-events-none z-30 flex justify-center">
                  {/* Laser Line */}
                  <div className="h-full w-[2px] bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.8)] opacity-80"></div>
@@ -410,7 +409,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             </div>
         </div>
 
-        {/* --- CONTROLS (NÚT SPIN - GIỮ NGUYÊN 100% CŨ) --- */}
+        {/* --- CONTROLS (NÚT SPIN - GIỮ NGUYÊN BẢN CŨ) --- */}
         <div className="flex flex-col items-center justify-center z-20">
               <button
                 onClick={spinChest}
