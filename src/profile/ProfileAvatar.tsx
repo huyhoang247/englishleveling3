@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-// --- Rank Configuration System (Lấy từ hieu-ung-rank.tsx) ---
+// --- Rank Configuration System ---
 export const RANK_DATA = {
   E: { color: '#9ca3af', glow: 'rgba(156, 163, 175, 0.6)', label: 'COMMON' },     // Gray
   D: { color: '#4ade80', glow: 'rgba(74, 222, 128, 0.6)', label: 'UNCOMMON' },  // Green
@@ -11,10 +11,11 @@ export const RANK_DATA = {
   SSR: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.9)', label: 'GODLY' }      // Red
 };
 
+// Định nghĩa kiểu dữ liệu cho Props (nếu dùng TypeScript)
 interface ProfileAvatarProps {
     avatarUrl: string;
-    rank?: keyof typeof RANK_DATA; // E, D, B, A, S, SS, SSR
-    size?: number; // Kích thước hiển thị (width/height)
+    rank?: keyof typeof RANK_DATA; 
+    size?: number;
     className?: string;
     onClick?: () => void;
 }
@@ -34,7 +35,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
     useEffect(() => {
         const img = new Image();
         img.src = avatarUrl;
-        img.crossOrigin = "Anonymous"; // Xử lý CORS nếu cần
+        img.crossOrigin = "Anonymous"; // Xử lý CORS nếu ảnh từ nguồn ngoài
         img.onload = () => {
             imgRef.current = img;
             setImageLoaded(true);
@@ -52,6 +53,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
         let time = 0;
         
         // Cấu hình Rank
+        // @ts-ignore
         const theme = RANK_DATA[rank] || RANK_DATA['D'];
         
         // Thiết lập kích thước Canvas (High DPI support)
@@ -172,6 +174,7 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
             ctx.restore();
 
             // 6. Hiệu ứng hạt năng lượng bay lên (Particles) - Chỉ cho Rank cao
+            // @ts-ignore
             if (['S', 'SS', 'SSR'].includes(rank)) {
                 const particleCount = rank === 'SSR' ? 4 : 2;
                 for(let i = 0; i < particleCount; i++) {
@@ -225,9 +228,6 @@ const ProfileAvatar: React.FC<ProfileAvatarProps> = ({
                     pointerEvents: 'none' // Để click event xuyên qua div cha nếu cần
                 }} 
             />
-            
-            {/* Icon máy ảnh đè lên trên cùng (nếu muốn giữ nút edit) - Sẽ được handle bởi parent component, 
-                nhưng ở đây ta để trống để logic canvas không bị che */}
         </div>
     );
 };
