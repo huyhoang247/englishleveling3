@@ -105,7 +105,8 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     };
 
     return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
+    /* CHANGED: Removed backdrop-blur-md, increased opacity to bg-black/90 for performance */
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
         className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
             ${jackpotWon ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-slate-600'}`
@@ -527,17 +528,19 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                     bg-gradient-to-r from-cyan-600/20 to-blue-600/20
                 `}></div>
                 
-                <div className="relative z-10 flex flex-col items-center justify-center h-full">
+                {/* CHANGED: Added pb-1 and used justify-center with flex-col to better position content */}
+                <div className="relative z-10 flex flex-col items-center justify-center h-full pb-1">
                     {isSpinning ? (
                          <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
                     ) : (
                         <>
+                            {/* CHANGED: Removed {spinMultiplier === 10 ? 'x10' : ''} */}
                             <span className="font-lilita text-2xl uppercase tracking-widest drop-shadow-md text-cyan-400 group-hover:text-cyan-300">
-                                SPIN {spinMultiplier === 10 ? 'x10' : ''}
+                                SPIN
                             </span>
                             
-                            {/* Cost Box */}
-                            <div className="flex items-center gap-1.5 mt-1 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
+                            {/* Cost Box - CHANGED: Reduced mt-1 to mt-0.5 */}
+                            <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
                                 <span className={`text-lg font-lilita tracking-wide leading-none ${currentCoins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>
                                     {currentCost}
                                 </span>
