@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
 import { useGame } from './GameContext.tsx'; // Import Hook
-import { useAnimateValue } from './ui/useAnimateValue.ts'; // --- [UPDATED] Import Hook Animate ---
+import { useAnimateValue } from './ui/useAnimateValue.ts'; // --- [NEW] Import Hook Animate ---
 
 // --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
@@ -201,7 +201,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     handleUpdateJackpotPool 
   } = useGame();
 
-  // --- [UPDATED] ANIMATED VALUES ---
+  // --- [NEW] ANIMATED VALUES ---
   // Tạo hiệu ứng số nhảy cho Coins và Jackpot
   const animatedCoins = useAnimateValue(coins, 800);
   const animatedJackpot = useAnimateValue(jackpotPool, 800);
@@ -246,18 +246,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     });
   }, [baseItems, spinMultiplier]);
 
-  // --- [UPDATED] LOGIC LẤY ITEM NGẪU NHIÊN ---
-  // Sửa lại để cho phép Jackpot xuất hiện "nhử" người chơi (tỉ lệ 5%)
   const getRandomFiller = useCallback(() => {
-    const standardItems = displayItems.filter(i => i.rarity !== 'jackpot');
-    const jackpotItem = displayItems.find(i => i.rarity === 'jackpot');
-
-    // Cơ hội 5% trả về ô Jackpot để làm hình ảnh lướt qua (visual bait)
-    if (jackpotItem && Math.random() < 0.05) {
-        return jackpotItem;
-    }
-    
-    return standardItems[Math.floor(Math.random() * standardItems.length)];
+    const fillerItems = displayItems.filter(i => i.rarity !== 'jackpot');
+    return fillerItems[Math.floor(Math.random() * fillerItems.length)];
   }, [displayItems]);
 
   // Initial Strip
@@ -274,7 +265,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     setOffset(0);
   }, [getRandomFiller, spinMultiplier, isSpinning, wonRewardDetails]);
 
-  // --- SPIN LOGIC ---
+  // --- UPDATED SPIN LOGIC ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
@@ -289,7 +280,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         setJackpotWon(false);
         setShowRewardPopup(false);
 
-        // Winner Logic (Logic trúng thưởng thật sự nằm ở đây)
+        // Winner Logic
         let winner: Item;
         if (Math.random() < 0.01) { // 1% Jackpot
             winner = displayItems.find(i => i.rarity === 'jackpot')!;
@@ -303,6 +294,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
         // --- BƯỚC QUAN TRỌNG: NỐI TIẾP VÒNG QUAY ---
         // 1. Xác định điểm bắt đầu (Anchor)
+        // Nếu đã từng quay (có wonRewardDetails), bắt đầu từ item đó.
+        // Nếu chưa (lần đầu), bắt đầu từ item đầu tiên hiện có trong strip.
         const startNode = wonRewardDetails 
             ? { ...wonRewardDetails, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
@@ -310,7 +303,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         // Đẩy điểm bắt đầu vào vị trí Index 0
         newStrip.push(startNode);
 
-        // 2. Thêm các item ở giữa (Filler) - Jackpot có thể xuất hiện ở đây nhờ logic mới của getRandomFiller
+        // 2. Thêm các item ở giữa (Filler)
         for (let i = 0; i < TARGET_INDEX; i++) {
             newStrip.push({ ...getRandomFiller(), uniqueId: `spin-mid-${Date.now()}-${i}` });
         }
@@ -326,10 +319,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         setStrip(newStrip);
 
         // --- RESET VỊ TRÍ VỀ 0 NGAY LẬP TỨC ---
+        // Vì Index 0 của strip mới chính là hình ảnh cũ, nên set offset=0 sẽ không làm hình ảnh bị nhảy
         setTransitionDuration(0);
         setOffset(0);
 
-        // Animation Trigger
+        // Animation Trigger (Đợi render xong mới bắt đầu trượt)
         setTimeout(() => {
             // Tính toán vị trí dừng: (Vị trí Start + Số lượng item giữa) * Độ rộng
             const distanceToIndex = 1 + TARGET_INDEX; 
@@ -381,7 +375,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
             <CoinDisplay 
-              displayedCoins={animatedCoins} // --- [UPDATED] Sử dụng giá trị animated ---
+              displayedCoins={animatedCoins} // --- [NEW] Sử dụng giá trị animated ---
               isStatsFullscreen={isStatsFullscreen}
             />
         </div>
@@ -403,7 +397,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
               <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
               <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
                 <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
-                    {animatedJackpot.toLocaleString()} {/* --- [UPDATED] Sử dụng giá trị animated --- */}
+                    {animatedJackpot.toLocaleString()} {/* --- [NEW] Sử dụng giá trị animated cho Jackpot --- */}
                 </span>
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
