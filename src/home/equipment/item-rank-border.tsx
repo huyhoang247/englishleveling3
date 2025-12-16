@@ -1,7 +1,7 @@
 // --- FILE: ui/item-rank-border.tsx ---
 
 import React, { useRef, useEffect } from 'react';
-import { type ItemRank } from '../data/item-database'; // Điều chỉnh đường dẫn import ItemRank tùy cấu trúc dự án của bạn
+import { type ItemRank } from './item-database.ts'; // Điều chỉnh đường dẫn import ItemRank tùy cấu trúc dự án của bạn
 
 // Định nghĩa màu sắc dựa trên hieu-ung-rank.tsx
 const RANK_DATA: Record<string, { color: string; glow: string; dark: string }> = {
