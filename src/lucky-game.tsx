@@ -282,15 +282,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/20 blur-[100px] rounded-full"></div>
       </div>
 
-      {/* --- HEADER (MODIFIED TO MATCH VOCA-CHEST-UI) --- */}
-      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[60]">
+      {/* --- HEADER (MATCHING JACKPOT POOL STYLE) --- */}
+      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-gradient-to-b from-slate-900 to-black border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
         <button 
             onClick={onClose} 
-            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-colors"
+            className="flex items-center justify-center p-2 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all hover:text-white"
             title="Quay lại Trang Chính"
         >
           <HomeIcon className="w-5 h-5" />
-          <span className="text-sm font-semibold">Trang Chính</span>
         </button>
         <div className="flex items-center gap-3">
             <CoinDisplay 
