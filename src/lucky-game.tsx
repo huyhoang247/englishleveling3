@@ -88,7 +88,7 @@ const CARD_GAP = 12;
 const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
 const VISIBLE_CARDS = 5;
 
-// --- REWARD POPUP (GIỮ NGUYÊN BẢN CŨ THEO YÊU CẦU) ---
+// --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
 
@@ -239,8 +239,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     // Animation Trigger
     setTimeout(() => {
         // --- FIX LỆCH Ô ---
-        // Đưa dải băng sang trái một khoảng đúng bằng vị trí của ô trúng thưởng.
-        // CSS transform sẽ lo việc căn giữa thẻ (trừ đi 1/2 chiều rộng thẻ).
         const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
 
         setTransitionDuration(5.5); // Thời gian quay
@@ -274,7 +272,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
-      {/* --- BACKGROUND AMBIENCE (Mới) --- */}
+      {/* --- BACKGROUND AMBIENCE --- */}
       <div className="absolute inset-0 pointer-events-none">
         {/* Radial Gradient nền */}
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,#1e1b4b_0%,#000000_80%)]" />
@@ -298,7 +296,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10">
         
-        {/* --- JACKPOT UI (Giao diện mới) --- */}
+        {/* --- JACKPOT UI --- */}
         <div className="text-center mb-8 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
@@ -324,7 +322,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             </div>
         </div>
         
-        {/* --- SPINNER UI (Khung máy mới) --- */}
+        {/* --- SPINNER UI --- */}
         <div className="relative w-full max-w-4xl mb-12">
             
             {/* Máy quay hiện đại */}
@@ -344,7 +342,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 <div 
                     className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
-                        // LOGIC CĂN GIỮA: offset đưa mép trái ô trúng về giữa màn hình, trừ đi 1 nửa chiều rộng thẻ để tâm thẻ vào giữa
                         transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
                         transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.12, 0.8, 0.3, 1.0)` : 'none',
                     }}
@@ -398,18 +395,46 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 </div>
             </div>
 
-            {/* --- CENTER TARGET (Scanner Style) --- */}
-            <div className="absolute inset-0 pointer-events-none z-30 flex justify-center">
-                 {/* Laser Line */}
-                 <div className="h-full w-[2px] bg-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.8)] opacity-80"></div>
-                 {/* Top Triangle */}
-                 <div className="absolute top-[-8px] w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[14px] border-t-yellow-400 drop-shadow-lg"></div>
-                 {/* Bottom Triangle */}
-                 <div className="absolute bottom-[-8px] w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[14px] border-b-yellow-400 drop-shadow-lg"></div>
+            {/* --- CENTER TARGET (Redesigned - Tinh tế hơn) --- */}
+            <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
+                 
+                 {/* 1. Focus Area Highlight (Cột sáng nền mờ ảo) */}
+                 <div className="absolute h-full w-[130px] bg-gradient-to-r from-transparent via-yellow-400/5 to-transparent"></div>
+
+                 {/* 2. The Frame (Khung viền bao quanh thẻ trúng) */}
+                 <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/20 rounded-xl">
+                    {/* Góc trang trí (Corner Accents) - Tạo cảm giác Tech/Modern */}
+                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-yellow-400 rounded-tl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                    <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-yellow-400 rounded-tr-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                    <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-yellow-400 rounded-bl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-yellow-400 rounded-br-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                 </div>
+
+                 {/* 3. The Central Line (Sợi chỉ vàng mảnh mai, gradient fade) */}
+                 <div className="absolute inset-0 flex justify-center">
+                    <div className="h-full w-[1px] bg-gradient-to-b from-transparent via-yellow-300/80 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.8)]"></div>
+                 </div>
+
+                 {/* 4. Top Indicator (Viên ngọc chỉ thị phía trên) */}
+                 <div className="absolute top-0 transform -translate-y-1/2 z-40">
+                     <div className="relative flex flex-col items-center">
+                        <div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
+                        {/* Glow point */}
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div>
+                     </div>
+                 </div>
+
+                 {/* 5. Bottom Indicator (Viên ngọc chỉ thị phía dưới) */}
+                 <div className="absolute bottom-0 transform translate-y-1/2 z-40">
+                     <div className="relative flex flex-col items-center">
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div>
+                        <div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_-2px_10px_rgba(0,0,0,0.5)]"></div>
+                     </div>
+                 </div>
             </div>
         </div>
 
-        {/* --- CONTROLS (NÚT SPIN - GIỮ NGUYÊN BẢN CŨ) --- */}
+        {/* --- CONTROLS --- */}
         <div className="flex flex-col items-center justify-center z-20">
               <button
                 onClick={spinChest}
