@@ -1,5 +1,3 @@
-// --- START OF FILE background-game.tsx ---
-
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -175,11 +173,8 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 {currentUser && (
                     <LuckyChestGame 
                         onClose={toggleLuckyGame} 
-                        currentCoins={coins} 
-                        onUpdateCoins={updateCoins} // <-- SỬ DỤNG HÀM TỪ CONTEXT
-                        onUpdatePickaxes={handleUpdatePickaxes} 
-                        currentJackpotPool={jackpotPool} 
-                        onUpdateJackpotPool={handleUpdateJackpotPool} 
+                        // Props currentCoins, onUpdateCoins, etc. have been removed
+                        // as LuckyChestGame now uses GameContext internally.
                     />
                 )}
             </ErrorBoundary> 
@@ -322,4 +317,3 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     </div>
   );
 }
-// --- END OF FILE background-game.tsx ---
