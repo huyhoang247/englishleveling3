@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
-import HomeButton from './ui/home-button.tsx';
+import HomeButton from './ui//home-button.tsx';
 
 // --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
@@ -27,6 +27,8 @@ const ZapIcon = ({ className }: { className?: string }) => ( <svg className={cla
 const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path> </svg> );
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
+const PlayIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 24 24"> <path d="M8 5v14l11-7z" /> </svg> );
+
 
 // --- Interfaces ---
 interface Item {
@@ -92,26 +94,33 @@ const VISIBLE_CARDS = 5;
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
 
+    const handleWatchAds = () => {
+        // Logic xem quảng cáo sẽ ở đây
+        console.log("Watching Ads for x2 Reward...");
+        // Sau khi xem xong, có thể gọi callback để x2 reward và đóng popup
+        onClose();
+    };
+
     return (
     <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
-        className={`relative w-80 bg-slate-900 border-2 rounded-2xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
+        className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
             ${jackpotWon ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-slate-600'}`
         }
         onClick={(e) => e.stopPropagation()}
       >
         {/* Floating Icon */}
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2">
-             <div className={`w-24 h-24 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-lg ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2">
+             <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
-                    <img src={item.icon} alt={item.name} className="w-14 h-14 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
+                    <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
                 ) : (
-                    <item.icon className={`w-14 h-14 ${item.color}`} />
+                    <item.icon className={`w-16 h-16 ${item.color}`} />
                 )}
              </div>
         </div>
 
-        <div className="mt-12 mb-2">
+        <div className="mt-14 mb-2">
             {jackpotWon ? (
                 <>
                     <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-1 drop-shadow-md animate-pulse">JACKPOT!</h2>
@@ -119,39 +128,65 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                 </>
             ) : (
                 <>
-                    <h2 className="text-2xl font-bold uppercase tracking-wide" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
-                    <p className="font-sans text-slate-400 text-xs uppercase tracking-widest mt-1">{item.rarity} Reward</p>
+                    <h2 className="text-3xl font-bold uppercase tracking-wide drop-shadow-sm" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
+                    <p className="font-sans text-slate-400 text-xs uppercase tracking-widest mt-1 font-semibold">{item.rarity} Reward</p>
                 </>
             )}
         </div>
 
+        {/* Reward Box */}
         <div className="flex flex-col gap-2 w-full my-6">
-            <div className="bg-slate-800/50 rounded-lg p-3 border border-slate-700 flex flex-col items-center justify-center">
-                 <span className="text-slate-400 text-xs font-sans mb-1">PHẦN THƯỞNG</span>
-                 <div className="flex items-center gap-2">
+            <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
+                 <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
+                 <div className="flex items-center gap-3">
                     {item.rewardType === 'coin' && (
                         <>
-                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-6 h-6" />
-                            <span className="text-2xl font-bold text-yellow-400">{item.value.toLocaleString()}</span>
+                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8 drop-shadow-md" />
+                            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-500 drop-shadow-sm">{item.value.toLocaleString()}</span>
                         </>
                     )}
                     {(item.rewardType === 'pickaxe' || item.rewardType === 'other') && (
                         <>
-                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-6 h-6" />}
-                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-6 h-6 ${item.color}`} />}
-                            <span className="text-2xl font-bold text-white">x{item.rewardAmount?.toLocaleString()}</span>
+                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-8 h-8 drop-shadow-md" />}
+                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-8 h-8 ${item.color} drop-shadow-md`} />}
+                            <span className="text-4xl font-black text-white drop-shadow-sm">x{item.rewardAmount?.toLocaleString()}</span>
                         </>
                     )}
                  </div>
             </div>
         </div>
         
-        <button
-          onClick={onClose}
-          className="w-full py-3 bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 rounded-xl font-bold text-white tracking-wider uppercase shadow-lg transform active:scale-95 transition-all"
-        >
-          Nhận Quà
-        </button>
+        {/* Buttons Action Area */}
+        <div className="flex w-full gap-3 mt-1">
+            
+            {/* Watch Ads Button (Highlight) */}
+            <button 
+                onClick={handleWatchAds}
+                className="group relative flex-1"
+            >
+                {/* Glow Effect */}
+                <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
+                
+                <div className="relative h-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-xl border-t border-white/20 shadow-lg flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="bg-black/20 p-1 rounded-full">
+                            <PlayIcon className="w-3.5 h-3.5 text-white" />
+                        </div>
+                        <span className="text-xl font-black text-white italic tracking-wide drop-shadow-md">x2</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
+                </div>
+            </button>
+
+            {/* Claim Button (Secondary) */}
+            <button
+                onClick={onClose}
+                className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all"
+            >
+                <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
+            </button>
+
+        </div>
       </div>
     </div>
     );
