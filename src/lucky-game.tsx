@@ -221,7 +221,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     }
 
     // Prepare Spin Strip
-    const TARGET_INDEX = 40; 
+    // --- UPDATED: Tăng số lượng thẻ để quay lâu hơn (100 thẻ) ---
+    const TARGET_INDEX = 100; 
     const newStrip: StripItem[] = [];
     
     for (let i = 0; i < TARGET_INDEX; i++) {
@@ -241,9 +242,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         // --- FIX LỆCH Ô ---
         const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
 
-        setTransitionDuration(5.5); // Thời gian quay
+        // --- UPDATED: Tăng thời gian quay lên 8s ---
+        setTransitionDuration(8); 
         setOffset(finalOffset);
         
+        // --- UPDATED: Tăng thời gian chờ mở quà lên 8.1s ---
         setTimeout(() => {
             setIsSpinning(false);
             
@@ -264,7 +267,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
             setWonRewardDetails({ ...winner, value: actualValue });
             setShowRewardPopup(true);
-        }, 5600); // Đợi quay xong
+        }, 8100); 
     }, 50);
 
   }, [isSpinning, currentCoins, items, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, currentJackpotPool, getRandomFiller]);
