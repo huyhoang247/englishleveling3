@@ -1,5 +1,3 @@
-// --- START OF FILE GameContext.tsx ---
-
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
@@ -205,6 +203,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 const gameData = docSnap.data();
                 console.log("Real-time data received from Firestore, updating context state.");
 
+                // Note: We might want to be careful overwriting coins if an optimistic update is pending
+                // but generally Firestore snapshot is the source of truth.
                 setCoins(gameData.coins ?? 0);
                 setGems(gameData.gems ?? 0);
                 setMasteryCards(gameData.masteryCards ?? 0);
@@ -266,7 +266,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   }, []);
   
   useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
-  useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins]);
+  // Note: Optimistic update sets displayedCoins directly, this effect ensures sync if coins changes via other means (like snapshot)
+  useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins, displayedCoins]);
   
   const totalEquipmentStats = useMemo(() => {
     const totals = { hp: 0, atk: 0, def: 0 };
@@ -295,15 +296,36 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, [userStatsValue, totalEquipmentStats]);
     
+  // --- OPTIMISTIC UPDATE COINS ---
   const updateCoins = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
+
+    // 1. Capture current state for rollback
+    const previousCoins = coins;
+
+    // 2. Optimistic Update: Update UI state immediately
+    const optimisticCoins = previousCoins + amount;
+    setCoins(optimisticCoins);
+    setDisplayedCoins(optimisticCoins); // Force visual update instantly
+
+    // Set syncing flag (does not block logic, just indicates background activity)
     setIsSyncingData(true);
+
     try {
-      const newTotalCoins = await updateUserCoins(userId, amount);
-      setCoins(newTotalCoins);
+      // 3. Make API call
+      const serverConfirmedCoins = await updateUserCoins(userId, amount);
+      
+      // 4. Reconcile with server (Source of Truth)
+      // Usually matches optimisticCoins, but good to ensure sync
+      setCoins(serverConfirmedCoins);
     } catch (error) {
-      console.error("Failed to update coins via context:", error);
+      console.error("Failed to update coins via context (Rolling back):", error);
+      
+      // 5. Rollback on failure
+      setCoins(previousCoins);
+      setDisplayedCoins(previousCoins);
+      // Optional: Add a toast notification here for error
     } finally {
       setIsSyncingData(false);
     }
@@ -471,4 +493,3 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
-// --- END OF FILE GameContext.tsx ---
