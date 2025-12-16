@@ -282,8 +282,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/20 blur-[100px] rounded-full"></div>
       </div>
 
-      {/* --- HEADER (MATCHING JACKPOT POOL STYLE) --- */}
-      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-gradient-to-b from-slate-900 to-black border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
+      {/* --- HEADER (FLAT COLOR) --- */}
+      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
         <button 
             onClick={onClose} 
             className="flex items-center justify-center p-2 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-all hover:text-white"
