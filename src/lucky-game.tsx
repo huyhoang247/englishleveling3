@@ -69,7 +69,7 @@ const getRarityColor = (rarity: Item['rarity']) => {
     }
 };
 
-// Style cho thẻ bài trong vòng quay (Đẹp hơn, có gradient)
+// Style cho thẻ bài trong vòng quay
 const getCardStyle = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return { bg: 'bg-gradient-to-br from-slate-800 to-slate-900', border: 'border-slate-600', glow: 'shadow-inner' };
@@ -221,7 +221,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     }
 
     // Prepare Spin Strip
-    // --- UPDATED: Tăng số lượng thẻ để quay lâu hơn (100 thẻ) ---
     const TARGET_INDEX = 100; 
     const newStrip: StripItem[] = [];
     
@@ -242,11 +241,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         // --- FIX LỆCH Ô ---
         const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
 
-        // --- UPDATED: Tăng thời gian quay lên 8s ---
         setTransitionDuration(8); 
         setOffset(finalOffset);
         
-        // --- UPDATED: Tăng thời gian chờ mở quà lên 8.1s ---
         setTimeout(() => {
             setIsSpinning(false);
             
@@ -299,8 +296,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10">
         
-        {/* --- JACKPOT UI --- */}
-        <div className="text-center mb-8 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
+        {/* --- JACKPOT UI (Moved Up) --- */}
+        <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
                 ${ jackpotAnimation 
@@ -398,7 +395,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 </div>
             </div>
 
-            {/* --- CENTER TARGET (Redesigned - Tinh tế hơn) --- */}
+            {/* --- CENTER TARGET (Scanner Style) --- */}
             <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
                  
                  {/* 1. Focus Area Highlight (Cột sáng nền mờ ảo) */}
@@ -406,28 +403,27 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
                  {/* 2. The Frame (Khung viền bao quanh thẻ trúng) */}
                  <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/20 rounded-xl">
-                    {/* Góc trang trí (Corner Accents) - Tạo cảm giác Tech/Modern */}
+                    {/* Góc trang trí */}
                     <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-yellow-400 rounded-tl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-yellow-400 rounded-tr-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-yellow-400 rounded-bl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-yellow-400 rounded-br-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                  </div>
 
-                 {/* 3. The Central Line (Sợi chỉ vàng mảnh mai, gradient fade) */}
+                 {/* 3. The Central Line */}
                  <div className="absolute inset-0 flex justify-center">
                     <div className="h-full w-[1px] bg-gradient-to-b from-transparent via-yellow-300/80 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.8)]"></div>
                  </div>
 
-                 {/* 4. Top Indicator (Viên ngọc chỉ thị phía trên) */}
+                 {/* 4. Top Indicator */}
                  <div className="absolute top-0 transform -translate-y-1/2 z-40">
                      <div className="relative flex flex-col items-center">
                         <div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
-                        {/* Glow point */}
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div>
                      </div>
                  </div>
 
-                 {/* 5. Bottom Indicator (Viên ngọc chỉ thị phía dưới) */}
+                 {/* 5. Bottom Indicator */}
                  <div className="absolute bottom-0 transform translate-y-1/2 z-40">
                      <div className="relative flex flex-col items-center">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div>
@@ -450,12 +446,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 
                 <div className="relative z-10 flex flex-col items-center justify-center h-full">
                     {isSpinning ? (
-                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">ROLLING...</span>
+                         // --- CHANGE 1: ROLLING -> SPINNING ---
+                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
                     ) : (
                         <>
                             <span className="font-lilita text-2xl text-cyan-400 uppercase tracking-widest drop-shadow-md group-hover:text-cyan-300">SPIN</span>
                             <div className="flex items-center gap-1 mt-0.5">
-                                <span className={`text-sm font-bold ${currentCoins < 100 ? 'text-red-500' : 'text-slate-300'}`}>100</span>
+                                {/* --- CHANGE 2: Font Lilita for Coin Value --- */}
+                                <span className={`text-xl font-lilita tracking-wide ${currentCoins < 100 ? 'text-red-500' : 'text-slate-300'}`}>100</span>
                                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
                             </div>
                         </>
