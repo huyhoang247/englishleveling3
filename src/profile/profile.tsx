@@ -1,5 +1,3 @@
-// --- START OF FILE profile.tsx ---
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
     updateProfileInfo, 
@@ -9,6 +7,7 @@ import {
 import { auth } from '../firebase'; // Import auth to get current user info
 import { useGame } from '../GameContext.tsx'; // Import the useGame hook
 import WorkoutApp from '../workout/workout.tsx'; // Import the Workout App component
+import ProfileAvatar from './ProfileAvatar.tsx'; // <--- IMPORT COMPONENT MỚI Ở ĐÂY
 
 // Định nghĩa các loại chế độ hiển thị
 type DisplayMode = 'fullscreen' | 'normal';
@@ -61,7 +60,7 @@ const ICONS = {
   cog: "M12 8.25c-2.078 0-3.75 1.672-3.75 3.75s1.672 3.75 3.75 3.75 3.75-1.672 3.75-3.75-1.672-3.75-3.75-3.75zM12 14.25c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zM22.5 12.75h-1.781c-0.141 0.703-0.375 1.359-0.656 1.969l1.266 1.266c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352 0.844l-1.063 1.063c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.266-1.266c-0.609 0.281-1.266 0.516-1.969 0.656v1.781c0 0.828-0.672 1.5-1.5 1.5h-1.5c-0.828 0-1.5-0.672-1.5-1.5v-1.781c-0.703-0.141-1.359-0.375-1.969-0.656l-1.266 1.266c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.063-1.063c-0.234 0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.266-1.266c-0.281-0.609-0.516-1.266-0.656-1.969h-1.781c-0.828 0-1.5-0.672-1.5-1.5v-1.5c0-0.828 0.672-1.5 1.5-1.5h1.781c0.141-0.703 0.375-1.359 0.656-1.969l-1.266-1.266c-0.234-0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.063-1.063c0.234 0.234 0.516 0.352 0.844 0.352s0.609 0.117 0.844 0.352l1.266 1.266c0.609-0.281 1.266-0.516 1.969-0.656v-1.781c0-0.828 0.672-1.5 1.5-1.5h1.5c0.828 0 1.5 0.672 1.5 1.5v1.781c0.703 0.141 1.359 0.375 1.969 0.656l1.266-1.266c0.234-0.234 0.516-0.352 0.844-0.352s0.609 0.117 0.844 0.352l1.063 1.063c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352-0.844l-1.266 1.266c0.281 0.609 0.516 1.266 0.656 1.969h1.781c0.828 0 1.5 0.672 1.5 1.5v1.5c0 0.828-0.672 1.5-1.5 1.5z",
   map: "M12 0c-4.148 0-7.5 3.352-7.5 7.5c0 4.148 7.5 16.5 7.5 16.5s7.5-12.352 7.5-16.5c0-4.148-3.352-7.5-7.5-7.5zM12 11.25c-2.078 0-3.75-1.672-3.75-3.75s1.672-3.75 3.75-3.75 3.75 1.672 3.75 3.75-1.672 3.75-3.75 3.75z",
   camera: "M6 6c-1.657 0-3 1.343-3 3v9c0 1.657 1.343 3 3 3h12c1.657 0 3-1.343 3-3v-9c0-1.657-1.343-3-3-3h-2.25l-1.5-1.5h-4.5l-1.5 1.5h-2.25zm6 12c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z",
-  close: "M6.46875 4.96875l-1.5 1.5 5.53125 5.53125-5.53125 5.53125 1.5 1.5 5.53125-5.53125 5.53125 5.53125 1.5-1.5-5.53125-5.53125 5.53125-5.53125-1.5-1.5-5.53125 5.53125z",
+  close: "M6.46875 4.96875l-1.5 1.5 5.53125 5.53125-5.53125 5.53125 1.5 1.5 5.53125-5.53125 5.53125 5.53125-1.5-1.5-5.53125-5.53125 5.53125-5.53125-1.5-1.5-5.53125 5.53125z",
   gem: "M12 0.75l-4.5 4.5h9zM12 23.25l4.5-4.5h-9zM6 6l-5.25 5.25v1.5l5.25 5.25h12l5.25-5.25v-1.5l-5.25-5.25z",
   star: "M12 17.25l-6.1875 3.25 1.1875-6.875-5-4.875h6.1875l2.8125-6.25 2.8125 6.25h6.1875l-5 4.875 1.1875 6.875z",
   trendingUp: "M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z",
@@ -489,7 +488,6 @@ export default function GameProfile() {
   }
   
   // Create a playerInfo object from the context for easier prop passing to sub-components
-  // NOTE: This assumes `username`, `title`, `avatarUrl`, `accountType` are available in your GameContext
   const playerInfo = {
     name: (game as any).username || user.displayName || 'CyberWarrior',
     title: (game as any).title || `Lv. ${game.bossBattleHighestFloor + 1} - Rookie`,
@@ -499,6 +497,19 @@ export default function GameProfile() {
     masteryPoints: game.masteryCards,
     maxMasteryPoints: 1000, // This can be a constant or derived from context
   };
+
+  // Tính toán Rank để hiển thị hiệu ứng
+  const calculateRank = (points) => {
+      if (points >= 1000) return 'SSR';
+      if (points >= 800) return 'SS';
+      if (points >= 600) return 'S';
+      if (points >= 400) return 'A';
+      if (points >= 200) return 'B';
+      if (points >= 100) return 'D';
+      return 'E';
+  };
+
+  const currentRank = calculateRank(playerInfo.masteryPoints);
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -517,12 +528,21 @@ export default function GameProfile() {
            <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-10"></div>
            <div className="relative">
               <div className="flex items-center space-x-4">
-                <div className="relative flex-shrink-0">
-                  <img src={playerInfo.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-4 border-purple-500 shadow-lg object-cover"/>
-                  <button onClick={() => handleModal('avatar', true)} className="absolute -bottom-1 -right-1 bg-slate-700 w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-slate-300 hover:bg-purple-600 transition-all">
-                     <Icon path={ICONS.camera} className="w-5 h-5"/>
-                  </button>
+                
+                {/* --- Phần Avatar sử dụng Component mới --- */}
+                <div className="relative flex-shrink-0 cursor-pointer group mr-4" onClick={() => handleModal('avatar', true)}>
+                    <ProfileAvatar 
+                        avatarUrl={playerInfo.avatarUrl}
+                        rank={currentRank as any}
+                        size={80} // Kích thước avatar
+                    />
+                     {/* Nút camera nhỏ nằm ở góc */}
+                    <button className="absolute bottom-0 right-0 z-20 bg-slate-700 w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-slate-300 hover:bg-purple-600 transition-all shadow-lg">
+                        <Icon path={ICONS.camera} className="w-4 h-4"/>
+                    </button>
                 </div>
+                {/* ----------------------------------------------- */}
+
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2 mb-1">
                       <h1 className="text-xl font-bold font-roboto text-slate-100 tracking-wider">{playerInfo.name}</h1>
@@ -616,5 +636,3 @@ export default function GameProfile() {
     </div>
   );
 }
-
-// --- END OF FILE profile.tsx ---
