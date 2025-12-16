@@ -1,3 +1,5 @@
+--- START OF FILE lucky-game.tsx ---
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
@@ -89,6 +91,7 @@ const CARD_WIDTH = 110;
 const CARD_GAP = 12;
 const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
 const VISIBLE_CARDS = 5;
+const BASE_COST = 100;
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
@@ -195,6 +198,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 // --- MAIN COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, onUpdatePickaxes, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
   const [isSpinning, setIsSpinning] = useState(false);
+  const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
@@ -205,7 +209,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
   const [offset, setOffset] = useState(0);
   const [transitionDuration, setTransitionDuration] = useState(0);
 
-  const items: Item[] = useMemo(() => [
+  // Base Items
+  const baseItems: Item[] = useMemo(() => [
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
     { icon: ZapIcon, name: 'Energy', value: 0, rarity: 'uncommon', color: 'text-cyan-400', rewardType: 'other', rewardAmount: 1 },
     { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
@@ -220,26 +225,46 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
-  const getRandomFiller = useCallback(() => {
-    const fillerItems = items.filter(i => i.rarity !== 'jackpot');
-    return fillerItems[Math.floor(Math.random() * fillerItems.length)];
-  }, [items]);
+  // Compute items based on multiplier
+  const displayItems = useMemo(() => {
+    return baseItems.map(item => {
+        // Don't multiply Jackpot value here (it's dynamic) or rarity text
+        if (item.rarity === 'jackpot') return item;
+        
+        return {
+            ...item,
+            // Scale Value (for Coins)
+            value: item.value * spinMultiplier,
+            // Scale Reward Amount (for Pickaxes, Coins, Items)
+            rewardAmount: item.rewardAmount ? item.rewardAmount * spinMultiplier : undefined
+        };
+    });
+  }, [baseItems, spinMultiplier]);
 
-  // Initial Strip
+  const getRandomFiller = useCallback(() => {
+    const fillerItems = displayItems.filter(i => i.rarity !== 'jackpot');
+    return fillerItems[Math.floor(Math.random() * fillerItems.length)];
+  }, [displayItems]);
+
+  // Regenerate Initial Strip when Multiplier changes to show updated values immediately
   useEffect(() => {
+    if (isSpinning) return; // Don't reset mid-spin
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
-        initStrip.push({ ...getRandomFiller(), uniqueId: `init-${i}` });
+        initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
     }
     setStrip(initStrip);
-  }, [getRandomFiller]);
+    setOffset(0); // Reset offset visually
+  }, [getRandomFiller, spinMultiplier, isSpinning]);
 
   const spinChest = useCallback(() => {
-    if (isSpinning || currentCoins < 100) return;
+    const cost = BASE_COST * spinMultiplier;
+    if (isSpinning || currentCoins < cost) return;
 
     // Logic Cost
-    onUpdateCoins(-100);
-    const randomCoinsToAdd = Math.floor(Math.random() * (100 - 10 + 1)) + 10;
+    onUpdateCoins(-cost);
+    // Add to pool (more contribution for higher bet)
+    const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
     onUpdateJackpotPool(randomCoinsToAdd);
 
     setIsSpinning(true);
@@ -248,10 +273,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
     // Winner Logic
     let winner: Item;
-    if (Math.random() < 0.01) { // 1% Jackpot
-        winner = items.find(i => i.rarity === 'jackpot')!;
+    if (Math.random() < 0.01) { // 1% Jackpot (fixed chance)
+        winner = displayItems.find(i => i.rarity === 'jackpot')!;
     } else {
-        const others = items.filter(i => i.rarity !== 'jackpot');
+        const others = displayItems.filter(i => i.rarity !== 'jackpot');
         winner = others[Math.floor(Math.random() * others.length)];
     }
 
@@ -259,6 +284,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
     const TARGET_INDEX = 100; 
     const newStrip: StripItem[] = [];
     
+    // Fill pre-spin buffer with current multiplier items
     for (let i = 0; i < TARGET_INDEX; i++) {
         newStrip.push({ ...getRandomFiller(), uniqueId: `spin-pre-${Date.now()}-${i}` });
     }
@@ -273,7 +299,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
     // Animation Trigger
     setTimeout(() => {
-        // --- FIX LỆCH Ô ---
         const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
 
         setTransitionDuration(8); 
@@ -295,6 +320,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 setTimeout(() => setJackpotAnimation(false), 3000);
             } else if (winner.rewardType === 'coin') {
                 onUpdateCoins(winner.value);
+            } else if (winner.rewardType === 'other' && winner.rewardAmount) {
+                // Handle logic for other items (Energy, Trophy etc.) here if needed
+                // Currently just visual feedback in popup
             }
 
             setWonRewardDetails({ ...winner, value: actualValue });
@@ -302,8 +330,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         }, 8100); 
     }, 50);
 
-  }, [isSpinning, currentCoins, items, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, currentJackpotPool, getRandomFiller]);
+  }, [isSpinning, currentCoins, displayItems, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, currentJackpotPool, getRandomFiller, spinMultiplier]);
   
+  const currentCost = BASE_COST * spinMultiplier;
+
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
@@ -468,56 +498,67 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         </div>
 
         {/* --- CONTROLS --- */}
-        <div className="flex flex-col items-center justify-center z-20 mt-4">
-            <button
+        <div className="flex flex-col items-center justify-center z-20">
+              
+              {/* Spin Multiplier Toggles */}
+              <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg backdrop-blur-sm">
+                 <button 
+                   onClick={() => !isSpinning && setSpinMultiplier(1)}
+                   className={`px-4 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                   disabled={isSpinning}
+                 >
+                    x1
+                 </button>
+                 <button 
+                   onClick={() => !isSpinning && setSpinMultiplier(10)}
+                   className={`px-4 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all flex items-center gap-1 ${spinMultiplier === 10 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                   disabled={isSpinning}
+                 >
+                    x10 <span className="text-[10px] bg-black/20 px-1 rounded">HOT</span>
+                 </button>
+              </div>
+
+              <button
                 onClick={spinChest}
-                disabled={isSpinning || currentCoins < 100}
-                className={`
-                    group relative w-40 h-14 rounded-full transition-all duration-150 ease-out
-                    flex items-center justify-center overflow-visible
-                    ${isSpinning || currentCoins < 100 
-                        ? 'bg-slate-700 cursor-not-allowed grayscale opacity-80 shadow-none translate-y-1' 
-                        : 'bg-gradient-to-b from-cyan-400 to-cyan-600 shadow-[0_6px_0_rgb(21,94,117),0_15px_20px_rgba(6,182,212,0.4)] hover:shadow-[0_6px_0_rgb(21,94,117),0_20px_30px_rgba(6,182,212,0.6)] hover:-translate-y-0.5 active:shadow-none active:translate-y-[6px]'
-                    }
+                disabled={isSpinning || currentCoins < currentCost}
+                className={`group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200
+                           disabled:opacity-70 disabled:cursor-not-allowed
+                           active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]
+                           border-2 ${spinMultiplier === 10 ? 'bg-slate-900 border-purple-500' : 'bg-slate-900 border-cyan-600'}
                 `}
-            >
-                {/* Shine Effect Overlay */}
-                <div className="absolute inset-x-4 top-0 h-[2px] bg-white/40 rounded-full"></div>
+              >
+                {/* Background Animation based on multiplier */}
+                <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} 
+                    ${spinMultiplier === 10 
+                        ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20' 
+                        : 'bg-gradient-to-r from-cyan-600/20 to-blue-600/20'
+                    }
+                `}></div>
                 
-                {/* Content Wrapper */}
-                <div className="flex flex-col items-center justify-center leading-none select-none -mt-1">
+                <div className="relative z-10 flex flex-col items-center justify-center h-full">
                     {isSpinning ? (
-                        <span className="font-lilita text-lg text-slate-300 tracking-wider animate-pulse">
-                            WAIT...
-                        </span>
+                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
                     ) : (
                         <>
-                            <span className="font-lilita text-2xl text-white drop-shadow-md tracking-wider">
-                                SPIN
+                            <span className={`font-lilita text-2xl uppercase tracking-widest drop-shadow-md ${spinMultiplier === 10 ? 'text-pink-400 group-hover:text-pink-300' : 'text-cyan-400 group-hover:text-cyan-300'}`}>
+                                SPIN {spinMultiplier === 10 ? 'x10' : ''}
                             </span>
-                            {/* Price Tag Badge */}
-                            <div className={`
-                                flex items-center gap-1 px-2 py-0.5 rounded-full mt-0.5 shadow-inner
-                                ${currentCoins < 100 ? 'bg-red-900/60' : 'bg-black/20'}
-                            `}>
-                                <span className={`text-xs font-bold ${currentCoins < 100 ? 'text-red-300' : 'text-cyan-100'}`}>
-                                    100
+                            <div className="flex items-center gap-1 mt-0.5">
+                                <span className={`text-xl font-lilita tracking-wide ${currentCoins < currentCost ? 'text-red-500' : 'text-slate-300'}`}>
+                                    {currentCost}
                                 </span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3 drop-shadow-sm" />
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
                             </div>
                         </>
                     )}
                 </div>
-            </button>
-
-            {/* Warning Text (Minimalist) */}
-            {currentCoins < 100 && !isSpinning && (
-                <div className="mt-4 animate-bounce">
-                    <span className="text-[10px] font-bold text-red-400 bg-red-950/80 px-3 py-1 rounded-full border border-red-800/50 shadow-lg uppercase tracking-wider">
-                        Không đủ xu
-                    </span>
-                </div>
-            )}
+              </button>
+              
+              {currentCoins < currentCost && !isSpinning && (
+                  <p className="text-red-500 text-sm mt-3 font-semibold bg-red-950/30 px-3 py-1 rounded-full border border-red-900/50">
+                      Không đủ xu để quay!
+                  </p>
+              )}
         </div>
 
       </div>
