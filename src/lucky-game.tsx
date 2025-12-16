@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
@@ -321,7 +322,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                 onUpdateCoins(winner.value);
             } else if (winner.rewardType === 'other' && winner.rewardAmount) {
                 // Handle logic for other items (Energy, Trophy etc.) here if needed
-                // Currently just visual feedback in popup
             }
 
             setWonRewardDetails({ ...winner, value: actualValue });
@@ -359,7 +359,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
-        {/* --- JACKPOT UI (Moved Up) --- */}
+        {/* --- JACKPOT UI --- */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
@@ -461,12 +461,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             {/* --- CENTER TARGET (Scanner Style) --- */}
             <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
                  
-                 {/* 1. Focus Area Highlight (Cột sáng nền mờ ảo) */}
+                 {/* 1. Focus Area Highlight */}
                  <div className="absolute h-full w-[130px] bg-gradient-to-r from-transparent via-yellow-400/5 to-transparent"></div>
 
-                 {/* 2. The Frame (Khung viền bao quanh thẻ trúng) */}
+                 {/* 2. The Frame */}
                  <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/20 rounded-xl">
-                    {/* Góc trang trí */}
                     <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-yellow-400 rounded-tl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-yellow-400 rounded-tr-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-yellow-400 rounded-bl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
@@ -478,15 +477,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                     <div className="h-full w-[1px] bg-gradient-to-b from-transparent via-yellow-300/80 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.8)]"></div>
                  </div>
 
-                 {/* 4. Top Indicator */}
+                 {/* 4. Indicators */}
                  <div className="absolute top-0 transform -translate-y-1/2 z-40">
                      <div className="relative flex flex-col items-center">
                         <div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div>
                      </div>
                  </div>
-
-                 {/* 5. Bottom Indicator */}
                  <div className="absolute bottom-0 transform translate-y-1/2 z-40">
                      <div className="relative flex flex-col items-center">
                         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div>
@@ -503,35 +500,31 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg backdrop-blur-sm">
                  <button 
                    onClick={() => !isSpinning && setSpinMultiplier(1)}
-                   className={`px-4 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                   className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                    disabled={isSpinning}
                  >
                     x1
                  </button>
                  <button 
                    onClick={() => !isSpinning && setSpinMultiplier(10)}
-                   className={`px-4 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all flex items-center gap-1 ${spinMultiplier === 10 ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                   className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
                    disabled={isSpinning}
                  >
-                    x10 <span className="text-[10px] bg-black/20 px-1 rounded">HOT</span>
+                    x10
                  </button>
               </div>
 
               <button
                 onClick={spinChest}
                 disabled={isSpinning || currentCoins < currentCost}
-                className={`group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200
+                className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200
                            disabled:opacity-70 disabled:cursor-not-allowed
                            active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]
-                           border-2 ${spinMultiplier === 10 ? 'bg-slate-900 border-purple-500' : 'bg-slate-900 border-cyan-600'}
-                `}
+                           border-2 bg-slate-900 border-cyan-600"
               >
-                {/* Background Animation based on multiplier */}
+                {/* Background Animation */}
                 <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} 
-                    ${spinMultiplier === 10 
-                        ? 'bg-gradient-to-r from-purple-600/20 to-pink-600/20' 
-                        : 'bg-gradient-to-r from-cyan-600/20 to-blue-600/20'
-                    }
+                    bg-gradient-to-r from-cyan-600/20 to-blue-600/20
                 `}></div>
                 
                 <div className="relative z-10 flex flex-col items-center justify-center h-full">
@@ -539,20 +532,23 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                          <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
                     ) : (
                         <>
-                            <span className={`font-lilita text-2xl uppercase tracking-widest drop-shadow-md ${spinMultiplier === 10 ? 'text-pink-400 group-hover:text-pink-300' : 'text-cyan-400 group-hover:text-cyan-300'}`}>
+                            <span className="font-lilita text-2xl uppercase tracking-widest drop-shadow-md text-cyan-400 group-hover:text-cyan-300">
                                 SPIN {spinMultiplier === 10 ? 'x10' : ''}
                             </span>
-                            <div className="flex items-center gap-1 mt-0.5">
-                                <span className={`text-xl font-lilita tracking-wide ${currentCoins < currentCost ? 'text-red-500' : 'text-slate-300'}`}>
+                            
+                            {/* Cost Box */}
+                            <div className="flex items-center gap-1.5 mt-1 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
+                                <span className={`text-lg font-lilita tracking-wide leading-none ${currentCoins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>
                                     {currentCost}
                                 </span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
                             </div>
                         </>
                     )}
                 </div>
               </button>
               
+              {/* Error Message */}
               {currentCoins < currentCost && !isSpinning && (
                   <p className="text-red-500 text-sm mt-3 font-semibold bg-red-950/30 px-3 py-1 rounded-full border border-red-900/50">
                       Không đủ xu để quay!
