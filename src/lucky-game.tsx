@@ -330,7 +330,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
-        {/* --- JACKPOT UI (Moved Up) --- */}
+        {/* --- JACKPOT UI --- */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
@@ -467,39 +467,88 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             </div>
         </div>
 
-        {/* --- CONTROLS --- */}
-        <div className="flex flex-col items-center justify-center z-20">
-              <button
+        {/* --- CONTROLS (3D BUTTON) --- */}
+        <div className="flex flex-col items-center justify-center z-20 mt-4">
+            <button
                 onClick={spinChest}
                 disabled={isSpinning || currentCoins < 100}
-                className="group relative w-48 h-16 rounded-xl bg-slate-900 border-2 border-cyan-600 overflow-hidden transition-all duration-200
-                           disabled:border-slate-700 disabled:opacity-70 disabled:cursor-not-allowed
-                           active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]"
-              >
-                <div className={`absolute inset-0 bg-gradient-to-r from-cyan-600/20 to-blue-600/20 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'}`}></div>
-                
-                <div className="relative z-10 flex flex-col items-center justify-center h-full">
-                    {isSpinning ? (
-                         // --- CHANGE 1: ROLLING -> SPINNING ---
-                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
-                    ) : (
-                        <>
-                            <span className="font-lilita text-2xl text-cyan-400 uppercase tracking-widest drop-shadow-md group-hover:text-cyan-300">SPIN</span>
-                            <div className="flex items-center gap-1 mt-0.5">
-                                {/* --- CHANGE 2: Font Lilita for Coin Value --- */}
-                                <span className={`text-xl font-lilita tracking-wide ${currentCoins < 100 ? 'text-red-500' : 'text-slate-300'}`}>100</span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4" />
+                className="group relative w-60 h-20 focus:outline-none touch-manipulation disabled:cursor-not-allowed"
+            >
+                {/* 1. LAYER BÓNG ĐỔ (Shadow dưới mặt đất) */}
+                <div className="absolute top-3 left-0 w-full h-full bg-black/40 rounded-2xl blur-sm transition-all group-active:top-1 group-active:blur-xs"></div>
+
+                {/* 2. LAYER KHỐI 3D (Phần thân nút - Depth) */}
+                <div className={`
+                    absolute top-2 left-0 w-full h-full rounded-2xl transition-all
+                    ${(isSpinning || currentCoins < 100) 
+                        ? 'bg-slate-700'  // Màu thân khi disable
+                        : 'bg-cyan-800 shadow-[0_0_20px_rgba(6,182,212,0.4)]' // Màu thân khi active
+                    }
+                `}></div>
+
+                {/* 3. LAYER BỀ MẶT (Surface - Phần người dùng chạm vào) */}
+                <div className={`
+                    relative w-full h-full rounded-2xl border-t border-white/20 flex flex-col items-center justify-center transition-all duration-100 ease-out
+                    group-active:translate-y-2 group-disabled:translate-y-2
+                    ${(isSpinning || currentCoins < 100)
+                        ? 'bg-slate-600 border-slate-500 text-slate-400' // Style khi disable
+                        : 'bg-gradient-to-b from-cyan-400 via-cyan-500 to-cyan-600 border-cyan-300 shadow-[inset_0_2px_4px_rgba(255,255,255,0.3)]' // Style khi active
+                    }
+                `}>
+                    {/* Hiệu ứng bóng kính (Glossy Reflection) ở nửa trên */}
+                    {!isSpinning && currentCoins >= 100 && (
+                        <div className="absolute top-0 left-2 right-2 h-[40%] bg-gradient-to-b from-white/20 to-transparent rounded-t-xl pointer-events-none"></div>
+                    )}
+
+                    {/* Nội dung bên trong nút */}
+                    <div className="relative z-10 flex flex-col items-center justify-center -mt-1">
+                        {isSpinning ? (
+                            <div className="flex items-center gap-2">
+                                <svg className="animate-spin h-5 w-5 text-slate-300" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span className="font-lilita text-xl text-slate-300 tracking-wider uppercase drop-shadow-md">Spinning...</span>
                             </div>
-                        </>
+                        ) : (
+                            <>
+                                {/* Chữ SPIN */}
+                                <span className="font-lilita text-3xl text-white tracking-[0.15em] uppercase drop-shadow-[0_2px_2px_rgba(0,0,0,0.3)] stroke-black" 
+                                      style={{ textShadow: '0 2px 0 rgba(0,0,0,0.2)' }}>
+                                    SPIN
+                                </span>
+                                
+                                {/* Giá tiền (Cost Badge) */}
+                                <div className={`
+                                    flex items-center gap-1.5 px-3 py-0.5 rounded-full mt-0.5 shadow-inner border
+                                    ${currentCoins < 100 
+                                        ? 'bg-red-900/50 border-red-700/50' 
+                                        : 'bg-black/20 border-black/10'
+                                    }
+                                `}>
+                                    <span className={`text-lg font-lilita ${currentCoins < 100 ? 'text-red-300' : 'text-cyan-50'}`}>
+                                        100
+                                    </span>
+                                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-4 h-4 drop-shadow-sm" />
+                                </div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Góc sáng nhỏ trang trí (Specular Highlight) */}
+                    {!isSpinning && currentCoins >= 100 && (
+                        <div className="absolute bottom-2 right-3 w-1.5 h-1.5 bg-cyan-300/60 rounded-full blur-[1px]"></div>
                     )}
                 </div>
-              </button>
-              
-              {currentCoins < 100 && !isSpinning && (
-                  <p className="text-red-500 text-sm mt-3 font-semibold bg-red-950/30 px-3 py-1 rounded-full border border-red-900/50">
-                      Không đủ xu để quay!
-                  </p>
-              )}
+            </button>
+            
+            {/* Thông báo lỗi khi không đủ tiền */}
+            {currentCoins < 100 && !isSpinning && (
+                <div className="mt-4 animate-fade-in-scale-fast bg-slate-900/90 border border-red-500/30 text-red-400 px-4 py-1.5 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-2 shadow-lg backdrop-blur-sm">
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd"/></svg>
+                    Not enough coins
+                </div>
+            )}
         </div>
 
       </div>
