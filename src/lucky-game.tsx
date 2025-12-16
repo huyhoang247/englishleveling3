@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
 import { useGame } from './GameContext.tsx'; // Import Hook
+import { useAnimateValue } from './ui/useAnimateValue.ts'; // --- [NEW] Import Hook Animate ---
 
 // --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
@@ -200,6 +201,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     handleUpdateJackpotPool 
   } = useGame();
 
+  // --- [NEW] ANIMATED VALUES ---
+  // Tạo hiệu ứng số nhảy cho Coins và Jackpot
+  const animatedCoins = useAnimateValue(coins, 800);
+  const animatedJackpot = useAnimateValue(jackpotPool, 800);
+
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
   const [jackpotWon, setJackpotWon] = useState(false);
@@ -369,7 +375,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
             <CoinDisplay 
-              displayedCoins={coins} 
+              displayedCoins={animatedCoins} // --- [NEW] Sử dụng giá trị animated ---
               isStatsFullscreen={isStatsFullscreen}
             />
         </div>
@@ -391,7 +397,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
               <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
               <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
                 <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
-                    {jackpotPool.toLocaleString()}
+                    {animatedJackpot.toLocaleString()} {/* --- [NEW] Sử dụng giá trị animated cho Jackpot --- */}
                 </span>
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
