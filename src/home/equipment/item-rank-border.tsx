@@ -3,14 +3,20 @@
 import React, { useRef, useEffect } from 'react';
 import { type ItemRank } from './item-database.ts';
 
+// --- TỐI ƯU MÀU SẮC: GIẢM OPACITY CỦA 'glow' ĐỂ TINH TẾ HƠN ---
 const RANK_DATA: Record<string, { color: string; glow: string; dark: string }> = {
-    E: { color: '#9ca3af', glow: 'rgba(156, 163, 175, 0.6)', dark: '#4b5563' },
-    D: { color: '#4ade80', glow: 'rgba(74, 222, 128, 0.6)', dark: '#16a34a' },
-    B: { color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.6)', dark: '#2563eb' },
-    A: { color: '#c084fc', glow: 'rgba(192, 132, 252, 0.6)', dark: '#9333ea' },
-    S: { color: '#facc15', glow: 'rgba(250, 204, 21, 0.6)', dark: '#ca8a04' },
-    SS: { color: '#f97316', glow: 'rgba(249, 115, 22, 0.8)', dark: '#c2410c' },
-    SSR: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.9)', dark: '#7f1d1d' }
+    // Rank thấp: Glow rất nhẹ (0.2 - 0.3)
+    E: { color: '#9ca3af', glow: 'rgba(156, 163, 175, 0.2)', dark: '#4b5563' },
+    D: { color: '#4ade80', glow: 'rgba(74, 222, 128, 0.25)', dark: '#16a34a' },
+    B: { color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.3)', dark: '#2563eb' },
+    
+    // Rank trung bình: Glow vừa phải (0.4)
+    A: { color: '#c084fc', glow: 'rgba(192, 132, 252, 0.4)', dark: '#9333ea' },
+    S: { color: '#facc15', glow: 'rgba(250, 204, 21, 0.45)', dark: '#ca8a04' },
+    
+    // Rank cao: Glow rõ hơn nhưng không quá gắt (0.5 - 0.6)
+    SS: { color: '#f97316', glow: 'rgba(249, 115, 22, 0.5)', dark: '#c2410c' },
+    SSR: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.6)', dark: '#7f1d1d' }
 };
 
 interface ItemRankBorderProps {
@@ -23,7 +29,6 @@ interface ItemRankBorderProps {
 const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, className = '', showGlow = true }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    // Lưu kích thước vào ref để không trigger render lại component
     const sizeRef = useRef({ width: 0, height: 0 });
 
     useEffect(() => {
@@ -31,15 +36,14 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
         const container = containerRef.current;
         if (!canvas || !container) return;
 
-        const ctx = canvas.getContext('2d', { alpha: true }); // alpha: true để tối ưu trong suốt
+        const ctx = canvas.getContext('2d', { alpha: true });
         if (!ctx) return;
 
         const theme = RANK_DATA[rank] || RANK_DATA['E'];
         let animationFrameId: number;
         let time = 0;
 
-        // --- TỐI ƯU 1: ResizeObserver ---
-        // Chỉ cập nhật kích thước khi thực sự thay đổi, không đo trong vòng lặp render
+        // ResizeObserver để tối ưu hiệu năng
         const updateSize = () => {
             const width = container.clientWidth;
             const height = container.clientHeight;
@@ -56,30 +60,27 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
 
         const resizeObserver = new ResizeObserver(() => updateSize());
         resizeObserver.observe(container);
-        updateSize(); // Gọi lần đầu
+        updateSize();
 
-        // Hàm vẽ path bo góc (tái sử dụng)
+        // Polyfill vẽ bo góc
         const roundedRectPath = (ctx: CanvasRenderingContext2D, width: number, height: number, radius: number) => {
             ctx.beginPath();
-            ctx.roundRect(0, 0, width, height, radius); // Sử dụng API native mới nếu trình duyệt hỗ trợ (nhanh hơn)
+            if (ctx.roundRect) {
+                ctx.roundRect(0, 0, width, height, radius);
+            } else {
+                // Fallback thủ công
+                ctx.moveTo(radius, 0);
+                ctx.lineTo(width - radius, 0);
+                ctx.quadraticCurveTo(width, 0, width, radius);
+                ctx.lineTo(width, height - radius);
+                ctx.quadraticCurveTo(width, height, width - radius, height);
+                ctx.lineTo(radius, height);
+                ctx.quadraticCurveTo(0, height, 0, height - radius);
+                ctx.lineTo(0, radius);
+                ctx.quadraticCurveTo(0, 0, radius, 0);
+            }
+            ctx.closePath();
         };
-        
-        // Fallback nếu trình duyệt cũ chưa hỗ trợ roundRect
-        const manualRoundedRect = (ctx: CanvasRenderingContext2D, width: number, height: number, radius: number) => {
-             ctx.beginPath();
-             ctx.moveTo(radius, 0);
-             ctx.lineTo(width - radius, 0);
-             ctx.quadraticCurveTo(width, 0, width, radius);
-             ctx.lineTo(width, height - radius);
-             ctx.quadraticCurveTo(width, height, width - radius, height);
-             ctx.lineTo(radius, height);
-             ctx.quadraticCurveTo(0, height, 0, height - radius);
-             ctx.lineTo(0, radius);
-             ctx.quadraticCurveTo(0, 0, radius, 0);
-             ctx.closePath();
-        };
-
-        const drawRect = ctx.roundRect ? roundedRectPath : manualRoundedRect;
 
         const render = () => {
             const { width, height } = sizeRef.current;
@@ -88,6 +89,7 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
                 return;
             }
 
+            // Tốc độ xoay
             time += rank === 'SSR' ? 0.04 : 0.02;
 
             const centerX = width / 2;
@@ -97,25 +99,21 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
 
             ctx.clearRect(0, 0, width, height);
 
-            // --- TỐI ƯU 2: Bỏ phần vẽ Glow bằng Canvas ở đây ---
-            // (Chúng ta sẽ dùng CSS box-shadow ở thẻ div cha để nhẹ hơn)
-
             // 1. Vẽ Gradient xoay
             ctx.save();
-            drawRect(ctx, width, height, radius);
+            roundedRectPath(ctx, width, height, radius);
             ctx.clip();
 
             ctx.translate(centerX, centerY);
             ctx.rotate(time);
 
-            const gradientSize = Math.max(width, height) * 2; // Tính 1 lần nếu cần siêu tối ưu, nhưng ở đây ok
+            const gradientSize = Math.max(width, height) * 2;
             
-            // Vẽ gradient
             try {
                 const conic = ctx.createConicGradient(0, 0, 0);
                 conic.addColorStop(0, 'transparent');
                 conic.addColorStop(0.2, theme.dark);
-                conic.addColorStop(0.4, theme.color);
+                conic.addColorStop(0.4, theme.color); // Màu chính
                 conic.addColorStop(0.6, theme.dark);
                 conic.addColorStop(0.8, 'transparent');
                 ctx.fillStyle = conic;
@@ -128,13 +126,10 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
 
             // 2. Vẽ phần nền bên trong (Mask)
             ctx.save();
-            // Điều chỉnh tọa độ để trừ đi độ dày viền
             ctx.translate(borderThickness, borderThickness);
-            
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; // Màu nền
-            drawRect(ctx, width - borderThickness * 2, height - borderThickness * 2, radius - 1);
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.95)'; // Tăng độ đặc nền lên 0.95 để contrast tốt hơn với viền mỏng
+            roundedRectPath(ctx, width - borderThickness * 2, height - borderThickness * 2, radius - 1);
             ctx.fill();
-            
             ctx.restore();
 
             animationFrameId = requestAnimationFrame(render);
@@ -146,13 +141,17 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
             cancelAnimationFrame(animationFrameId);
             resizeObserver.disconnect();
         };
-    }, [rank]); // Bỏ showGlow khỏi dependency vì dùng CSS
+    }, [rank]);
 
-    // Lấy theme cho CSS shadow
     const theme = RANK_DATA[rank] || RANK_DATA['E'];
-    // Style cho box-shadow (Hiệu năng tốt hơn canvas shadow)
-    const glowStyle = showGlow ? {
-        boxShadow: `0 0 ${rank === 'SSR' ? '20px' : '10px'} ${theme.glow}`
+
+    // --- TỐI ƯU SHADOW: GIẢM SIZE VÀ THÊM SPREAD ÂM ĐỂ GỌN HƠN ---
+    const glowStyle: React.CSSProperties = showGlow ? {
+        // SSR: 12px (cũ 20px), Các rank khác: 6px (cũ 10px)
+        // Thêm spread radius (tham số thứ 4) là 0 hoặc -1px để bóng ôm sát hơn
+        boxShadow: `0 0 ${rank === 'SSR' ? '12px' : '6px'} ${theme.glow}`,
+        border: `1px solid ${theme.glow}`, // Thêm viền border thật cực mờ cùng màu glow để tạo khuôn
+        borderColor: 'rgba(255,255,255,0.05)' // Hoặc viền trắng siêu mờ để bắt sáng
     } : {};
 
     return (
@@ -161,7 +160,10 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
             className={`relative overflow-hidden rounded-xl ${className}`}
             style={{ 
                 ...glowStyle,
-                transition: 'box-shadow 0.3s ease' // Thêm hiệu ứng chuyển mượt
+                // Ghi đè borderColor bằng theme màu nhưng rất nhạt để tạo viền giới hạn tinh tế
+                borderColor: theme.dark, 
+                borderWidth: '0px', // Nếu muốn hoàn toàn không có viền cứng thì để 0px, hoặc 1px solid theme.dark
+                transition: 'box-shadow 0.3s ease'
             }}
         >
             <canvas 
