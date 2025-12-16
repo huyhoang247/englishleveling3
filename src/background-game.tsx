@@ -31,8 +31,6 @@ import Mailbox from './home/mail/mail.tsx';
 import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
-// --- MODIFIED: Removed updateUserCoins as it's now handled by the context ---
-// import { updateUserCoins } from './gameDataService.ts'; 
 
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 const SlotMachineGame = lazy(() => import('./777.tsx'));
@@ -81,13 +79,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate,
-    // --- MODIFIED: Removed these as PvP gets them internally now ---
-    // getPlayerBattleStats,
-    // getEquippedSkillsDetails, 
     handleStateUpdateFromChest, handleAchievementsDataUpdate,
     setCoins, updateSkillsState,
     updateEquipmentData,
     updateUserCurrency,
+    updateCoins, // <--- ĐÃ THÊM HÀM NÀY TỪ CONTEXT
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
@@ -166,7 +162,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         {/* --- Overlays / Modals --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary>{isRankOpen && currentUser && <EnhancedLeaderboard onClose={toggleRank} currentUserId={currentUser.uid} />}</ErrorBoundary> </div>
         
-        {/* --- MODIFIED: PvpArena call is now much simpler --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isPvpArenaOpen && currentUser && (
@@ -175,7 +170,20 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             </ErrorBoundary>
         </div>
         
-        <div className="fixed inset-0 z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> <ErrorBoundary>{currentUser && (<LuckyChestGame onClose={toggleLuckyGame} currentCoins={coins} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} onUpdatePickaxes={handleUpdatePickaxes} currentJackpotPool={jackpotPool} onUpdateJackpotPool={handleUpdateJackpotPool} />)}</ErrorBoundary> </div>
+        <div className="fixed inset-0 z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> 
+            <ErrorBoundary>
+                {currentUser && (
+                    <LuckyChestGame 
+                        onClose={toggleLuckyGame} 
+                        currentCoins={coins} 
+                        onUpdateCoins={updateCoins} // <-- SỬ DỤNG HÀM TỪ CONTEXT
+                        onUpdatePickaxes={handleUpdatePickaxes} 
+                        currentJackpotPool={jackpotPool} 
+                        onUpdateJackpotPool={handleUpdateJackpotPool} 
+                    />
+                )}
+            </ErrorBoundary> 
+        </div>
         
         <div className="fixed inset-0 z-[60]" style={{ display: isMinerChallengeOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
@@ -194,7 +202,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                     <BossBattle 
                         userId={currentUser.uid}
                         onClose={toggleBossBattle}
-                        onBattleEnd={async (result, rewards) => { if (result === 'win' && currentUser) setCoins(await updateUserCoins(currentUser.uid, rewards.coins)); }}
+                        onBattleEnd={async (result, rewards) => { 
+                            if (result === 'win' && rewards.coins) {
+                                updateCoins(rewards.coins); // <-- SỬ DỤNG HÀM TỪ CONTEXT
+                            }
+                        }}
                         onFloorComplete={handleBossFloorUpdate}
                     />
                 )}
@@ -220,7 +232,16 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <ErrorBoundary>{isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} onDataUpdated={handleStatsUpdate} />)}</ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
-            <ErrorBoundary>{isBaseBuildingOpen && currentUser && (<BaseBuildingScreen onClose={toggleBaseBuilding} coins={coins} gems={gems} onUpdateCoins={async (amount) => setCoins(await updateUserCoins(currentUser!.uid, amount))} />)}</ErrorBoundary>
+            <ErrorBoundary>
+                {isBaseBuildingOpen && currentUser && (
+                    <BaseBuildingScreen 
+                        onClose={toggleBaseBuilding} 
+                        coins={coins} 
+                        gems={gems} 
+                        onUpdateCoins={updateCoins} // <-- SỬ DỤNG HÀM TỪ CONTEXT
+                    />
+                )}
+            </ErrorBoundary>
         </div>
         <div className="fixed inset-0 z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isSkillScreenOpen && currentUser && (
