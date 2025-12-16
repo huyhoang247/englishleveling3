@@ -1,4 +1,3 @@
---- START OF FILE lucky-game.tsx ---
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
