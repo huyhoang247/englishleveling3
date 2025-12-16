@@ -13,8 +13,11 @@ import RateLimitToast from '../../thong-bao.tsx';
 import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import EquipmentScreenSkeleton from './equipment-loading.tsx';
-// THAY ĐỔI: Import component TotalStatsModal đã được tách ra file mới
 import TotalStatsModal from './total-stats-modal.tsx';
+
+// --- IMPORT MỚI: Component hiệu ứng Rank ---
+// Bạn hãy đảm bảo đường dẫn này trỏ đúng tới file item-rank-border.tsx bạn vừa tạo
+import ItemRankBorder from './item-rank-border.tsx'; 
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -117,6 +120,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
     );
 });
 
+// --- EQUIPMENT SLOT (ĐÃ SỬA ĐỔI) ---
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
@@ -129,43 +133,72 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
         );
     }
 
-    const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center group";
+    const sizeClasses = "w-24 h-24 sm:w-28 sm:h-28";
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
-    const borderStyle = itemDef ? `${getRarityColor(itemDef.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
-    const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/50';
 
-    const getPlaceholderIcon = () => {
-        const iconMap = {
-            weapon: equipmentUiAssets.weaponIcon,
-            armor: equipmentUiAssets.armorIcon,
-            Helmet: equipmentUiAssets.helmetIcon,
-        };
-        const iconSrc = iconMap[slotType];
-
-        if (iconSrc) {
-            return <img src={iconSrc} alt={`${slotType} slot`} className="h-10 w-10 opacity-40 group-hover:opacity-60 transition-opacity" />;
-        }
-
-        return <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
-        </svg>;
-    };
-
-    return (
-        <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined} title={itemDef ? `${itemDef.name} - Lv.${ownedItem?.level}` : `Ô ${slotType}`}>
+    // Nội dung bên trong ô (dùng chung cho cả 2 trạng thái)
+    const renderContent = () => (
+        <>
             {ownedItem && itemDef ? (
                 <>
-                    <img src={itemDef.icon} alt={itemDef.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110" />
-                    <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
+                    <img 
+                        src={itemDef.icon} 
+                        alt={itemDef.name} 
+                        className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110 relative z-10 drop-shadow-md" 
+                    />
+                    <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
                         Lv.{ownedItem.level}
                     </span>
+                    {/* Hiệu ứng nền nhẹ cho item */}
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl pointer-events-none z-0" />
                 </>
             ) : (
-                <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-slate-400 transition-colors text-center">
-                    {getPlaceholderIcon()}
-                    <span className="text-xs font-semibold uppercase mt-1">{slotType}</span>
+                <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-slate-400 transition-colors text-center relative z-10">
+                    {(() => {
+                        const iconMap = {
+                            weapon: equipmentUiAssets.weaponIcon,
+                            armor: equipmentUiAssets.armorIcon,
+                            Helmet: equipmentUiAssets.helmetIcon,
+                        };
+                        const iconSrc = iconMap[slotType];
+                        if (iconSrc) {
+                            return <img src={iconSrc} alt={`${slotType} slot`} className="h-10 w-10 opacity-40 group-hover:opacity-60 transition-opacity" />;
+                        }
+                        return (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
+                            </svg>
+                        );
+                    })()}
+                    <span className="text-xs font-semibold uppercase mt-1 opacity-70">{slotType}</span>
                 </div>
             )}
+        </>
+    );
+
+    // TRƯỜNG HỢP 1: Đã có trang bị -> Sử dụng hiệu ứng Rank mới
+    if (ownedItem && itemDef) {
+        return (
+            <div 
+                className={`relative ${sizeClasses} rounded-xl transition-all duration-300 group ${interactivity} active:scale-95`}
+                onClick={!isProcessing ? onClick : undefined}
+                title={`${itemDef.name} - Lv.${ownedItem.level}`}
+            >
+                <ItemRankBorder rank={itemDef.rarity} className="w-full h-full shadow-lg shadow-black/50">
+                    {renderContent()}
+                </ItemRankBorder>
+            </div>
+        );
+    }
+
+    // TRƯỜNG HỢP 2: Ô trống -> Sử dụng giao diện cũ (nét đứt)
+    return (
+        <div 
+            className={`relative ${sizeClasses} rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60 transition-all duration-300 flex items-center justify-center group ${interactivity}`}
+            onClick={!isProcessing ? onClick : undefined}
+            title={`Ô ${slotType}`}
+        >
+            {renderContent()}
         </div>
     );
 });
@@ -559,9 +592,6 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
     );
 });
 
-// THAY ĐỔI: Component TotalStatsModal đã được xóa khỏi đây và chuyển sang file total-stats-modal.tsx
-
-
 // --- COMPONENT HIỂN THỊ CHÍNH ---
 function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
     const {
@@ -578,7 +608,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         equippedItemsMap,
         unequippedItemsSorted,
         totalEquippedStats,
-        userStatsValue, // Lấy state mới
+        userStatsValue, 
         isLoading,
         handleEquipItem,
         handleUnequipItem,
