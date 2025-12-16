@@ -1,4 +1,4 @@
-// --- START OF FILE src/home/skill-game/skill-ui.tsx ---
+// --- FILE: src/home/skill-game/skill-ui.tsx ---
 
 import React, { memo, useState, useEffect, useRef } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
@@ -20,11 +20,16 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 
-// --- CÁC ICON GIAO DIỆN CHUNG (SVG GIỮ NGUYÊN) ---
+// --- IMPORT MỚI: Component hiệu ứng Rank (Kiểm tra lại đường dẫn import của bạn) ---
+// Giả sử file này nằm cùng cấp hoặc trong thư mục ui chung. 
+// Nếu file item-rank-border.tsx nằm bên thư mục equipment-game, hãy sửa đường dẫn thành '../equipment-game/item-rank-border.tsx'
+import ItemRankBorder from '../equipment/item-rank-border.tsx'; 
+
+// --- CÁC ICON GIAO DIỆN CHUNG ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
 
-// --- CÁC COMPONENT CON (ĐÃ BỌC TRONG React.memo) ---
+// --- CÁC COMPONENT CON ---
 const Header = memo(({ goldValue }: { goldValue: number }) => {
     const { handleClose } = useSkillContext();
     const animatedGold = useAnimateValue(goldValue);
@@ -43,31 +48,64 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     );
 });
 
+// --- SKILL SLOT (ĐÃ SỬA ĐỔI: Sử dụng ItemRankBorder và chỉnh vị trí Lv tag) ---
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
-  const baseClasses = "relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 transition-all duration-300 flex items-center justify-center group";
+  
+  // Kích thước giống EquipmentSlot
+  const sizeClasses = "w-24 h-24 sm:w-28 sm:h-28";
   const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
-  const borderStyle = ownedSkill && skillBlueprint ? `${getRarityColor(ownedSkill.rarity)} hover:opacity-80` : 'border-dashed border-slate-600 hover:border-slate-400';
-  const backgroundStyle = skillBlueprint ? 'bg-slate-900/80' : 'bg-slate-900/50';
-  const IconComponent = skillBlueprint?.icon;
 
-  return (
-    <div className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} onClick={!isProcessing ? onClick : undefined} title={skillBlueprint ? `${skillBlueprint.name} - Lv.${ownedSkill?.level}` : 'Ô trống'}>
-      {ownedSkill && skillBlueprint && IconComponent ? (
-        <>
-          <div className="transition-all duration-300 group-hover:scale-110">
-             <IconComponent className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
+  // Nội dung bên trong ô
+  const renderContent = () => (
+    <>
+        {ownedSkill && skillBlueprint && skillBlueprint.icon ? (
+            <>
+                <div className="transition-all duration-300 group-hover:scale-110 relative z-10 drop-shadow-md">
+                    <skillBlueprint.icon className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
+                </div>
+                {/* Vị trí Lv: top-2 right-2 để tránh bo góc */}
+                <span className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
+                    Lv.{ownedSkill.level}
+                </span>
+                {/* Hiệu ứng nền nhẹ cho item */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl pointer-events-none z-0" />
+            </>
+        ) : (
+            <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-slate-400 transition-colors text-center relative z-10">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 opacity-40 group-hover:opacity-60 transition-opacity" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="text-xs font-semibold uppercase mt-1 opacity-70">Empty</span>
+            </div>
+        )}
+    </>
+  );
+
+  // TRƯỜNG HỢP 1: Đã có skill -> Dùng ItemRankBorder
+  if (ownedSkill && skillBlueprint) {
+      return (
+          <div 
+            className={`relative ${sizeClasses} rounded-xl transition-all duration-300 group ${interactivity} active:scale-95`}
+            onClick={!isProcessing ? onClick : undefined}
+            title={`${skillBlueprint.name} - Lv.${ownedSkill.level}`}
+          >
+              <ItemRankBorder rank={ownedSkill.rarity} className="w-full h-full shadow-lg shadow-black/50">
+                  {renderContent()}
+              </ItemRankBorder>
           </div>
-          <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/60 text-white rounded-md border border-slate-600">
-            Lv.{ownedSkill?.level}
-          </span>
-        </>
-      ) : (
-        <div className="text-slate-600 group-hover:text-slate-400 transition-colors">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
-        </div>
-      )}
+      );
+  }
+
+  // TRƯỜNG HỢP 2: Ô trống -> Viền nét đứt
+  return (
+    <div 
+        className={`relative ${sizeClasses} rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60 transition-all duration-300 flex items-center justify-center group ${interactivity}`} 
+        onClick={!isProcessing ? onClick : undefined} 
+        title='Ô Kỹ Năng Trống'
+    >
+      {renderContent()}
     </div>
   );
 });
@@ -379,4 +417,3 @@ export default function SkillScreen({ onClose, userId }: SkillScreenProps) {
         </SkillProvider>
     );
 }
-// --- END OF FILE src/home/skill-game/skill-ui.tsx ---
