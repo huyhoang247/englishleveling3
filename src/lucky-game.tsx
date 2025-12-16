@@ -1,3 +1,5 @@
+--- START OF FILE lucky-game.tsx (10).txt ---
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
@@ -562,15 +564,24 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 </div>
               </button>
               
-              {/* Error Message */}
-              {coins < currentCost && !isSpinning && (
-                  <p className="text-red-500 text-sm mt-3 font-semibold bg-red-950/30 px-3 py-1 rounded-full border border-red-900/50">
-                      Không đủ xu để quay!
-                  </p>
-              )}
+              {/* REMOVED: Old error message was here */}
         </div>
 
       </div>
+      
+      {/* Error Message Toast (Fixed Position) */}
+      {coins < currentCost && !isSpinning && (
+          <div className="fixed bottom-6 right-6 z-[100] animate-fade-in">
+              <div className="bg-slate-900/95 border border-red-500/50 text-red-400 px-4 py-3 rounded-xl shadow-2xl backdrop-blur-md flex items-center gap-3">
+                   <div className="bg-red-500/10 p-1.5 rounded-full">
+                       <svg className="w-5 h-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                       </svg>
+                   </div>
+                   <span className="font-bold text-sm tracking-wide">Không đủ xu để quay!</span>
+              </div>
+          </div>
+      )}
 
       {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
 
