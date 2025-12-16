@@ -1,8 +1,7 @@
-
-
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
+import { useGame } from './GameContext.tsx'; // Import Hook
 
 // --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
@@ -45,15 +44,13 @@ interface Item {
 interface StripItem extends Item {
   uniqueId: string;
 }
+
+// Updated Props: Removed data props, kept UI control props
 interface LuckyChestGameProps {
   onClose: () => void;
-  isStatsFullscreen: boolean;
-  currentCoins: number;
-  onUpdateCoins: (amount: number) => void;
-  onUpdatePickaxes: (amount: number) => void;
-  currentJackpotPool: number;
-  onUpdateJackpotPool: (amount: number, resetToDefault?: boolean) => void;
+  isStatsFullscreen?: boolean; // Optional, defaults to false
 }
+
 interface RewardPopupProps {
   item: Item;
   jackpotWon: boolean;
@@ -105,7 +102,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     };
 
     return (
-    /* CHANGED: Removed backdrop-blur-md, increased opacity to bg-black/90 for performance */
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
         className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
@@ -197,7 +193,16 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 };
 
 // --- MAIN COMPONENT ---
-const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoins, onUpdatePickaxes, currentJackpotPool, onUpdateJackpotPool }: LuckyChestGameProps) => {
+const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGameProps) => {
+  // Use Context Hook
+  const { 
+    coins, 
+    updateCoins, 
+    handleUpdatePickaxes, 
+    jackpotPool, 
+    handleUpdateJackpotPool 
+  } = useGame();
+
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
   const [jackpotWon, setJackpotWon] = useState(false);
@@ -260,13 +265,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
-    if (isSpinning || currentCoins < cost) return;
+    // Check cost against context coins
+    if (isSpinning || coins < cost) return;
 
-    // Logic Cost
-    onUpdateCoins(-cost);
+    // Logic Cost (Use context function)
+    updateCoins(-cost);
     // Add to pool (more contribution for higher bet)
     const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
-    onUpdateJackpotPool(randomCoinsToAdd);
+    handleUpdateJackpotPool(randomCoinsToAdd);
 
     setIsSpinning(true);
     setJackpotWon(false);
@@ -310,17 +316,17 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
             
             let actualValue = winner.value;
             if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
-                onUpdatePickaxes(winner.rewardAmount);
+                handleUpdatePickaxes(winner.rewardAmount);
                 actualValue = winner.rewardAmount;
             } else if (winner.rarity === 'jackpot') {
-                actualValue = currentJackpotPool;
+                actualValue = jackpotPool;
                 setJackpotWon(true);
                 setJackpotAnimation(true);
-                onUpdateCoins(actualValue);
-                onUpdateJackpotPool(0, true);
+                updateCoins(actualValue);
+                handleUpdateJackpotPool(0, true);
                 setTimeout(() => setJackpotAnimation(false), 3000);
             } else if (winner.rewardType === 'coin') {
-                onUpdateCoins(winner.value);
+                updateCoins(winner.value);
             } else if (winner.rewardType === 'other' && winner.rewardAmount) {
                 // Handle logic for other items (Energy, Trophy etc.) here if needed
             }
@@ -330,7 +336,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         }, 8100); 
     }, 50);
 
-  }, [isSpinning, currentCoins, displayItems, onUpdateCoins, onUpdatePickaxes, onUpdateJackpotPool, currentJackpotPool, getRandomFiller, spinMultiplier]);
+  }, [isSpinning, coins, displayItems, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool, jackpotPool, getRandomFiller, spinMultiplier]);
   
   const currentCost = BASE_COST * spinMultiplier;
 
@@ -352,7 +358,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
             <CoinDisplay 
-              displayedCoins={currentCoins}
+              displayedCoins={coins} // Use context coins
               isStatsFullscreen={isStatsFullscreen}
             />
         </div>
@@ -375,7 +381,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
               <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
                 <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
-                    {currentJackpotPool.toLocaleString()}
+                    {jackpotPool.toLocaleString()}
                 </span>
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
@@ -517,7 +523,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
 
               <button
                 onClick={spinChest}
-                disabled={isSpinning || currentCoins < currentCost}
+                disabled={isSpinning || coins < currentCost} // Use context coins
                 className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200
                            disabled:opacity-70 disabled:cursor-not-allowed
                            active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]
@@ -541,7 +547,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
                             
                             {/* Cost Box - CHANGED: Reduced mt-1 to mt-0.5 */}
                             <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
-                                <span className={`text-lg font-lilita tracking-wide leading-none ${currentCoins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>
+                                <span className={`text-lg font-lilita tracking-wide leading-none ${coins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>
                                     {currentCost}
                                 </span>
                                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
@@ -552,7 +558,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
               </button>
               
               {/* Error Message */}
-              {currentCoins < currentCost && !isSpinning && (
+              {coins < currentCost && !isSpinning && (
                   <p className="text-red-500 text-sm mt-3 font-semibold bg-red-950/30 px-3 py-1 rounded-full border border-red-900/50">
                       Không đủ xu để quay!
                   </p>
