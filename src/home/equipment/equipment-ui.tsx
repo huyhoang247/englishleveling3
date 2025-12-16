@@ -1,3 +1,5 @@
+// --- FILE: ui/equipment-ui.tsx ---
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
@@ -16,7 +18,6 @@ import EquipmentScreenSkeleton from './equipment-loading.tsx';
 import TotalStatsModal from './total-stats-modal.tsx';
 
 // --- IMPORT MỚI: Component hiệu ứng Rank ---
-// Bạn hãy đảm bảo đường dẫn này trỏ đúng tới file item-rank-border.tsx bạn vừa tạo
 import ItemRankBorder from './item-rank-border.tsx'; 
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
@@ -120,7 +121,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
     );
 });
 
-// --- EQUIPMENT SLOT (ĐÃ SỬA ĐỔI) ---
+// --- EQUIPMENT SLOT (ĐÃ SỬA ĐỔI VỊ TRÍ LV TAG) ---
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
@@ -146,7 +147,8 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
                         alt={itemDef.name} 
                         className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110 relative z-10 drop-shadow-md" 
                     />
-                    <span className="absolute top-1 right-1.5 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
+                    {/* --- ĐÃ SỬA: Thay đổi từ top-1 right-1.5 thành top-2 right-2 để tránh mép bo cong --- */}
+                    <span className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
                         Lv.{ownedItem.level}
                     </span>
                     {/* Hiệu ứng nền nhẹ cho item */}
