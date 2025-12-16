@@ -268,73 +268,78 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     // Check cost against context coins
     if (isSpinning || coins < cost) return;
 
-    // Logic Cost (Use context function)
+    // --- FIX: Cập nhật Coin ngay lập tức ---
     updateCoins(-cost);
-    // Add to pool (more contribution for higher bet)
+    
+    // Add to pool
     const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
     handleUpdateJackpotPool(randomCoinsToAdd);
 
-    setIsSpinning(true);
-    setJackpotWon(false);
-    setShowRewardPopup(false);
-
-    // Winner Logic
-    let winner: Item;
-    if (Math.random() < 0.01) { // 1% Jackpot (fixed chance)
-        winner = displayItems.find(i => i.rarity === 'jackpot')!;
-    } else {
-        const others = displayItems.filter(i => i.rarity !== 'jackpot');
-        winner = others[Math.floor(Math.random() * others.length)];
-    }
-
-    // Prepare Spin Strip
-    const TARGET_INDEX = 100; 
-    const newStrip: StripItem[] = [];
-    
-    // Fill pre-spin buffer with current multiplier items
-    for (let i = 0; i < TARGET_INDEX; i++) {
-        newStrip.push({ ...getRandomFiller(), uniqueId: `spin-pre-${Date.now()}-${i}` });
-    }
-    newStrip.push({ ...winner, uniqueId: `winner-${Date.now()}` });
-    for (let i = 0; i < 5; i++) {
-        newStrip.push({ ...getRandomFiller(), uniqueId: `spin-post-${Date.now()}-${i}` });
-    }
-
-    setStrip(newStrip);
-    setTransitionDuration(0);
-    setOffset(0);
-
-    // Animation Trigger
+    // --- FIX: Đẩy việc xử lý quay nặng nề vào hàng đợi tiếp theo (10ms) ---
+    // Điều này giúp React render xong việc trừ tiền rồi mới làm việc khác
     setTimeout(() => {
-        const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
+        setIsSpinning(true);
+        setJackpotWon(false);
+        setShowRewardPopup(false);
 
-        setTransitionDuration(8); 
-        setOffset(finalOffset);
+        // Winner Logic
+        let winner: Item;
+        if (Math.random() < 0.01) { // 1% Jackpot (fixed chance)
+            winner = displayItems.find(i => i.rarity === 'jackpot')!;
+        } else {
+            const others = displayItems.filter(i => i.rarity !== 'jackpot');
+            winner = others[Math.floor(Math.random() * others.length)];
+        }
+
+        // Prepare Spin Strip
+        const TARGET_INDEX = 100; 
+        const newStrip: StripItem[] = [];
         
-        setTimeout(() => {
-            setIsSpinning(false);
-            
-            let actualValue = winner.value;
-            if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
-                handleUpdatePickaxes(winner.rewardAmount);
-                actualValue = winner.rewardAmount;
-            } else if (winner.rarity === 'jackpot') {
-                actualValue = jackpotPool;
-                setJackpotWon(true);
-                setJackpotAnimation(true);
-                updateCoins(actualValue);
-                handleUpdateJackpotPool(0, true);
-                setTimeout(() => setJackpotAnimation(false), 3000);
-            } else if (winner.rewardType === 'coin') {
-                updateCoins(winner.value);
-            } else if (winner.rewardType === 'other' && winner.rewardAmount) {
-                // Handle logic for other items (Energy, Trophy etc.) here if needed
-            }
+        // Fill pre-spin buffer with current multiplier items
+        for (let i = 0; i < TARGET_INDEX; i++) {
+            newStrip.push({ ...getRandomFiller(), uniqueId: `spin-pre-${Date.now()}-${i}` });
+        }
+        newStrip.push({ ...winner, uniqueId: `winner-${Date.now()}` });
+        for (let i = 0; i < 5; i++) {
+            newStrip.push({ ...getRandomFiller(), uniqueId: `spin-post-${Date.now()}-${i}` });
+        }
 
-            setWonRewardDetails({ ...winner, value: actualValue });
-            setShowRewardPopup(true);
-        }, 8100); 
-    }, 50);
+        setStrip(newStrip);
+        setTransitionDuration(0);
+        setOffset(0);
+
+        // Animation Trigger
+        setTimeout(() => {
+            const finalOffset = -(TARGET_INDEX * ITEM_FULL_WIDTH);
+
+            setTransitionDuration(8); 
+            setOffset(finalOffset);
+            
+            setTimeout(() => {
+                setIsSpinning(false);
+                
+                let actualValue = winner.value;
+                if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
+                    handleUpdatePickaxes(winner.rewardAmount);
+                    actualValue = winner.rewardAmount;
+                } else if (winner.rarity === 'jackpot') {
+                    actualValue = jackpotPool;
+                    setJackpotWon(true);
+                    setJackpotAnimation(true);
+                    updateCoins(actualValue);
+                    handleUpdateJackpotPool(0, true);
+                    setTimeout(() => setJackpotAnimation(false), 3000);
+                } else if (winner.rewardType === 'coin') {
+                    updateCoins(winner.value);
+                } else if (winner.rewardType === 'other' && winner.rewardAmount) {
+                    // Handle logic for other items (Energy, Trophy etc.) here if needed
+                }
+
+                setWonRewardDetails({ ...winner, value: actualValue });
+                setShowRewardPopup(true);
+            }, 8100); 
+        }, 50);
+    }, 10);
 
   }, [isSpinning, coins, displayItems, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool, jackpotPool, getRandomFiller, spinMultiplier]);
   
