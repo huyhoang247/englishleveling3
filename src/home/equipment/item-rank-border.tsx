@@ -1,17 +1,16 @@
 // --- FILE: ui/item-rank-border.tsx ---
 
 import React, { useRef, useEffect } from 'react';
-import { type ItemRank } from './item-database.ts'; // Điều chỉnh đường dẫn import tùy dự án
+import { type ItemRank } from './item-database.ts';
 
-// Định nghĩa màu sắc cho từng Rank
 const RANK_DATA: Record<string, { color: string; glow: string; dark: string }> = {
-    E: { color: '#9ca3af', glow: 'rgba(156, 163, 175, 0.6)', dark: '#4b5563' },     // Gray
-    D: { color: '#4ade80', glow: 'rgba(74, 222, 128, 0.6)', dark: '#16a34a' },     // Green
-    B: { color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.6)', dark: '#2563eb' },     // Blue
-    A: { color: '#c084fc', glow: 'rgba(192, 132, 252, 0.6)', dark: '#9333ea' },    // Purple
-    S: { color: '#facc15', glow: 'rgba(250, 204, 21, 0.6)', dark: '#ca8a04' },     // Gold
-    SS: { color: '#f97316', glow: 'rgba(249, 115, 22, 0.8)', dark: '#c2410c' },    // Orange
-    SSR: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.9)', dark: '#7f1d1d' }     // Red
+    E: { color: '#9ca3af', glow: 'rgba(156, 163, 175, 0.6)', dark: '#4b5563' },
+    D: { color: '#4ade80', glow: 'rgba(74, 222, 128, 0.6)', dark: '#16a34a' },
+    B: { color: '#60a5fa', glow: 'rgba(96, 165, 250, 0.6)', dark: '#2563eb' },
+    A: { color: '#c084fc', glow: 'rgba(192, 132, 252, 0.6)', dark: '#9333ea' },
+    S: { color: '#facc15', glow: 'rgba(250, 204, 21, 0.6)', dark: '#ca8a04' },
+    SS: { color: '#f97316', glow: 'rgba(249, 115, 22, 0.8)', dark: '#c2410c' },
+    SSR: { color: '#ef4444', glow: 'rgba(239, 68, 68, 0.9)', dark: '#7f1d1d' }
 };
 
 interface ItemRankBorderProps {
@@ -24,114 +23,118 @@ interface ItemRankBorderProps {
 const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, className = '', showGlow = true }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    // Lưu kích thước vào ref để không trigger render lại component
+    const sizeRef = useRef({ width: 0, height: 0 });
 
     useEffect(() => {
         const canvas = canvasRef.current;
         const container = containerRef.current;
         if (!canvas || !container) return;
 
-        const ctx = canvas.getContext('2d');
+        const ctx = canvas.getContext('2d', { alpha: true }); // alpha: true để tối ưu trong suốt
         if (!ctx) return;
 
-        // Lấy theme màu theo rank
         const theme = RANK_DATA[rank] || RANK_DATA['E'];
         let animationFrameId: number;
         let time = 0;
 
-        // Hàm hỗ trợ vẽ hình chữ nhật bo góc
-        const roundedRect = (ctx: CanvasRenderingContext2D, x: number, y: number, width: number, height: number, radius: number) => {
-            ctx.beginPath();
-            ctx.moveTo(x + radius, y);
-            ctx.lineTo(x + width - radius, y);
-            ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
-            ctx.lineTo(x + width, y + height - radius);
-            ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
-            ctx.lineTo(x + radius, y + height);
-            ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
-            ctx.lineTo(x, y + radius);
-            ctx.quadraticCurveTo(x, y, x + radius, y);
-            ctx.closePath();
-        };
-
-        const render = () => {
-            // Tốc độ xoay: SSR xoay nhanh hơn
-            time += rank === 'SSR' ? 0.04 : 0.02;
-
+        // --- TỐI ƯU 1: ResizeObserver ---
+        // Chỉ cập nhật kích thước khi thực sự thay đổi, không đo trong vòng lặp render
+        const updateSize = () => {
             const width = container.clientWidth;
             const height = container.clientHeight;
-            // Xử lý màn hình Retina/High DPI
             const dpr = window.devicePixelRatio || 1;
+            
+            sizeRef.current = { width, height };
 
             if (canvas.width !== width * dpr || canvas.height !== height * dpr) {
                 canvas.width = width * dpr;
                 canvas.height = height * dpr;
                 ctx.scale(dpr, dpr);
             }
+        };
+
+        const resizeObserver = new ResizeObserver(() => updateSize());
+        resizeObserver.observe(container);
+        updateSize(); // Gọi lần đầu
+
+        // Hàm vẽ path bo góc (tái sử dụng)
+        const roundedRectPath = (ctx: CanvasRenderingContext2D, width: number, height: number, radius: number) => {
+            ctx.beginPath();
+            ctx.roundRect(0, 0, width, height, radius); // Sử dụng API native mới nếu trình duyệt hỗ trợ (nhanh hơn)
+        };
+        
+        // Fallback nếu trình duyệt cũ chưa hỗ trợ roundRect
+        const manualRoundedRect = (ctx: CanvasRenderingContext2D, width: number, height: number, radius: number) => {
+             ctx.beginPath();
+             ctx.moveTo(radius, 0);
+             ctx.lineTo(width - radius, 0);
+             ctx.quadraticCurveTo(width, 0, width, radius);
+             ctx.lineTo(width, height - radius);
+             ctx.quadraticCurveTo(width, height, width - radius, height);
+             ctx.lineTo(radius, height);
+             ctx.quadraticCurveTo(0, height, 0, height - radius);
+             ctx.lineTo(0, radius);
+             ctx.quadraticCurveTo(0, 0, radius, 0);
+             ctx.closePath();
+        };
+
+        const drawRect = ctx.roundRect ? roundedRectPath : manualRoundedRect;
+
+        const render = () => {
+            const { width, height } = sizeRef.current;
+            if (width === 0 || height === 0) {
+                animationFrameId = requestAnimationFrame(render);
+                return;
+            }
+
+            time += rank === 'SSR' ? 0.04 : 0.02;
 
             const centerX = width / 2;
             const centerY = height / 2;
-            const radius = 12; // Độ bo góc
-            const borderThickness = 3; // Độ dày viền
+            const radius = 12; 
+            const borderThickness = 3; 
 
-            // Xóa toàn bộ canvas để vẽ frame mới
             ctx.clearRect(0, 0, width, height);
 
-            // 1. Vẽ hiệu ứng Glow (bóng đổ) phía sau
-            if (showGlow) {
-                ctx.save();
-                ctx.shadowColor = theme.glow;
-                ctx.shadowBlur = rank === 'SSR' ? 20 : 10;
-                ctx.fillStyle = 'rgba(0,0,0,0)'; // Fill trong suốt, chỉ để lấy shadow
-                roundedRect(ctx, 2, 2, width - 4, height - 4, radius);
-                ctx.fill();
-                ctx.restore();
-            }
+            // --- TỐI ƯU 2: Bỏ phần vẽ Glow bằng Canvas ở đây ---
+            // (Chúng ta sẽ dùng CSS box-shadow ở thẻ div cha để nhẹ hơn)
 
-            // 2. Vẽ Gradient xoay (Conic Gradient)
+            // 1. Vẽ Gradient xoay
             ctx.save();
-            // Tạo vùng cắt (clip) hình chữ nhật bo góc
-            roundedRect(ctx, 0, 0, width, height, radius);
+            drawRect(ctx, width, height, radius);
             ctx.clip();
 
-            // Di chuyển tâm để xoay
             ctx.translate(centerX, centerY);
             ctx.rotate(time);
 
-            // Vẽ Gradient hình nón
-            const gradientSize = Math.max(width, height) * 2;
+            const gradientSize = Math.max(width, height) * 2; // Tính 1 lần nếu cần siêu tối ưu, nhưng ở đây ok
+            
+            // Vẽ gradient
             try {
                 const conic = ctx.createConicGradient(0, 0, 0);
-                conic.addColorStop(0, 'transparent'); // Trong suốt (đuôi)
-                conic.addColorStop(0.2, theme.dark);  // Màu tối (chuyển tiếp)
-                conic.addColorStop(0.4, theme.color); // Màu chính (sáng nhất)
-                conic.addColorStop(0.6, theme.dark);  // Màu tối (chuyển tiếp)
-                conic.addColorStop(0.8, 'transparent'); // Trong suốt (đầu)
+                conic.addColorStop(0, 'transparent');
+                conic.addColorStop(0.2, theme.dark);
+                conic.addColorStop(0.4, theme.color);
+                conic.addColorStop(0.6, theme.dark);
+                conic.addColorStop(0.8, 'transparent');
                 ctx.fillStyle = conic;
             } catch (e) {
-                // Fallback cho trình duyệt cũ
                 ctx.fillStyle = theme.color;
             }
             
-            // Vẽ hình chữ nhật lớn chứa gradient xoay
             ctx.fillRect(-gradientSize / 2, -gradientSize / 2, gradientSize, gradientSize);
             ctx.restore();
 
-            // 3. Vẽ phần nền bên trong (Mask) để che tâm gradient -> tạo thành viền
+            // 2. Vẽ phần nền bên trong (Mask)
             ctx.save();
-            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; // Màu nền (Slate-900 opacity)
-            roundedRect(
-                ctx, 
-                borderThickness, 
-                borderThickness, 
-                width - (borderThickness * 2), 
-                height - (borderThickness * 2), 
-                radius - 1
-            );
+            // Điều chỉnh tọa độ để trừ đi độ dày viền
+            ctx.translate(borderThickness, borderThickness);
+            
+            ctx.fillStyle = 'rgba(15, 23, 42, 0.9)'; // Màu nền
+            drawRect(ctx, width - borderThickness * 2, height - borderThickness * 2, radius - 1);
             ctx.fill();
             
-            // ĐÃ XÓA: Phần vẽ viền tĩnh (ctx.stroke) tại đây.
-            // Giờ đây mép trong của viền sẽ hoàn toàn sạch và không có đường kẻ nào.
-
             ctx.restore();
 
             animationFrameId = requestAnimationFrame(render);
@@ -141,18 +144,30 @@ const ItemRankBorder: React.FC<ItemRankBorderProps> = ({ rank, children, classNa
 
         return () => {
             cancelAnimationFrame(animationFrameId);
+            resizeObserver.disconnect();
         };
-    }, [rank, showGlow]);
+    }, [rank]); // Bỏ showGlow khỏi dependency vì dùng CSS
+
+    // Lấy theme cho CSS shadow
+    const theme = RANK_DATA[rank] || RANK_DATA['E'];
+    // Style cho box-shadow (Hiệu năng tốt hơn canvas shadow)
+    const glowStyle = showGlow ? {
+        boxShadow: `0 0 ${rank === 'SSR' ? '20px' : '10px'} ${theme.glow}`
+    } : {};
 
     return (
-        <div ref={containerRef} className={`relative overflow-hidden rounded-xl ${className}`}>
-            {/* Canvas vẽ hiệu ứng nền và viền */}
+        <div 
+            ref={containerRef} 
+            className={`relative overflow-hidden rounded-xl ${className}`}
+            style={{ 
+                ...glowStyle,
+                transition: 'box-shadow 0.3s ease' // Thêm hiệu ứng chuyển mượt
+            }}
+        >
             <canvas 
                 ref={canvasRef} 
                 className="absolute inset-0 w-full h-full pointer-events-none"
-                style={{ width: '100%', height: '100%' }}
             />
-            {/* Nội dung chính (Icon/Text) nằm đè lên trên */}
             <div className="relative z-10 w-full h-full flex items-center justify-center">
                 {children}
             </div>
