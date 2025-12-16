@@ -282,19 +282,25 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen, currentCoins, onUpdateCoin
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/20 blur-[100px] rounded-full"></div>
       </div>
 
-      {/* --- Header --- */}
-      <header className="relative w-full flex items-center justify-between py-3 px-4 z-20">
-        <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors backdrop-blur-sm">
-          <HomeIcon className="w-5 h-5 text-slate-300" />
-          <span className="hidden sm:inline text-sm font-semibold text-slate-300">Quay lại</span>
+      {/* --- HEADER (MODIFIED TO MATCH VOCA-CHEST-UI) --- */}
+      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[60]">
+        <button 
+            onClick={onClose} 
+            className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 hover:bg-slate-700 text-slate-300 transition-colors"
+            title="Quay lại Trang Chính"
+        >
+          <HomeIcon className="w-5 h-5" />
+          <span className="text-sm font-semibold">Trang Chính</span>
         </button>
-        <CoinDisplay 
-          displayedCoins={currentCoins}
-          isStatsFullscreen={isStatsFullscreen}
-        />
+        <div className="flex items-center gap-3">
+            <CoinDisplay 
+              displayedCoins={currentCoins}
+              isStatsFullscreen={isStatsFullscreen}
+            />
+        </div>
       </header>
 
-      <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10">
+      <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
         {/* --- JACKPOT UI (Moved Up) --- */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
