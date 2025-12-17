@@ -32,7 +32,6 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     const { handleClose } = useSkillContext();
     const animatedGold = useAnimateValue(goldValue);
     return (
-        // Changed: Removed backdrop-blur-sm, changed bg to slate-900/90
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
                  <button onClick={handleClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -52,11 +51,9 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
   
-  // Kích thước giống EquipmentSlot
   const sizeClasses = "w-24 h-24 sm:w-28 sm:h-28";
   const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
 
-  // Nội dung bên trong ô
   const renderContent = () => (
     <>
         {ownedSkill && skillBlueprint && skillBlueprint.icon ? (
@@ -64,11 +61,9 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
                 <div className="transition-all duration-300 group-hover:scale-110 relative z-10 drop-shadow-md">
                     <skillBlueprint.icon className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
                 </div>
-                {/* Vị trí Lv: top-2 right-2 để tránh bo góc */}
                 <span className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
                     Lv.{ownedSkill.level}
                 </span>
-                {/* Hiệu ứng nền nhẹ cho item */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl pointer-events-none z-0" />
             </>
         ) : (
@@ -82,7 +77,6 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
     </>
   );
 
-  // TRƯỜNG HỢP 1: Đã có skill -> Dùng ItemRankBorder
   if (ownedSkill && skillBlueprint) {
       return (
           <div 
@@ -97,7 +91,6 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
       );
   }
 
-  // TRƯỜNG HỢP 2: Ô trống -> Viền nét đứt
   return (
     <div 
         className={`relative ${sizeClasses} rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60 transition-all duration-300 flex items-center justify-center group ${interactivity}`} 
@@ -179,7 +172,6 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
           <div className="fixed inset-0 bg-black/80" onClick={handleCloseDetailModal} />
           <div className={`relative bg-gradient-to-br ${getRarityGradient(ownedSkill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
@@ -194,7 +186,17 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
             </div>
             <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
-                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
+                
+                {/* --- UPDATE: DÙNG ItemRankBorder CHO DETAIL MODAL --- */}
+                <div className="w-32 h-32 shrink-0">
+                    <ItemRankBorder rank={ownedSkill.rarity} className="w-full h-full shadow-[0_0_20px_rgba(0,0,0,0.5)]">
+                        <div className="w-full h-full flex items-center justify-center bg-black/30 rounded-lg">
+                            <IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)} drop-shadow-md`} />
+                        </div>
+                    </ItemRankBorder>
+                </div>
+                {/* --------------------------------------------------- */}
+
                 <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
                     <p className="text-slate-300 text-sm leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
                 </div>
@@ -250,7 +252,6 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
     return ( 
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
-            {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
             <div className="fixed inset-0 bg-black/80" onClick={handleCloseCraftSuccessModal}></div> 
             <div className="relative w-full max-w-sm"> 
                 <div className="absolute inset-0.5 animate-spin-slow-360"> 
@@ -262,9 +263,15 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
                 > 
                     <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
                     
-                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
-                        <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
+                    {/* --- UPDATE: DÙNG ItemRankBorder CHO CRAFTING SUCCESS --- */}
+                    <div className="w-32 h-32 shrink-0 mb-2">
+                        <ItemRankBorder rank={ownedSkill.rarity} className="w-full h-full shadow-[0_0_30px_rgba(255,255,255,0.1)]">
+                            <div className="w-full h-full flex items-center justify-center bg-black/40 rounded-xl">
+                                <IconComponent className={`w-20 h-20 ${rarityTextColor} drop-shadow-lg`} />
+                            </div>
+                        </ItemRankBorder>
                     </div>
+                    {/* -------------------------------------------------------- */}
                     
                     <div className="w-full p-4 bg-black/25 rounded-lg border border-slate-700/50 text-center flex flex-col gap-2">
                         <div>
@@ -294,7 +301,6 @@ const MergeModal = memo(() => {
 
     return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
       <div className="fixed inset-0 bg-black/80" onClick={handleCloseMergeModal} />
       <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
@@ -367,7 +373,6 @@ function SkillScreenContent() {
                             {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => skill && handleSelectSkill(skill)} />))}
                         </div>
                     </section>
-                    {/* Changed: Removed backdrop-blur-sm, changed bg to bg-black/40 */}
                     <section className="flex-shrink-0 p-3 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10" />
@@ -375,7 +380,6 @@ function SkillScreenContent() {
                         </div>
                         <button onClick={handleCraftSkill} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing || ownedSkills.length >= MAX_SKILLS_IN_STORAGE}>Craft</button>
                     </section>
-                    {/* Changed: Removed backdrop-blur-sm, changed bg to bg-black/40 */}
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
