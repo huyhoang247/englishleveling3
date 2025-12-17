@@ -107,7 +107,6 @@ const StatsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http:/
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     const animatedGold = useAnimateValue(gold);
     return (
-        // Changed: Replaced bg-black/20 backdrop-blur-sm with bg-slate-900/90 for better performance
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
                 <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại" title="Quay lại">
@@ -293,7 +292,6 @@ const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bo
   return (
     <>
       <style>{animationStyle}</style>
-      {/* Changed: Removed backdrop-blur-sm, simplified bg */}
       <div className={`absolute bottom-full left-1/2 -translate-x-1/2 mb-2 -ml-8 z-50 pointer-events-none flex items-center justify-center gap-1 px-2.5 py-1 rounded-full shadow-lg bg-slate-900/90 border ${colorClasses.border} animate-float-up`}>
         <div className="w-4 h-4">{icon}</div>
         <span className={`text-sm font-bold ${colorClasses.text}`}>+{formatBonus(bonus)}</span>
@@ -372,8 +370,8 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            {/* Changed: Removed backdrop-blur-sm, changed opacity to 60 for lighter overlay */}
-            <div className="fixed inset-0 bg-black/60" onClick={onClose} />
+            {/* UPDATED: Increased opacity to 80 (darker) */}
+            <div className="fixed inset-0 bg-black/80" onClick={onClose} />
             <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
                 <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-start mb-2">
@@ -467,8 +465,8 @@ const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedIte
 
     return ( 
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
-            {/* Changed: Removed backdrop-blur-sm, changed opacity to 60 for lighter overlay */}
-            <div className="fixed inset-0 bg-black/60" onClick={onClose}></div> 
+            {/* UPDATED: Increased opacity to 80 (darker) */}
+            <div className="fixed inset-0 bg-black/80" onClick={onClose}></div> 
             <div className="relative w-full max-w-sm"> 
                 <div className="absolute inset-0.5 animate-spin-slow-360"> 
                     <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> 
@@ -560,8 +558,8 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            {/* Changed: Removed backdrop-blur-sm, changed opacity to 60 for lighter overlay */}
-            <div className="fixed inset-0 bg-black/60" onClick={onClose} />
+            {/* UPDATED: Increased opacity to 80 (darker) */}
+            <div className="fixed inset-0 bg-black/80" onClick={onClose} />
             <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-center mb-2">
@@ -672,7 +670,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                             {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isProcessing} />)}
                         </div>
                     </section>
-                    {/* Changed: Replaced bg-black/20 backdrop-blur-sm with bg-black/40 */}
                     <section className="flex-shrink-0 p-3 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <EquipmentPieceIcon className="w-10 h-10" />
@@ -684,7 +681,6 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                         <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
                     </section>
                     
-                    {/* Changed: Replaced bg-black/30 backdrop-blur-sm with bg-black/40 */}
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
