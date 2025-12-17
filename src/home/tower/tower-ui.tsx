@@ -29,7 +29,8 @@ const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: Combat
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
     return (
-      <div className="w-64 bg-slate-900/50 backdrop-blur-sm rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
+      // Changed: bg-slate-900/50 backdrop-blur-sm -> bg-slate-900/80
+      <div className="w-64 bg-slate-900/80 rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div 
             onClick={onAvatarClick}
             className="flex-shrink-0 w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center border-2 border-slate-600 cursor-pointer transition-all duration-200 hover:border-blue-400 hover:scale-110"
@@ -65,7 +66,8 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   const scale = Math.max(0, current / max); 
   return (
     <div className="w-full">
-      <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner backdrop-blur-sm">
+      {/* Changed: Removed backdrop-blur-sm */}
+      <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner">
         <div 
             className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`} 
             style={{ 
@@ -106,7 +108,8 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
     );
   };
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+    // Changed: bg-black/60 backdrop-blur-sm -> bg-black/80
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
         <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
@@ -122,7 +125,8 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
 
 const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+      // Changed: bg-black/60 backdrop-blur-sm -> bg-black/80
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
           <div className="p-4 border-b border-slate-700"><h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3></div>
@@ -136,7 +140,8 @@ const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void })
 
 const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+    // Changed: bg-black/60 backdrop-blur-sm -> bg-black/80
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
         <div className="p-5 pt-8">
@@ -159,7 +164,8 @@ const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards:
 
 const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
+    // Changed: bg-black/70 backdrop-blur-sm -> bg-black/80
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
           <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" />
           <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow" style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>VICTORY</h2>
@@ -189,7 +195,8 @@ const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { on
 
 const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => {
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-40 animate-fade-in">
+    // Changed: bg-black/70 backdrop-blur-sm -> bg-black/80
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
           <img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2" />
           <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2>
@@ -209,7 +216,8 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
     : bossBattleAssets.defeatIcon;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 animate-fade-in">
+    // Changed: bg-black/70 backdrop-blur-sm -> bg-black/80
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
         <img src={iconSrc} alt={title} className="w-16 h-16 object-contain mb-2" />
         <h2 className={`text-3xl font-bold ${titleColor} tracking-widest uppercase mb-4 text-shadow`}>{title}</h2>
@@ -312,7 +320,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     }, [currentFloor]);
 
     // --- RENDER LOGIC CHO LỖI ---
-    if (error) return <div className="absolute inset-0 bg-red-900/80 backdrop-blur-sm flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
+    // Changed: bg-red-900/80 backdrop-blur-sm -> bg-red-900/90
+    if (error) return <div className="absolute inset-0 bg-red-900/90 flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
     
     // --- RENDER ---
     return (
@@ -370,7 +379,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             </div>
                         ) : (
                             <>
-                                <header className="fixed top-0 left-0 w-full z-20 p-2 bg-black/30 backdrop-blur-sm border-b border-slate-700/50 shadow-lg h-14">
+                                {/* Changed: bg-black/30 backdrop-blur-sm -> bg-slate-900/90 */}
+                                <header className="fixed top-0 left-0 w-full z-20 p-2 bg-slate-900/90 border-b border-slate-700/50 shadow-lg h-14">
                                     <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                                         <div className="flex items-center gap-3">
                                             <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Go Home" title="Go Home">
@@ -397,11 +407,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
                                     <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
                                     {battleState === 'idle' && currentFloor > 0 && (
-                                        <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700">
+                                        // Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90
+                                        <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700">
                                             {isSweeping ? 'Sweeping...' : 'Sweep Previous'}
                                         </button>
                                     )}
-                                    {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button> )}
+                                    {/* Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90 */}
+                                    {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button> )}
                                 </div>
     
                                 <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
@@ -409,10 +421,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         <div></div>
                                         <div className="flex flex-col items-end gap-2">
                                             <div className="w-full flex justify-center gap-2">
-                                                <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
+                                                {/* Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90 */}
+                                                <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
                                                     <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
                                                 </button>
-                                                <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/70 backdrop-blur-sm hover:bg-slate-700/80 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
+                                                {/* Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90 */}
+                                                <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
                                                     <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
                                                 </button>
                                             </div>
@@ -424,7 +438,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* --- BOSS DISPLAY AREA --- */}
                                     <div className="w-full max-w-4xl flex justify-center items-center my-8">
                                         <div 
-                                            className="relative bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible" 
+                                            // Changed: bg-slate-900/50 backdrop-blur-sm -> bg-slate-900/60
+                                            className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible" 
                                             onClick={() => setStatsModalTarget('boss')} 
                                             title="View Boss Stats"
                                         >
@@ -472,7 +487,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         </button>
                                         )}
                                         {battleState !== 'idle' && (
-                                        <div className="mt-2 h-40 w-full bg-slate-900/50 backdrop-blur-sm p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                                        // Changed: bg-slate-900/50 backdrop-blur-sm -> bg-slate-900/80
+                                        <div className="mt-2 h-40 w-full bg-slate-900/80 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                                             {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                                         </div>
                                         )}
