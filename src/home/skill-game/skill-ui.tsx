@@ -32,6 +32,7 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     const { handleClose } = useSkillContext();
     const animatedGold = useAnimateValue(goldValue);
     return (
+        // Changed: Removed backdrop-blur-sm, changed bg to slate-900/90
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
                  <button onClick={handleClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
@@ -51,9 +52,11 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
   
+  // Kích thước giống EquipmentSlot
   const sizeClasses = "w-24 h-24 sm:w-28 sm:h-28";
   const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
 
+  // Nội dung bên trong ô
   const renderContent = () => (
     <>
         {ownedSkill && skillBlueprint && skillBlueprint.icon ? (
@@ -61,9 +64,11 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
                 <div className="transition-all duration-300 group-hover:scale-110 relative z-10 drop-shadow-md">
                     <skillBlueprint.icon className={`w-12 h-12 sm:w-14 sm:h-14 ${getRarityTextColor(ownedSkill.rarity)}`} />
                 </div>
+                {/* Vị trí Lv: top-2 right-2 để tránh bo góc */}
                 <span className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
                     Lv.{ownedSkill.level}
                 </span>
+                {/* Hiệu ứng nền nhẹ cho item */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl pointer-events-none z-0" />
             </>
         ) : (
@@ -77,6 +82,7 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
     </>
   );
 
+  // TRƯỜNG HỢP 1: Đã có skill -> Dùng ItemRankBorder
   if (ownedSkill && skillBlueprint) {
       return (
           <div 
@@ -91,6 +97,7 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
       );
   }
 
+  // TRƯỜNG HỢP 2: Ô trống -> Viền nét đứt
   return (
     <div 
         className={`relative ${sizeClasses} rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60 transition-all duration-300 flex items-center justify-center group ${interactivity}`} 
@@ -170,72 +177,105 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         handleUpgradeSkill(ownedSkill);
     };
 
+    // Chuẩn bị màu sắc và gradient để tái tạo hiệu ứng Glassmorphism "cao cấp" cho mọi Rank
+    const rarityGradient = getRarityGradient(ownedSkill.rarity);
+    const rarityColorClass = getRarityColor(ownedSkill.rarity);
+    // Lấy mã màu từ class border (vd: border-yellow-500 -> yellow-500) để dùng cho shadow
+    const rarityColorCode = rarityColorClass.replace('border-', ''); 
+
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="fixed inset-0 bg-black/80" onClick={handleCloseDetailModal} />
-          <div className={`relative bg-gradient-to-br ${getRarityGradient(ownedSkill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
-            <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
-              <div className="flex justify-between items-start mb-2">
-                <h3 className={`text-2xl font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skill.name}</h3>
-                <button onClick={handleCloseDetailModal} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Đóng" className="w-5 h-5" /></button>
-              </div>
-              <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(ownedSkill.rarity)} bg-gray-800/70 border ${getRarityColor(ownedSkill.rarity)} capitalize`}>{getRarityDisplayName(ownedSkill.rarity)}</span>
-                <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
-              </div>
-            </div>
-            <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
-              <div className="flex flex-col items-center text-center gap-4">
+          
+          {/* Container chính: Sử dụng cấu trúc layer để tạo hiệu ứng chiều sâu và opacity đẹp */}
+          <div className="relative w-full max-w-md max-h-[95vh] z-50 flex flex-col group">
+            
+            {/* LAYER 1: Outer Glow (Tạo hào quang phía sau - Làm cho E/D rank cũng phát sáng) */}
+            <div className={`absolute -inset-1 bg-gradient-to-br ${rarityGradient} opacity-40 blur-xl rounded-xl transition-all duration-500`}></div>
+            
+            {/* LAYER 2: Main Box (Nền tối kính mờ) */}
+            <div className={`relative flex flex-col w-full h-full bg-slate-950/90 border-2 ${rarityColorClass} rounded-xl overflow-hidden shadow-2xl`}>
                 
-                {/* --- UPDATE: DÙNG ItemRankBorder CHO DETAIL MODAL --- */}
-                <div className="w-32 h-32 shrink-0">
-                    <ItemRankBorder rank={ownedSkill.rarity} className="w-full h-full shadow-[0_0_20px_rgba(0,0,0,0.5)]">
-                        <div className="w-full h-full flex items-center justify-center bg-black/30 rounded-lg">
-                            <IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)} drop-shadow-md`} />
+                {/* LAYER 3: Gradient Tint (Phủ màu rank lên nền tối với opacity thấp - Tránh bị đục màu) */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${rarityGradient} opacity-15 pointer-events-none`}></div>
+                
+                {/* LAYER 4: Content Area (Nổi lên trên lớp phủ) */}
+                <div className="relative z-10 p-5 flex flex-col h-full overflow-hidden">
+                    
+                    {/* Header */}
+                    <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
+                        <div className="flex justify-between items-start mb-2">
+                            <h3 className={`text-2xl font-bold ${getRarityTextColor(ownedSkill.rarity)} drop-shadow-sm`}>{skill.name}</h3>
+                            <button onClick={handleCloseDetailModal} className="text-gray-400 hover:text-white hover:bg-white/10 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Đóng" className="w-5 h-5" /></button>
                         </div>
-                    </ItemRankBorder>
-                </div>
-                {/* --------------------------------------------------- */}
+                        <div className="flex items-center gap-2">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(ownedSkill.rarity)} bg-black/40 border ${rarityColorClass} capitalize`}>{getRarityDisplayName(ownedSkill.rarity)}</span>
+                            <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
+                        </div>
+                    </div>
 
-                <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
-                    <p className="text-slate-300 text-sm leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
-                </div>
-                {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
-                {isUpgradable && (
-                    <div className="w-full mb-4 space-y-2">
-                        <div className="relative w-full p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
-                            <UpgradeEffectToast isVisible={upgradeToast.show} oldValue={upgradeToast.oldValue} newValue={upgradeToast.newValue} />
-                            <div className="flex flex-col">
-                                <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
-                                <div className="flex items-center gap-2 font-bold text-lg mt-1">
-                                    <span className="text-slate-300">{currentEffectValue}%</span>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                    <span className="text-green-400">{currentEffectValue + skill.effectValuePerLevel!}%</span>
-                                </div>
+                    {/* Scrollable Body */}
+                    <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
+                        <div className="flex flex-col items-center text-center gap-4">
+                            {/* Icon Box */}
+                            <div className={`w-32 h-32 flex items-center justify-center bg-black/40 rounded-lg border-2 ${rarityColorClass} shadow-lg relative`}>
+                                <div className={`absolute inset-0 bg-${rarityColorCode} opacity-10 rounded-lg`}></div>
+                                <IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)} drop-shadow-lg`} />
                             </div>
-                            <button 
-                                onClick={handleLocalUpgradeClick} 
-                                disabled={!canAffordUpgrade || actionDisabled} 
-                                className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
-                                ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`} >
-                                <img src={uiAssets.goldIcon} alt="Vàng" className="w-5 h-5"/> 
-                                <span className={`font-bold text-sm`}>{currentUpgradeCost.toLocaleString()}</span>
+                            
+                            {/* Description Box */}
+                            <div className="w-full p-4 bg-black/30 rounded-lg border border-white/10 text-left backdrop-blur-sm">
+                                <p className="text-slate-200 text-sm leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
+                            </div>
+                            
+                            {skill.baseEffectValue !== undefined && ( 
+                                <div className="w-full text-left text-sm p-3 bg-black/30 rounded-lg border border-white/10"> 
+                                    <div className="flex justify-between"> 
+                                        <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> 
+                                        <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> 
+                                    </div> 
+                                </div> 
+                            )}
+                            
+                            {isUpgradable && (
+                                <div className="w-full mb-4 space-y-2">
+                                    <div className="relative w-full p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/30 border border-white/10">
+                                        <UpgradeEffectToast isVisible={upgradeToast.show} oldValue={upgradeToast.oldValue} newValue={upgradeToast.newValue} />
+                                        <div className="flex flex-col">
+                                            <span className="text-xs text-purple-300 font-semibold uppercase tracking-wider">Nâng Cấp</span>
+                                            <div className="flex items-center gap-2 font-bold text-lg mt-1">
+                                                <span className="text-slate-300">{currentEffectValue}%</span>
+                                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
+                                                <span className="text-green-400">{currentEffectValue + skill.effectValuePerLevel!}%</span>
+                                            </div>
+                                        </div>
+                                        <button 
+                                            onClick={handleLocalUpgradeClick} 
+                                            disabled={!canAffordUpgrade || actionDisabled} 
+                                            className={`flex items-center gap-2 px-3 py-1.5 rounded-md transition-all duration-200 transform
+                                            ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700/50 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100 shadow-md'}`} >
+                                            <img src={uiAssets.goldIcon} alt="Vàng" className="w-5 h-5"/> 
+                                            <span className={`font-bold text-sm`}>{currentUpgradeCost.toLocaleString()}</span>
+                                        </button>
+                                    </div>
+                                    {!canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* Footer Actions */}
+                    <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
+                        <div className="flex items-center gap-3">
+                            <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>
+                                {mainActionText}
+                            </button>
+                            <button onClick={() => handleDisenchantSkill(ownedSkill)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>
+                                Recycle
                             </button>
                         </div>
-                        {!canAffordUpgrade && <p className="text-center text-xs text-red-400 mt-1">Không đủ vàng</p>}
                     </div>
-                )}
-              </div>
-            </div>
-            <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
-              <div className="flex items-center gap-3">
-                <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? mainActionDisabledStyle : mainActionStyle}`}>
-                  {mainActionText}
-                </button>
-                <button onClick={() => handleDisenchantSkill(ownedSkill)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>
-                  Recycle
-                </button>
-              </div>
+                </div>
             </div>
           </div>
         </div>
@@ -252,6 +292,7 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
     return ( 
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
+            {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
             <div className="fixed inset-0 bg-black/80" onClick={handleCloseCraftSuccessModal}></div> 
             <div className="relative w-full max-w-sm"> 
                 <div className="absolute inset-0.5 animate-spin-slow-360"> 
@@ -263,15 +304,9 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
                 > 
                     <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
                     
-                    {/* --- UPDATE: DÙNG ItemRankBorder CHO CRAFTING SUCCESS --- */}
-                    <div className="w-32 h-32 shrink-0 mb-2">
-                        <ItemRankBorder rank={ownedSkill.rarity} className="w-full h-full shadow-[0_0_30px_rgba(255,255,255,0.1)]">
-                            <div className="w-full h-full flex items-center justify-center bg-black/40 rounded-xl">
-                                <IconComponent className={`w-20 h-20 ${rarityTextColor} drop-shadow-lg`} />
-                            </div>
-                        </ItemRankBorder>
+                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
+                        <IconComponent className={`w-20 h-20 ${rarityTextColor}`} />
                     </div>
-                    {/* -------------------------------------------------------- */}
                     
                     <div className="w-full p-4 bg-black/25 rounded-lg border border-slate-700/50 text-center flex flex-col gap-2">
                         <div>
@@ -301,6 +336,7 @@ const MergeModal = memo(() => {
 
     return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
+      {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
       <div className="fixed inset-0 bg-black/80" onClick={handleCloseMergeModal} />
       <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
@@ -373,6 +409,7 @@ function SkillScreenContent() {
                             {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => skill && handleSelectSkill(skill)} />))}
                         </div>
                     </section>
+                    {/* Changed: Removed backdrop-blur-sm, changed bg to bg-black/40 */}
                     <section className="flex-shrink-0 p-3 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10" />
@@ -380,6 +417,7 @@ function SkillScreenContent() {
                         </div>
                         <button onClick={handleCraftSkill} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing || ownedSkills.length >= MAX_SKILLS_IN_STORAGE}>Craft</button>
                     </section>
+                    {/* Changed: Removed backdrop-blur-sm, changed bg to bg-black/40 */}
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
