@@ -102,6 +102,9 @@ const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="h
 const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M20.5 11H19V7c0-1.1-.9-2-2-2h-4V3.5a2.5 2.5 0 0 0-5 0V5H4c-1.1 0-2 .9-2 2v4h1.5c1.93 0 3.5 1.57 3.5 3.5S5.43 20 3.5 20H2v-4c0-1.1.9-2 2-2h4v1.5a2.5 2.5 0 0 0 5 0V13h4c1.1 0 2-.9 2 2v4h-1.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5H22v-4c0-1.1-.9-2-2-2z"/> </svg>);
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.equipmentPieceIcon} alt="Mảnh Trang Bị" className={className} /> );
 const StatsIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" {...props}> <path d="M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zm0-8h14V7H7v2z"/> </svg>);
+// Fallback icon khi không tìm thấy config
+const DefaultStatIcon = (props: React.SVGProps<SVGSVGElement>) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" /></svg>);
+
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
@@ -300,7 +303,7 @@ const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bo
   );
 };
 
-// --- UPDATED ITEM DETAIL MODAL ---
+// --- UPDATED ITEM DETAIL MODAL (FIXED LAYOUT) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem, statKey: string, increase: number) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
@@ -394,7 +397,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         
                         {(hasStats || isUpgradable) && (
                             <div className="w-full bg-black/20 rounded-lg overflow-hidden pb-2">
-                                {/* NEW TAB DESIGN: Compact & Sophisticated */}
+                                {/* TAB DESIGN: Compact & Sophisticated */}
                                 <div className="mx-4 mt-3 mb-2 p-1 bg-black/40 rounded-lg flex gap-1">
                                     <button 
                                         onClick={() => setActiveTab('stats')} 
@@ -422,20 +425,37 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 
                                 <div className="px-4 py-2">
                                     {activeTab === 'stats' && (
-                                        <div className="space-y-1 fade-in-down animate-[fadeIn_0.3s_ease-out]">
+                                        <div className="space-y-2 fade-in-down animate-[fadeIn_0.3s_ease-out]">
                                             {hasStats ? sortedStats.map(([key, value]) => { 
                                                 const config = STAT_CONFIG[key.toLowerCase()]; 
                                                 const baseStat = itemDef.stats?.[key]; 
                                                 let bonus = 0; 
                                                 if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { 
                                                     bonus = value - baseStat; 
-                                                } 
+                                                }
+                                                // Default icon fallback if config not found
+                                                const IconComponent = config?.Icon || DefaultStatIcon;
+                                                const iconColor = config?.color || 'text-slate-400';
+                                                
                                                 return (
-                                                    <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg border border-slate-800/30">
-                                                        {config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}
-                                                        <div className="flex flex-1 items-center justify-between">
-                                                            <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
-                                                            <span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span>
+                                                    <div key={key} className="flex items-center justify-between gap-3 bg-slate-900/50 p-2 rounded-lg border border-slate-800/30 w-full shadow-sm">
+                                                        <div className="flex items-center gap-3">
+                                                            <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-black/40 shadow-inner border border-slate-700/50 ${iconColor}`}>
+                                                                <IconComponent className="w-5 h-5" />
+                                                            </div>
+                                                            <span className="text-sm font-bold text-slate-400 capitalize tracking-wide">
+                                                                {config?.name || key}
+                                                            </span>
+                                                        </div>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="font-lilita text-lg text-white tracking-wide drop-shadow-sm">
+                                                                {typeof value === 'number' ? value.toLocaleString() : value}
+                                                            </span>
+                                                            {bonus > 0 && (
+                                                                <span className="font-lilita text-green-400 text-xs mt-1">
+                                                                    (+{bonus.toLocaleString()})
+                                                                </span>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ); 
