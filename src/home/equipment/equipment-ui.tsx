@@ -370,7 +370,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            {/* UPDATED: Increased opacity to 80 (darker) */}
             <div className="fixed inset-0 bg-black/80" onClick={onClose} />
             <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
                 <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
@@ -394,48 +393,107 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         </div>
                         
                         {(hasStats || isUpgradable) && (
-                            <div className="w-full bg-black/20 rounded-lg">
-                                <div className="flex border-b border-slate-700/50">
-                                    <button onClick={() => setActiveTab('stats')} className={`relative px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'stats' ? 'text-cyan-300' : 'text-slate-500 hover:text-slate-300'}`}>Chỉ Số{activeTab === 'stats' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-cyan-400"></div>}</button>
-                                    {isUpgradable && (<button onClick={() => setActiveTab('upgrade')} className={`relative px-4 py-2 text-sm font-bold transition-colors ${activeTab === 'upgrade' ? 'text-purple-300' : 'text-slate-500 hover:text-slate-300'}`}>Nâng Cấp{activeTab === 'upgrade' && <div className="absolute bottom-[-1px] left-0 right-0 h-0.5 bg-purple-400"></div>}</button>)}
+                            <div className="w-full bg-black/20 rounded-xl overflow-hidden border border-slate-700/30 mt-2">
+                                {/* GIAO DIỆN TAB MỚI - FONT LILITA & DESIGN HIỆN ĐẠI */}
+                                <div className="flex p-1.5 gap-2 bg-black/40 rounded-t-xl">
+                                    <button 
+                                        onClick={() => setActiveTab('stats')} 
+                                        className={`
+                                            flex-1 py-2 rounded-lg text-lg font-lilita tracking-wider transition-all duration-300 border
+                                            ${activeTab === 'stats' 
+                                                ? 'bg-gradient-to-t from-cyan-900/60 to-slate-800 border-cyan-500/40 text-cyan-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]' 
+                                                : 'bg-transparent border-transparent text-slate-600 hover:text-slate-400 hover:bg-white/5'
+                                            }
+                                        `}
+                                    >
+                                        Stats
+                                    </button>
+                                    
+                                    {isUpgradable && (
+                                        <button 
+                                            onClick={() => setActiveTab('upgrade')} 
+                                            className={`
+                                                flex-1 py-2 rounded-lg text-lg font-lilita tracking-wider transition-all duration-300 border
+                                                ${activeTab === 'upgrade' 
+                                                    ? 'bg-gradient-to-t from-purple-900/60 to-slate-800 border-purple-500/40 text-purple-300 shadow-[inset_0_1px_1px_rgba(255,255,255,0.1)]' 
+                                                    : 'bg-transparent border-transparent text-slate-600 hover:text-slate-400 hover:bg-white/5'
+                                                }
+                                            `}
+                                        >
+                                            Upgrade
+                                        </button>
+                                    )}
                                 </div>
                                 
-                                <div className="p-4">
+                                <div className="p-4 bg-slate-900/20 min-h-[150px]">
                                     {activeTab === 'stats' && (
-                                        <div className="space-y-1">{hasStats ? sortedStats.map(([key, value]) => { const config = STAT_CONFIG[key.toLowerCase()]; const baseStat = itemDef.stats?.[key]; let bonus = 0; if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } return (<div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">{config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}<div className="flex flex-1 items-center justify-between"><span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span><span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span></div></div>); }) : (<p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>)}</div>
+                                        <div className="space-y-2">
+                                            {hasStats ? sortedStats.map(([key, value]) => { 
+                                                const config = STAT_CONFIG[key.toLowerCase()]; 
+                                                const baseStat = itemDef.stats?.[key]; 
+                                                let bonus = 0; 
+                                                if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { 
+                                                    bonus = value - baseStat; 
+                                                } 
+                                                return (
+                                                    <div key={key} className="flex items-center gap-3 bg-slate-900/80 border border-slate-700/50 p-2 rounded-lg shadow-sm">
+                                                        {config?.Icon && (
+                                                            <div className={`flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-md bg-black/40 ${config.color} shadow-inner`}>
+                                                                <config.Icon className="w-5 h-5" />
+                                                            </div>
+                                                        )}
+                                                        <div className="flex flex-1 items-center justify-between">
+                                                            <span className="text-xs font-bold text-slate-400 uppercase tracking-wide">{config?.name || key}</span>
+                                                            <div className="flex items-baseline">
+                                                                <span className="font-lilita text-lg text-white tracking-wide">
+                                                                    {typeof value === 'number' ? value.toLocaleString() : value}
+                                                                </span>
+                                                                {bonus > 0 && (
+                                                                    <span className="text-green-400 ml-1.5 font-bold text-xs">(+{bonus.toLocaleString()})</span>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                ); 
+                                            }) : (
+                                                <div className="flex items-center justify-center h-full py-8 text-slate-500 italic">
+                                                    No stats available.
+                                                </div>
+                                            )}
+                                        </div>
                                     )}
 
                                     {activeTab === 'upgrade' && isUpgradable && (
-                                        <div className="w-full flex flex-col items-center justify-center py-4 space-y-4">
-                                            <div className="text-center">
+                                        <div className="w-full flex flex-col items-center justify-center py-2 space-y-4">
+                                            <div className="text-center bg-purple-900/20 border border-purple-500/20 p-3 rounded-lg w-full">
                                                 <p className="text-sm text-slate-300">
-                                                    Một chỉ số ngẫu nhiên sẽ được tăng.
+                                                    Upgrade to increase a random stat.
                                                 </p>
-                                                <p className="text-xs text-purple-300 font-semibold mt-1">
-                                                    Tăng ngẫu nhiên 1% - 5% chỉ số cơ bản
+                                                <p className="text-xs text-purple-300 font-bold mt-1 uppercase tracking-wide">
+                                                    Chance: 1% - 5% Base Stat
                                                 </p>
                                             </div>
                                             
-                                            <div className="w-full max-w-xs flex items-center justify-between">
-                                                <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
-                                                    <span className="text-slate-300">Lv. {ownedItem.level}</span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                                    <span className="text-green-400">Lv. {ownedItem.level + 1}</span>
+                                            <div className="w-full flex items-center justify-between px-2">
+                                                <div className="flex items-center gap-2 bg-black/40 border border-slate-700 rounded-lg px-4 py-2 font-lilita text-lg shadow-inner">
+                                                    <span className="text-slate-400">Lv.{ownedItem.level}</span>
+                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-500 mx-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" /></svg>
+                                                    <span className="text-green-400">Lv.{ownedItem.level + 1}</span>
                                                 </div>
                                                 
                                                 <div className="relative">
                                                     <button 
                                                         onClick={handleUpgradeClick} 
                                                         disabled={!canAffordUpgrade || actionDisabled} 
-                                                        className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`}
+                                                        className={`flex items-center justify-center gap-2 px-5 py-2 rounded-xl text-base font-lilita tracking-wide transition-all duration-300 transform shadow-lg ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed grayscale' : 'bg-gradient-to-b from-yellow-400 to-yellow-600 border-t border-yellow-300 text-yellow-50 hover:scale-105 active:scale-95 shadow-yellow-900/50'}`}
                                                     >
-                                                        <GoldIcon className="w-5 h-5"/> 
+                                                        <GoldIcon className="w-5 h-5 drop-shadow-md"/> 
                                                         <span>{currentUpgradeCost.toLocaleString()}</span>
                                                     </button>
                                                     {toastInfo && <UpgradeStatToast key={toastInfo.key} {...toastInfo} />}
                                                 </div>
                                             </div>
-                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 -mt-2">Không đủ vàng</p>}
+                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs font-bold text-red-400 animate-pulse">Not enough gold</p>}
                                         </div>
                                     )}
                                 </div>
@@ -558,7 +616,6 @@ const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, e
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            {/* UPDATED: Increased opacity to 80 (darker) */}
             <div className="fixed inset-0 bg-black/80" onClick={onClose} />
             <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
