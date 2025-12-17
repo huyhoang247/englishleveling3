@@ -20,9 +20,7 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 
-// --- IMPORT MỚI: Component hiệu ứng Rank (Kiểm tra lại đường dẫn import của bạn) ---
-// Giả sử file này nằm cùng cấp hoặc trong thư mục ui chung. 
-// Nếu file item-rank-border.tsx nằm bên thư mục equipment-game, hãy sửa đường dẫn thành '../equipment-game/item-rank-border.tsx'
+// --- IMPORT MỚI: Component hiệu ứng Rank ---
 import ItemRankBorder from '../equipment/item-rank-border.tsx'; 
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
@@ -34,7 +32,8 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     const { handleClose } = useSkillContext();
     const animatedGold = useAnimateValue(goldValue);
     return (
-        <header className="flex-shrink-0 w-full bg-black/20 border-b-2 border-slate-800/50 backdrop-blur-sm">
+        // Changed: Removed backdrop-blur-sm, changed bg to slate-900/90
+        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
                  <button onClick={handleClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
                     <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -48,7 +47,7 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     );
 });
 
-// --- SKILL SLOT (ĐÃ SỬA ĐỔI: Sử dụng ItemRankBorder và chỉnh vị trí Lv tag) ---
+// --- SKILL SLOT ---
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
@@ -180,7 +179,8 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseDetailModal} />
+          {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
+          <div className="fixed inset-0 bg-black/80" onClick={handleCloseDetailModal} />
           <div className={`relative bg-gradient-to-br ${getRarityGradient(ownedSkill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
@@ -250,7 +250,8 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     const shadowStyle = { boxShadow: `0 0 25px -5px ${rarityColor}, 0 0 15px -10px ${rarityColor}` };
     return ( 
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseCraftSuccessModal}></div> 
+            {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
+            <div className="fixed inset-0 bg-black/80" onClick={handleCloseCraftSuccessModal}></div> 
             <div className="relative w-full max-w-sm"> 
                 <div className="absolute inset-0.5 animate-spin-slow-360"> 
                     <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(ownedSkill.rarity)} opacity-50 rounded-full blur-2xl`}></div> 
@@ -293,7 +294,8 @@ const MergeModal = memo(() => {
 
     return (
     <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-      <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={handleCloseMergeModal} />
+      {/* Changed: Removed backdrop-blur-sm, set opacity to 80 */}
+      <div className="fixed inset-0 bg-black/80" onClick={handleCloseMergeModal} />
       <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
         <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
           <div className="flex justify-between items-center mb-2">
@@ -365,14 +367,16 @@ function SkillScreenContent() {
                             {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => skill && handleSelectSkill(skill)} />))}
                         </div>
                     </section>
-                    <section className="flex-shrink-0 p-3 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex justify-between items-center">
+                    {/* Changed: Removed backdrop-blur-sm, changed bg to bg-black/40 */}
+                    <section className="flex-shrink-0 p-3 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10" />
                             <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{ancientBooks}</span><span className="text-base text-slate-400">/ {CRAFTING_COST}</span></div>
                         </div>
                         <button onClick={handleCraftSkill} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing || ownedSkills.length >= MAX_SKILLS_IN_STORAGE}>Craft</button>
                     </section>
-                    <section className="w-full p-4 bg-black/20 rounded-xl border border-slate-800 backdrop-blur-sm flex flex-col flex-grow min-h-0">
+                    {/* Changed: Removed backdrop-blur-sm, changed bg to bg-black/40 */}
+                    <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
                                 <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
