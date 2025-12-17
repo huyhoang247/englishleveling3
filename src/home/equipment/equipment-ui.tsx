@@ -393,10 +393,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         
                         {(hasStats || isUpgradable) && (
                             <div className="w-full bg-black/20 rounded-lg overflow-hidden">
-                                <div className="flex items-center p-1.5 mx-3 mt-3 bg-black/40 rounded-xl border border-white/5">
+                                <div className="flex items-center p-1 mx-4 mt-3 bg-black/40 rounded-lg border border-white/5">
                                     <button 
                                         onClick={() => setActiveTab('stats')} 
-                                        className={`flex-1 py-2.5 rounded-lg text-lg tracking-wide transition-all duration-200 font-lilita ${
+                                        className={`flex-1 py-1.5 rounded-md text-base tracking-wide transition-all duration-200 font-lilita ${
                                             activeTab === 'stats' 
                                                 ? 'bg-slate-700 text-cyan-300 shadow-lg shadow-black/50' 
                                                 : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
@@ -408,7 +408,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     {isUpgradable && (
                                         <button 
                                             onClick={() => setActiveTab('upgrade')} 
-                                            className={`flex-1 py-2.5 rounded-lg text-lg tracking-wide transition-all duration-200 font-lilita ml-1.5 ${
+                                            className={`flex-1 py-1.5 rounded-md text-base tracking-wide transition-all duration-200 font-lilita ml-1 ${
                                                 activeTab === 'upgrade' 
                                                     ? 'bg-slate-700 text-purple-300 shadow-lg shadow-black/50' 
                                                     : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
