@@ -18,63 +18,10 @@ const CoinWrapper = memo(() => {
     return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />;
 });
 
-// 2. CountdownDisplay: Chỉ text này re-render mỗi giây
-const CountdownDisplay = () => {
-    const { countdown } = useCheckIn();
-    return (
-        <span className="text-[11px] font-mono font-semibold text-slate-400">
-            {countdown}
-        </span>
-    );
-};
-
-// 3. StreakWidget: Widget hình tròn nước (Tách ra để tránh render lại khi scroll)
-const StreakWidget = memo(({ loginStreak, streakGoal }: { loginStreak: number, streakGoal: number }) => {
-    // Tính toán style transform
-    const fillStyle = useMemo(() => ({
-        transform: `translateY(${(1 - (loginStreak / (streakGoal || 7))) * 100}%)`, 
-        transition: 'transform 1s ease-out'
-    }), [loginStreak, streakGoal]);
-
-    return (
-        <div className="flex justify-center mt-2 mb-6">
-            <div className="bg-slate-900/95 rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
-                <div className="flex-shrink-0">
-                    <div className="relative w-16 h-16">
-                        <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 opacity-20 blur-md"></div>
-                        <div className="w-16 h-16 relative overflow-hidden rounded-full border-2 border-slate-700 bg-slate-900 transform-gpu">
-                            <div 
-                                className="water-fill absolute bottom-0 left-0 w-full h-full bg-gradient-to-b from-cyan-400 to-blue-600 opacity-80" 
-                                style={fillStyle}
-                            >
-                                <div className="water-wave1"></div>
-                                <div className="water-wave2"></div>
-                            </div>
-                            <div className="absolute inset-0 flex items-center justify-center z-10">
-                                <span className="text-2xl font-bold text-white drop-shadow-lg">{loginStreak}</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div className="flex-1 min-w-0">
-                    <div className="flex flex-col items-start gap-1.5">
-                        <span className="inline-flex items-center bg-slate-700 text-slate-300 px-3 py-1 rounded-full text-sm font-medium border border-slate-600">
-                            <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/streak-icon.webp" alt="Streak Icon" className="w-5 h-5 mr-2" />
-                            {loginStreak} Day Streak
-                        </span>
-                        {/* Countdown nằm ở đây, nó tự quản lý render của nó */}
-                        <CountdownDisplay />
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-});
-
-// 4. MiniCalendar: Tách lịch nhỏ ra
+// 2. MiniCalendar: Tách lịch nhỏ ra
 const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStreak }: any) => {
     return (
-        <div className="mb-6 flex justify-between px-1">
+        <div className="mb-6 mt-4 flex justify-between px-1">
             {dailyRewards.map((reward: any) => {
                 let isClaimed;
                 if (canClaimToday) {
@@ -115,7 +62,7 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     );
 });
 
-// 5. NextGoalCard: Thẻ mục tiêu tiếp theo
+// 3. NextGoalCard: Thẻ mục tiêu tiếp theo
 const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     if (!nextStreakGoal) return null;
     
@@ -153,7 +100,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 6. RewardItem: Giữ nguyên logic cũ nhưng tối ưu render
+// 4. RewardItem: Giữ nguyên logic cũ nhưng tối ưu render
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -229,9 +176,6 @@ const RewardItem = memo(({
 
 // --- COMPONENT GIAO DIỆN CHÍNH (VIEW) ---
 const DailyCheckInView = () => {
-  // Lưu ý: Việc useCheckIn() ở đây sẽ làm DailyCheckInView re-render mỗi khi Context thay đổi (ví dụ countdown)
-  // Tuy nhiên, do các component con (StreakWidget, RewardItem...) đã được MEMO, 
-  // nên React sẽ không vẽ lại DOM của con trừ khi props của con thay đổi.
   const {
     loginStreak, isSyncingData, canClaimToday, claimableDay, 
     isClaiming, showRewardAnimation, animatingReward, particles, 
@@ -241,12 +185,6 @@ const DailyCheckInView = () => {
 
   return (
     <div className="bg-black/95 shadow-2xl overflow-hidden relative flex flex-col h-screen">
-      {/* 
-        OPTIMIZATION:
-        1. Bỏ backdrop-blur-sm ở header. Thay bằng bg-slate-900 (màu đặc) hoặc opacity cao.
-           Backdrop-blur tính toán rất nặng khi scroll.
-        2. z-index cao để đè lên nội dung scroll
-      */}
       <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 z-20 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
@@ -254,18 +192,10 @@ const DailyCheckInView = () => {
         </div>
       </header>
       
-      {/* 
-        OPTIMIZATION:
-        1. will-change-scroll: Gợi ý cho trình duyệt tối ưu layer cuộn.
-        2. overscroll-none: Ngăn chặn hiệu ứng kéo dãn lò xo (trên iOS) gây nặng.
-      */}
       <div className="flex-1 overflow-y-auto hide-scrollbar overscroll-none" style={{ willChange: 'scroll-position' }}>
         <div className="px-4 pt-4 pb-24">
             
-          {/* Component đã Memo */}
-          <StreakWidget loginStreak={loginStreak} streakGoal={nextStreakGoal?.streakGoal} />
-          
-          {/* Component đã Memo */}
+          {/* Component đã Memo - Bỏ StreakWidget, giữ MiniCalendar */}
           <MiniCalendar 
              dailyRewards={dailyRewards}
              canClaimToday={canClaimToday}
@@ -300,7 +230,6 @@ const DailyCheckInView = () => {
       {showRewardAnimation && animatingReward && (
         <div className="fixed inset-0 bg-slate-900/95 flex items-center justify-center z-50">
           <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
-             {/* Nội dung modal giữ nguyên, chỉ tối ưu CSS nếu cần */}
             <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
                 <div className="w-full h-full rounded-full bg-slate-900/60 flex items-center justify-center">
@@ -333,29 +262,21 @@ const DailyCheckInView = () => {
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         
-        /* Giảm bớt độ phức tạp của animation */
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         
-        /* Chỉ giữ lại animation cần thiết cho wave */
-        @keyframes wave { 0% { transform: translateX(-100%) translateY(5px); } 100% { transform: translateX(100%) translateY(-5px); } }
-        .water-wave1, .water-wave2 { 
-            position: absolute; top: -15px; left: 0; width: 200%; height: 20px; 
-            background: rgba(255, 255, 255, 0.3); border-radius: 50%; 
-            animation: wave 3s infinite linear; 
-            will-change: transform; /* Hint cho trình duyệt */
-        }
-        .water-wave2 { top: -5px; animation-delay: 1s; opacity: 0.6; }
-
         .animate-spin { animation: spin 1s linear infinite; }
         .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
         @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
         .animate-float { animation: float 3s ease-in-out infinite; }
 
-        /* Particle animations... (Giữ nguyên hoặc xóa nếu không cần thiết quá nhiều) */
         @keyframes float-particle-1 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-100px, -100px) scale(0); opacity: 0; } }
         .animate-float-particle-1 { animation: float-particle-1 2s ease-out forwards; }
-        /* ... các particle khác tương tự */
+        /* Giữ các animation particle khác nếu cần, hoặc xóa nếu không dùng */
+        .animate-float-particle-2 { animation: float-particle-1 2.5s ease-out forwards; }
+        .animate-float-particle-3 { animation: float-particle-1 3s ease-out forwards; }
+        .animate-float-particle-4 { animation: float-particle-1 1.5s ease-out forwards; }
+        .animate-float-particle-5 { animation: float-particle-1 2.2s ease-out forwards; }
       `}</style>
     </div>
   );
