@@ -165,7 +165,6 @@ const DailyCheckInView = () => {
                       </div>
                     </div>
                     
-                    {/* === THAY ĐỔI GIAO DIỆN TÊN VẬT PHẨM === */}
                     <div className="flex-1 min-w-0">
                       {/* Name Badge: Hộp nhỏ gọn, tinh tế */}
                       <div className={`inline-flex items-center px-2.5 py-1 rounded-md border mb-1.5 shadow-sm backdrop-blur-sm transition-colors ${
@@ -178,12 +177,11 @@ const DailyCheckInView = () => {
                           </span>
                       </div>
                       
-                      {/* Số lượng */}
-                      <p className={`text-base font-lilita leading-none ${isClaimable ? 'text-white' : 'text-slate-300'}`}>
+                      {/* === THAY ĐỔI: Thêm ml-1 để dịch sang phải một tí nhưng không căn giữa === */}
+                      <p className={`text-base font-lilita leading-none ml-1 ${isClaimable ? 'text-white' : 'text-slate-300'}`}>
                           x{reward.amount}
                       </p>
                     </div>
-                    {/* === KẾT THÚC THAY ĐỔI === */}
 
                     <button 
                       onClick={() => claimReward(reward.day)} 
