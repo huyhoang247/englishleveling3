@@ -16,7 +16,9 @@ import { EquipmentProvider, useEquipment } from './equipment-context.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import EquipmentScreenSkeleton from './equipment-loading.tsx';
 import TotalStatsModal from './total-stats-modal.tsx';
-import ItemRankBorder from './item-rank-border.tsx'; 
+import ItemRankBorder from './item-rank-border.tsx';
+// --- IMPORT COMPONENT HIỆU ỨNG MỚI ---
+import CraftingEffectCanvas from './crafting-effect.tsx'; 
 
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
@@ -651,6 +653,25 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         CRAFTING_COST
     } = useEquipment();
     
+    // --- START: STATE VÀ LOGIC CHO HIỆU ỨNG CRAFTING ---
+    const [isCraftingAnimation, setIsCraftingAnimation] = useState(false);
+
+    // Kích hoạt hiệu ứng khi nhấn nút Craft
+    const onCraftClick = useCallback(() => {
+        setIsCraftingAnimation(true);
+        handleCraftItem();
+    }, [handleCraftItem]);
+
+    // Tắt hiệu ứng khi isProcessing trở về false (nghĩa là craft xong)
+    useEffect(() => {
+        if (!isProcessing) {
+            // Thêm delay nhỏ để chuyển cảnh mượt sang modal kết quả
+            const timer = setTimeout(() => setIsCraftingAnimation(false), 200);
+            return () => clearTimeout(timer);
+        }
+    }, [isProcessing]);
+    // --- END: LOGIC HIỆU ỨNG CRAFTING ---
+
     const handleClose = useCallback(() => {
         onClose({
             gold,
@@ -666,6 +687,10 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
             
+            {/* --- COMPONENT HIỆU ỨNG CANVAS --- */}
+            <CraftingEffectCanvas isActive={isCraftingAnimation && isProcessing} />
+            {/* ---------------------------------- */}
+
             <RateLimitToast show={dismantleSuccessToast.show} message={dismantleSuccessToast.message} showIcon={false} />
             {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
             {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
@@ -697,7 +722,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                 <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
-                        <button onClick={handleCraftItem} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
+                        {/* SỬA: Dùng hàm onCraftClick thay vì handleCraftItem */}
+                        <button onClick={onCraftClick} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
                     </section>
                     
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
