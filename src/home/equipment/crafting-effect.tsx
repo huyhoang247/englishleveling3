@@ -8,6 +8,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     const frameRef = React.useRef<number>(0);
 
     useEffect(() => {
+        // Nếu không active thì hủy animation và thoát
         if (!isActive) {
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
             return;
@@ -18,7 +19,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Resize handler
+        // Xử lý Resize
         const handleResize = () => {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
@@ -26,273 +27,248 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         handleResize();
         window.addEventListener('resize', handleResize);
 
-        // --- CẤU HÌNH ---
-        // Định nghĩa đỉnh cơ bản
-        const baseVertices = [
+        // --- CẤU HÌNH HÌNH HỌC (GEOMETRY) ---
+        
+        // Các đỉnh của hình lập phương (Vertices)
+        const vertices = [
             { x: -1, y: -1, z: -1 }, { x: 1, y: -1, z: -1 }, { x: 1, y: 1, z: -1 }, { x: -1, y: 1, z: -1 },
             { x: -1, y: -1, z: 1 }, { x: 1, y: -1, z: 1 }, { x: 1, y: 1, z: 1 }, { x: -1, y: 1, z: 1 }
         ];
 
-        // Định nghĩa các cạnh nối để vẽ khung dây
-        const edges = [
-            [0, 1], [1, 2], [2, 3], [3, 0], // Back face
-            [4, 5], [5, 6], [6, 7], [7, 4], // Front face
-            [0, 4], [1, 5], [2, 6], [3, 7]  // Connecting edges
-        ];
-
-        // Định nghĩa các mặt để tô màu (chỉ dùng cho lõi hoặc hiệu ứng mờ)
+        // Các mặt của hình lập phương (Faces)
         const faces = [
-            { indices: [0, 1, 2, 3] }, { indices: [4, 5, 6, 7] },
-            { indices: [0, 4, 7, 3] }, { indices: [1, 5, 6, 2] },
-            { indices: [0, 1, 5, 4] }, { indices: [3, 2, 6, 7] }
+            { indices: [0, 1, 2, 3], id: 'back' },
+            { indices: [4, 5, 6, 7], id: 'front' },
+            { indices: [0, 4, 7, 3], id: 'left' },
+            { indices: [1, 5, 6, 2], id: 'right' },
+            { indices: [0, 1, 5, 4], id: 'top' },
+            { indices: [3, 2, 6, 7], id: 'bottom' }
         ];
 
-        // Hệ thống hạt: Tàn lửa (Embers)
+        // --- HỆ THỐNG HẠT (PARTICLES) ---
+        // Tạo ra các đốm lửa/năng lượng bay lên từ dưới
         const particles: { angle: number; radius: number; height: number; speed: number; life: number; colorVar: number }[] = [];
-        for (let i = 0; i < 80; i++) {
+        for (let i = 0; i < 120; i++) {
             particles.push({
-                angle: Math.random() * Math.PI * 2,
-                radius: 40 + Math.random() * 100,
-                height: Math.random() * 200,
-                speed: 1 + Math.random() * 3,
-                life: Math.random(),
-                colorVar: Math.random()
+                angle: Math.random() * Math.PI * 2,     // Góc xoay quanh tâm
+                radius: 40 + Math.random() * 80,        // Khoảng cách từ tâm
+                height: Math.random() * 200,            // Độ cao
+                speed: 0.8 + Math.random() * 2,         // Tốc độ bay lên
+                life: Math.random(),                    // Tuổi thọ hạt
+                colorVar: Math.random()                 // Biến thể màu sắc
             });
         }
 
-        let rotY_Outer = 0;
-        let rotX_Outer = 0;
-        let rotY_Inner = 0;
-        let rotX_Inner = 0;
+        // Biến trạng thái chuyển động
+        let rotationMain = 0;
         let floatTick = 0;
 
-        // Hàm chiếu 3D sang 2D
-        const project = (v: { x: number, y: number, z: number }, size: number, rotX: number, rotY: number, transY: number) => {
-            let x = v.x * size;
-            let y = v.y * size;
-            let z = v.z * size;
+        // --- HÀM CHIẾU 3D SANG 2D (PROJECTION) ---
+        // Chuyển đổi tọa độ x,y,z sang x,y trên màn hình dựa trên kích thước và góc xoay
+        const project = (v: { x: number, y: number, z: number }, rotX: number, rotY: number, transY: number, currentSize: number) => {
+            // Áp dụng kích thước
+            let x = v.x * currentSize;
+            let y = v.y * currentSize;
+            let z = v.z * currentSize;
 
-            // Xoay Y
+            // Xoay quanh trục Y
             const cosY = Math.cos(rotY);
             const sinY = Math.sin(rotY);
             const x1 = x * cosY - z * sinY;
             const z1 = z * cosY + x * sinY;
 
-            // Xoay X
+            // Xoay quanh trục X
             const cosX = Math.cos(rotX);
             const sinX = Math.sin(rotX);
             const y2 = y * cosX - z1 * sinX;
             const z2 = z1 * cosX + y * sinX;
 
+            // Thêm hiệu ứng bay lên xuống (Float)
             const yFinal = y2 + transY;
-            const scale = 1000 / (1000 + z2); // Perspective
 
+            // Phối cảnh (Perspective): Vật ở xa (z lớn) sẽ nhỏ lại
+            const scale = 1000 / (1000 + z2);
+            
             return {
                 x: x1 * scale + canvas.width / 2,
                 y: yFinal * scale + canvas.height / 2,
-                z: z2, // Độ sâu để sort
+                zDepth: z2,
                 scale: scale
             };
         };
 
-        // Hàm vẽ tia sét (Lightning)
-        const drawLightning = (x1: number, y1: number, x2: number, y2: number, displace: number, color: string) => {
-            if (displace < 2) {
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(x1, y1);
-                ctx.lineTo(x2, y2);
-                ctx.stroke();
-                return;
-            }
-            const midX = (x1 + x2) / 2;
-            const midY = (y1 + y2) / 2;
-            const offsetX = (Math.random() - 0.5) * displace;
-            const offsetY = (Math.random() - 0.5) * displace;
-            
-            drawLightning(x1, y1, midX + offsetX, midY + offsetY, displace / 2, color);
-            drawLightning(midX + offsetX, midY + offsetY, x2, y2, displace / 2, color);
-        };
-
+        // --- HÀM VẼ VÒNG TRÒN MA THUẬT DƯỚI ĐÁY ---
         const drawMagicCircle = (cx: number, cy: number, radius: number, angle: number, color: string, segments: number) => {
             ctx.save();
             ctx.translate(cx, cy);
-            ctx.scale(1, 0.35); 
+            ctx.scale(1, 0.35); // Nén hình tròn thành hình elip để tạo phối cảnh mặt đất
             ctx.rotate(angle);
+
             ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
-            ctx.shadowBlur = 10;
+            ctx.lineWidth = 1.5;
+            ctx.shadowBlur = 15;
             ctx.shadowColor = color;
+
+            // Vẽ vòng tròn chính
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.stroke();
-            // Vẽ các đa giác bên trong
+
+            // Vẽ các họa tiết bên trong (tam giác/đa giác xoay)
             ctx.beginPath();
-            for(let i = 0; i <= segments; i++) {
+            for(let i = 0; i < segments; i++) {
                 const theta = (i / segments) * Math.PI * 2;
-                const x = Math.cos(theta) * radius;
-                const y = Math.sin(theta) * radius;
-                if (i===0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
+                ctx.moveTo(Math.cos(theta) * (radius * 0.9), Math.sin(theta) * (radius * 0.9));
+                ctx.lineTo(Math.cos(theta) * (radius * 1.1), Math.sin(theta) * (radius * 1.1));
+                
+                const nextTheta = ((i + 2) / segments) * Math.PI * 2;
+                ctx.moveTo(Math.cos(theta) * radius, Math.sin(theta) * radius);
+                ctx.lineTo(Math.cos(nextTheta) * radius, Math.sin(nextTheta) * radius);
             }
             ctx.stroke();
             ctx.restore();
         };
 
+        // --- HÀM VẼ KHỐI LẬP PHƯƠNG (MESH) ---
+        const drawCubeMesh = (
+            size: number, 
+            rX: number, 
+            rY: number, 
+            floatY: number,
+            pulse: number,
+            type: 'inner' | 'outer'
+        ) => {
+            // 1. Tính toán vị trí các đỉnh sau khi xoay
+            const projectedVertices = vertices.map(v => project(v, rX, rY, floatY, size));
+            
+            // 2. Sắp xếp các mặt theo độ sâu Z (Painter's Algorithm) để mặt xa vẽ trước, mặt gần vẽ sau
+            const sortedFaces = faces.map(face => {
+                let zSum = 0;
+                face.indices.forEach(i => zSum += projectedVertices[i].zDepth);
+                return { ...face, z: zSum / 4 };
+            }).sort((a, b) => b.z - a.z);
+
+            // 3. Vẽ từng mặt
+            sortedFaces.forEach(face => {
+                const pts = face.indices.map(i => projectedVertices[i]);
+                
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+                ctx.closePath();
+
+                // --- STYLING (Màu sắc & Hiệu ứng) ---
+                const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y);
+
+                if (type === 'inner') {
+                    // CUBE TRONG: Lõi năng lượng, Đặc, Nóng (Đỏ đậm/Đen)
+                    grad.addColorStop(0, '#3f0000'); 
+                    grad.addColorStop(0.5, '#7f1d1d'); 
+                    grad.addColorStop(1, '#000000');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Glow mạnh cho lõi
+                    ctx.shadowBlur = 20 + (pulse * 15);
+                    ctx.shadowColor = '#ef4444'; 
+                    ctx.strokeStyle = 'rgba(255, 100, 100, 0.8)';
+                    ctx.lineWidth = 2;
+                } else {
+                    // CUBE NGOÀI: Vỏ bảo vệ, Trong suốt, Huyền bí (Tím/Đen nhạt)
+                    grad.addColorStop(0, 'rgba(0, 0, 0, 0.3)');
+                    grad.addColorStop(0.5, 'rgba(20, 0, 30, 0.1)');
+                    grad.addColorStop(1, 'rgba(0, 0, 0, 0.3)');
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+
+                    // Glow viền nhẹ
+                    ctx.shadowBlur = 10;
+                    ctx.shadowColor = '#a855f7'; 
+                    
+                    // Viền Gradient đẹp
+                    const strokeGrad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
+                    strokeGrad.addColorStop(0, '#dc2626'); // Đỏ
+                    strokeGrad.addColorStop(1, '#9333ea'); // Tím
+                    ctx.strokeStyle = strokeGrad;
+                    ctx.lineWidth = 1.5;
+                }
+                
+                ctx.stroke();
+                ctx.shadowBlur = 0; // Reset shadow sau khi vẽ xong
+            });
+        };
+
+        // --- VÒNG LẶP RENDER CHÍNH ---
         const render = () => {
             frameRef.current++;
+            
+            // Cập nhật các biến chuyển động
+            rotationMain += 0.01; 
+            floatTick += 0.02;
+            const floatY = Math.sin(floatTick) * 12 - 40; // Bay lên xuống nhẹ nhàng
+            
+            // Nhịp đập (Pulse) cho hiệu ứng sáng
+            const pulse = (Math.sin(frameRef.current * 0.05) + 1) * 0.5;
+
+            // Xóa canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-            // Animation vars
-            rotY_Outer += 0.005; // Outer quay chậm
-            rotX_Outer = Math.sin(frameRef.current * 0.01) * 0.2; 
-            
-            rotY_Inner -= 0.02; // Inner quay nhanh ngược chiều
-            rotX_Inner = Math.cos(frameRef.current * 0.015) * 0.4;
+            // 1. VẼ MAGIC CIRCLE (Nền)
+            drawMagicCircle(cx, cy + 130, 160, frameRef.current * 0.003, 'rgba(220, 38, 38, 0.5)', 6); 
+            drawMagicCircle(cx, cy + 130, 100, -frameRef.current * 0.008, 'rgba(147, 51, 234, 0.4)', 5); 
 
-            floatTick += 0.03;
-            const floatY = Math.sin(floatTick) * 15 - 30; 
-            const pulse = (Math.sin(frameRef.current * 0.1) + 1) * 0.5; // Nhịp đập nhanh
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-            // --- 1. MAGIC CIRCLES (Sàn) ---
-            drawMagicCircle(cx, cy + 150, 160, frameRef.current * 0.005, 'rgba(220, 38, 38, 0.4)', 3); // Tam giác đỏ
-            drawMagicCircle(cx, cy + 150, 100, -frameRef.current * 0.01, 'rgba(168, 85, 247, 0.5)', 6); // Lục giác tím
-
-            // --- 2. PARTICLES (Lên trước để bị cube che nếu cần, hoặc dùng blend mode) ---
-            ctx.globalCompositeOperation = 'lighter';
+            // 2. VẼ PARTICLES (Hạt bay lên)
+            ctx.globalCompositeOperation = 'lighter'; // Chế độ hòa trộn làm sáng
             particles.forEach(p => {
-                p.angle += 0.01;
+                p.angle += 0.02;
                 p.height += p.speed;
-                if (p.height > 250) {
-                    p.height = -50;
-                    p.radius = 40 + Math.random() * 80;
+                p.radius -= 0.1;
+
+                // Reset hạt khi bay quá cao hoặc quá nhỏ
+                if (p.height > 180 || p.radius < 5) {
+                    p.height = -60;
+                    p.radius = 80 + Math.random() * 60;
+                    p.life = 1;
                 }
-                const groundY = cy + 130;
+
+                const groundY = cy + 110;
                 const x = cx + Math.cos(p.angle) * p.radius;
                 const y = groundY - p.height; 
-                const alpha = Math.max(0, (1 - (p.height / 200)));
                 
-                // Màu lửa pha tím
+                const alpha = Math.min(1, (1 - (p.height / 180))) * 0.8;
                 const r = 255;
-                const g = p.colorVar > 0.5 ? 50 : 0; 
-                const b = p.colorVar > 0.5 ? 50 : 150;
+                const g = p.colorVar > 0.5 ? Math.floor(100 * (1 - p.height/180)) : 0; 
+                const b = p.height > 100 ? 50 : 0;
 
                 ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
                 ctx.beginPath();
-                ctx.arc(x, y, 1.5, 0, Math.PI * 2);
+                ctx.arc(x, y, 1.2, 0, Math.PI * 2);
                 ctx.fill();
             });
 
-            // --- 3. INNER CUBE (LÕI NĂNG LƯỢNG) ---
-            const innerSize = 35 + pulse * 5; // Lõi đập
-            const innerPoints = baseVertices.map(v => project(v, innerSize, rotX_Inner, rotY_Inner, floatY));
+            // 3. VẼ CUBES (Chính)
+            ctx.globalCompositeOperation = 'source-over'; // Quay lại chế độ vẽ đè bình thường
             
-            // Vẽ lõi đặc
-            const sortedInnerFaces = faces.map(face => {
-                let zSum = 0;
-                face.indices.forEach(i => zSum += innerPoints[i].z);
-                return { ...face, z: zSum / 4 };
-            }).sort((a, b) => b.z - a.z);
+            // Góc nghiêng chung cho cả 2 khối để nhìn thấy mặt trên
+            const baseTilt = Math.sin(frameRef.current * 0.015) * 0.15 - 0.1;
 
-            sortedInnerFaces.forEach(face => {
-                const pts = face.indices.map(i => innerPoints[i]);
-                ctx.beginPath();
-                ctx.moveTo(pts[0].x, pts[0].y);
-                pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-                ctx.closePath();
-                // Lõi sáng rực rỡ
-                ctx.fillStyle = `rgba(255, 255, 255, ${0.8 + pulse * 0.2})`;
-                ctx.shadowColor = '#d8b4fe'; // Tím nhạt
-                ctx.shadowBlur = 30;
-                ctx.fill();
-            });
+            // -- INNER CUBE (Lõi) --
+            // Nhỏ hơn (size 40), quay cùng chiều kim đồng hồ
+            drawCubeMesh(40, baseTilt, rotationMain, floatY, pulse, 'inner');
 
-            // --- 4. OUTER CUBE (VỎ BẢO VỆ & SÉT) ---
-            const outerSize = 85;
-            const outerPoints = baseVertices.map(v => project(v, outerSize, rotX_Outer, rotY_Outer, floatY));
-
-            // Vẽ các cạnh tia sét (Lightning Edges)
-            ctx.shadowBlur = 10;
-            ctx.shadowColor = '#dc2626'; // Đỏ
-            edges.forEach(edge => {
-                const p1 = outerPoints[edge[0]];
-                const p2 = outerPoints[edge[1]];
-                
-                // Chỉ vẽ sét ngẫu nhiên để tạo hiệu ứng chập chờn (flicker)
-                if (Math.random() > 0.1) {
-                    // Màu chuyển từ Đỏ sang Tím
-                    const grad = ctx.createLinearGradient(p1.x, p1.y, p2.x, p2.y);
-                    grad.addColorStop(0, '#ef4444');
-                    grad.addColorStop(1, '#a855f7');
-                    
-                    // Vẽ đường thẳng mờ làm nền
-                    ctx.strokeStyle = 'rgba(239, 68, 68, 0.3)';
-                    ctx.lineWidth = 1;
-                    ctx.beginPath();
-                    ctx.moveTo(p1.x, p1.y);
-                    ctx.lineTo(p2.x, p2.y);
-                    ctx.stroke();
-
-                    // Vẽ sét chồng lên
-                    drawLightning(p1.x, p1.y, p2.x, p2.y, 8, '#fca5a5'); 
-                }
-            });
-
-            // Kết nối năng lượng từ Lõi ra Vỏ (Energy Arcs)
-            if (frameRef.current % 3 === 0) { // Không vẽ mọi frame để đỡ rối
-                for (let i = 0; i < 4; i++) {
-                    const idxInner = Math.floor(Math.random() * 8);
-                    const idxOuter = Math.floor(Math.random() * 8);
-                    const pIn = innerPoints[idxInner];
-                    const pOut = outerPoints[idxOuter];
-                    
-                    ctx.shadowColor = '#a855f7';
-                    ctx.shadowBlur = 15;
-                    drawLightning(pIn.x, pIn.y, pOut.x, pOut.y, 15, 'rgba(168, 85, 247, 0.6)');
-                }
-            }
-
-            // Vẽ các mặt kính mờ cho Outer Cube (tạo khối)
-            const sortedOuterFaces = faces.map(face => {
-                let zSum = 0;
-                face.indices.forEach(i => zSum += outerPoints[i].z);
-                return { ...face, z: zSum / 4 };
-            }).sort((a, b) => b.z - a.z);
-
-            // Chỉ vẽ các mặt phía sau (để không che mất tia sét phía trước quá nhiều)
-            // hoặc vẽ bán trong suốt
-            ctx.globalCompositeOperation = 'source-over'; // Reset blend mode để vẽ mặt tối
-            sortedOuterFaces.forEach(face => {
-                const pts = face.indices.map(i => outerPoints[i]);
-                ctx.beginPath();
-                ctx.moveTo(pts[0].x, pts[0].y);
-                pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-                ctx.closePath();
-
-                // Gradient tối ma thuật
-                const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y);
-                grad.addColorStop(0, 'rgba(0, 0, 0, 0.1)'); 
-                grad.addColorStop(0.5, 'rgba(20, 0, 10, 0.4)'); 
-                grad.addColorStop(1, 'rgba(0, 0, 0, 0.1)'); 
-                
-                ctx.fillStyle = grad;
-                ctx.fill();
-                
-                // Viền mỏng
-                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
-                ctx.lineWidth = 0.5;
-                ctx.stroke();
-            });
+            // -- OUTER CUBE (Vỏ) --
+            // Lớn hơn (size 85), quay NGƯỢC chiều kim đồng hồ, lệch pha một chút
+            drawCubeMesh(85, baseTilt, -rotationMain * 0.6 + Math.PI/4, floatY, pulse, 'outer');
 
             requestRef.current = requestAnimationFrame(render);
         };
 
+        // Bắt đầu render
         render();
 
+        // Cleanup function khi component unmount
         return () => {
             window.removeEventListener('resize', handleResize);
             if (requestRef.current) cancelAnimationFrame(requestRef.current);
@@ -302,12 +278,8 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     if (!isActive) return null;
 
     return (
-        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/70">
+        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/60">
             <canvas ref={canvasRef} className="absolute inset-0" />
-            {/* Optional Text Overlay if needed */}
-            <div className="absolute top-[65%] text-white/80 font-mono tracking-widest text-sm animate-pulse z-10">
-                CONSTRUCTING ARTIFACT...
-            </div>
         </div>
     );
 });
