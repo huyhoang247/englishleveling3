@@ -366,11 +366,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const mainActionText = isEquipped ? 'Unequip' : 'Equip';
     const mainActionHandler = () => isEquipped ? onUnequip(ownedItem) : onEquip(ownedItem);
     const mainActionStyle = isEquipped ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105';
-    const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
+    // const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            {/* UPDATED: Increased opacity to 80 (darker) */}
             <div className="fixed inset-0 bg-black/80" onClick={onClose} />
             <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
                 <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
@@ -467,8 +466,20 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                 
                 <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
                     <div className="flex items-center gap-3">
-                        <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : mainActionStyle}`}>{mainActionText}</button>
-                        <button onClick={() => onDismantle(ownedItem)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>Recycle</button>
+                        <button 
+                            onClick={mainActionHandler} 
+                            disabled={actionDisabled} 
+                            className={`flex-1 font-lilita text-lg tracking-wide uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : mainActionStyle}`}
+                        >
+                            {mainActionText}
+                        </button>
+                        <button 
+                            onClick={() => onDismantle(ownedItem)} 
+                            disabled={isEquipped || actionDisabled} 
+                            className={`flex-1 font-lilita text-lg tracking-wide uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-b from-slate-700 to-slate-900 border border-slate-600 text-slate-300 hover:text-white hover:border-slate-500 hover:from-slate-600 hover:to-slate-800 hover:scale-105 hover:shadow-lg shadow-black/40 active:scale-95'}`}
+                        >
+                            Recycle
+                        </button>
                     </div>
                 </div>
             </div>
