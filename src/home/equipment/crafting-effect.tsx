@@ -220,9 +220,9 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     if (!isActive) return null;
 
     return (
-        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/40 backdrop-blur-[1px]">
+        // UPDATE: Sử dụng bg-black/60 thay vì backdrop-blur để tiết kiệm tài nguyên
+        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/60">
             <canvas ref={canvasRef} className="absolute inset-0" />
-            {/* Đã xóa text và loading bar */}
         </div>
     );
 });
