@@ -365,8 +365,15 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const actionDisabled = isProcessing;
     const mainActionText = isEquipped ? 'Unequip' : 'Equip';
     const mainActionHandler = () => isEquipped ? onUnequip(ownedItem) : onEquip(ownedItem);
-    const mainActionStyle = isEquipped ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105';
-    // const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
+    
+    // Nút Style Compact & Tinh tế
+    const commonBtnClasses = "flex-1 py-2.5 rounded-xl font-lilita text-base tracking-wide shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase";
+    
+    const mainActionStyle = isEquipped 
+        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-orange-500/30' 
+        : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/30';
+    
+    const recycleActionStyle = 'bg-gradient-to-r from-slate-600 to-slate-800 text-slate-200 hover:from-slate-500 hover:to-slate-700 hover:text-white hover:shadow-black/50';
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -469,14 +476,14 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         <button 
                             onClick={mainActionHandler} 
                             disabled={actionDisabled} 
-                            className={`flex-1 font-lilita text-lg tracking-wide uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : mainActionStyle}`}
+                            className={`${commonBtnClasses} ${actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : mainActionStyle}`}
                         >
                             {mainActionText}
                         </button>
                         <button 
                             onClick={() => onDismantle(ownedItem)} 
                             disabled={isEquipped || actionDisabled} 
-                            className={`flex-1 font-lilita text-lg tracking-wide uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-b from-slate-700 to-slate-900 border border-slate-600 text-slate-300 hover:text-white hover:border-slate-500 hover:from-slate-600 hover:to-slate-800 hover:scale-105 hover:shadow-lg shadow-black/40 active:scale-95'}`}
+                            className={`${commonBtnClasses} ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : recycleActionStyle}`}
                         >
                             Recycle
                         </button>
