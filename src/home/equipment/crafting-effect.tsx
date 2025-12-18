@@ -27,7 +27,8 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         window.addEventListener('resize', handleResize);
 
         // --- CẤU HÌNH ---
-        const cubeSize = 85; // Tăng nhẹ kích thước cube
+        // UPDATE: Giảm kích thước cube để trông tinh tế hơn
+        const cubeSize = 45; 
         
         const vertices = [
             { x: -1, y: -1, z: -1 }, { x: 1, y: -1, z: -1 }, { x: 1, y: 1, z: -1 }, { x: -1, y: 1, z: -1 },
@@ -43,15 +44,16 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
             { indices: [3, 2, 6, 7], id: 'bottom' }
         ];
 
-        // Hệ thống hạt: Tàn lửa bị hút vào hố đen
-        const particles: { angle: number; radius: number; speed: number; size: number; color: string }[] = [];
-        for (let i = 0; i < 60; i++) {
+        // Hệ thống hạt: Tàn lửa (Embers)
+        const particles: { angle: number; radius: number; height: number; speed: number; life: number; colorVar: number }[] = [];
+        for (let i = 0; i < 100; i++) {
             particles.push({
                 angle: Math.random() * Math.PI * 2,
-                radius: 40 + Math.random() * 100, // Bắt đầu từ xa
-                speed: 0.02 + Math.random() * 0.04,
-                size: Math.random() * 2,
-                color: Math.random() > 0.5 ? '#a855f7' : '#ef4444'
+                radius: 40 + Math.random() * 80,
+                height: Math.random() * 200,
+                speed: 0.8 + Math.random() * 2,
+                life: Math.random(),
+                colorVar: Math.random()
             });
         }
 
@@ -75,12 +77,13 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
             const z2 = z1 * cosX + y * sinX;
 
             const yFinal = y2 + transY;
-            const scale = 1000 / (1000 + z2);
+            const scale = 1000 / (1000 + z2); // Perspective scaling
             
             return {
                 x: x1 * scale + canvas.width / 2,
                 y: yFinal * scale + canvas.height / 2,
-                zDepth: z2
+                zDepth: z2,
+                scale: scale
             };
         };
 
@@ -89,55 +92,120 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
             ctx.translate(cx, cy);
             ctx.scale(1, 0.35); 
             ctx.rotate(angle);
+
             ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
+            ctx.lineWidth = 1.5;
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = color;
+
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.stroke();
-            // Vẽ đa giác bên trong
+            
+            // Trang trí thêm vòng trong
             ctx.beginPath();
-            for(let i = 0; i < segments; i++) {
-                const theta = (i / segments) * Math.PI * 2;
-                if (i===0) ctx.moveTo(Math.cos(theta) * radius, Math.sin(theta) * radius);
-                else ctx.lineTo(Math.cos(theta) * radius, Math.sin(theta) * radius);
-            }
-            ctx.closePath();
+            ctx.arc(0, 0, radius * 0.7, 0, Math.PI * 2);
+            ctx.strokeStyle = color.replace('0.5', '0.2');
             ctx.stroke();
+
             ctx.restore();
+        };
+
+        // Hàm vẽ lõi năng lượng (Black Hole Core)
+        const drawCore = (x: number, y: number, pulse: number, scale: number) => {
+            const coreSize = 25 * scale;
+            
+            // Glow ngoài
+            const gradGlow = ctx.createRadialGradient(x, y, coreSize * 0.2, x, y, coreSize * 2.5);
+            gradGlow.addColorStop(0, 'rgba(168, 85, 247, 0.8)'); // Purple center
+            gradGlow.addColorStop(0.4, 'rgba(220, 38, 38, 0.4)'); // Red mid
+            gradGlow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+            
+            ctx.fillStyle = gradGlow;
+            ctx.beginPath();
+            ctx.arc(x, y, coreSize * 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lõi đen (Hố đen)
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(x, y, coreSize * (0.8 + pulse * 0.1), 0, Math.PI * 2);
+            ctx.fill();
+
+            // Viền năng lượng cực mạnh (Accretion disk)
+            ctx.strokeStyle = '#fff';
+            ctx.lineWidth = 2;
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#d8b4fe';
+            ctx.beginPath();
+            ctx.arc(x, y, coreSize * (0.8 + pulse * 0.1), 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.shadowBlur = 0; // Reset
         };
 
         const render = () => {
             frameRef.current++;
+            rotationY += 0.01; 
+            // UPDATE: Nghiêng nhiều hơn để tạo cảm giác 3D rõ (base 0.4 rad)
+            rotationX = 0.4 + Math.sin(frameRef.current * 0.02) * 0.1; 
             
-            // --- TILT & ROTATION ---
-            rotationY += 0.01; // Xoay quanh trục Y
-            // rotationX cố định khoảng 0.5 (nghiêng xuống) + rung nhẹ để tạo cảm giác trôi nổi
-            rotationX = 0.5 + Math.sin(frameRef.current * 0.02) * 0.05; 
+            floatTick += 0.025;
+            const floatY = Math.sin(floatTick) * 8 - 40; 
             
-            floatTick += 0.03;
-            const floatY = Math.sin(floatTick) * 8 - 20; 
-            
-            const pulse = (Math.sin(frameRef.current * 0.1) + 1) * 0.5; // Nhịp đập nhanh hơn cho hố đen
+            const pulse = (Math.sin(frameRef.current * 0.08) + 1) * 0.5;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-            // 1. NỀN VÒNG TRÒN MA PHÁP (Dưới đất)
-            drawMagicCircle(cx, cy + 150, 120, frameRef.current * 0.005, 'rgba(168, 85, 247, 0.3)', 6); 
+            // 1. MAGIC CIRCLE
+            drawMagicCircle(cx, cy + 130, 150, frameRef.current * 0.003, 'rgba(220, 38, 38, 0.5)', 6); 
+            drawMagicCircle(cx, cy + 130, 90, -frameRef.current * 0.008, 'rgba(147, 51, 234, 0.4)', 5); 
 
-            // 2. TÍNH TOÁN 3D CUBE
+            // 2. PARTICLES
+            ctx.globalCompositeOperation = 'lighter';
+            particles.forEach(p => {
+                p.angle += 0.02;
+                p.height += p.speed;
+                p.radius -= 0.1;
+                if (p.height > 180 || p.radius < 5) {
+                    p.height = -60;
+                    p.radius = 80 + Math.random() * 60;
+                    p.life = 1;
+                }
+                const groundY = cy + 110;
+                const x = cx + Math.cos(p.angle) * p.radius;
+                const y = groundY - p.height; 
+                const alpha = Math.min(1, (1 - (p.height / 180))) * 0.8;
+                const r = 255;
+                const g = p.colorVar > 0.5 ? Math.floor(100 * (1 - p.height/180)) : 0; 
+                const b = p.height > 100 ? 50 : 0;
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
+                ctx.beginPath();
+                ctx.arc(x, y, 1.2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 3. CUBE & CORE
+            ctx.globalCompositeOperation = 'source-over';
+
+            // Tính toán vị trí các đỉnh
             const projectedVertices = vertices.map(v => project(v, rotationX, rotationY, floatY));
-            
-            // Sắp xếp mặt theo độ sâu (Painter's algorithm)
+            // Tính toán vị trí tâm (cho core)
+            const centerProjected = project({x:0, y:0, z:0}, rotationX, rotationY, floatY);
+
+            // Sắp xếp mặt theo độ sâu (xa vẽ trước, gần vẽ sau)
             const sortedFaces = faces.map(face => {
                 let zSum = 0;
                 face.indices.forEach(i => zSum += projectedVertices[i].zDepth);
                 return { ...face, z: zSum / 4 };
             }).sort((a, b) => b.z - a.z);
 
-            // Hàm vẽ mặt Cube
-            const drawFace = (face: typeof sortedFaces[0], isFront: boolean) => {
+            // UPDATE: Vẽ 3 mặt ở xa trước (Back faces)
+            const backFaces = sortedFaces.slice(0, 3);
+            const frontFaces = sortedFaces.slice(3);
+
+            const drawFace = (face: typeof faces[0]) => {
                 const pts = face.indices.map(i => projectedVertices[i]);
                 
                 ctx.beginPath();
@@ -145,106 +213,44 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
                 ctx.closePath();
 
-                // Gradient kính tối màu (Glassy Dark)
+                // UPDATE: Gradient trong suốt (Opacity ~70%)
                 const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y);
-                grad.addColorStop(0, 'rgba(10, 5, 15, 0.7)'); 
-                grad.addColorStop(0.5, 'rgba(0, 0, 0, 0.75)');
-                grad.addColorStop(1, 'rgba(20, 5, 10, 0.7)'); 
-                
+                grad.addColorStop(0, 'rgba(5, 5, 10, 0.7)');    // Đen tím nhạt
+                grad.addColorStop(0.5, 'rgba(20, 5, 20, 0.6)');  // Hơi đỏ
+                grad.addColorStop(1, 'rgba(5, 5, 10, 0.7)');     // Đen lại
+
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                // Viền Neon
+                // Hiệu ứng viền Neon
+                const glowIntensity = 10 + (pulse * 5);
+                ctx.shadowBlur = glowIntensity;
+                ctx.shadowColor = '#a855f7'; // Purple glow
+                
                 const strokeGrad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
-                if (isFront) {
-                    ctx.shadowBlur = 10 + pulse * 5;
-                    ctx.shadowColor = '#a855f7';
-                    strokeGrad.addColorStop(0, '#ef4444');
-                    strokeGrad.addColorStop(1, '#a855f7');
-                    ctx.lineWidth = 2;
-                } else {
-                    ctx.shadowBlur = 0;
-                    strokeGrad.addColorStop(0, 'rgba(239, 68, 68, 0.3)');
-                    strokeGrad.addColorStop(1, 'rgba(168, 85, 247, 0.3)');
-                    ctx.lineWidth = 1;
-                }
+                strokeGrad.addColorStop(0, 'rgba(239, 68, 68, 0.8)'); // Red
+                strokeGrad.addColorStop(1, 'rgba(168, 85, 247, 0.8)'); // Purple
+
+                ctx.lineWidth = 1.5;
                 ctx.strokeStyle = strokeGrad;
                 ctx.stroke();
-
-                // Hiệu ứng bóng kính (Highlight)
-                if (isFront) {
-                    ctx.shadowBlur = 0;
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.03)';
-                    ctx.fill();
-                }
+                
+                // Reset shadow cho lần vẽ tiếp
+                ctx.shadowBlur = 0; 
+                
+                // Highlight bề mặt (Glass effect)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.05)';
+                ctx.fill();
             };
 
-            // A. VẼ MẶT SAU (BACK FACES)
-            for (let i = 0; i < 3; i++) drawFace(sortedFaces[i], false);
+            // A. Vẽ các mặt sau
+            backFaces.forEach(drawFace);
 
-            // B. VẼ HỐ ĐEN (BLACK HOLE CORE)
-            // Vẽ ở giữa để nằm trong khối Cube
-            ctx.save();
-            ctx.translate(cx, cy + floatY); // Di chuyển theo độ nảy của cube
-            
-            // B1. Đĩa bồi tụ (Accretion Disk) - Xoáy năng lượng
-            ctx.save();
-            ctx.scale(1, 0.3); // Nén dẹt để trông 3D khớp với góc nghiêng
-            ctx.rotate(frameRef.current * 0.05); // Xoay nhanh
-            
-            const diskRadius = 45 + pulse * 5;
-            const diskGrad = ctx.createRadialGradient(0, 0, 15, 0, 0, diskRadius);
-            diskGrad.addColorStop(0, 'rgba(0,0,0,0)'); 
-            diskGrad.addColorStop(0.4, 'rgba(147, 51, 234, 0.9)'); // Tím
-            diskGrad.addColorStop(0.7, 'rgba(220, 38, 38, 0.8)'); // Đỏ
-            diskGrad.addColorStop(1, 'rgba(0,0,0,0)');
-            
-            ctx.fillStyle = diskGrad;
-            ctx.beginPath();
-            ctx.arc(0, 0, diskRadius, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.restore();
+            // B. Vẽ Lõi Năng Lượng (nằm giữa mặt sau và mặt trước)
+            drawCore(centerProjected.x, centerProjected.y, pulse, centerProjected.scale);
 
-            // B2. Chân trời sự kiện (Event Horizon) - Lõi đen
-            ctx.beginPath();
-            ctx.arc(0, 0, 18, 0, Math.PI * 2);
-            ctx.fillStyle = '#000000';
-            ctx.shadowBlur = 20;
-            ctx.shadowColor = '#ffffff'; // Hào quang trắng bao quanh lỗ đen
-            ctx.fill();
-            
-            // Viền photon (Vòng sáng mỏng quanh lỗ đen)
-            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
-            ctx.lineWidth = 1.5;
-            ctx.stroke();
-
-            // B3. Hạt bị hút vào (Suction Particles)
-            ctx.globalCompositeOperation = 'lighter';
-            particles.forEach(p => {
-                p.angle += p.speed;
-                p.radius -= 0.8; // Hút vào tâm
-                
-                if (p.radius < 10) {
-                    p.radius = 60 + Math.random() * 40; // Reset ra xa
-                    p.angle = Math.random() * Math.PI * 2;
-                }
-
-                const px = Math.cos(p.angle) * p.radius;
-                const py = Math.sin(p.angle) * p.radius * 0.3; // Nén theo chiều dọc
-                
-                const alpha = Math.min(1, p.radius / 60);
-                ctx.fillStyle = p.color;
-                ctx.globalAlpha = alpha;
-                ctx.beginPath();
-                ctx.arc(px, py, p.size, 0, Math.PI * 2);
-                ctx.fill();
-            });
-            ctx.globalAlpha = 1;
-            ctx.restore();
-
-            // C. VẼ MẶT TRƯỚC (FRONT FACES)
-            ctx.globalCompositeOperation = 'source-over';
-            for (let i = 3; i < 6; i++) drawFace(sortedFaces[i], true);
+            // C. Vẽ các mặt trước (đè lên lõi nhưng trong suốt nên vẫn thấy lõi)
+            frontFaces.forEach(drawFace);
 
             requestRef.current = requestAnimationFrame(render);
         };
