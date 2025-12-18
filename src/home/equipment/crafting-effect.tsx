@@ -27,59 +27,57 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         window.addEventListener('resize', handleResize);
 
         // --- CẤU HÌNH ---
-        // Lưới 3x3x3 = 27 khối nhỏ
-        const gridSize = 3; 
-        const subCubeSize = 22; // Kích thước mỗi khối nhỏ
-        const spacing = 2; // Khoảng cách giữa các khối khi đã ghép chặt
-
-        // Định nghĩa 8 đỉnh cơ bản cho 1 khối lập phương đơn vị
-        const baseVertices = [
+        const cubeSize = 75; // Khối to hơn một chút để tăng sự đe dọa
+        
+        const vertices = [
             { x: -1, y: -1, z: -1 }, { x: 1, y: -1, z: -1 }, { x: 1, y: 1, z: -1 }, { x: -1, y: 1, z: -1 },
             { x: -1, y: -1, z: 1 }, { x: 1, y: -1, z: 1 }, { x: 1, y: 1, z: 1 }, { x: -1, y: 1, z: 1 }
         ];
 
-        // Các mặt của 1 khối cube
         const faces = [
-            { indices: [0, 1, 2, 3], normal: { x: 0, y: 0, z: -1 } }, // Back
-            { indices: [4, 5, 6, 7], normal: { x: 0, y: 0, z: 1 } },  // Front
-            { indices: [0, 4, 7, 3], normal: { x: -1, y: 0, z: 0 } }, // Left
-            { indices: [1, 5, 6, 2], normal: { x: 1, y: 0, z: 0 } },  // Right
-            { indices: [0, 1, 5, 4], normal: { x: 0, y: -1, z: 0 } }, // Top
-            { indices: [3, 2, 6, 7], normal: { x: 0, y: 1, z: 0 } }   // Bottom
+            { indices: [0, 1, 2, 3], id: 'back' },
+            { indices: [4, 5, 6, 7], id: 'front' },
+            { indices: [0, 4, 7, 3], id: 'left' },
+            { indices: [1, 5, 6, 2], id: 'right' },
+            { indices: [0, 1, 5, 4], id: 'top' },
+            { indices: [3, 2, 6, 7], id: 'bottom' }
         ];
 
-        // Tạo danh sách 27 vị trí trong lưới (x, y, z từ -1 đến 1)
-        const gridPositions: {x: number, y: number, z: number}[] = [];
-        const offset = Math.floor(gridSize / 2);
-        for(let x = -offset; x <= offset; x++) {
-            for(let y = -offset; y <= offset; y++) {
-                for(let z = -offset; z <= offset; z++) {
-                    gridPositions.push({x, y, z});
-                }
-            }
+        // Hệ thống hạt: Tàn lửa (Embers)
+        const particles: { angle: number; radius: number; height: number; speed: number; life: number; colorVar: number }[] = [];
+        for (let i = 0; i < 100; i++) {
+            particles.push({
+                angle: Math.random() * Math.PI * 2,
+                radius: 40 + Math.random() * 80,
+                height: Math.random() * 200,
+                speed: 0.8 + Math.random() * 2,
+                life: Math.random(),
+                colorVar: Math.random() // Biến số để random màu giữa đỏ và cam
+            });
         }
 
         let rotationY = 0;
         let rotationX = 0;
+        let floatTick = 0;
 
-        // Hàm chiếu 3D -> 2D
-        const project = (x: number, y: number, z: number, rotX: number, rotY: number, transY: number) => {
-            // Xoay Y
+        const project = (v: { x: number, y: number, z: number }, rotX: number, rotY: number, transY: number) => {
+            let x = v.x * cubeSize;
+            let y = v.y * cubeSize;
+            let z = v.z * cubeSize;
+
             const cosY = Math.cos(rotY);
             const sinY = Math.sin(rotY);
             const x1 = x * cosY - z * sinY;
             const z1 = z * cosY + x * sinY;
 
-            // Xoay X
             const cosX = Math.cos(rotX);
             const sinX = Math.sin(rotX);
             const y2 = y * cosX - z1 * sinX;
             const z2 = z1 * cosX + y * sinX;
 
             const yFinal = y2 + transY;
-
-            // Phối cảnh
             const scale = 1000 / (1000 + z2);
+            
             return {
                 x: x1 * scale + canvas.width / 2,
                 y: yFinal * scale + canvas.height / 2,
@@ -88,163 +86,141 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
             };
         };
 
-        const drawMagicCircle = (cx: number, cy: number, radius: number, angle: number, color: string) => {
+        const drawMagicCircle = (cx: number, cy: number, radius: number, angle: number, color: string, segments: number) => {
             ctx.save();
             ctx.translate(cx, cy);
-            ctx.scale(1, 0.35); // Dẹt hơn chút
+            ctx.scale(1, 0.35); // Góc nhìn nghiêng hơn
             ctx.rotate(angle);
-            
-            // Glow
+
+            // Glow mạnh hơn cho vòng tròn
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5; // Mỏng nhưng sắc
             ctx.shadowBlur = 15;
             ctx.shadowColor = color;
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 2;
 
-            // Vòng tròn
             ctx.beginPath();
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Hình vuông xoay bên trong
+            // Họa tiết sắc nhọn hơn (Gothic style)
             ctx.beginPath();
-            const r = radius * 0.7;
-            for(let i=0; i<=4; i++) {
-                const a = (i * Math.PI / 2);
-                ctx.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+            for(let i = 0; i < segments; i++) {
+                const theta = (i / segments) * Math.PI * 2;
+                // Vẽ các tia nhọn hướng ra ngoài
+                ctx.moveTo(Math.cos(theta) * (radius * 0.9), Math.sin(theta) * (radius * 0.9));
+                ctx.lineTo(Math.cos(theta) * (radius * 1.1), Math.sin(theta) * (radius * 1.1));
+                
+                // Nối các điểm bên trong tạo hình ngôi sao
+                const nextTheta = ((i + 2) / segments) * Math.PI * 2;
+                ctx.moveTo(Math.cos(theta) * radius, Math.sin(theta) * radius);
+                ctx.lineTo(Math.cos(nextTheta) * radius, Math.sin(nextTheta) * radius);
             }
             ctx.stroke();
-
             ctx.restore();
         };
 
         const render = () => {
             frameRef.current++;
-            rotationY += 0.015;
-            rotationX = Math.sin(frameRef.current * 0.015) * 0.2 - 0.3; // Nghiêng để nhìn từ trên xuống
-
-            // Hiệu ứng "Thở" / Lắp ghép
-            // gapFactor đi từ 0 (khép kín) đến 2.5 (bung ra)
-            // Dùng hàm sin để tạo nhịp: Bung ra -> Hút vào -> Giữ chặt -> Bung ra
-            const time = frameRef.current * 0.03;
-            let gapFactor = (Math.sin(time) + 1) * 1.2; // 0 -> 2.4
+            rotationY += 0.008; // Xoay chậm, nặng nề hơn
+            rotationX = Math.sin(frameRef.current * 0.015) * 0.15 - 0.1; 
+            floatTick += 0.02;
+            const floatY = Math.sin(floatTick) * 10 - 40; 
             
-            // Làm cho giai đoạn "khép kín" lâu hơn một chút để cảm thấy chắc chắn
-            if (gapFactor < 0.3) gapFactor = 0; 
-
-            // Khoảng cách thực tế giữa các tâm khối
-            const currentSpread = (subCubeSize * 2 + spacing) + (gapFactor * 15);
+            // Hiệu ứng nhịp đập (Pulsing) cho glow đỏ
+            const pulse = (Math.sin(frameRef.current * 0.05) + 1) * 0.5; // 0 -> 1
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-            // 1. VẼ MAGIC CIRCLE (Đáy)
-            drawMagicCircle(cx, cy + 180, 150, frameRef.current * 0.01, '#a855f7'); // Purple
-            drawMagicCircle(cx, cy + 180, 90, -frameRef.current * 0.02, '#22d3ee'); // Cyan
+            // 1. VẼ VÒNG MA PHÁP (BLOOD MAGIC)
+            // Đỏ thẫm
+            drawMagicCircle(cx, cy + 130, 150, frameRef.current * 0.003, 'rgba(220, 38, 38, 0.5)', 6); 
+            // Tím đen
+            drawMagicCircle(cx, cy + 130, 90, -frameRef.current * 0.008, 'rgba(147, 51, 234, 0.4)', 5); 
 
-            // 2. VẼ CÁC KHỐI CON (SUB-CUBES)
-            // Để vẽ đúng thứ tự (khối xa vẽ trước, khối gần vẽ sau), ta cần tính Z-depth của tâm mỗi khối
-            const cubesToDraw = gridPositions.map(pos => {
-                // Tính vị trí tâm của sub-cube trong không gian 3D
-                const worldX = pos.x * currentSpread;
-                const worldY = pos.y * currentSpread;
-                const worldZ = pos.z * currentSpread;
+            // 2. VẼ PARTICLES (EMBERS - TÀN LỬA)
+            ctx.globalCompositeOperation = 'lighter';
+            particles.forEach(p => {
+                p.angle += 0.02;
+                p.height += p.speed;
+                p.radius -= 0.1;
 
-                // Chiếu tâm để lấy Z-depth dùng cho sorting
-                const projectedCenter = project(worldX, worldY, worldZ, rotationX, rotationY, 0);
+                if (p.height > 180 || p.radius < 5) {
+                    p.height = -60;
+                    p.radius = 80 + Math.random() * 60;
+                    p.life = 1;
+                }
+
+                const groundY = cy + 110;
+                const x = cx + Math.cos(p.angle) * p.radius;
+                const y = groundY - p.height; 
                 
-                return {
-                    gridPos: pos,
-                    worldPos: { x: worldX, y: worldY, z: worldZ },
-                    zDepth: projectedCenter.zDepth,
-                    // Tính độ rung nhẹ cho mỗi khối để tạo cảm giác năng lượng không ổn định
-                    jitter: gapFactor > 0.5 ? {
-                        x: (Math.random() - 0.5) * gapFactor * 2,
-                        y: (Math.random() - 0.5) * gapFactor * 2
-                    } : {x:0, y:0}
-                };
-            });
-
-            // Sort: Xa (zDepth lớn) vẽ trước
-            cubesToDraw.sort((a, b) => b.zDepth - a.zDepth);
-
-            // Vẽ từng khối
-            cubesToDraw.forEach(cube => {
-                // Tính tọa độ 8 đỉnh của khối con này
-                const projectedVerts = baseVertices.map(v => {
-                    const vx = cube.worldPos.x + v.x * subCubeSize + cube.jitter.x;
-                    const vy = cube.worldPos.y + v.y * subCubeSize + cube.jitter.y;
-                    const vz = cube.worldPos.z + v.z * subCubeSize;
-                    return project(vx, vy, vz, rotationX, rotationY, -30); // -30 để nâng toàn bộ cụm lên cao chút
-                });
-
-                // Vẽ các mặt của khối con
-                // Một bản tối ưu hóa đơn giản: Chỉ vẽ mặt nếu nó hướng về phía camera (Back-face culling)
-                // Tuy nhiên với cube bán trong suốt hoặc stroke, vẽ hết cũng đẹp. 
-                // Ở đây ta dùng thuật toán Painter cho các mặt của khối con luôn.
+                const alpha = Math.min(1, (1 - (p.height / 180))) * 0.8;
                 
-                // Sort faces của khối con
-                const sortedFaces = faces.map(face => {
-                    let z = 0;
-                    face.indices.forEach(i => z += projectedVerts[i].zDepth);
-                    return { ...face, z: z/4 };
-                }).sort((a, b) => b.z - a.z);
+                // Màu từ Cam cháy -> Đỏ -> Tím khi bay lên
+                const r = 255;
+                const g = p.colorVar > 0.5 ? Math.floor(100 * (1 - p.height/180)) : 0; 
+                const b = p.height > 100 ? 50 : 0;
 
-                sortedFaces.forEach(face => {
-                    const pts = face.indices.map(i => projectedVerts[i]);
-
-                    ctx.beginPath();
-                    ctx.moveTo(pts[0].x, pts[0].y);
-                    pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
-                    ctx.closePath();
-
-                    // --- STYLE CHO KHỐI CON ---
-                    // Màu đen bóng (Obsidian)
-                    ctx.fillStyle = `rgba(10, 10, 20, 0.95)`; 
-                    
-                    // Nếu các khối đang tách ra, cho lõi phát sáng
-                    if (cube.gridPos.x === 0 && cube.gridPos.y === 0 && cube.gridPos.z === 0) {
-                        ctx.fillStyle = `rgba(34, 211, 238, 0.8)`; // Lõi trung tâm sáng Cyan
-                    }
-
-                    ctx.fill();
-
-                    // Viền Neon
-                    ctx.lineWidth = 1.5;
-                    // Đổi màu viền dựa trên vị trí để tạo gradient tổng thể cho khối lớn
-                    // Trên tím, dưới xanh
-                    const gradientStroke = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y);
-                    gradientStroke.addColorStop(0, '#22d3ee'); // Cyan
-                    gradientStroke.addColorStop(1, '#a855f7'); // Purple
-                    
-                    ctx.strokeStyle = gradientStroke;
-                    
-                    // Glow nhẹ cho viền
-                    ctx.shadowBlur = 5;
-                    ctx.shadowColor = '#22d3ee';
-                    
-                    ctx.stroke();
-                });
-            });
-
-            // 3. CORE GLOW (Khi hợp nhất)
-            // Khi các khối chụm lại (gapFactor ~ 0), vẽ một luồng sáng chói lòa ở giữa
-            if (gapFactor < 0.1) {
-                const centerProj = project(0, 0, 0, rotationX, rotationY, -30);
-                const pulse = 1 + Math.sin(frameRef.current * 0.2) * 0.2;
-                
-                const grad = ctx.createRadialGradient(centerProj.x, centerProj.y, 10, centerProj.x, centerProj.y, 150 * pulse);
-                grad.addColorStop(0, 'rgba(255, 255, 255, 1)');
-                grad.addColorStop(0.2, 'rgba(34, 211, 238, 0.6)');
-                grad.addColorStop(1, 'rgba(34, 211, 238, 0)');
-                
-                ctx.globalCompositeOperation = 'screen';
-                ctx.fillStyle = grad;
+                ctx.fillStyle = `rgba(${r}, ${g}, ${b}, ${alpha})`;
                 ctx.beginPath();
-                ctx.arc(centerProj.x, centerProj.y, 150 * pulse, 0, Math.PI * 2);
+                ctx.arc(x, y, 1.2, 0, Math.PI * 2);
                 ctx.fill();
-                ctx.globalCompositeOperation = 'source-over';
-            }
+            });
+
+            // 3. VẼ MYSTERIOUS DARK CUBE
+            ctx.globalCompositeOperation = 'source-over';
+
+            const projectedVertices = vertices.map(v => project(v, rotationX, rotationY, floatY));
+            
+            const sortedFaces = faces.map(face => {
+                let zSum = 0;
+                face.indices.forEach(i => zSum += projectedVertices[i].zDepth);
+                return { ...face, z: zSum / 4 };
+            }).sort((a, b) => b.z - a.z);
+
+            sortedFaces.forEach(face => {
+                const pts = face.indices.map(i => projectedVertices[i]);
+                
+                ctx.beginPath();
+                ctx.moveTo(pts[0].x, pts[0].y);
+                pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
+                ctx.closePath();
+
+                // --- STYLING: VOID & BLOOD ---
+                
+                // A. FILL: Gradient "Abyss" (Vực thẳm)
+                // Đen tuyệt đối ở 2 đầu, ở giữa có chút ánh đỏ tím rất tối
+                const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y);
+                grad.addColorStop(0, '#000000'); // Pure Black
+                grad.addColorStop(0.4, '#1a0505'); // Very Dark Red (gần như đen)
+                grad.addColorStop(0.6, '#0f0518'); // Very Dark Purple
+                grad.addColorStop(1, '#000000'); // Pure Black
+                
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // B. BORDER & GLOW: "Demonic Energy"
+                // Shadow blur mạnh màu đỏ
+                const glowIntensity = 15 + (pulse * 10); // Glow thở 15 -> 25
+                ctx.shadowBlur = glowIntensity;
+                ctx.shadowColor = '#dc2626'; // Red-600 Glow
+                
+                // Viền Gradient: Đỏ rực chuyển sang Tím
+                const strokeGrad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
+                strokeGrad.addColorStop(0, '#ef4444'); // Red-500
+                strokeGrad.addColorStop(1, '#a855f7'); // Purple-500
+
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = strokeGrad;
+                ctx.stroke();
+                
+                // C. SHINE: Ánh kim loại đen bóng
+                ctx.shadowBlur = 0; 
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.02)'; // Reflection rất yếu
+                ctx.fill();
+            });
 
             requestRef.current = requestAnimationFrame(render);
         };
@@ -260,17 +236,18 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     if (!isActive) return null;
 
     return (
-        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none">
+        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/40 backdrop-blur-[1px]">
             <canvas ref={canvasRef} className="absolute inset-0" />
             
-            <div className="relative z-10 mt-80 flex flex-col items-center gap-2">
-                <div className="font-black text-4xl text-transparent bg-clip-text bg-gradient-to-b from-cyan-100 to-cyan-500 tracking-widest uppercase drop-shadow-[0_0_15px_rgba(34,211,238,0.8)] animate-pulse">
-                    Crafting
+            {/* UI Text: Darker & More Menacing */}
+            <div className="relative z-10 mt-72 flex flex-col items-center gap-3">
+                <div className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-purple-500 to-red-500 tracking-[0.4em] animate-pulse text-2xl uppercase drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] font-mono">
+                    Crafting Artifact
                 </div>
-                <div className="flex gap-1">
-                     <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-75"></span>
-                     <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-150"></span>
-                     <span className="w-2 h-2 bg-purple-500 rounded-full animate-bounce delay-300"></span>
+                
+                {/* Progress Bar: Dark Red/Purple */}
+                <div className="w-56 h-1 bg-black border border-red-900/60 rounded-full overflow-hidden shadow-[0_0_10px_rgba(220,38,38,0.3)]">
+                    <div className="h-full bg-gradient-to-r from-purple-900 via-red-600 to-purple-900 animate-[width_2.5s_ease-in-out_infinite] w-full origin-left shadow-[0_0_10px_#ef4444]"></div>
                 </div>
             </div>
         </div>
