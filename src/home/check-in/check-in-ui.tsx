@@ -1,4 +1,4 @@
-// Filename: check-in-ui.tsx (ĐÃ SỬA LỖI)
+// Filename: check-in-ui.tsx
 
 import React from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
@@ -25,12 +25,6 @@ const DailyCheckInView = () => {
 
   return (
     <div className="bg-black/90 shadow-2xl overflow-hidden relative flex flex-col h-screen">
-      {/* ================= SỬA LỖI TẠI ĐÂY ================= */}
-      {/* 
-        - Padding top (`pt-8`) được giảm xuống `pt-2` để bằng với padding bottom (`pb-2`).
-        - Lưu ý: Giao diện có thể bị che bởi "tai thỏ" trên một số điện thoại.
-      */}
-      {/* DÒNG DƯỚI ĐÂY ĐÃ ĐƯỢC THAY ĐỔI: `pt-8` thành `pt-2` */}
       <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900/70 backdrop-blur-sm border-b border-white/10 z-20 pt-2 pb-2 px-4">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
@@ -40,8 +34,6 @@ const DailyCheckInView = () => {
       
       {/* --- CONTAINER NỘI DUNG CUỘN --- */}
       <div className="flex-1 overflow-y-auto hide-scrollbar">
-        {/* ================= SỬA LỖI TẠI ĐÂY ================= */}
-        {/* Giảm padding bottom từ pb-24 xuống pb-16 để bớt khoảng trống */}
         <div className="px-4 pt-4 pb-16">
           <div className="flex justify-center mt-2 mb-6">
             <div className="bg-slate-900/80 rounded-xl px-4 py-4 w-full max-w-sm flex items-center gap-4 border border-slate-700 shadow-lg relative">
@@ -98,7 +90,6 @@ const DailyCheckInView = () => {
                 return (
                   <div key={reward.day} className="relative group">
                     <div className={dayClasses}>
-                      {/* === THAY ĐỔI 1: Áp dụng font-lilita cho số ngày trong vòng tròn === */}
                       <span className="font-lilita z-10">{reward.day}</span>
                       {isClaimable && (
                         <>
@@ -113,7 +104,8 @@ const DailyCheckInView = () => {
                       )}
                     </div>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
-                      <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap">{reward.name}</div>
+                      {/* Cập nhật font cho tooltip */}
+                      <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap font-lilita tracking-wide">{reward.name}</div>
                       <div className="w-2 h-2 bg-slate-800 transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
                     </div>
                   </div>
@@ -147,7 +139,8 @@ const DailyCheckInView = () => {
                                       <span className="text-xs text-slate-400 font-mono">/{nextStreakGoal.streakGoal}</span>
                                   </div>
                               </div>
-                              <p className="text-indigo-300 text-lg font-bold">x{nextStreakGoal.amount}</p>
+                              {/* Cập nhật font cho phần thưởng Streak */}
+                              <p className="text-indigo-300 text-lg font-bold font-lilita">x{nextStreakGoal.amount}</p>
                           </div>
                       </div>
                   </div>
@@ -167,7 +160,6 @@ const DailyCheckInView = () => {
                 <div key={reward.day} className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${isClaimed ? 'opacity-60' : 'hover:transform hover:scale-[1.02]'}`}>
                   {isClaimable && (<div className="absolute inset-0 rounded-xl animate-pulse-slow" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.6), transparent)`, backgroundSize: '200% 200%'}}></div>)}
                   <div className={`relative flex items-center gap-4 p-4 rounded-xl ${ isClaimable ? 'bg-gradient-to-r from-slate-800 to-slate-800/95 border border-purple-500/50' : 'bg-slate-800'}`}>
-                    {/* === THAY ĐỔI 2: Áp dụng font-lilita và uppercase cho nhãn "Day X" === */}
                     <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
                     <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                       <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
@@ -175,19 +167,22 @@ const DailyCheckInView = () => {
                       </div>
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-bold text-white">{reward.name}</h3>
-                      <p className="text-slate-300 text-sm">x{reward.amount}</p>
+                      {/* === THAY ĐỔI: Tên vật phẩm font-lilita === */}
+                      <h3 className="font-bold text-white font-lilita tracking-wide">{reward.name}</h3>
+                      {/* === THAY ĐỔI: Số lượng vật phẩm font-lilita === */}
+                      <p className="text-slate-300 text-sm font-lilita">x{reward.amount}</p>
                     </div>
+                    {/* === THAY ĐỔI: Button font-lilita và text Received === */}
                     <button 
                       onClick={() => claimReward(reward.day)} 
                       disabled={!isClaimable || isClaiming || isSyncingData} 
-                      className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-semibold text-sm transition-all ${ 
+                      className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all ${ 
                         isClaimed ? 'bg-green-600 text-white' : 
                         isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg' : 
                         'bg-slate-700 text-slate-400'
                       }`}
                     >
-                      { isClaimed ? 'Đã Nhận' : 
+                      { isClaimed ? 'Received' : 
                         isClaiming && isClaimable ? (
                           <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -223,13 +218,14 @@ const DailyCheckInView = () => {
             </div>
             <div className="mt-14 text-center">
               <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
-              <div className="text-white text-xl font-bold mb-1">{animatingReward.daily?.name}</div>
-              <div className="text-indigo-200 text-3xl font-bold mb-4">x{animatingReward.daily?.amount}</div>
+              {/* Cập nhật font trong modal */}
+              <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide">{animatingReward.daily?.name}</div>
+              <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
               {animatingReward.streak && (
                   <div className="border-t border-slate-700 pt-4 mt-4">
                       <div className="text-green-400 text-sm font-bold mb-1">Thưởng Chuỗi Đăng Nhập!</div>
-                      <div className="text-white text-lg font-bold mb-1">{animatingReward.streak?.name}</div>
-                      <div className="text-green-200 text-2xl font-bold">+{animatingReward.streak?.amount}</div>
+                      <div className="text-white text-lg font-bold mb-1 font-lilita tracking-wide">{animatingReward.streak?.name}</div>
+                      <div className="text-green-200 text-2xl font-bold font-lilita">+{animatingReward.streak?.amount}</div>
                   </div>
               )}
               <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
