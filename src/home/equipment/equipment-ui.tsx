@@ -300,6 +300,7 @@ const UpgradeStatToast: React.FC<UpgradeStatToastProps> = ({ isVisible, icon, bo
   );
 };
 
+// --- UPDATED ITEM DETAIL MODAL WITH 3D BUTTONS ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onUpgrade, isEquipped, gold, isProcessing }: { ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onUpgrade: (item: OwnedItem, statKey: string, increase: number) => void, isEquipped: boolean, gold: number, isProcessing: boolean }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     const [activeTab, setActiveTab] = useState<'stats' | 'upgrade'>('stats');
@@ -363,113 +364,214 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
     const hasStats = sortedStats.length > 0;
     const actionDisabled = isProcessing;
-    const mainActionText = isEquipped ? 'Unequip' : 'Equip';
+    
+    // --- CẤU HÌNH GIAO DIỆN NÚT BẤM 3D ---
+    const mainActionText = isEquipped ? 'Gỡ Bỏ' : 'Trang Bị';
     const mainActionHandler = () => isEquipped ? onUnequip(ownedItem) : onEquip(ownedItem);
-    const mainActionStyle = isEquipped ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:scale-105' : 'bg-gradient-to-r from-cyan-400 to-blue-500 text-white hover:scale-105';
-    const mainActionDisabledStyle = 'bg-slate-700 text-slate-500 cursor-not-allowed';
+
+    // Style cho nút Equip (Xanh dương/Cyan)
+    const equipBtnStyle = `
+        bg-gradient-to-b from-cyan-400 via-blue-500 to-blue-700
+        border-t-2 border-cyan-300 border-x border-blue-600
+        shadow-[0_6px_0_#1e3a8a,0_10px_10px_rgba(0,0,0,0.5)]
+        active:shadow-[0_0px_0_#1e3a8a] active:translate-y-[6px] active:border-t-blue-700
+        group
+    `;
+
+    // Style cho nút Unequip (Vàng/Cam)
+    const unequipBtnStyle = `
+        bg-gradient-to-b from-yellow-300 via-orange-500 to-orange-700
+        border-t-2 border-yellow-200 border-x border-orange-600
+        shadow-[0_6px_0_#9a3412,0_10px_10px_rgba(0,0,0,0.5)]
+        active:shadow-[0_0px_0_#9a3412] active:translate-y-[6px] active:border-t-orange-700
+        group
+    `;
+
+    // Style cho nút Recycle (Đỏ)
+    const recycleBtnStyle = `
+        bg-gradient-to-b from-red-400 via-red-600 to-red-800
+        border-t-2 border-red-300 border-x border-red-700
+        shadow-[0_6px_0_#7f1d1d,0_10px_10px_rgba(0,0,0,0.5)]
+        active:shadow-[0_0px_0_#7f1d1d] active:translate-y-[6px] active:border-t-red-900
+        group
+    `;
+
+    // Style khi bị Disabled
+    const disabledBtnStyle = `
+        bg-slate-700 border-slate-600 text-slate-500 
+        cursor-not-allowed shadow-none translate-y-1 grayscale
+    `;
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            {/* UPDATED: Increased opacity to 80 (darker) */}
-            <div className="fixed inset-0 bg-black/80" onClick={onClose} />
-            <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
-                <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
-                    <div className="flex justify-between items-start mb-2">
-                        <h3 className={`text-2xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
-                        <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)}`}>{`${itemDef.rarity} Rank`}</span>
-                        <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedItem.level}</span>
-                    </div>
-                </div>
-
-                <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
-                    <div className="flex flex-col items-center text-center gap-4">
-                        <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
-                             <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
-                        </div>
-                        <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
-                            <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
-                        </div>
+            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-1 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col overflow-hidden`}>
+                
+                {/* Inner Content Container */}
+                <div className="bg-slate-900/90 rounded-xl w-full h-full flex flex-col overflow-hidden">
+                    
+                    {/* Header */}
+                    <div className="flex-shrink-0 bg-black/40 border-b border-gray-700/50 p-4 relative">
+                        {/* Background glow effect behind header */}
+                        <div className={`absolute top-0 left-0 w-full h-1 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50`}></div>
                         
-                        {(hasStats || isUpgradable) && (
-                            <div className="w-full bg-black/20 rounded-lg overflow-hidden">
-                                <div className="flex items-center p-1 mx-4 mt-3 bg-black/40 rounded-lg border border-white/5">
-                                    <button 
-                                        onClick={() => setActiveTab('stats')} 
-                                        className={`flex-1 py-1.5 rounded-md text-base tracking-wide transition-all duration-200 font-lilita ${
-                                            activeTab === 'stats' 
-                                                ? 'bg-slate-700 text-cyan-300 shadow-lg shadow-black/50' 
-                                                : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                                        }`}
-                                    >
-                                        Stats
-                                    </button>
-                                    
-                                    {isUpgradable && (
-                                        <button 
-                                            onClick={() => setActiveTab('upgrade')} 
-                                            className={`flex-1 py-1.5 rounded-md text-base tracking-wide transition-all duration-200 font-lilita ml-1 ${
-                                                activeTab === 'upgrade' 
-                                                    ? 'bg-slate-700 text-purple-300 shadow-lg shadow-black/50' 
-                                                    : 'text-slate-500 hover:text-slate-300 hover:bg-white/5'
-                                            }`}
-                                        >
-                                            Upgrade
-                                        </button>
-                                    )}
-                                </div>
-                                
-                                <div className="p-4">
-                                    {activeTab === 'stats' && (
-                                        <div className="space-y-1">{hasStats ? sortedStats.map(([key, value]) => { const config = STAT_CONFIG[key.toLowerCase()]; const baseStat = itemDef.stats?.[key]; let bonus = 0; if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } return (<div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">{config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}<div className="flex flex-1 items-center justify-between"><span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span><span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span></div></div>); }) : (<p className="text-sm text-slate-500 text-center py-4">Vật phẩm này không có chỉ số.</p>)}</div>
-                                    )}
+                        <div className="flex justify-between items-start mb-1">
+                            <h3 className={`text-2xl font-black uppercase italic tracking-wide ${getRarityTextColor(itemDef.rarity)} drop-shadow-md`}>{itemDef.name}</h3>
+                            <button onClick={onClose} className="text-gray-400 hover:text-white hover:bg-white/10 rounded-lg p-1 transition-colors"><CloseIcon className="w-6 h-6" /></button>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <span className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${getRarityTextColor(itemDef.rarity)} bg-black/60 border border-current shadow-sm`}>{`${itemDef.rarity} Rank`}</span>
+                            <span className="text-[10px] font-bold text-white bg-blue-900/50 px-2 py-0.5 rounded border border-blue-500/30">Level {ownedItem.level}</span>
+                        </div>
+                    </div>
 
-                                    {activeTab === 'upgrade' && isUpgradable && (
-                                        <div className="w-full flex flex-col items-center justify-center py-4 space-y-4">
-                                            <div className="text-center">
-                                                <p className="text-sm text-slate-300">
-                                                    Một chỉ số ngẫu nhiên sẽ được tăng.
-                                                </p>
-                                                <p className="text-xs text-purple-300 font-semibold mt-1">
-                                                    Tăng ngẫu nhiên 1% - 5% chỉ số cơ bản
-                                                </p>
+                    {/* Scrollable Body */}
+                    <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar p-4">
+                        <div className="flex flex-col items-center gap-5">
+                            {/* Item Icon with 3D Pedestal look */}
+                            <div className="relative group">
+                                <div className={`absolute inset-0 bg-${getRarityColor(itemDef.rarity).replace('border-', '')}-500/20 blur-xl rounded-full scale-110`}></div>
+                                <div className={`relative w-28 h-28 flex items-center justify-center bg-gradient-to-b from-slate-800 to-black rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-[inset_0_0_20px_rgba(0,0,0,0.8)]`}>
+                                    <img src={itemDef.icon} alt={itemDef.name} className="w-20 h-20 object-contain drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] z-10" />
+                                    {/* Grid pattern overlay */}
+                                    <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10 rounded-xl"></div>
+                                </div>
+                            </div>
+
+                            {/* Description Box */}
+                            <div className="w-full p-3 bg-slate-800/50 rounded-lg border border-slate-700 text-left shadow-inner">
+                                <p className="text-slate-300 text-sm leading-relaxed italic">"{itemDef.description}"</p>
+                            </div>
+                            
+                            {(hasStats || isUpgradable) && (
+                                <div className="w-full bg-slate-800/30 rounded-xl overflow-hidden border border-slate-700/50">
+                                    {/* Tab Header */}
+                                    <div className="flex p-1 bg-black/40">
+                                        <button 
+                                            onClick={() => setActiveTab('stats')} 
+                                            className={`flex-1 py-2 text-sm font-bold uppercase tracking-wide rounded-lg transition-all ${activeTab === 'stats' ? 'bg-slate-700 text-cyan-300 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                        >
+                                            Chỉ Số
+                                        </button>
+                                        {isUpgradable && (
+                                            <button 
+                                                onClick={() => setActiveTab('upgrade')} 
+                                                className={`flex-1 py-2 text-sm font-bold uppercase tracking-wide rounded-lg transition-all ml-1 ${activeTab === 'upgrade' ? 'bg-slate-700 text-purple-300 shadow-lg' : 'text-slate-500 hover:text-slate-300'}`}
+                                            >
+                                                Nâng Cấp
+                                            </button>
+                                        )}
+                                    </div>
+                                    
+                                    <div className="p-4 min-h-[160px]">
+                                        {activeTab === 'stats' && (
+                                            <div className="space-y-2">
+                                                {hasStats ? sortedStats.map(([key, value]) => { 
+                                                    const config = STAT_CONFIG[key.toLowerCase()]; 
+                                                    const baseStat = itemDef.stats?.[key]; 
+                                                    let bonus = 0; 
+                                                    if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
+                                                    return (
+                                                        <div key={key} className="flex items-center justify-between bg-slate-900/80 p-2 rounded border border-slate-700/50">
+                                                            <div className="flex items-center gap-2">
+                                                                {config?.Icon && <div className={`p-1 rounded bg-black/50 ${config.color}`}><config.Icon className="w-4 h-4" /></div>}
+                                                                <span className="text-xs font-bold text-slate-400 uppercase">{config?.name || key}</span>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <span className="font-mono font-bold text-white">{typeof value === 'number' ? value.toLocaleString() : value}</span>
+                                                                {bonus > 0 && <span className="block text-[10px] text-green-400 font-mono">(+{bonus.toLocaleString()})</span>}
+                                                            </div>
+                                                        </div>
+                                                    ); 
+                                                }) : (<p className="text-sm text-slate-500 text-center py-4">Không có chỉ số.</p>)}
                                             </div>
-                                            
-                                            <div className="w-full max-w-xs flex items-center justify-between">
-                                                <div className="flex items-center gap-2 bg-slate-900/50 border border-slate-700 rounded-lg px-3 py-1.5 font-bold text-sm">
-                                                    <span className="text-slate-300">Lv. {ownedItem.level}</span>
-                                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                                    <span className="text-green-400">Lv. {ownedItem.level + 1}</span>
+                                        )}
+
+                                        {activeTab === 'upgrade' && isUpgradable && (
+                                            <div className="flex flex-col items-center justify-between h-full py-1">
+                                                <div className="text-center mb-4">
+                                                    <p className="text-xs text-slate-400 mb-1">Tỷ lệ thành công 100%</p>
+                                                    <p className="text-sm text-purple-300 font-bold">Tăng ngẫu nhiên 1% - 5%</p>
                                                 </div>
                                                 
-                                                <div className="relative">
+                                                <div className="relative w-full flex flex-col items-center">
                                                     <button 
                                                         onClick={handleUpgradeClick} 
                                                         disabled={!canAffordUpgrade || actionDisabled} 
-                                                        className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all duration-300 transform ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border border-slate-600 text-slate-500 cursor-not-allowed' : 'bg-slate-800 border border-slate-600 text-yellow-300 hover:scale-105 active:scale-100'}`}
+                                                        className={`relative w-full max-w-[200px] py-2 px-4 rounded-xl flex items-center justify-center gap-3 transition-all transform active:scale-95 ${!canAffordUpgrade || actionDisabled ? 'bg-slate-700 border-2 border-slate-600 grayscale opacity-70' : 'bg-gradient-to-r from-yellow-600 to-yellow-500 border-2 border-yellow-300 shadow-[0_0_15px_rgba(234,179,8,0.4)] hover:shadow-[0_0_25px_rgba(234,179,8,0.6)]'}`}
                                                     >
-                                                        <GoldIcon className="w-5 h-5"/> 
-                                                        <span>{currentUpgradeCost.toLocaleString()}</span>
+                                                        <div className="flex flex-col items-start">
+                                                            <span className="text-[10px] uppercase font-bold text-yellow-100">Chi phí</span>
+                                                            <div className="flex items-center gap-1.5">
+                                                                <GoldIcon className="w-4 h-4"/> 
+                                                                <span className="font-bold text-white text-lg drop-shadow-md">{currentUpgradeCost.toLocaleString()}</span>
+                                                            </div>
+                                                        </div>
+                                                        {/* Shine effect */}
+                                                        <div className="absolute top-0 right-0 w-full h-1/2 bg-gradient-to-b from-white/20 to-transparent rounded-t-lg pointer-events-none"></div>
                                                     </button>
                                                     {toastInfo && <UpgradeStatToast key={toastInfo.key} {...toastInfo} />}
+                                                    {!canAffordUpgrade && !actionDisabled && <p className="text-xs text-red-400 mt-2 font-bold animate-pulse">Thiếu Vàng!</p>}
                                                 </div>
                                             </div>
-                                            {!canAffordUpgrade && !actionDisabled && <p className="text-center text-xs text-red-400 -mt-2">Không đủ vàng</p>}
-                                        </div>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                        </div>
                     </div>
-                </div>
-                
-                <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
-                    <div className="flex items-center gap-3">
-                        <button onClick={mainActionHandler} disabled={actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : mainActionStyle}`}>{mainActionText}</button>
-                        <button onClick={() => onDismantle(ownedItem)} disabled={isEquipped || actionDisabled} className={`flex-1 font-bold text-sm uppercase py-3 rounded-lg transition-all duration-300 transform ${isEquipped || actionDisabled ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-red-500 to-orange-500 text-white hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 active:scale-100'}`}>Recycle</button>
+                    
+                    {/* 3D ACTION BUTTONS FOOTER */}
+                    <div className="flex-shrink-0 mt-auto bg-black/60 p-4 border-t border-slate-700/50 backdrop-blur-md">
+                        <div className="flex items-center gap-4">
+                            {/* NÚT CHÍNH (EQUIP / UNEQUIP) */}
+                            <button 
+                                onClick={mainActionHandler} 
+                                disabled={actionDisabled} 
+                                className={`flex-1 relative rounded-xl transition-all duration-100 ease-out transform ${actionDisabled ? disabledBtnStyle : (isEquipped ? unequipBtnStyle : equipBtnStyle)}`}
+                            >
+                                {/* Inner Shine Highlight */}
+                                <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-lg pointer-events-none" />
+                                
+                                <div className="relative z-10 flex flex-col items-center justify-center py-3">
+                                    <div className="flex items-center gap-2">
+                                        {isEquipped ? (
+                                            // Icon Gỡ bỏ
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-orange-100 drop-shadow-md group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                        ) : (
+                                            // Icon Trang bị
+                                            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-cyan-100 drop-shadow-md group-hover:scale-110 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        )}
+                                        <span className="font-black text-lg text-white uppercase tracking-wider drop-shadow-md">{mainActionText}</span>
+                                    </div>
+                                </div>
+                            </button>
+
+                            {/* NÚT RECYCLE (PHÂN GIẢI) */}
+                            <button 
+                                onClick={() => onDismantle(ownedItem)} 
+                                disabled={isEquipped || actionDisabled} 
+                                className={`flex-1 relative rounded-xl transition-all duration-100 ease-out transform ${isEquipped || actionDisabled ? disabledBtnStyle : recycleBtnStyle}`}
+                            >
+                                {/* Inner Shine Highlight */}
+                                <div className="absolute inset-x-0 top-0 h-1/3 bg-gradient-to-b from-white/30 to-transparent rounded-t-lg pointer-events-none" />
+                                
+                                <div className="relative z-10 flex flex-col items-center justify-center py-3">
+                                    <div className="flex items-center gap-2">
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-red-100 drop-shadow-md group-hover:rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                        </svg>
+                                        <span className="font-black text-lg text-white uppercase tracking-wider drop-shadow-md">Phân Giải</span>
+                                    </div>
+                                </div>
+                            </button>
+                        </div>
                     </div>
+
                 </div>
             </div>
         </div>
