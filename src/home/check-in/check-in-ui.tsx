@@ -1,6 +1,6 @@
 // Filename: check-in-ui.tsx
 
-import React, { memo, useMemo } from 'react';
+import React, { memo } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -18,38 +18,43 @@ const CoinWrapper = memo(() => {
     return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />;
 });
 
-// 2. MiniCalendar: Tách lịch nhỏ ra
+// 2. MiniCalendar: Tối ưu logic render class
 const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStreak }: any) => {
+    // Helper tính trạng thái
+    const getStatus = (day: number) => {
+        if (canClaimToday && day === claimableDay) return 'claimable';
+        
+        let isClaimed;
+        if (canClaimToday) {
+            isClaimed = day < claimableDay;
+        } else {
+            const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
+            isClaimed = day <= completedDaysInCycle;
+        }
+        return isClaimed ? 'claimed' : 'locked';
+    };
+
     return (
         <div className="mb-6 mt-4 flex justify-between px-1">
             {dailyRewards.map((reward: any) => {
-                let isClaimed;
-                if (canClaimToday) {
-                    isClaimed = reward.day < claimableDay;
-                } else {
-                    const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
-                    isClaimed = reward.day <= completedDaysInCycle;
-                }
+                const status = getStatus(reward.day);
                 
-                const isClaimable = canClaimToday && reward.day === claimableDay;
-                
-                // Tối ưu class string
                 let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 relative ";
-                if (isClaimed) dayClasses += "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
-                else if (isClaimable) dayClasses += "bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
+                if (status === 'claimed') dayClasses += "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
+                else if (status === 'claimable') dayClasses += "bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
                 else dayClasses += "bg-slate-700 text-slate-400";
 
                 return (
                     <div key={reward.day} className="relative group">
                         <div className={dayClasses}>
                             <span className="font-lilita z-10">{reward.day}</span>
-                            {isClaimable && (
+                            {status === 'claimable' && (
                                 <>
                                     <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
                                     <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div>
                                 </>
                             )}
-                            {isClaimed && (
+                            {status === 'claimed' && (
                                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20">
                                     <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
                                 </div>
@@ -66,9 +71,8 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
 const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     if (!nextStreakGoal) return null;
     
-    const progressWidth = useMemo(() => 
-        ({ width: `${Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100)}%` }), 
-    [loginStreak, nextStreakGoal.streakGoal]);
+    // Tính toán % width đơn giản
+    const percentage = Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100);
 
     return (
         <div className="group relative rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg p-4 mb-4">
@@ -83,7 +87,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
                         <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                             <div 
                                 className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
-                                style={progressWidth}
+                                style={{ width: `${percentage}%` }}
                             >
                                 <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
                             </div>
@@ -100,7 +104,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Giữ nguyên logic cũ nhưng tối ưu render
+// 4. RewardItem: Đã tối ưu render có điều kiện
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -113,14 +117,18 @@ const RewardItem = memo(({
     }
     const isClaimable = canClaimToday && reward.day === claimableDay;
 
-    // Tối ưu hóa: Chỉ render hiệu ứng pulse nếu là item nhận được hôm nay
-    const pulseEffect = isClaimable ? (
-        <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
-    ) : null;
+    const handleClaim = () => {
+        if (isClaimable && !isClaiming && !isSyncingData) {
+            onClaim(reward.day);
+        }
+    };
 
     return (
         <div className={`group relative rounded-xl overflow-hidden transition-transform duration-300 ${isClaimed ? 'opacity-60' : 'hover:scale-[1.01]'} transform-gpu`}>
-            {pulseEffect}
+            {isClaimable && (
+                <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
+            )}
+            
             <div className={`relative flex items-center gap-4 p-4 rounded-xl border ${ isClaimable ? 'bg-slate-800 border-purple-500/50' : 'bg-slate-800 border-transparent'}`}>
             <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
             
@@ -147,7 +155,7 @@ const RewardItem = memo(({
             </div>
 
             <button 
-                onClick={() => onClaim(reward.day)} 
+                onClick={handleClaim} 
                 disabled={!isClaimable || isClaiming || isSyncingData} 
                 className={`min-w-[90px] h-10 flex-shrink-0 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
                 isClaimed ? 'bg-green-600 text-white' : 
@@ -174,6 +182,79 @@ const RewardItem = memo(({
     );
 });
 
+// 5. CheckInMainContent: [QUAN TRỌNG NHẤT] - Component chứa list
+// Component này SẼ KHÔNG Render lại khi particles (hiệu ứng) ở cha thay đổi
+const CheckInMainContent = memo(({ 
+    dailyRewards, canClaimToday, claimableDay, loginStreak, nextStreakGoal, isClaiming, isSyncingData, onClaim 
+}: any) => {
+    return (
+        <div className="px-4 pt-4 pb-24">
+            <MiniCalendar 
+                dailyRewards={dailyRewards}
+                canClaimToday={canClaimToday}
+                claimableDay={claimableDay}
+                loginStreak={loginStreak}
+            />
+        
+            <div className="pb-6">
+                <div className="grid grid-cols-1 gap-4">
+                    <NextGoalCard nextStreakGoal={nextStreakGoal} loginStreak={loginStreak} />
+
+                    {dailyRewards.map((reward: any) => (
+                        <RewardItem 
+                            key={reward.day}
+                            reward={reward}
+                            canClaimToday={canClaimToday}
+                            claimableDay={claimableDay}
+                            loginStreak={loginStreak}
+                            isClaiming={isClaiming}
+                            isSyncingData={isSyncingData}
+                            onClaim={onClaim}
+                        />
+                    ))}
+                </div>
+            </div>
+        </div>
+    );
+});
+
+// 6. RewardAnimationOverlay: Component riêng cho hiệu ứng và modal
+const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, particles }: any) => {
+    if (!showRewardAnimation || !animatingReward) return null;
+
+    return (
+        <div className="fixed inset-0 bg-slate-900/95 flex items-center justify-center z-50">
+            <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
+                <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
+                        <div className="w-full h-full rounded-full bg-slate-900/60 flex items-center justify-center">
+                            <div className="w-12 h-12 animate-pulse">{animatingReward.daily?.icon}</div>
+                        </div>
+                    </div>
+                </div>
+                <div className="mt-14 text-center">
+                    <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
+                    <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
+                    <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
+                    {animatingReward.streak && (
+                        <div className="border-t border-slate-700 pt-4 mt-4">
+                            <div className="text-green-400 text-sm font-bold mb-1">Thưởng Chuỗi Đăng Nhập!</div>
+                            <div className="text-white text-lg font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.streak?.name}</div>
+                            <div className="text-green-200 text-2xl font-bold font-lilita">+{animatingReward.streak?.amount}</div>
+                        </div>
+                    )}
+                    <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
+                </div>
+            </div>
+            
+            {/* Particles render here - isolated from the main list */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                {particles.map((particle: any) => (<div key={particle.id} className={particle.className} style={particle.style} />))}
+            </div>
+        </div>
+    );
+});
+
 // --- COMPONENT GIAO DIỆN CHÍNH (VIEW) ---
 const DailyCheckInView = () => {
   const {
@@ -192,70 +273,29 @@ const DailyCheckInView = () => {
         </div>
       </header>
       
+      {/* 
+          Phần list nặng được tách ra CheckInMainContent.
+          Khi `particles` thay đổi (60fps), `DailyCheckInView` re-render, 
+          nhưng `CheckInMainContent` giữ nguyên vì props không đổi.
+      */}
       <div className="flex-1 overflow-y-auto hide-scrollbar overscroll-none" style={{ willChange: 'scroll-position' }}>
-        <div className="px-4 pt-4 pb-24">
-            
-          {/* Component đã Memo - Bỏ StreakWidget, giữ MiniCalendar */}
-          <MiniCalendar 
-             dailyRewards={dailyRewards}
-             canClaimToday={canClaimToday}
-             claimableDay={claimableDay}
-             loginStreak={loginStreak}
-          />
-        
-          <div className="pb-6">
-            <div className="grid grid-cols-1 gap-4">
-              {/* Component đã Memo */}
-              <NextGoalCard nextStreakGoal={nextStreakGoal} loginStreak={loginStreak} />
-
-              {/* Danh sách phần thưởng */}
-              {dailyRewards.map(reward => (
-                  <RewardItem 
-                    key={reward.day}
-                    reward={reward}
-                    canClaimToday={canClaimToday}
-                    claimableDay={claimableDay}
-                    loginStreak={loginStreak}
-                    isClaiming={isClaiming}
-                    isSyncingData={isSyncingData}
-                    onClaim={claimReward}
-                  />
-              ))}
-            </div>
-          </div>
-        </div>
+         <CheckInMainContent 
+            dailyRewards={dailyRewards}
+            canClaimToday={canClaimToday}
+            claimableDay={claimableDay}
+            loginStreak={loginStreak}
+            nextStreakGoal={nextStreakGoal}
+            isClaiming={isClaiming}
+            isSyncingData={isSyncingData}
+            onClaim={claimReward}
+         />
       </div>
 
-      {/* REWARD ANIMATION MODAL */}
-      {showRewardAnimation && animatingReward && (
-        <div className="fixed inset-0 bg-slate-900/95 flex items-center justify-center z-50">
-          <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
-            <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
-                <div className="w-full h-full rounded-full bg-slate-900/60 flex items-center justify-center">
-                  <div className="w-12 h-12 animate-pulse">{animatingReward.daily?.icon}</div>
-                </div>
-              </div>
-            </div>
-            <div className="mt-14 text-center">
-              <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
-              <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
-              <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
-              {animatingReward.streak && (
-                  <div className="border-t border-slate-700 pt-4 mt-4">
-                      <div className="text-green-400 text-sm font-bold mb-1">Thưởng Chuỗi Đăng Nhập!</div>
-                      <div className="text-white text-lg font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.streak?.name}</div>
-                      <div className="text-green-200 text-2xl font-bold font-lilita">+{animatingReward.streak?.amount}</div>
-                  </div>
-              )}
-              <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
-            </div>
-          </div>
-          <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            {particles.map((particle) => (<div key={particle.id} className={particle.className} style={particle.style} />))}
-          </div>
-        </div>
-      )}
+      <RewardAnimationOverlay 
+         showRewardAnimation={showRewardAnimation}
+         animatingReward={animatingReward}
+         particles={particles}
+      />
 
       {/* --- CSS --- */}
       <style jsx>{`
@@ -272,7 +312,7 @@ const DailyCheckInView = () => {
 
         @keyframes float-particle-1 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-100px, -100px) scale(0); opacity: 0; } }
         .animate-float-particle-1 { animation: float-particle-1 2s ease-out forwards; }
-        /* Giữ các animation particle khác nếu cần, hoặc xóa nếu không dùng */
+        /* Các animation particle bổ sung nếu cần */
         .animate-float-particle-2 { animation: float-particle-1 2.5s ease-out forwards; }
         .animate-float-particle-3 { animation: float-particle-1 3s ease-out forwards; }
         .animate-float-particle-4 { animation: float-particle-1 1.5s ease-out forwards; }
@@ -281,7 +321,6 @@ const DailyCheckInView = () => {
     </div>
   );
 };
-
 
 const DailyCheckIn = ({ onClose }: DailyCheckInProps) => {
   return (
