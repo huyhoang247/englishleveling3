@@ -27,7 +27,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         window.addEventListener('resize', handleResize);
 
         // --- CẤU HÌNH ---
-        const cubeSize = 75; // Khối to hơn một chút để tăng sự đe dọa
+        const cubeSize = 75; 
         
         const vertices = [
             { x: -1, y: -1, z: -1 }, { x: 1, y: -1, z: -1 }, { x: 1, y: 1, z: -1 }, { x: -1, y: 1, z: -1 },
@@ -52,7 +52,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 height: Math.random() * 200,
                 speed: 0.8 + Math.random() * 2,
                 life: Math.random(),
-                colorVar: Math.random() // Biến số để random màu giữa đỏ và cam
+                colorVar: Math.random()
             });
         }
 
@@ -89,12 +89,11 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         const drawMagicCircle = (cx: number, cy: number, radius: number, angle: number, color: string, segments: number) => {
             ctx.save();
             ctx.translate(cx, cy);
-            ctx.scale(1, 0.35); // Góc nhìn nghiêng hơn
+            ctx.scale(1, 0.35); 
             ctx.rotate(angle);
 
-            // Glow mạnh hơn cho vòng tròn
             ctx.strokeStyle = color;
-            ctx.lineWidth = 1.5; // Mỏng nhưng sắc
+            ctx.lineWidth = 1.5;
             ctx.shadowBlur = 15;
             ctx.shadowColor = color;
 
@@ -102,15 +101,12 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
             ctx.arc(0, 0, radius, 0, Math.PI * 2);
             ctx.stroke();
 
-            // Họa tiết sắc nhọn hơn (Gothic style)
             ctx.beginPath();
             for(let i = 0; i < segments; i++) {
                 const theta = (i / segments) * Math.PI * 2;
-                // Vẽ các tia nhọn hướng ra ngoài
                 ctx.moveTo(Math.cos(theta) * (radius * 0.9), Math.sin(theta) * (radius * 0.9));
                 ctx.lineTo(Math.cos(theta) * (radius * 1.1), Math.sin(theta) * (radius * 1.1));
                 
-                // Nối các điểm bên trong tạo hình ngôi sao
                 const nextTheta = ((i + 2) / segments) * Math.PI * 2;
                 ctx.moveTo(Math.cos(theta) * radius, Math.sin(theta) * radius);
                 ctx.lineTo(Math.cos(nextTheta) * radius, Math.sin(nextTheta) * radius);
@@ -121,25 +117,22 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
 
         const render = () => {
             frameRef.current++;
-            rotationY += 0.008; // Xoay chậm, nặng nề hơn
+            rotationY += 0.008; 
             rotationX = Math.sin(frameRef.current * 0.015) * 0.15 - 0.1; 
             floatTick += 0.02;
             const floatY = Math.sin(floatTick) * 10 - 40; 
             
-            // Hiệu ứng nhịp đập (Pulsing) cho glow đỏ
-            const pulse = (Math.sin(frameRef.current * 0.05) + 1) * 0.5; // 0 -> 1
+            const pulse = (Math.sin(frameRef.current * 0.05) + 1) * 0.5;
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
 
-            // 1. VẼ VÒNG MA PHÁP (BLOOD MAGIC)
-            // Đỏ thẫm
+            // 1. MAGIC CIRCLE
             drawMagicCircle(cx, cy + 130, 150, frameRef.current * 0.003, 'rgba(220, 38, 38, 0.5)', 6); 
-            // Tím đen
             drawMagicCircle(cx, cy + 130, 90, -frameRef.current * 0.008, 'rgba(147, 51, 234, 0.4)', 5); 
 
-            // 2. VẼ PARTICLES (EMBERS - TÀN LỬA)
+            // 2. PARTICLES
             ctx.globalCompositeOperation = 'lighter';
             particles.forEach(p => {
                 p.angle += 0.02;
@@ -158,7 +151,6 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 
                 const alpha = Math.min(1, (1 - (p.height / 180))) * 0.8;
                 
-                // Màu từ Cam cháy -> Đỏ -> Tím khi bay lên
                 const r = 255;
                 const g = p.colorVar > 0.5 ? Math.floor(100 * (1 - p.height/180)) : 0; 
                 const b = p.height > 100 ? 50 : 0;
@@ -169,7 +161,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 ctx.fill();
             });
 
-            // 3. VẼ MYSTERIOUS DARK CUBE
+            // 3. DARK CUBE
             ctx.globalCompositeOperation = 'source-over';
 
             const projectedVertices = vertices.map(v => project(v, rotationX, rotationY, floatY));
@@ -188,37 +180,29 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 pts.slice(1).forEach(p => ctx.lineTo(p.x, p.y));
                 ctx.closePath();
 
-                // --- STYLING: VOID & BLOOD ---
-                
-                // A. FILL: Gradient "Abyss" (Vực thẳm)
-                // Đen tuyệt đối ở 2 đầu, ở giữa có chút ánh đỏ tím rất tối
                 const grad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[2].x, pts[2].y);
-                grad.addColorStop(0, '#000000'); // Pure Black
-                grad.addColorStop(0.4, '#1a0505'); // Very Dark Red (gần như đen)
-                grad.addColorStop(0.6, '#0f0518'); // Very Dark Purple
-                grad.addColorStop(1, '#000000'); // Pure Black
+                grad.addColorStop(0, '#000000'); 
+                grad.addColorStop(0.4, '#1a0505'); 
+                grad.addColorStop(0.6, '#0f0518'); 
+                grad.addColorStop(1, '#000000'); 
                 
                 ctx.fillStyle = grad;
                 ctx.fill();
 
-                // B. BORDER & GLOW: "Demonic Energy"
-                // Shadow blur mạnh màu đỏ
-                const glowIntensity = 15 + (pulse * 10); // Glow thở 15 -> 25
+                const glowIntensity = 15 + (pulse * 10);
                 ctx.shadowBlur = glowIntensity;
-                ctx.shadowColor = '#dc2626'; // Red-600 Glow
+                ctx.shadowColor = '#dc2626'; 
                 
-                // Viền Gradient: Đỏ rực chuyển sang Tím
                 const strokeGrad = ctx.createLinearGradient(pts[0].x, pts[0].y, pts[1].x, pts[1].y);
-                strokeGrad.addColorStop(0, '#ef4444'); // Red-500
-                strokeGrad.addColorStop(1, '#a855f7'); // Purple-500
+                strokeGrad.addColorStop(0, '#ef4444');
+                strokeGrad.addColorStop(1, '#a855f7');
 
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = strokeGrad;
                 ctx.stroke();
                 
-                // C. SHINE: Ánh kim loại đen bóng
                 ctx.shadowBlur = 0; 
-                ctx.fillStyle = 'rgba(255, 255, 255, 0.02)'; // Reflection rất yếu
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
                 ctx.fill();
             });
 
@@ -238,18 +222,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     return (
         <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/40 backdrop-blur-[1px]">
             <canvas ref={canvasRef} className="absolute inset-0" />
-            
-            {/* UI Text: Darker & More Menacing */}
-            <div className="relative z-10 mt-72 flex flex-col items-center gap-3">
-                <div className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-purple-500 to-red-500 tracking-[0.4em] animate-pulse text-2xl uppercase drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] font-mono">
-                    Crafting Artifact
-                </div>
-                
-                {/* Progress Bar: Dark Red/Purple */}
-                <div className="w-56 h-1 bg-black border border-red-900/60 rounded-full overflow-hidden shadow-[0_0_10px_rgba(220,38,38,0.3)]">
-                    <div className="h-full bg-gradient-to-r from-purple-900 via-red-600 to-purple-900 animate-[width_2.5s_ease-in-out_infinite] w-full origin-left shadow-[0_0_10px_#ef4444]"></div>
-                </div>
-            </div>
+            {/* Đã xóa text và loading bar */}
         </div>
     );
 });
