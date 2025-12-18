@@ -104,8 +104,8 @@ const DailyCheckInView = () => {
                       )}
                     </div>
                     <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-200 z-30">
-                      {/* Cập nhật font cho tooltip */}
-                      <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap font-lilita tracking-wide">{reward.name}</div>
+                      {/* Cập nhật font cho tooltip và thêm uppercase */}
+                      <div className="bg-slate-800 text-white text-xs px-2 py-1 rounded shadow-lg whitespace-nowrap font-lilita tracking-wide uppercase">{reward.name}</div>
                       <div className="w-2 h-2 bg-slate-800 transform rotate-45 absolute -bottom-1 left-1/2 -translate-x-1/2"></div>
                     </div>
                   </div>
@@ -167,16 +167,16 @@ const DailyCheckInView = () => {
                       </div>
                     </div>
                     <div className="flex-1">
-                      {/* === THAY ĐỔI: Tên vật phẩm font-lilita === */}
-                      <h3 className="font-bold text-white font-lilita tracking-wide">{reward.name}</h3>
+                      {/* === THAY ĐỔI: Tên vật phẩm font-lilita và in hoa (uppercase) === */}
+                      <h3 className="font-bold text-white font-lilita tracking-wide uppercase">{reward.name}</h3>
                       {/* === THAY ĐỔI: Số lượng vật phẩm font-lilita === */}
                       <p className="text-slate-300 text-sm font-lilita">x{reward.amount}</p>
                     </div>
-                    {/* === THAY ĐỔI: Button font-lilita và text Received === */}
+                    {/* === THAY ĐỔI: Button font-lilita, in hoa (uppercase) === */}
                     <button 
                       onClick={() => claimReward(reward.day)} 
                       disabled={!isClaimable || isClaiming || isSyncingData} 
-                      className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all ${ 
+                      className={`min-w-[90px] h-10 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
                         isClaimed ? 'bg-green-600 text-white' : 
                         isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white hover:shadow-indigo-400/20 hover:shadow-lg' : 
                         'bg-slate-700 text-slate-400'
@@ -218,13 +218,13 @@ const DailyCheckInView = () => {
             </div>
             <div className="mt-14 text-center">
               <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
-              {/* Cập nhật font trong modal */}
-              <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide">{animatingReward.daily?.name}</div>
+              {/* Cập nhật font trong modal và in hoa (uppercase) */}
+              <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
               <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
               {animatingReward.streak && (
                   <div className="border-t border-slate-700 pt-4 mt-4">
                       <div className="text-green-400 text-sm font-bold mb-1">Thưởng Chuỗi Đăng Nhập!</div>
-                      <div className="text-white text-lg font-bold mb-1 font-lilita tracking-wide">{animatingReward.streak?.name}</div>
+                      <div className="text-white text-lg font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.streak?.name}</div>
                       <div className="text-green-200 text-2xl font-bold font-lilita">+{animatingReward.streak?.amount}</div>
                   </div>
               )}
