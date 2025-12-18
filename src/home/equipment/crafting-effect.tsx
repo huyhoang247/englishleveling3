@@ -57,22 +57,17 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
 
         const render = () => {
             frameRef.current++;
-            // Tăng tốc độ xoay theo thời gian để tạo cảm giác "charge"
+            // Tăng tốc độ xoay
             if (speed < 0.15) speed += 0.0005;
             
             rotationX += speed;
             rotationY += speed * 0.6;
 
+            // Xóa canvas để nền hoàn toàn trong suốt
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
             const cx = canvas.width / 2;
             const cy = canvas.height / 2;
-
-            // Gradient Background tối dần
-            const gradient = ctx.createRadialGradient(cx, cy, 50, cx, cy, 400);
-            gradient.addColorStop(0, 'rgba(15, 23, 42, 0)');
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0.8)');
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
 
             // Projection Function
             const project = (v: { x: number, y: number, z: number }) => {
@@ -80,33 +75,29 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 let y = v.y * size;
                 let z = v.z * size;
 
-                // Rotate Y
                 const cosY = Math.cos(rotationY);
                 const sinY = Math.sin(rotationY);
                 const x1 = x * cosY - z * sinY;
                 const z1 = z * cosY + x * sinY;
 
-                // Rotate X
                 const cosX = Math.cos(rotationX);
                 const sinX = Math.sin(rotationX);
                 const y2 = y * cosX - z1 * sinX;
                 const z2 = z1 * cosX + y * sinX;
 
-                // Perspective
                 const scale = 800 / (800 + z2);
                 return { x: x1 * scale + cx, y: y2 * scale + cy, scale };
             };
 
-            // Draw Particles (Energy sucking in)
+            // Draw Particles
             ctx.globalCompositeOperation = 'lighter';
             particles.forEach(p => {
                 p.angle += p.speed + (speed * 0.5);
-                p.radius -= 0.5; // Hút vào tâm
-                if (p.radius < 20) p.radius = 200 + Math.random() * 100; // Reset
+                p.radius -= 0.5;
+                if (p.radius < 20) p.radius = 200 + Math.random() * 100;
 
                 const px = Math.cos(p.angle) * p.radius;
                 const pz = Math.sin(p.angle) * p.radius;
-                // Rotate particle view similar to cube
                 const proj = project({ x: px/size, y: (Math.sin(frameRef.current * 0.05) * 50)/size, z: pz/size });
                 
                 ctx.beginPath();
@@ -115,10 +106,9 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                 ctx.fill();
             });
 
-            // Draw Connections (Vertices)
             const projectedVertices = vertices.map(project);
 
-            // Glow Effect
+            // Glow Effect (Cyan)
             ctx.shadowBlur = 20 + Math.sin(frameRef.current * 0.1) * 10;
             ctx.shadowColor = '#06b6d4'; // Cyan-500
             ctx.strokeStyle = '#22d3ee'; // Cyan-400
@@ -133,12 +123,12 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
             });
             ctx.stroke();
 
-            // Inner Cube (Core)
+            // Inner Core (Cyan)
             ctx.shadowBlur = 30;
-            ctx.shadowColor = '#a855f7'; // Purple glow
-            ctx.fillStyle = 'rgba(168, 85, 247, 0.3)';
+            ctx.shadowColor = '#06b6d4'; 
+            ctx.fillStyle = 'rgba(6, 182, 212, 0.3)';
+            
             ctx.beginPath();
-            // Vẽ đại diện một tâm sáng
             ctx.arc(cx, cy, 15 + Math.sin(frameRef.current * 0.2) * 5, 0, Math.PI * 2);
             ctx.fill();
 
@@ -156,9 +146,10 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     if (!isActive) return null;
 
     return (
-        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+        // Đã xóa bg-black/60 và backdrop-blur-sm
+        <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in">
             <canvas ref={canvasRef} className="absolute inset-0" />
-            <div className="relative z-10 mt-64 font-bold text-cyan-300 tracking-[0.2em] animate-pulse text-lg uppercase">
+            <div className="relative z-10 mt-64 font-bold text-cyan-300 tracking-[0.2em] animate-pulse text-lg uppercase drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                 Crafting Equipment...
             </div>
         </div>
