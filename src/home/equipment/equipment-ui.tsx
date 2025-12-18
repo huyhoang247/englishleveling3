@@ -655,21 +655,41 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
     
     // --- START: STATE VÀ LOGIC CHO HIỆU ỨNG CRAFTING ---
     const [isCraftingAnimation, setIsCraftingAnimation] = useState(false);
+    // Thêm state để kiểm soát thời gian tối thiểu
+    const [minTimeElapsed, setMinTimeElapsed] = useState(true);
+
+    // Thời gian hiệu ứng chạy (ms)
+    const CRAFT_DURATION = 3000; // 3 giây
 
     // Kích hoạt hiệu ứng khi nhấn nút Craft
     const onCraftClick = useCallback(() => {
+        // 1. Bật màn hình hiệu ứng
         setIsCraftingAnimation(true);
+        // 2. Đánh dấu là chưa chạy xong thời gian tối thiểu
+        setMinTimeElapsed(false);
+        
+        // 3. Gọi API xử lý logic game
         handleCraftItem();
+
+        // 4. Đặt timer để đảm bảo hiệu ứng chạy ít nhất 3 giây
+        setTimeout(() => {
+            setMinTimeElapsed(true);
+        }, CRAFT_DURATION);
     }, [handleCraftItem]);
 
-    // Tắt hiệu ứng khi isProcessing trở về false (nghĩa là craft xong)
+    // Logic tắt hiệu ứng
     useEffect(() => {
-        if (!isProcessing) {
-            // Thêm delay nhỏ để chuyển cảnh mượt sang modal kết quả
-            const timer = setTimeout(() => setIsCraftingAnimation(false), 200);
+        // Chỉ tắt hiệu ứng khi:
+        // 1. Server đã xử lý xong (!isProcessing)
+        // 2. VÀ Thời gian tối thiểu đã trôi qua (minTimeElapsed)
+        if (!isProcessing && minTimeElapsed) {
+            // Thêm delay nhỏ 200ms để transition mượt mà
+            const timer = setTimeout(() => {
+                setIsCraftingAnimation(false);
+            }, 200);
             return () => clearTimeout(timer);
         }
-    }, [isProcessing]);
+    }, [isProcessing, minTimeElapsed]);
     // --- END: LOGIC HIỆU ỨNG CRAFTING ---
 
     const handleClose = useCallback(() => {
@@ -683,17 +703,26 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
 
     const displayGold = isLoading ? 0 : gold;
 
+    // Canvas chỉ hiển thị khi isCraftingAnimation = true
+    const showEffect = isCraftingAnimation; 
+
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
             
             {/* --- COMPONENT HIỆU ỨNG CANVAS --- */}
-            <CraftingEffectCanvas isActive={isCraftingAnimation && isProcessing} />
+            {/* Truyền isActive={showEffect} để canvas biết khi nào chạy */}
+            <CraftingEffectCanvas isActive={showEffect} />
             {/* ---------------------------------- */}
 
             <RateLimitToast show={dismantleSuccessToast.show} message={dismantleSuccessToast.message} showIcon={false} />
-            {selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
-            {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
+            
+            {/* Chỉ hiện modal kết quả khi hiệu ứng crafting đã tắt hẳn để tránh chồng chéo */}
+            {!isCraftingAnimation && selectedItem && <ItemDetailModal ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} onDismantle={handleDismantleItem} onUpgrade={handleUpgradeItem} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} gold={gold} isProcessing={isProcessing}/>}
+            
+            {/* Modal Craft Success chỉ hiện khi hiệu ứng đã tắt */}
+            {!isCraftingAnimation && newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
+            
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
             <TotalStatsModal 
                 isOpen={isStatsModalOpen} 
@@ -722,7 +751,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                 <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
-                        {/* SỬA: Dùng hàm onCraftClick thay vì handleCraftItem */}
+                        {/* Nút Craft kích hoạt logic mới */}
                         <button onClick={onCraftClick} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}>Craft</button>
                     </section>
                     
