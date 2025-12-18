@@ -1,4 +1,7 @@
-// --- START: CRAFTING EFFECT COMPONENT ---
+// --- FILE: ui/crafting-effect.tsx ---
+
+import React, { useEffect, memo } from 'react';
+
 const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     const canvasRef = React.useRef<HTMLCanvasElement>(null);
     const requestRef = React.useRef<number>();
@@ -161,4 +164,5 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
         </div>
     );
 });
-// --- END: CRAFTING EFFECT COMPONENT ---
+
+export default CraftingEffectCanvas;
