@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
-import { useGame } from './GameContext.tsx'; // Import Hook
-import { useAnimateValue } from './ui/useAnimateValue.ts'; // Import Hook Animate
+import { useGame } from './GameContext.tsx'; 
+import { useAnimateValue } from './ui/useAnimateValue.ts'; 
 
-// --- SVG Icons ---
+// --- SVG Icons & Utils (GIỮ NGUYÊN) ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -22,7 +22,7 @@ const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => 
     </svg>
   );
 };
-
+// ... (Giữ nguyên các Icon khác: PickaxeIcon, ZapIcon, TrophyIcon, HeartIcon, GiftIcon, PlayIcon) ...
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
 const PickaxeIcon = ({ className }: { className?: string }) => <img src={pickaxeIconUrl} alt="Pickaxe Icon" className={className} onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=P'; }} />;
 const ZapIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"></path> </svg> );
@@ -31,8 +31,7 @@ const HeartIcon = ({ className }: { className?: string }) => ( <svg className={c
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
 const PlayIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 24 24"> <path d="M8 5v14l11-7z" /> </svg> );
 
-
-// --- Interfaces ---
+// --- Interfaces (GIỮ NGUYÊN) ---
 interface Item {
   icon: React.FC<{ className?: string }> | string;
   name: string;
@@ -57,7 +56,7 @@ interface RewardPopupProps {
   onClose: () => void;
 }
 
-// --- UTILITY FUNCTIONS ---
+// --- UTILITY FUNCTIONS (GIỮ NGUYÊN) ---
 const getRarityColor = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return '#9ca3af'; 
@@ -82,11 +81,52 @@ const getCardStyle = (rarity: Item['rarity']) => {
     }
 };
 
-// --- OPTIMIZED COMPONENT: GameCard ---
-// Tách ra và dùng React.memo để tránh re-render không cần thiết khi state cha thay đổi
+// --- [OPTIMIZATION 1] JACKPOT DISPLAY COMPONENT ---
+// Tách biệt phần hiển thị Jackpot. useAnimateValue sẽ chạy ở đây, không ảnh hưởng Parent.
+const JackpotSection = React.memo(({ value, isAnimating }: { value: number, isAnimating: boolean }) => {
+    const animatedJackpot = useAnimateValue(value, 800);
+
+    return (
+        <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
+            <div className={`
+                relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
+                ${ isAnimating 
+                    ? 'bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-pulse' 
+                    : 'bg-gradient-to-br from-slate-900/90 to-black border-slate-700 shadow-2xl backdrop-blur-md' 
+                }
+            `}>
+                <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
+                
+                <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
+                <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ isAnimating ? 'animate-bounce' : '' }`}>
+                    <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
+                        {animatedJackpot.toLocaleString()}
+                    </span>
+                    <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
+                </div>
+                <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide"> Tỉ lệ quay trúng ô JACKPOT: <span className="text-yellow-400 font-bold">1%</span> </div>
+                
+                {isAnimating && ( <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div> )}
+            </div>
+        </div>
+    );
+});
+
+// --- [OPTIMIZATION 2] HEADER COINS COMPONENT ---
+// Tách biệt phần hiển thị Coins ở header.
+const HeaderCoinSection = React.memo(({ coins, isStatsFullscreen }: { coins: number, isStatsFullscreen?: boolean }) => {
+    const animatedCoins = useAnimateValue(coins, 800);
+    return (
+        <CoinDisplay 
+            displayedCoins={animatedCoins} 
+            isStatsFullscreen={isStatsFullscreen}
+        />
+    );
+});
+
+// --- GameCard Component (GIỮ NGUYÊN) ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
-    
     return (
         <div 
             className="flex-shrink-0 flex items-center justify-center transform"
@@ -101,8 +141,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                 shadow-lg
             `}>
                 <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
-
-                {/* TỐI ƯU: Đã xóa backdrop-blur-sm, thay bằng màu nền bán trong suốt để nhẹ GPU */}
                 <div className="relative z-10 p-2 rounded-xl bg-slate-900/70 ring-1 ring-white/5 w-14 h-14 flex items-center justify-center shadow-inner">
                     {typeof item.icon === 'string' ? (
                         <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain drop-shadow-md" />
@@ -110,7 +148,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                         <item.icon className={`w-9 h-9 ${item.color} drop-shadow-md`} />
                     )}
                 </div>
-                
                 <div className="relative z-10 text-center w-full px-1">
                     <div className={`text-[10px] font-bold uppercase tracking-wider opacity-80 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
                         {item.name || item.rarity}
@@ -119,30 +156,16 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
                 </div>
-                
                 <div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full opacity-50" style={{ backgroundColor: getRarityColor(item.rarity) }}></div>
             </div>
         </div>
     );
 });
 
-// --- CONFIG ---
-const CARD_WIDTH = 110;
-const CARD_GAP = 12;
-const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
-const VISIBLE_CARDS = 5;
-const BASE_COST = 100;
-const SPIN_DURATION_SEC = 6; // Giảm thời gian xuống 6s để phù hợp với số lượng item giảm đi
-
-// --- REWARD POPUP ---
+// --- RewardPopup Component (GIỮ NGUYÊN) ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
-
-    const handleWatchAds = () => {
-        // Logic xem quảng cáo sẽ ở đây
-        console.log("Watching Ads for x2 Reward...");
-        onClose();
-    };
+    const handleWatchAds = () => { console.log("Watching Ads..."); onClose(); };
 
     return (
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
@@ -152,7 +175,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         }
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floating Icon */}
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
              <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
@@ -176,8 +198,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                 </>
             )}
         </div>
-
-        {/* Reward Box */}
         <div className="flex flex-col gap-2 w-full my-6">
             <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
                  <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
@@ -198,15 +218,8 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                  </div>
             </div>
         </div>
-        
-        {/* Buttons Action Area */}
         <div className="flex w-full gap-3 mt-1">
-            
-            {/* Watch Ads Button (Highlight) */}
-            <button 
-                onClick={handleWatchAds}
-                className="group relative flex-1"
-            >
+            <button onClick={handleWatchAds} className="group relative flex-1">
                 <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
                 <div className="relative h-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-xl border-t border-white/20 shadow-lg flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -218,20 +231,22 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                     <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
                 </div>
             </button>
-
-            {/* Claim Button (Secondary) */}
-            <button
-                onClick={onClose}
-                className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all"
-            >
+            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all">
                 <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
             </button>
-
         </div>
       </div>
     </div>
     );
 };
+
+// --- CONSTANTS ---
+const CARD_WIDTH = 110;
+const CARD_GAP = 12;
+const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
+const VISIBLE_CARDS = 5;
+const BASE_COST = 100;
+const SPIN_DURATION_SEC = 6;
 
 // --- MAIN COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGameProps) => {
@@ -244,10 +259,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     handleUpdateJackpotPool 
   } = useGame();
 
-  // --- [NEW] ANIMATED VALUES ---
-  // Tạo hiệu ứng số nhảy cho Coins và Jackpot
-  const animatedCoins = useAnimateValue(coins, 800);
-  const animatedJackpot = useAnimateValue(jackpotPool, 800);
+  // --- [FIX] REMOVE ANIMATED VALUES FROM MAIN COMPONENT ---
+  // Xóa bỏ useAnimateValue ở đây để tránh re-render toàn bộ file mỗi khi số nhảy.
+  // Đã chuyển xuống component con (HeaderCoinSection và JackpotSection).
 
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
@@ -297,9 +311,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   // Initial Strip
   useEffect(() => {
     if (isSpinning) return;
-    if (wonRewardDetails) return; // Nếu đã có winner thì để logic trong spin xử lý, không reset
+    if (wonRewardDetails) return; 
     
-    // Chỉ tạo strip ngẫu nhiên khi component load lần đầu hoặc đổi multiplier mà chưa quay
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
@@ -308,13 +321,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     setOffset(0);
   }, [getRandomFiller, spinMultiplier, isSpinning, wonRewardDetails]);
 
-  // --- UPDATED SPIN LOGIC ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
 
     updateCoins(-cost);
     
+    // Logic Jackpot Pool cập nhật giá trị
     const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
     handleUpdateJackpotPool(randomCoinsToAdd);
 
@@ -323,21 +336,17 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         setJackpotWon(false);
         setShowRewardPopup(false);
 
-        // Winner Logic
         let winner: Item;
-        if (Math.random() < 0.01) { // 1% Jackpot
+        if (Math.random() < 0.01) { 
             winner = displayItems.find(i => i.rarity === 'jackpot')!;
         } else {
             const others = displayItems.filter(i => i.rarity !== 'jackpot');
             winner = others[Math.floor(Math.random() * others.length)];
         }
 
-        // TỐI ƯU: GIẢM TARGET_INDEX XUỐNG 50 (từ 100)
-        // Điều này giảm đáng kể số lượng DOM node cần render và transform, giúp FPS mượt hơn
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
-        // --- BƯỚC QUAN TRỌNG: NỐI TIẾP VÒNG QUAY ---
         const startNode = wonRewardDetails 
             ? { ...wonRewardDetails, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
@@ -355,17 +364,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         }
 
         setStrip(newStrip);
-
-        // --- RESET VỊ TRÍ VỀ 0 NGAY LẬP TỨC ---
         setTransitionDuration(0);
         setOffset(0);
 
-        // Animation Trigger
         setTimeout(() => {
             const distanceToIndex = 1 + TARGET_INDEX; 
             const finalOffset = -(distanceToIndex * ITEM_FULL_WIDTH);
 
-            setTransitionDuration(SPIN_DURATION_SEC); // Dùng 6s
+            setTransitionDuration(SPIN_DURATION_SEC);
             setOffset(finalOffset);
             
             setTimeout(() => {
@@ -410,40 +416,18 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
-            <CoinDisplay 
-              displayedCoins={animatedCoins} 
-              isStatsFullscreen={isStatsFullscreen}
-            />
+            {/* [FIX] Sử dụng Component đã tách riêng */}
+            <HeaderCoinSection coins={coins} isStatsFullscreen={isStatsFullscreen} />
         </div>
       </header>
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
         {/* --- JACKPOT UI --- */}
-        <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
-            <div className={`
-                relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
-                ${ jackpotAnimation 
-                    ? 'bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-pulse' 
-                    : 'bg-gradient-to-br from-slate-900/90 to-black border-slate-700 shadow-2xl backdrop-blur-md' 
-                }
-            `}>
-              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              
-              <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
-              <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
-                    {animatedJackpot.toLocaleString()}
-                </span>
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
-              </div>
-              <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide"> Tỉ lệ quay trúng ô JACKPOT: <span className="text-yellow-400 font-bold">1%</span> </div>
-              
-              {jackpotAnimation && ( <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div> )}
-            </div>
-        </div>
+        {/* [FIX] Sử dụng Component đã tách riêng, truyền prop isAnimating */}
+        <JackpotSection value={jackpotPool} isAnimating={jackpotAnimation} />
         
-        {/* --- SPINNER UI --- */}
+        {/* --- SPINNER UI (GIỮ NGUYÊN - VÌ NÓ NẶNG NHẤT NHƯNG ĐÃ ĐƯỢC TÁCH KHỎI VIỆC RE-RENDER DO SỐ NHẢY) --- */}
         <div className="relative w-full max-w-4xl mb-12">
             
             <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden">
@@ -452,37 +436,31 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
                 <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
 
-                {/* The Strip */}
                 <div 
                     className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
                         transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
-                        // Dùng cubic-bezier để chuyển động mượt mà hơn
                         transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
                     }}
                 >
-                    {/* TỐI ƯU: Render bằng component đã được Memoize */}
                     {strip.map((item) => (
                         <GameCard key={item.uniqueId} item={item} />
                     ))}
                 </div>
             </div>
 
-            {/* --- CENTER TARGET --- */}
+            {/* --- CENTER TARGET (GIỮ NGUYÊN) --- */}
             <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
                  <div className="absolute h-full w-[130px] bg-gradient-to-r from-transparent via-yellow-400/5 to-transparent"></div>
-
                  <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/20 rounded-xl">
                     <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-yellow-400 rounded-tl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-yellow-400 rounded-tr-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-yellow-400 rounded-bl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                     <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-yellow-400 rounded-br-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                  </div>
-
                  <div className="absolute inset-0 flex justify-center">
                     <div className="h-full w-[1px] bg-gradient-to-b from-transparent via-yellow-300/80 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.8)]"></div>
                  </div>
-
                  <div className="absolute top-0 transform -translate-y-1/2 z-40">
                      <div className="relative flex flex-col items-center">
                         <div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div>
@@ -501,7 +479,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         {/* --- CONTROLS --- */}
         <div className="flex flex-col items-center justify-center z-20">
               
-              {/* Spin Multiplier Toggles */}
               <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg backdrop-blur-sm">
                  <button 
                    onClick={() => !isSpinning && setSpinMultiplier(1)}
@@ -554,7 +531,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
       </div>
       
-      {/* Error Message Toast */}
       {coins < currentCost && !isSpinning && (
           <div className="fixed bottom-3 right-3 z-[100] animate-fade-in pointer-events-none">
               <div className="bg-slate-900/95 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-2xl backdrop-blur-md flex items-center gap-2">
@@ -570,10 +546,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;700;800;900&display=swap');
-        
         body { font-family: 'Inter', sans-serif; }
         .font-lilita { font-family: 'Lilita One', cursive; }
-        
         @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
