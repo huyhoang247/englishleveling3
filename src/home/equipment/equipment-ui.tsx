@@ -370,7 +370,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     const commonBtnClasses = "flex-1 py-2.5 rounded-xl font-lilita text-base tracking-wide shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase";
     
     const mainActionStyle = isEquipped 
-        ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-orange-500/30' 
+        ? 'bg-gradient-to-r from-rose-800 to-red-950 text-slate-200 hover:from-rose-700 hover:to-red-900 hover:text-white hover:shadow-rose-900/40' // Màu Dark Red/Rose trầm và đẹp
         : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/30';
     
     const recycleActionStyle = 'bg-gradient-to-r from-slate-600 to-slate-800 text-slate-200 hover:from-slate-500 hover:to-slate-700 hover:text-white hover:shadow-black/50';
