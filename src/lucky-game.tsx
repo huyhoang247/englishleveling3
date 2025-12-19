@@ -4,6 +4,14 @@ import HomeButton from './ui//home-button.tsx';
 import { useGame } from './GameContext.tsx'; // Import Hook
 import { useAnimateValue } from './ui/useAnimateValue.ts'; // Import Hook Animate
 
+// --- CONFIG ---
+const CARD_WIDTH = 110;
+const CARD_GAP = 12;
+const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
+const VISIBLE_CARDS = 5;
+const BASE_COST = 100;
+const SPIN_DURATION_SEC = 6;
+
 // --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
@@ -82,15 +90,32 @@ const getCardStyle = (rarity: Item['rarity']) => {
     }
 };
 
-// --- OPTIMIZED COMPONENT: GameCard ---
-// Tách ra và dùng React.memo để tránh re-render không cần thiết khi state cha thay đổi
+// --- OPTIMIZED SUB-COMPONENTS ---
+
+// 1. Header Coin Wrapper: Tách animation ra để header không render lại cả game
+const HeaderCoinWrapper = React.memo(({ coins, isStatsFullscreen }: { coins: number, isStatsFullscreen: boolean }) => {
+    const animatedCoins = useAnimateValue(coins, 800);
+    return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={isStatsFullscreen} />;
+});
+
+// 2. Jackpot Counter: Tách animation số Jackpot ra riêng
+const JackpotCounter = React.memo(({ value }: { value: number }) => {
+    const animatedJackpot = useAnimateValue(value, 800);
+    return (
+        <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
+            {animatedJackpot.toLocaleString()}
+        </span>
+    );
+});
+
+// 3. GameCard: Đã tối ưu với memo
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
     return (
         <div 
             className="flex-shrink-0 flex items-center justify-center transform"
-            style={{ width: 110, marginRight: 12 }} 
+            style={{ width: CARD_WIDTH, marginRight: CARD_GAP }} 
         >
             <div className={`
                 relative w-full aspect-[4/5] rounded-xl 
@@ -125,20 +150,39 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
     );
 });
 
-// --- CONFIG ---
-const CARD_WIDTH = 110;
-const CARD_GAP = 12;
-const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
-const VISIBLE_CARDS = 5;
-const BASE_COST = 100;
-const SPIN_DURATION_SEC = 6; 
+// 4. SpinnerTrack: QUAN TRỌNG NHẤT - Tách phần render strip ra để tránh re-render khi coin update
+const SpinnerTrack = React.memo(({ 
+    strip, 
+    offset, 
+    isSpinning, 
+    transitionDuration 
+}: { 
+    strip: StripItem[], 
+    offset: number, 
+    isSpinning: boolean, 
+    transitionDuration: number 
+}) => {
+    return (
+        <div 
+            className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
+            style={{
+                transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
+                transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
+            }}
+        >
+            {strip.map((item) => (
+                <GameCard key={item.uniqueId} item={item} />
+            ))}
+        </div>
+    );
+});
+
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
 
     const handleWatchAds = () => {
-        // Logic xem quảng cáo sẽ ở đây
         console.log("Watching Ads for x2 Reward...");
         onClose();
     };
@@ -151,7 +195,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         }
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floating Icon */}
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
              <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
@@ -176,7 +219,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             )}
         </div>
 
-        {/* Reward Box */}
         <div className="flex flex-col gap-2 w-full my-6">
             <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
                  <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
@@ -198,14 +240,8 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             </div>
         </div>
         
-        {/* Buttons Action Area */}
         <div className="flex w-full gap-3 mt-1">
-            
-            {/* Watch Ads Button (Highlight) */}
-            <button 
-                onClick={handleWatchAds}
-                className="group relative flex-1"
-            >
+            <button onClick={handleWatchAds} className="group relative flex-1">
                 <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
                 <div className="relative h-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-xl border-t border-white/20 shadow-lg flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -217,15 +253,9 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                     <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
                 </div>
             </button>
-
-            {/* Claim Button (Secondary) */}
-            <button
-                onClick={onClose}
-                className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all"
-            >
+            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all">
                 <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
             </button>
-
         </div>
       </div>
     </div>
@@ -243,11 +273,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     handleUpdateJackpotPool 
   } = useGame();
 
-  // --- [NEW] ANIMATED VALUES ---
-  // Tạo hiệu ứng số nhảy cho Coins và Jackpot
-  const animatedCoins = useAnimateValue(coins, 800);
-  const animatedJackpot = useAnimateValue(jackpotPool, 800);
-
+  // LƯU Ý: Đã xóa useAnimateValue ở đây để tránh Parent re-render liên tục
+  
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
   const [jackpotWon, setJackpotWon] = useState(false);
@@ -296,9 +323,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   // Initial Strip
   useEffect(() => {
     if (isSpinning) return;
-    if (wonRewardDetails) return; // Nếu đã có winner thì để logic trong spin xử lý, không reset
+    if (wonRewardDetails) return;
     
-    // Chỉ tạo strip ngẫu nhiên khi component load lần đầu hoặc đổi multiplier mà chưa quay
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
@@ -314,7 +340,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
     updateCoins(-cost);
     
-    // ĐÃ BỎ: Code cộng Jackpot ngay tại đây
+    const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
+    handleUpdateJackpotPool(randomCoinsToAdd);
 
     setTimeout(() => {
         setIsSpinning(true);
@@ -333,7 +360,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
-        // --- BƯỚC QUAN TRỌNG: NỐI TIẾP VÒNG QUAY ---
         const startNode = wonRewardDetails 
             ? { ...wonRewardDetails, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
@@ -352,7 +378,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
         setStrip(newStrip);
 
-        // --- RESET VỊ TRÍ VỀ 0 NGAY LẬP TỨC ---
         setTransitionDuration(0);
         setOffset(0);
 
@@ -361,24 +386,18 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             const distanceToIndex = 1 + TARGET_INDEX; 
             const finalOffset = -(distanceToIndex * ITEM_FULL_WIDTH);
 
-            setTransitionDuration(SPIN_DURATION_SEC); // Dùng 6s
+            setTransitionDuration(SPIN_DURATION_SEC);
             setOffset(finalOffset);
             
             setTimeout(() => {
                 setIsSpinning(false);
-                
-                // --- CHUYỂN LOGIC CỘNG JACKPOT XUỐNG ĐÂY ---
-                const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
-                handleUpdateJackpotPool(randomCoinsToAdd);
-                // -------------------------------------------
                 
                 let actualValue = winner.value;
                 if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
                     handleUpdatePickaxes(winner.rewardAmount);
                     actualValue = winner.rewardAmount;
                 } else if (winner.rarity === 'jackpot') {
-                    // Cập nhật giá trị Jackpot thắng = Quỹ gốc + Phần vừa thêm
-                    actualValue = jackpotPool + randomCoinsToAdd;
+                    actualValue = jackpotPool;
                     setJackpotWon(true);
                     setJackpotAnimation(true);
                     updateCoins(actualValue);
@@ -412,8 +431,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
-            <CoinDisplay 
-              displayedCoins={animatedCoins} 
+            {/* Sử dụng Wrapper để animation số nhảy không re-render Parent */}
+            <HeaderCoinWrapper 
+              coins={coins}
               isStatsFullscreen={isStatsFullscreen}
             />
         </div>
@@ -434,9 +454,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
               
               <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
               <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
-                    {animatedJackpot.toLocaleString()}
-                </span>
+                
+                {/* Sử dụng Component con để animation số nhảy không re-render Parent */}
+                <JackpotCounter value={jackpotPool} />
+
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
               <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide"> Tỉ lệ quay trúng ô JACKPOT: <span className="text-yellow-400 font-bold">1%</span> </div>
@@ -454,20 +475,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
                 <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
 
-                {/* The Strip */}
-                <div 
-                    className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
-                    style={{
-                        transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
-                        // Dùng cubic-bezier để chuyển động mượt mà hơn
-                        transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
-                    }}
-                >
-                    {/* TỐI ƯU: Render bằng component đã được Memoize */}
-                    {strip.map((item) => (
-                        <GameCard key={item.uniqueId} item={item} />
-                    ))}
-                </div>
+                {/* The Strip - Sử dụng component con để isolate re-renders */}
+                <SpinnerTrack 
+                    strip={strip}
+                    offset={offset}
+                    isSpinning={isSpinning}
+                    transitionDuration={transitionDuration}
+                />
             </div>
 
             {/* --- CENTER TARGET --- */}
