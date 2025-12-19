@@ -8,17 +8,6 @@ const getBezierPoint = (t, p0, p1, p2) => {
 };
 
 // --- ICON COMPONENTS ---
-const IconTrophy = ({ size = 24, className = "" }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
-    <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
-    <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
-    <path d="M4 22h16" />
-    <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
-    <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
-    <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
-  </svg>
-);
-
 const IconPlay = ({ size = 24, className = "", fill = "none" }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
     <polygon points="5 3 19 12 5 21 5 3" />
@@ -67,8 +56,16 @@ const IconCoin = ({ size = 24, className = "" }) => (
   </svg>
 );
 
+const IconLayers = ({ size = 24, className = "" }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+    <polygon points="12 2 2 7 12 12 22 7 12 2" />
+    <polyline points="2 17 12 22 22 17" />
+    <polyline points="2 12 12 17 22 12" />
+  </svg>
+);
+
 // --- ANIMATION COMPONENTS ---
-const CinematicFloatingCoin = ({ startPos, targetPos, onComplete }) => {
+const CinematicFloatingCoin = ({ startPos, targetPos, value = 1, onComplete }) => {
     const [pos, setPos] = useState(startPos);
     const [scale, setScale] = useState(1);
     const [opacity, setOpacity] = useState(1);
@@ -120,9 +117,14 @@ const CinematicFloatingCoin = ({ startPos, targetPos, onComplete }) => {
                 opacity: opacity
             }}
         >
-            <div className="relative">
+            <div className="relative flex flex-col items-center">
                 <IconCoin size={32} />
                 <div className="absolute inset-0 bg-yellow-400 blur-md opacity-40 rounded-full animate-pulse" />
+                {value > 1 && (
+                    <span className="absolute -top-6 text-yellow-300 font-bold text-lg drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                        +{value}
+                    </span>
+                )}
             </div>
         </div>
     );
@@ -174,9 +176,12 @@ const CircularProgress = ({ percentage, size = 40, strokeWidth = 4, icon: Icon }
 const NeonRunner = () => {
   const [gameState, setGameState] = useState('MENU');
   const [score, setScore] = useState(0);
+  const [floor, setFloor] = useState(1);
+  const [savedFloor, setSavedFloor] = useState(1); // Checkpoint
   const [health, setHealth] = useState(100); 
   const [coinCount, setCoinCount] = useState(0); 
   const [coinBump, setCoinBump] = useState(0); 
+  const [showLevelUp, setShowLevelUp] = useState(false);
   
   const [floatingCoins, setFloatingCoins] = useState([]); 
   const coinTargetRef = useRef(null); 
@@ -188,10 +193,10 @@ const NeonRunner = () => {
   const touchStart = useRef({ x: 0, y: 0 });
 
   // GAME CONFIGURATION CONSTANTS
-  const TIER_1_Y = 0.6; // Ground tier item height
-  const TIER_2_Y = 3.2; // Air tier item height
-  const FLIGHT_Y = 3.2; // Stable flight height
-  const JUMP_POWER = 0.40; // Reduced slightly for shorter character feel
+  const TIER_1_Y = 0.6; 
+  const TIER_2_Y = 3.2; 
+  const FLIGHT_Y = 3.2; 
+  const JUMP_POWER = 0.40;
   const GRAVITY = 0.028; 
 
   const gameRef = useRef({
@@ -199,6 +204,7 @@ const NeonRunner = () => {
     player: null, playerContainer: null, playerParts: {}, materials: {}, 
     lanes: [-2, 0, 2], currentLane: 1, targetX: 0,
     speed: 0.20,
+    floor: 1, // Track internal floor logic
     obstacles: [], coins: [], rockets: [], speedLines: [], 
     particles: [],
     frameId: null, frameCount: 0, 
@@ -230,7 +236,7 @@ const NeonRunner = () => {
     scene.fog = new THREE.FogExp2(bgColor, 0.02);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 4.5, 8.5); // Slightly lower and closer camera
+    camera.position.set(0, 4.5, 8.5); 
     
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -261,11 +267,11 @@ const NeonRunner = () => {
     gridHelper.position.y = -0.5;
     scene.add(gridHelper);
 
-    // --- UPDATED CHARACTER DESIGN (SHORTER) ---
+    // --- COMPACT CHARACTER DESIGN ---
     const createCharacter = () => {
         const container = new THREE.Group(); 
         const group = new THREE.Group();
-        group.position.y = 0.35; // Lowered base center (was 0.55)
+        group.position.y = 0.35; 
         container.add(group);
 
         const armorMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.4, metalness: 0.5 });
@@ -273,33 +279,16 @@ const NeonRunner = () => {
         const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff }); 
         const visorMat = new THREE.MeshStandardMaterial({ color: 0x110033, roughness: 0.1, metalness: 0.9, emissive: 0x001133, emissiveIntensity: 0.5 });
 
-        // COMPACT BODY PROPORTIONS
-        
-        // Chest
         const chest = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.4, 0.3), armorMat);
-        chest.position.y = 0.65; // Lowered from 0.85
-        chest.castShadow = true; 
-        group.add(chest);
-
-        // Abs (Shortened)
-        const abs = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.25, 8), darkSuitMat); // Height 0.25 (was 0.35)
-        abs.position.y = 0.38; // Lowered from 0.55
-        group.add(abs);
-
-        // Core
+        chest.position.y = 0.65; chest.castShadow = true; group.add(chest);
+        const abs = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.25, 8), darkSuitMat);
+        abs.position.y = 0.38; group.add(abs);
         const core = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), glowMat);
-        core.position.set(0, 0.65, 0.16); 
-        group.add(core);
-
-        // Hips
+        core.position.set(0, 0.65, 0.16); group.add(core);
         const hips = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.2, 0.28), armorMat);
-        hips.position.y = 0.20; // Lowered from 0.3
-        group.add(hips);
+        hips.position.y = 0.20; group.add(hips);
 
-        // Head (Lowered)
-        const headGroup = new THREE.Group(); 
-        headGroup.position.set(0, 0.85, 0); // Lowered from 1.05
-        
+        const headGroup = new THREE.Group(); headGroup.position.set(0, 0.85, 0); 
         const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.35, 0.35), armorMat);
         helmet.position.y = 0.18; helmet.castShadow = true;
         const visor = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.15, 0.1), visorMat);
@@ -308,56 +297,34 @@ const NeonRunner = () => {
         ear.position.y = 0.18;
         headGroup.add(ear); headGroup.add(helmet); headGroup.add(visor); group.add(headGroup);
 
-        // Jetpack (Adjusted)
-        const packGroup = new THREE.Group(); 
-        packGroup.position.set(0, 0.65, -0.15); // Aligned with chest
+        const packGroup = new THREE.Group(); packGroup.position.set(0, 0.65, -0.15); 
         const mainPack = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.45, 0.15), armorMat); packGroup.add(mainPack);
-        
-        const tGeo = new THREE.CylinderGeometry(0.05, 0.08, 0.3, 8); // Shorter tanks
+        const tGeo = new THREE.CylinderGeometry(0.05, 0.08, 0.3, 8); 
         const t1 = new THREE.Mesh(tGeo, darkSuitMat); t1.position.set(-0.18, -0.05, 0); packGroup.add(t1);
         const t2 = new THREE.Mesh(tGeo, darkSuitMat); t2.position.set(0.18, -0.05, 0); packGroup.add(t2);
-        
         const fGeo = new THREE.ConeGeometry(0.08, 0.5, 8); fGeo.rotateX(Math.PI);
         const f1 = new THREE.Mesh(fGeo, glowMat); f1.position.set(-0.18, -0.3, 0); f1.visible = false; packGroup.add(f1);
         const f2 = new THREE.Mesh(fGeo, glowMat); f2.position.set(0.18, -0.3, 0); f2.visible = false; packGroup.add(f2);
         group.add(packGroup);
 
-        // Limbs (Shortened)
         const createLimb = (isArm, xPos) => {
             const lg = new THREE.Group(); 
-            // Arm starts at shoulder (0.75), Leg starts at hip (0.2)
             lg.position.set(xPos, isArm ? 0.75 : 0.2, 0); 
-
-            // Joint
-            const j = new THREE.Mesh(new THREE.SphereGeometry(isArm?0.12:0.12,8,8), darkSuitMat); 
-            lg.add(j);
-            
-            // Upper Limb (Shortened)
-            const uHeight = isArm ? 0.28 : 0.32; // Reduced
+            const j = new THREE.Mesh(new THREE.SphereGeometry(isArm?0.12:0.12,8,8), darkSuitMat); lg.add(j);
+            const uHeight = isArm ? 0.28 : 0.32; 
             const u = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.12:0.15, uHeight, isArm?0.12:0.15), darkSuitMat);
-            u.translateY(-(uHeight/2 + 0.05)); 
-            lg.add(u);
-
-            // Pad
+            u.translateY(-(uHeight/2 + 0.05)); lg.add(u);
             const p = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.14:0.17, 0.2, isArm?0.14:0.17), armorMat);
-            p.translateY(-(uHeight/2)); 
-            lg.add(p);
-
-            // Lower Limb (Shortened)
-            const lHeight = isArm ? 0.25 : 0.3; // Reduced
+            p.translateY(-(uHeight/2)); lg.add(p);
+            const lHeight = isArm ? 0.25 : 0.3; 
             const l = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.1:0.12, lHeight, isArm?0.1:0.12), armorMat);
-            l.translateY(-(uHeight + lHeight/2 + 0.05)); 
-            lg.add(l);
-
+            l.translateY(-(uHeight + lHeight/2 + 0.05)); lg.add(l);
             if(isArm) { 
                 const h = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.12,0.1), darkSuitMat); 
-                h.translateY(-(uHeight + lHeight + 0.1)); 
-                lg.add(h); 
+                h.translateY(-(uHeight + lHeight + 0.1)); lg.add(h); 
             } else { 
-                // Feet
                 const f = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.1,0.25), darkSuitMat); 
-                f.translate(0, -(uHeight + lHeight + 0.1), 0.05); 
-                lg.add(f); 
+                f.translate(0, -(uHeight + lHeight + 0.1), 0.05); lg.add(f); 
             }
             return lg;
         };
@@ -407,48 +374,20 @@ const NeonRunner = () => {
         ctx.fillStyle = grad;
         ctx.fillRect(0, 0, 256, 256);
 
-        ctx.strokeStyle = '#94a3b8'; 
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        for(let i=0; i<256; i+=32) {
-            ctx.moveTo(0, i); ctx.lineTo(256, i);
-        }
-        ctx.stroke();
+        ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+        ctx.beginPath(); for(let i=0; i<256; i+=32) { ctx.moveTo(0, i); ctx.lineTo(256, i); } ctx.stroke();
 
         const coreGrad = ctx.createLinearGradient(80, 0, 176, 0);
-        coreGrad.addColorStop(0, '#06b6d4'); 
-        coreGrad.addColorStop(0.5, '#ecfeff'); 
-        coreGrad.addColorStop(1, '#06b6d4');
-        
-        ctx.fillStyle = coreGrad;
-        ctx.fillRect(100, 20, 56, 216);
-        
-        ctx.shadowColor = '#06b6d4';
-        ctx.shadowBlur = 20;
-        ctx.strokeStyle = '#22d3ee';
-        ctx.lineWidth = 4;
-        ctx.strokeRect(100, 20, 56, 216);
-        ctx.shadowBlur = 0;
+        coreGrad.addColorStop(0, '#06b6d4'); coreGrad.addColorStop(0.5, '#ecfeff'); coreGrad.addColorStop(1, '#06b6d4');
+        ctx.fillStyle = coreGrad; ctx.fillRect(100, 20, 56, 216);
+        ctx.shadowColor = '#06b6d4'; ctx.shadowBlur = 20; ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 4; ctx.strokeRect(100, 20, 56, 216); ctx.shadowBlur = 0;
 
         ctx.fillStyle = '#64748b';
-        for(let y=10; y<256; y+=32) {
-            ctx.beginPath(); ctx.arc(90, y, 4, 0, Math.PI*2); ctx.fill();
-            ctx.beginPath(); ctx.arc(166, y, 4, 0, Math.PI*2); ctx.fill();
-        }
+        for(let y=10; y<256; y+=32) { ctx.beginPath(); ctx.arc(90, y, 4, 0, Math.PI*2); ctx.fill(); ctx.beginPath(); ctx.arc(166, y, 4, 0, Math.PI*2); ctx.fill(); }
 
-        ctx.fillStyle = '#f59e0b'; 
-        for(let i=0; i<6; i++) {
-             ctx.fillRect(0, 220 + i*10, 256, 5);
-        }
+        ctx.fillStyle = '#f59e0b'; for(let i=0; i<6; i++) { ctx.fillRect(0, 220 + i*10, 256, 5); }
 
-        ctx.save();
-        ctx.translate(60, 128);
-        ctx.rotate(-Math.PI / 2);
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 24px Arial';
-        ctx.fillText('HYPER', 0, 0);
-        ctx.restore();
-
+        ctx.save(); ctx.translate(60, 128); ctx.rotate(-Math.PI / 2); ctx.fillStyle = '#0f172a'; ctx.font = 'bold 24px Arial'; ctx.fillText('HYPER', 0, 0); ctx.restore();
         return new THREE.CanvasTexture(canvas);
     };
 
@@ -559,69 +498,44 @@ const NeonRunner = () => {
     }
 
     const spawnObstacle = (zPos) => {
-      // OBSTACLES ARE STRICTLY TIER 1 (Ground)
       const group = new THREE.Group();
-      
       const mesh = new THREE.Mesh(game.geometries.cube, game.cachedMaterials.obstacle);
       group.add(mesh);
-      
       const edges = new THREE.EdgesGeometry(game.geometries.cage);
       const line = new THREE.LineSegments(edges, game.cachedMaterials.obstacleCage);
       line.userData = { isCage: true }; 
       group.add(line);
-
       group.position.set(game.lanes[Math.floor(Math.random() * 3)], 0.35, zPos);
       game.scene.add(group);
       game.obstacles.push(group);
     };
 
     const spawnCoin = (zPos) => {
-      // 8% Chance for Rocket (Powerup)
       if (Math.random() < 0.08) {
           const group = new THREE.Group();
-
-          // 1. Body
           const body = new THREE.Mesh(game.geometries.rocketBody, game.cachedMaterials.rocketBody);
-          body.rotation.y = Math.PI / 4; 
-          group.add(body);
-
-          // 2. Nose Cone
+          body.rotation.y = Math.PI / 4; group.add(body);
           const nose = new THREE.Mesh(game.geometries.rocketNose, game.cachedMaterials.rocketNose);
-          nose.position.y = 0.425; 
-          group.add(nose);
-
-          // 3. Fins (x3)
+          nose.position.y = 0.425; group.add(nose);
           for (let i = 0; i < 3; i++) {
               const fin = new THREE.Mesh(game.geometries.rocketFin, game.cachedMaterials.rocketFin);
               const angle = (i / 3) * Math.PI * 2;
-              fin.position.x = Math.cos(angle) * 0.15;
-              fin.position.z = Math.sin(angle) * 0.15;
-              fin.position.y = -0.2;
-              fin.rotation.y = -angle; 
+              fin.position.x = Math.cos(angle) * 0.15; fin.position.z = Math.sin(angle) * 0.15; fin.position.y = -0.2; fin.rotation.y = -angle; 
               group.add(fin);
           }
-          
-          group.rotation.z = 0.2; 
-          group.rotation.x = 0.2;
-
-          // ROCKETS SPAWN IN AIR (TIER 2) OR GROUND (TIER 1) randomly
+          group.rotation.z = 0.2; group.rotation.x = 0.2;
           const isAirRocket = Math.random() > 0.5;
           group.position.set(game.lanes[Math.floor(Math.random() * 3)], isAirRocket ? TIER_2_Y : TIER_1_Y, zPos);
           game.scene.add(group);
           game.rockets.push(group);
           return;
       }
-      
-      // COINS SPAWN
       const group = new THREE.Group();
       const rim = new THREE.Mesh(game.geometries.coinRim, game.cachedMaterials.coinRim); group.add(rim);
       const gem = new THREE.Mesh(game.geometries.coinGem, game.cachedMaterials.coinGem); group.add(gem);
-
-      // STRICT TIER LOGIC: 50% Air (Requires Jump/Fly), 50% Ground
       const isAir = Math.random() > 0.5;
       group.position.set(game.lanes[Math.floor(Math.random() * 3)], isAir ? TIER_2_Y : TIER_1_Y, zPos);
       group.userData = { gem: gem }; 
-
       game.scene.add(group);
       game.coins.push(group);
     }
@@ -719,8 +633,22 @@ const NeonRunner = () => {
 
           game.time += 0.015;
           game.scoreInternal += game.speed;
+          
+          // --- FLOOR CALCULATION LOGIC ---
+          // Floor increases every 10000 points. Cap at 300.
+          const currentScore = Math.floor(game.scoreInternal * 10);
+          const calculatedFloor = Math.min(300, Math.floor(currentScore / 10000) + 1);
+          
+          if (calculatedFloor > game.floor) {
+              game.floor = calculatedFloor;
+              setFloor(calculatedFloor);
+              setSavedFloor(calculatedFloor); // SAVE CHECKPOINT
+              setShowLevelUp(true);
+              setTimeout(() => setShowLevelUp(false), 2000);
+          }
+
           if(game.frameCount % 10 === 0) {
-              setScore(Math.floor(game.scoreInternal * 10));
+              setScore(currentScore);
               setFlightFuel((game.flightTimer / game.maxFlightTime) * 100);
           }
 
@@ -741,7 +669,6 @@ const NeonRunner = () => {
 
           if (isFlying) {
               game.flightTimer--;
-              // FLYING TARGET: STABLE TIER 2 HEIGHT
               game.playerContainer.position.y += (FLIGHT_Y - game.playerContainer.position.y) * 0.08;
               
               game.player.rotation.x = THREE.MathUtils.lerp(game.player.rotation.x, -0.8, 0.1);
@@ -792,27 +719,16 @@ const NeonRunner = () => {
                   const obj = arr[i];
                   obj.position.z += game.speed;
                   
-                  // OBSTACLE ANIMATION
                   if (idx === 0) { 
-                      obj.rotation.x += 0.02; 
-                      obj.rotation.y += 0.02; 
-                      obj.children.forEach(c => {
-                          if (c.userData.isCage) {
-                              c.rotation.x -= 0.05;
-                              c.rotation.z += 0.05;
-                          }
-                      });
+                      obj.rotation.x += 0.02; obj.rotation.y += 0.02; 
+                      obj.children.forEach(c => { if (c.userData.isCage) { c.rotation.x -= 0.05; c.rotation.z += 0.05; } });
                   }
                   
-                  // COIN ANIMATION
                   if (idx > 0) obj.rotation.y += 0.05; 
-                  if (obj.userData.gem) {
-                      obj.userData.gem.rotation.x += 0.1;
-                      obj.userData.gem.rotation.z += 0.05;
-                  }
+                  if (obj.userData.gem) { obj.userData.gem.rotation.x += 0.1; obj.userData.gem.rotation.z += 0.05; }
 
                   if (checkCollision(obj, 0.6)) {
-                      if (idx === 0) { // Obstacle (Ground Tier mostly)
+                      if (idx === 0) { // Obstacle
                           if (game.playerContainer.position.y < 0.8 && !game.isInvincible && !isFlying) {
                               game.healthInternal -= 34;
                               setHealth(Math.max(0, game.healthInternal));
@@ -828,7 +744,6 @@ const NeonRunner = () => {
                               }
                           }
                       } else if (idx === 1 || idx === 2) { // Coin or Rocket
-                          // STRICT VERTICAL CHECK FOR 2 TIERS
                           const dy = Math.abs(obj.position.y - (game.playerContainer.position.y + 0.5));
                           
                           if (dy < 1.0) {
@@ -841,7 +756,8 @@ const NeonRunner = () => {
                                         const rect = coinTargetRef.current.getBoundingClientRect();
                                         tx = rect.left + rect.width / 2; ty = rect.top + rect.height / 2;
                                     }
-                                    setFloatingCoins(p => [...p, { id: Date.now() + Math.random(), start: {x, y}, end: {x: tx, y: ty} }]);
+                                    // ADD COIN WITH MULTIPLIER (Floor value)
+                                    setFloatingCoins(p => [...p, { id: Date.now() + Math.random(), start: {x, y}, end: {x: tx, y: ty}, value: game.floor }]);
                                     triggerCanvasEffect(obj.position, 'COIN');
                                     setScore(p => p + 100);
                                     game.scene.remove(obj); arr.splice(i, 1);
@@ -898,8 +814,21 @@ const NeonRunner = () => {
       setFlightFuel(0); 
       game.healthInternal = 100; 
       setHealth(100); 
-      setScore(0); 
+      
+      // --- CHECKPOINT RESTORE LOGIC ---
+      // Restart at savedFloor
+      // Score = (Floor - 1) * 10000.  (e.g., Floor 2 -> 10000)
+      const startScore = (savedFloor - 1) * 10000;
+      game.scoreInternal = startScore / 10; // scoreInternal is roughly score/10
+      setScore(startScore); 
+      game.floor = savedFloor;
+      setFloor(savedFloor);
+
+      // Don't reset Coin Count completely? Usually rogue-likes reset coins. 
+      // But prompt didn't specify. I'll reset session coins to 0 to keep it challenging, 
+      // or you can remove this line to keep coins. I will reset for balance.
       setCoinCount(0); 
+      
       setGameState('PLAYING');
   }
 
@@ -945,20 +874,40 @@ const NeonRunner = () => {
             key={c.id} 
             startPos={c.start} 
             targetPos={c.end} 
+            value={c.value}
             onComplete={() => {
                 setFloatingCoins(p => p.filter(i => i.id !== c.id));
-                setCoinCount(p => p + 1); 
+                setCoinCount(p => p + c.value); 
                 setCoinBump(prev => prev + 1); 
             }} 
           />
       ))}
 
+      {/* Level Up Notification */}
+      {showLevelUp && (
+          <div className="absolute top-1/4 left-0 right-0 z-40 flex justify-center pointer-events-none">
+              <div className="text-4xl font-black italic text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-red-500 drop-shadow-[0_0_10px_rgba(255,200,0,0.8)] animate-bounce tracking-widest transform -skew-x-12">
+                  LEVEL UP!
+                  <div className="text-xl text-white text-center mt-1 not-italic font-mono">FLOOR {floor}</div>
+              </div>
+          </div>
+      )}
+
       <div className="absolute top-0 left-0 right-0 p-4 flex justify-between items-start z-10 pointer-events-none">
-        <div className="bg-black/40 backdrop-blur border border-cyan-500/30 p-2 pr-4 rounded-xl flex items-center gap-3">
-            <div className={`bg-cyan-500/20 p-2 rounded-lg`}><IconHeart size={20} className="text-cyan-400" /></div>
-            <div className="flex flex-col gap-1">
-                <div className="text-[10px] text-cyan-300 uppercase tracking-widest font-bold">GIÁP</div>
-                <div className="w-24 h-2 bg-gray-900 rounded-full overflow-hidden"><div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${health}%` }} /></div>
+        <div className="flex flex-col gap-2">
+            <div className="bg-black/40 backdrop-blur border border-cyan-500/30 p-2 pr-4 rounded-xl flex items-center gap-3">
+                <div className={`bg-cyan-500/20 p-2 rounded-lg`}><IconHeart size={20} className="text-cyan-400" /></div>
+                <div className="flex flex-col gap-1">
+                    <div className="text-[10px] text-cyan-300 uppercase tracking-widest font-bold">GIÁP</div>
+                    <div className="w-24 h-2 bg-gray-900 rounded-full overflow-hidden"><div className="h-full bg-cyan-500 transition-all duration-300" style={{ width: `${health}%` }} /></div>
+                </div>
+            </div>
+             <div className="bg-black/40 backdrop-blur border border-purple-500/30 p-2 pr-4 rounded-xl flex items-center gap-3">
+                <div className={`bg-purple-500/20 p-2 rounded-lg`}><IconLayers size={20} className="text-purple-400" /></div>
+                <div className="flex flex-col gap-1">
+                    <div className="text-[10px] text-purple-300 uppercase tracking-widest font-bold">FLOOR</div>
+                    <div className="text-xl font-mono font-bold text-white leading-none">{floor} <span className="text-xs text-gray-400">/ 300</span></div>
+                </div>
             </div>
         </div>
         
@@ -1014,14 +963,14 @@ const NeonRunner = () => {
                       <div className="text-2xl font-bold text-cyan-400">{score}</div>
                   </div>
                   <div className="text-center border-l border-white/10">
-                      <div className="text-[10px] text-gray-300 uppercase tracking-widest mb-1">Vàng</div>
-                      <div className="text-2xl font-bold text-yellow-400">{coinCount}</div>
+                      <div className="text-[10px] text-gray-300 uppercase tracking-widest mb-1">Floor</div>
+                      <div className="text-2xl font-bold text-purple-400">{floor}</div>
                   </div>
               </div>
 
               <div className="flex flex-col gap-3">
                   <button onClick={resetGame} className="w-full bg-red-600 hover:bg-red-500 p-4 font-bold flex items-center justify-center gap-2 transition hover:scale-105 shadow-lg uppercase tracking-wider text-sm text-white">
-                    <IconRotateCcw size={18}/> Thử lại
+                    <IconRotateCcw size={18}/> Thử lại (Floor {savedFloor})
                   </button>
                   <button onClick={() => setGameState('MENU')} className="w-full bg-transparent border border-white/20 hover:bg-white/10 p-4 font-bold flex items-center justify-center gap-2 transition uppercase tracking-wider text-sm text-gray-300">
                     Menu Chính
