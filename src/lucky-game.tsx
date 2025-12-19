@@ -407,7 +407,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       </div>
 
       {/* --- HEADER --- */}
-      {/* ĐÃ SỬA: Loại bỏ backdrop-blur-md, dùng bg-slate-900 đặc */}
+      {/* REMOVED: backdrop-blur-md, ADDED: bg-slate-900 (solid) */}
       <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 z-[60] shadow-lg">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
@@ -422,11 +422,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         
         {/* --- JACKPOT UI --- */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
+            {/* REMOVED: backdrop-blur-md, CHANGED: bg-slate-900/90 -> bg-slate-900 (solid) */}
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
                 ${ jackpotAnimation 
                     ? 'bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-pulse' 
-                    // ĐÃ SỬA: Loại bỏ backdrop-blur-md và dùng màu nền đặc (không có /90)
                     : 'bg-gradient-to-br from-slate-900 to-black border-slate-700 shadow-2xl' 
                 }
             `}>
@@ -504,7 +504,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         <div className="flex flex-col items-center justify-center z-20">
               
               {/* Spin Multiplier Toggles */}
-              {/* ĐÃ SỬA: Loại bỏ backdrop-blur-sm, dùng bg-slate-800 đặc */}
+              {/* REMOVED: backdrop-blur-sm, CHANGED: bg-slate-800/80 -> bg-slate-800 (solid) */}
               <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg">
                  <button 
                    onClick={() => !isSpinning && setSpinMultiplier(1)}
@@ -558,9 +558,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       </div>
       
       {/* Error Message Toast */}
+      {/* REMOVED: backdrop-blur-md, CHANGED: bg-slate-900/95 -> bg-slate-900 (solid) */}
       {coins < currentCost && !isSpinning && (
           <div className="fixed bottom-3 right-3 z-[100] animate-fade-in pointer-events-none">
-              {/* ĐÃ SỬA: Loại bỏ backdrop-blur-md, dùng bg-slate-900 đặc */}
               <div className="bg-slate-900 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-2xl flex items-center gap-2">
                    <svg className="w-4 h-4 text-red-500 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
