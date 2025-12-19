@@ -1,24 +1,16 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
-import HomeButton from './ui/home-button.tsx';
+import HomeButton from './ui//home-button.tsx';
 import { useGame } from './GameContext.tsx'; // Import Hook
 import { useAnimateValue } from './ui/useAnimateValue.ts'; // Import Hook Animate
 
-// --- CONFIG ---
-const CARD_WIDTH = 110;
-const CARD_GAP = 12;
-const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
-const VISIBLE_CARDS = 5;
-const BASE_COST = 100;
-const SPIN_DURATION_SEC = 6;
-
 // --- SVG Icons ---
-const CoinsIcon = React.memo(({ className, src }: { className?: string; src?: string }) => {
+const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
       <img
         src={src}
-        alt="Coin"
+        alt="Coin Icon"
         className={className}
         onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=X'; }}
       />
@@ -29,15 +21,16 @@ const CoinsIcon = React.memo(({ className, src }: { className?: string; src?: st
       <path d="M10 2a8 8 0 100 16 8 8 0 000-16zM8 12a2 2 0 114 0 2 2 0 01-4 0zm2-8a6 6 0 110 12 6 6 0 010-12z" clipRule="evenodd" fillRule="evenodd"></path>
     </svg>
   );
-});
+};
 
 const pickaxeIconUrl = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000d394622fa7e3b147c6b84a11.png';
-const PickaxeIcon = React.memo(({ className }: { className?: string }) => <img src={pickaxeIconUrl} alt="Pickaxe" className={className} onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=P'; }} />);
+const PickaxeIcon = ({ className }: { className?: string }) => <img src={pickaxeIconUrl} alt="Pickaxe Icon" className={className} onError={(e) => { e.currentTarget.src = 'https://placehold.co/24x24/cccccc/000000?text=P'; }} />;
 const ZapIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"></path> </svg> );
 const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path> </svg> );
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
 const PlayIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 24 24"> <path d="M8 5v14l11-7z" /> </svg> );
+
 
 // --- Interfaces ---
 interface Item {
@@ -89,34 +82,15 @@ const getCardStyle = (rarity: Item['rarity']) => {
     }
 };
 
-// --- OPTIMIZED SUB-COMPONENTS ---
-
-// 1. Header Coin Wrapper
-const HeaderCoinWrapper = React.memo(({ coins, isStatsFullscreen }: { coins: number, isStatsFullscreen: boolean }) => {
-    const animatedCoins = useAnimateValue(coins, 800);
-    return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={isStatsFullscreen} />;
-});
-
-// 2. Jackpot Counter
-const JackpotCounter = React.memo(({ value }: { value: number }) => {
-    const animatedJackpot = useAnimateValue(value, 800);
-    return (
-        <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
-            {animatedJackpot.toLocaleString()}
-        </span>
-    );
-});
-
-// 3. GameCard - Optimized: Removed lazy loading, added hardware acceleration
-const cardContainerStyle = { width: CARD_WIDTH, marginRight: CARD_GAP, transform: 'translate3d(0,0,0)' };
-
+// --- OPTIMIZED COMPONENT: GameCard ---
+// Tách ra và dùng React.memo để tránh re-render không cần thiết khi state cha thay đổi
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
     return (
         <div 
-            className="flex-shrink-0 flex items-center justify-center"
-            style={cardContainerStyle} 
+            className="flex-shrink-0 flex items-center justify-center transform"
+            style={{ width: 110, marginRight: 12 }} 
         >
             <div className={`
                 relative w-full aspect-[4/5] rounded-xl 
@@ -125,14 +99,13 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                 flex flex-col items-center justify-center gap-2
                 ${style.glow}
                 shadow-lg
-                will-change-transform
             `}>
                 <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
+                {/* TỐI ƯU: Đã xóa backdrop-blur-sm, thay bằng màu nền bán trong suốt để nhẹ GPU */}
                 <div className="relative z-10 p-2 rounded-xl bg-slate-900/70 ring-1 ring-white/5 w-14 h-14 flex items-center justify-center shadow-inner">
                     {typeof item.icon === 'string' ? (
-                        // Removed loading="lazy" to prevent lag during fast spin
-                        <img src={item.icon} alt={item.name} className="w-9 h-9 object-contain drop-shadow-md" />
+                        <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain drop-shadow-md" />
                     ) : (
                         <item.icon className={`w-9 h-9 ${item.color} drop-shadow-md`} />
                     )}
@@ -153,123 +126,20 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
     );
 });
 
-// 4. SpinnerTrack - Optimized: contain layout
-const SpinnerTrack = React.memo(({ 
-    strip, 
-    offset, 
-    isSpinning, 
-    transitionDuration 
-}: { 
-    strip: StripItem[], 
-    offset: number, 
-    isSpinning: boolean, 
-    transitionDuration: number 
-}) => {
-    return (
-        <div 
-            className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
-            style={{
-                transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
-                transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
-                contain: 'layout style', // Optimization hint for browser
-            }}
-        >
-            {strip.map((item) => (
-                <GameCard key={item.uniqueId} item={item} />
-            ))}
-        </div>
-    );
-});
-
-// 5. Spin Controls - Separated to isolate re-renders when coin changes
-const SpinControls = React.memo(({ 
-    isSpinning, 
-    spinMultiplier, 
-    setSpinMultiplier, 
-    onSpin, 
-    coins 
-}: {
-    isSpinning: boolean,
-    spinMultiplier: 1 | 10,
-    setSpinMultiplier: (m: 1 | 10) => void,
-    onSpin: () => void,
-    coins: number
-}) => {
-    const currentCost = BASE_COST * spinMultiplier;
-    
-    return (
-        <div className="flex flex-col items-center justify-center z-20">
-            {/* Spin Multiplier Toggles */}
-            <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg backdrop-blur-sm">
-                 <button 
-                   onClick={() => !isSpinning && setSpinMultiplier(1)}
-                   className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
-                   disabled={isSpinning}
-                 >
-                    x1
-                 </button>
-                 <button 
-                   onClick={() => !isSpinning && setSpinMultiplier(10)}
-                   className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
-                   disabled={isSpinning}
-                 >
-                    x10
-                 </button>
-            </div>
-
-            <button
-                onClick={onSpin}
-                disabled={isSpinning || coins < currentCost}
-                className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200
-                           disabled:opacity-70 disabled:cursor-not-allowed
-                           active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]
-                           border-2 bg-slate-900 border-cyan-600"
-            >
-                <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} 
-                    bg-gradient-to-r from-cyan-600/20 to-blue-600/20
-                `}></div>
-                
-                <div className="relative z-10 flex flex-col items-center justify-center h-full pb-1">
-                    {isSpinning ? (
-                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
-                    ) : (
-                        <>
-                            <span className="font-lilita text-2xl uppercase tracking-widest drop-shadow-md text-cyan-400 group-hover:text-cyan-300">
-                                SPIN
-                            </span>
-                            
-                            <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
-                                <span className={`text-lg font-lilita tracking-wide leading-none ${coins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>
-                                    {currentCost}
-                                </span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
-                            </div>
-                        </>
-                    )}
-                </div>
-            </button>
-            
-            {/* Error Message Toast inside Controls to keep relative context */}
-            {coins < currentCost && !isSpinning && (
-                <div className="fixed bottom-3 right-3 z-[100] animate-fade-in pointer-events-none">
-                    <div className="bg-slate-900/95 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-2xl backdrop-blur-md flex items-center gap-2">
-                        <svg className="w-4 h-4 text-red-500 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                        <span className="font-bold text-xs tracking-wide">Không đủ xu để quay!</span>
-                    </div>
-                </div>
-            )}
-        </div>
-    );
-});
-
+// --- CONFIG ---
+const CARD_WIDTH = 110;
+const CARD_GAP = 12;
+const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
+const VISIBLE_CARDS = 5;
+const BASE_COST = 100;
+const SPIN_DURATION_SEC = 6; // Giảm thời gian xuống 6s để phù hợp với số lượng item giảm đi
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     const rarityColor = getRarityColor(item.rarity);
 
     const handleWatchAds = () => {
+        // Logic xem quảng cáo sẽ ở đây
         console.log("Watching Ads for x2 Reward...");
         onClose();
     };
@@ -282,10 +152,11 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         }
         onClick={(e) => e.stopPropagation()}
       >
+        {/* Floating Icon */}
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
              <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
-                    <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain" />
+                    <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
                 ) : (
                     <item.icon className={`w-16 h-16 ${item.color}`} />
                 )}
@@ -306,6 +177,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             )}
         </div>
 
+        {/* Reward Box */}
         <div className="flex flex-col gap-2 w-full my-6">
             <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
                  <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
@@ -327,8 +199,14 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             </div>
         </div>
         
+        {/* Buttons Action Area */}
         <div className="flex w-full gap-3 mt-1">
-            <button onClick={handleWatchAds} className="group relative flex-1">
+            
+            {/* Watch Ads Button (Highlight) */}
+            <button 
+                onClick={handleWatchAds}
+                className="group relative flex-1"
+            >
                 <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
                 <div className="relative h-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-xl border-t border-white/20 shadow-lg flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -340,9 +218,15 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                     <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
                 </div>
             </button>
-            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all">
+
+            {/* Claim Button (Secondary) */}
+            <button
+                onClick={onClose}
+                className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all"
+            >
                 <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
             </button>
+
         </div>
       </div>
     </div>
@@ -351,6 +235,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
 // --- MAIN COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGameProps) => {
+  // Use Context Hook
   const { 
     coins, 
     updateCoins, 
@@ -358,7 +243,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     jackpotPool, 
     handleUpdateJackpotPool 
   } = useGame();
-  
+
+  // --- [NEW] ANIMATED VALUES ---
+  // Tạo hiệu ứng số nhảy cho Coins và Jackpot
+  const animatedCoins = useAnimateValue(coins, 800);
+  const animatedJackpot = useAnimateValue(jackpotPool, 800);
+
   const [isSpinning, setIsSpinning] = useState(false);
   const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
   const [jackpotWon, setJackpotWon] = useState(false);
@@ -387,7 +277,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
-  // Compute items
+  // Compute items based on multiplier
   const displayItems = useMemo(() => {
     return baseItems.map(item => {
         if (item.rarity === 'jackpot') return item;
@@ -407,8 +297,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   // Initial Strip
   useEffect(() => {
     if (isSpinning) return;
-    if (wonRewardDetails) return;
+    if (wonRewardDetails) return; // Nếu đã có winner thì để logic trong spin xử lý, không reset
     
+    // Chỉ tạo strip ngẫu nhiên khi component load lần đầu hoặc đổi multiplier mà chưa quay
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
@@ -420,8 +311,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   // --- UPDATED SPIN LOGIC ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
-    // We access coins from props/closure. If coins is stale, this might be an issue, 
-    // but since spinChest depends on coins (via dependency array), it's always fresh.
     if (isSpinning || coins < cost) return;
 
     updateCoins(-cost);
@@ -429,80 +318,84 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
     handleUpdateJackpotPool(randomCoinsToAdd);
 
-    // Use requestAnimationFrame to ensure state updates don't clash with CSS transitions
-    requestAnimationFrame(() => {
+    setTimeout(() => {
         setIsSpinning(true);
         setJackpotWon(false);
         setShowRewardPopup(false);
 
         // Winner Logic
         let winner: Item;
-        if (Math.random() < 0.01) { 
+        if (Math.random() < 0.01) { // 1% Jackpot
             winner = displayItems.find(i => i.rarity === 'jackpot')!;
         } else {
             const others = displayItems.filter(i => i.rarity !== 'jackpot');
             winner = others[Math.floor(Math.random() * others.length)];
         }
 
+        // TỐI ƯU: GIẢM TARGET_INDEX XUỐNG 50 (từ 100)
+        // Điều này giảm đáng kể số lượng DOM node cần render và transform, giúp FPS mượt hơn
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
+        // --- BƯỚC QUAN TRỌNG: NỐI TIẾP VÒNG QUAY ---
         const startNode = wonRewardDetails 
             ? { ...wonRewardDetails, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
 
         newStrip.push(startNode);
+
         for (let i = 0; i < TARGET_INDEX; i++) {
             newStrip.push({ ...getRandomFiller(), uniqueId: `spin-mid-${Date.now()}-${i}` });
         }
+
         newStrip.push({ ...winner, uniqueId: `winner-${Date.now()}` });
+
         for (let i = 0; i < 5; i++) {
             newStrip.push({ ...getRandomFiller(), uniqueId: `spin-end-${Date.now()}-${i}` });
         }
 
-        // Heavy DOM update
         setStrip(newStrip);
+
+        // --- RESET VỊ TRÍ VỀ 0 NGAY LẬP TỨC ---
         setTransitionDuration(0);
         setOffset(0);
 
-        // Wait for next frame paint to ensure newStrip is rendered BEFORE starting transition
-        requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-                 const distanceToIndex = 1 + TARGET_INDEX; 
-                 const finalOffset = -(distanceToIndex * ITEM_FULL_WIDTH);
+        // Animation Trigger
+        setTimeout(() => {
+            const distanceToIndex = 1 + TARGET_INDEX; 
+            const finalOffset = -(distanceToIndex * ITEM_FULL_WIDTH);
 
-                 setTransitionDuration(SPIN_DURATION_SEC);
-                 setOffset(finalOffset);
-                 
-                 // End Spin Logic
-                 setTimeout(() => {
-                     setIsSpinning(false);
-                     
-                     let actualValue = winner.value;
-                     if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
-                         handleUpdatePickaxes(winner.rewardAmount);
-                         actualValue = winner.rewardAmount;
-                     } else if (winner.rarity === 'jackpot') {
-                         actualValue = jackpotPool; // Note: This uses the jackpotPool from closure. 
-                         // Technically jackpotPool increased slightly when we started.
-                         setJackpotWon(true);
-                         setJackpotAnimation(true);
-                         updateCoins(actualValue);
-                         handleUpdateJackpotPool(0, true);
-                         setTimeout(() => setJackpotAnimation(false), 3000);
-                     } else if (winner.rewardType === 'coin') {
-                         updateCoins(winner.value);
-                     }
+            setTransitionDuration(SPIN_DURATION_SEC); // Dùng 6s
+            setOffset(finalOffset);
+            
+            setTimeout(() => {
+                setIsSpinning(false);
+                
+                let actualValue = winner.value;
+                if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
+                    handleUpdatePickaxes(winner.rewardAmount);
+                    actualValue = winner.rewardAmount;
+                } else if (winner.rarity === 'jackpot') {
+                    actualValue = jackpotPool;
+                    setJackpotWon(true);
+                    setJackpotAnimation(true);
+                    updateCoins(actualValue);
+                    handleUpdateJackpotPool(0, true);
+                    setTimeout(() => setJackpotAnimation(false), 3000);
+                } else if (winner.rewardType === 'coin') {
+                    updateCoins(winner.value);
+                }
 
-                     setWonRewardDetails({ ...winner, value: actualValue });
-                     setShowRewardPopup(true);
-                 }, (SPIN_DURATION_SEC * 1000) + 100); 
-            });
-        });
-    });
+                setWonRewardDetails({ ...winner, value: actualValue });
+                setShowRewardPopup(true);
+            }, (SPIN_DURATION_SEC * 1000) + 100); 
+        }, 50);
+    }, 10);
 
   }, [isSpinning, coins, displayItems, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool, jackpotPool, getRandomFiller, spinMultiplier, wonRewardDetails, strip]);
   
+  const currentCost = BASE_COST * spinMultiplier;
+
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
@@ -514,11 +407,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       </div>
 
       {/* --- HEADER --- */}
-      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
+      {/* ĐÃ SỬA: Loại bỏ backdrop-blur-md, dùng bg-slate-900 đặc */}
+      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 z-[60] shadow-lg">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
-            <HeaderCoinWrapper 
-              coins={coins}
+            <CoinDisplay 
+              displayedCoins={animatedCoins} 
               isStatsFullscreen={isStatsFullscreen}
             />
         </div>
@@ -532,14 +426,17 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
                 ${ jackpotAnimation 
                     ? 'bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-pulse' 
-                    : 'bg-gradient-to-br from-slate-900/90 to-black border-slate-700 shadow-2xl backdrop-blur-md' 
+                    // ĐÃ SỬA: Loại bỏ backdrop-blur-md và dùng màu nền đặc (không có /90)
+                    : 'bg-gradient-to-br from-slate-900 to-black border-slate-700 shadow-2xl' 
                 }
             `}>
               <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               
               <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
               <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
-                <JackpotCounter value={jackpotPool} />
+                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
+                    {animatedJackpot.toLocaleString()}
+                </span>
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
               <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide"> Tỉ lệ quay trúng ô JACKPOT: <span className="text-yellow-400 font-bold">1%</span> </div>
@@ -557,12 +454,20 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
                 <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
 
-                <SpinnerTrack 
-                    strip={strip}
-                    offset={offset}
-                    isSpinning={isSpinning}
-                    transitionDuration={transitionDuration}
-                />
+                {/* The Strip */}
+                <div 
+                    className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
+                    style={{
+                        transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
+                        // Dùng cubic-bezier để chuyển động mượt mà hơn
+                        transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
+                    }}
+                >
+                    {/* TỐI ƯU: Render bằng component đã được Memoize */}
+                    {strip.map((item) => (
+                        <GameCard key={item.uniqueId} item={item} />
+                    ))}
+                </div>
             </div>
 
             {/* --- CENTER TARGET --- */}
@@ -596,16 +501,75 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         </div>
 
         {/* --- CONTROLS --- */}
-        <SpinControls 
-            isSpinning={isSpinning}
-            spinMultiplier={spinMultiplier}
-            setSpinMultiplier={setSpinMultiplier}
-            onSpin={spinChest}
-            coins={coins}
-        />
+        <div className="flex flex-col items-center justify-center z-20">
+              
+              {/* Spin Multiplier Toggles */}
+              {/* ĐÃ SỬA: Loại bỏ backdrop-blur-sm, dùng bg-slate-800 đặc */}
+              <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg">
+                 <button 
+                   onClick={() => !isSpinning && setSpinMultiplier(1)}
+                   className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                   disabled={isSpinning}
+                 >
+                    x1
+                 </button>
+                 <button 
+                   onClick={() => !isSpinning && setSpinMultiplier(10)}
+                   className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`}
+                   disabled={isSpinning}
+                 >
+                    x10
+                 </button>
+              </div>
+
+              <button
+                onClick={spinChest}
+                disabled={isSpinning || coins < currentCost}
+                className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200
+                           disabled:opacity-70 disabled:cursor-not-allowed
+                           active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)]
+                           border-2 bg-slate-900 border-cyan-600"
+              >
+                <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} 
+                    bg-gradient-to-r from-cyan-600/20 to-blue-600/20
+                `}></div>
+                
+                <div className="relative z-10 flex flex-col items-center justify-center h-full pb-1">
+                    {isSpinning ? (
+                         <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span>
+                    ) : (
+                        <>
+                            <span className="font-lilita text-2xl uppercase tracking-widest drop-shadow-md text-cyan-400 group-hover:text-cyan-300">
+                                SPIN
+                            </span>
+                            
+                            <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
+                                <span className={`text-lg font-lilita tracking-wide leading-none ${coins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>
+                                    {currentCost}
+                                </span>
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
+                            </div>
+                        </>
+                    )}
+                </div>
+              </button>
+        </div>
 
       </div>
       
+      {/* Error Message Toast */}
+      {coins < currentCost && !isSpinning && (
+          <div className="fixed bottom-3 right-3 z-[100] animate-fade-in pointer-events-none">
+              {/* ĐÃ SỬA: Loại bỏ backdrop-blur-md, dùng bg-slate-900 đặc */}
+              <div className="bg-slate-900 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-2xl flex items-center gap-2">
+                   <svg className="w-4 h-4 text-red-500 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                   </svg>
+                   <span className="font-bold text-xs tracking-wide">Không đủ xu để quay!</span>
+              </div>
+          </div>
+      )}
+
       {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
 
       <style jsx global>{`
