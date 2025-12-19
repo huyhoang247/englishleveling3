@@ -187,17 +187,24 @@ const NeonRunner = () => {
   const mountRef = useRef(null);
   const touchStart = useRef({ x: 0, y: 0 });
 
+  // GAME CONFIGURATION CONSTANTS
+  const TIER_1_Y = 0.6; // Ground tier item height
+  const TIER_2_Y = 3.2; // Air tier item height
+  const FLIGHT_Y = 3.2; // Stable flight height
+  const JUMP_POWER = 0.45; // Tuned for reaching Tier 2
+  const GRAVITY = 0.028; // Tuned gravity
+
   const gameRef = useRef({
     scene: null, camera: null, renderer: null,
     player: null, playerContainer: null, playerParts: {}, materials: {}, 
     lanes: [-2, 0, 2], currentLane: 1, targetX: 0,
     speed: 0.20,
     obstacles: [], coins: [], rockets: [], speedLines: [], 
-    particles: [], // New generic particle system
+    particles: [],
     frameId: null, frameCount: 0, 
     isJumping: false, isDead: false, healthInternal: 100,
     isInvincible: false, invincibleTimer: 0,
-    jumpVelocity: 0, gravity: 0.025, jumpPower: 0.42, 
+    jumpVelocity: 0, gravity: GRAVITY, jumpPower: JUMP_POWER, 
     flightTimer: 0, maxFlightTime: 600, scoreInternal: 0, time: 0,
     geometries: {}, cachedMaterials: {}, cameraShake: 0
   });
@@ -422,7 +429,7 @@ const NeonRunner = () => {
     };
 
     const neonTexture = createNeonBoxTexture();
-    const rocketTexture = createRocketTexture(); // New Texture
+    const rocketTexture = createRocketTexture(); 
     const shockwaveTex = createShockwaveTexture();
     const particleTexCyan = createGlowParticleTexture('cyan');
     const particleTexGold = createGlowParticleTexture('gold');
@@ -454,7 +461,6 @@ const NeonRunner = () => {
     game.cachedMaterials.coinRim = new THREE.MeshStandardMaterial({ color: 0xffd700, metalness: 0.9, roughness: 0.1, emissive: 0xffaa00, emissiveIntensity: 0.4 });
     game.cachedMaterials.coinGem = new THREE.MeshBasicMaterial({ color: 0xffffff }); 
     
-    // Updated Rocket Material
     game.cachedMaterials.rocketBody = new THREE.MeshStandardMaterial({ 
         map: rocketTexture, 
         metalness: 0.6, roughness: 0.4, 
@@ -500,6 +506,7 @@ const NeonRunner = () => {
     }
 
     const spawnObstacle = (zPos) => {
+      // OBSTACLES ARE STRICTLY TIER 1 (Ground)
       const group = new THREE.Group();
       
       const mesh = new THREE.Mesh(game.geometries.cube, game.cachedMaterials.obstacle);
@@ -516,57 +523,50 @@ const NeonRunner = () => {
     };
 
     const spawnCoin = (zPos) => {
-      // 5% Chance for Rocket
-      if (Math.random() < 0.05) {
+      // 8% Chance for Rocket (Powerup)
+      if (Math.random() < 0.08) {
           const group = new THREE.Group();
 
           // 1. Body
           const body = new THREE.Mesh(game.geometries.rocketBody, game.cachedMaterials.rocketBody);
-          // Canvas texture wraps around cylinder.
-          // Rotate slightly to show "Core" window best
           body.rotation.y = Math.PI / 4; 
           group.add(body);
 
           // 2. Nose Cone
           const nose = new THREE.Mesh(game.geometries.rocketNose, game.cachedMaterials.rocketNose);
-          nose.position.y = 0.425; // 0.6/2 + 0.25/2
+          nose.position.y = 0.425; 
           group.add(nose);
 
           // 3. Fins (x3)
           for (let i = 0; i < 3; i++) {
               const fin = new THREE.Mesh(game.geometries.rocketFin, game.cachedMaterials.rocketFin);
               const angle = (i / 3) * Math.PI * 2;
-              // Position at base, pushed out
               fin.position.x = Math.cos(angle) * 0.15;
               fin.position.z = Math.sin(angle) * 0.15;
               fin.position.y = -0.2;
-              fin.rotation.y = -angle; // Rotate to face outward
+              fin.rotation.y = -angle; 
               group.add(fin);
           }
-
-          // Orient the whole group flat like a missile
-          group.rotation.x = Math.PI / 2; // Point forward? Or Up? Let's keep upright floating
-          // Wait, missiles usually float upright in these runner games or rotate?
-          // Previous code: rocket.rotation.x = Math.PI / 2; (Horizontal)
-          // Let's keep it upright for "Floating Powerup" feel, or Horizontal for "Flying Missile"?
-          // Let's make it float upright gently spinning.
           
-          // Actually, let's tilt it slightly so we see the side
           group.rotation.z = 0.2; 
           group.rotation.x = 0.2;
 
-          group.position.set(game.lanes[Math.floor(Math.random() * 3)], 1.0, zPos);
+          // ROCKETS SPAWN IN AIR (TIER 2) OR GROUND (TIER 1) randomly
+          const isAirRocket = Math.random() > 0.5;
+          group.position.set(game.lanes[Math.floor(Math.random() * 3)], isAirRocket ? TIER_2_Y : TIER_1_Y, zPos);
           game.scene.add(group);
           game.rockets.push(group);
           return;
       }
       
+      // COINS SPAWN
       const group = new THREE.Group();
       const rim = new THREE.Mesh(game.geometries.coinRim, game.cachedMaterials.coinRim); group.add(rim);
       const gem = new THREE.Mesh(game.geometries.coinGem, game.cachedMaterials.coinGem); group.add(gem);
 
-      const isAir = Math.random() > 0.6;
-      group.position.set(game.lanes[Math.floor(Math.random() * 3)], isAir ? 2.5 : 0.6, zPos);
+      // STRICT TIER LOGIC: 50% Air (Requires Jump/Fly), 50% Ground
+      const isAir = Math.random() > 0.5;
+      group.position.set(game.lanes[Math.floor(Math.random() * 3)], isAir ? TIER_2_Y : TIER_1_Y, zPos);
       group.userData = { gem: gem }; 
 
       game.scene.add(group);
@@ -688,7 +688,9 @@ const NeonRunner = () => {
 
           if (isFlying) {
               game.flightTimer--;
-              game.playerContainer.position.y += (4.0 - game.playerContainer.position.y) * 0.05;
+              // FLYING TARGET: STABLE TIER 2 HEIGHT
+              game.playerContainer.position.y += (FLIGHT_Y - game.playerContainer.position.y) * 0.08;
+              
               game.player.rotation.x = THREE.MathUtils.lerp(game.player.rotation.x, -0.8, 0.1);
               parts.head.rotation.x = THREE.MathUtils.lerp(parts.head.rotation.x, 0.6, 0.1);
               parts.leftArm.rotation.x = THREE.MathUtils.lerp(parts.leftArm.rotation.x, -0.6, 0.1); 
@@ -757,7 +759,7 @@ const NeonRunner = () => {
                   }
 
                   if (checkCollision(obj, 0.6)) {
-                      if (idx === 0) { // Obstacle
+                      if (idx === 0) { // Obstacle (Ground Tier mostly)
                           if (game.playerContainer.position.y < 0.8 && !game.isInvincible && !isFlying) {
                               game.healthInternal -= 34;
                               setHealth(Math.max(0, game.healthInternal));
@@ -772,26 +774,34 @@ const NeonRunner = () => {
                                   game.isInvincible = true; game.invincibleTimer = 60;
                               }
                           }
-                      } else if (idx === 1) { // Coin Logic
+                      } else if (idx === 1 || idx === 2) { // Coin or Rocket
+                          // STRICT VERTICAL CHECK FOR 2 TIERS
+                          // Player Y + 0.5 is approx Center Body.
+                          // Distance must be < 1.0 to ensure you can't pick up Air items while on Ground
+                          // Air Item Y = 3.2. Ground Player Center = 0.5. Diff = 2.7 (No pickup).
+                          // Air Item Y = 3.2. Jump Peak Player Center = ~3.2. Diff = 0 (Pickup).
                           const dy = Math.abs(obj.position.y - (game.playerContainer.position.y + 0.5));
-                          if (dy < 1.2) {
-                              const vec = obj.position.clone().project(game.camera);
-                              const x = (vec.x * .5 + .5) * window.innerWidth;
-                              const y = (-(vec.y * .5) + .5) * window.innerHeight;
-                              let tx = window.innerWidth - 60; let ty = 60;
-                              if (coinTargetRef.current) {
-                                  const rect = coinTargetRef.current.getBoundingClientRect();
-                                  tx = rect.left + rect.width / 2; ty = rect.top + rect.height / 2;
-                              }
-                              setFloatingCoins(p => [...p, { id: Date.now() + Math.random(), start: {x, y}, end: {x: tx, y: ty} }]);
-                              triggerCanvasEffect(obj.position, 'COIN');
-                              setScore(p => p + 100);
-                              game.scene.remove(obj); arr.splice(i, 1);
+                          
+                          if (dy < 1.0) {
+                                if (idx === 1) { // Coin
+                                    const vec = obj.position.clone().project(game.camera);
+                                    const x = (vec.x * .5 + .5) * window.innerWidth;
+                                    const y = (-(vec.y * .5) + .5) * window.innerHeight;
+                                    let tx = window.innerWidth - 60; let ty = 60;
+                                    if (coinTargetRef.current) {
+                                        const rect = coinTargetRef.current.getBoundingClientRect();
+                                        tx = rect.left + rect.width / 2; ty = rect.top + rect.height / 2;
+                                    }
+                                    setFloatingCoins(p => [...p, { id: Date.now() + Math.random(), start: {x, y}, end: {x: tx, y: ty} }]);
+                                    triggerCanvasEffect(obj.position, 'COIN');
+                                    setScore(p => p + 100);
+                                    game.scene.remove(obj); arr.splice(i, 1);
+                                } else { // Rocket
+                                    game.flightTimer = game.maxFlightTime;
+                                    triggerCanvasEffect(game.playerContainer.position, 'LANDING');
+                                    game.scene.remove(obj); arr.splice(i, 1);
+                                }
                           }
-                      } else if (idx === 2) { // Rocket
-                          game.flightTimer = game.maxFlightTime;
-                          triggerCanvasEffect(game.playerContainer.position, 'LANDING');
-                          game.scene.remove(obj); arr.splice(i, 1);
                       }
                   }
                   if (obj.position.z > 8) { game.scene.remove(obj); arr.splice(i, 1); }
