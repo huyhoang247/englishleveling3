@@ -1,3 +1,5 @@
+// --- START OF FILE lucky-game.tsx (15).txt ---
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
@@ -102,7 +104,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
             `}>
                 <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
-                {/* TỐI ƯU: Đã xóa backdrop-blur-sm, thay bằng màu nền bán trong suốt để nhẹ GPU */}
                 <div className="relative z-10 p-2 rounded-xl bg-slate-900/70 ring-1 ring-white/5 w-14 h-14 flex items-center justify-center shadow-inner">
                     {typeof item.icon === 'string' ? (
                         <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain drop-shadow-md" />
@@ -132,7 +133,7 @@ const CARD_GAP = 12;
 const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
 const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
-const SPIN_DURATION_SEC = 6; // Giảm thời gian xuống 6s để phù hợp với số lượng item giảm đi
+const SPIN_DURATION_SEC = 6; 
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
@@ -140,6 +141,7 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
     const handleWatchAds = () => {
         // Logic xem quảng cáo sẽ ở đây
+        // Sau khi xem xong, gọi onClose để claim
         console.log("Watching Ads for x2 Reward...");
         onClose();
     };
@@ -245,7 +247,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   } = useGame();
 
   // --- [NEW] ANIMATED VALUES ---
-  // Tạo hiệu ứng số nhảy cho Coins và Jackpot
   const animatedCoins = useAnimateValue(coins, 800);
   const animatedJackpot = useAnimateValue(jackpotPool, 800);
 
@@ -297,9 +298,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   // Initial Strip
   useEffect(() => {
     if (isSpinning) return;
-    if (wonRewardDetails) return; // Nếu đã có winner thì để logic trong spin xử lý, không reset
+    if (wonRewardDetails) return; 
     
-    // Chỉ tạo strip ngẫu nhiên khi component load lần đầu hoặc đổi multiplier mà chưa quay
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
@@ -308,13 +308,40 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     setOffset(0);
   }, [getRandomFiller, spinMultiplier, isSpinning, wonRewardDetails]);
 
+  // --- [NEW] HANDLE CLAIM LOGIC ---
+  const handleClaimReward = useCallback(() => {
+    if (!wonRewardDetails) {
+        setShowRewardPopup(false);
+        return;
+    }
+
+    if (wonRewardDetails.rarity === 'jackpot') {
+        // Cộng toàn bộ Jackpot pool vào ví
+        updateCoins(wonRewardDetails.value);
+        // Reset Jackpot pool về 0 (hoặc giá trị khởi điểm)
+        handleUpdateJackpotPool(0, true);
+    } else if (wonRewardDetails.rewardType === 'pickaxe' && wonRewardDetails.rewardAmount) {
+        handleUpdatePickaxes(wonRewardDetails.rewardAmount);
+    } else if (wonRewardDetails.rewardType === 'coin') {
+        updateCoins(wonRewardDetails.value);
+    } 
+    // Các loại reward khác (other) xử lý tại đây nếu có logic cụ thể
+
+    setShowRewardPopup(false);
+    setWonRewardDetails(null);
+    setJackpotWon(false);
+  }, [wonRewardDetails, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool]);
+
+
   // --- UPDATED SPIN LOGIC ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
 
+    // Trừ tiền ngay khi bắt đầu quay
     updateCoins(-cost);
     
+    // Cộng vào Jackpot pool ngay khi quay
     const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
     handleUpdateJackpotPool(randomCoinsToAdd);
 
@@ -332,31 +359,23 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             winner = others[Math.floor(Math.random() * others.length)];
         }
 
-        // TỐI ƯU: GIẢM TARGET_INDEX XUỐNG 50 (từ 100)
-        // Điều này giảm đáng kể số lượng DOM node cần render và transform, giúp FPS mượt hơn
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
-        // --- BƯỚC QUAN TRỌNG: NỐI TIẾP VÒNG QUAY ---
         const startNode = wonRewardDetails 
             ? { ...wonRewardDetails, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
 
         newStrip.push(startNode);
-
         for (let i = 0; i < TARGET_INDEX; i++) {
             newStrip.push({ ...getRandomFiller(), uniqueId: `spin-mid-${Date.now()}-${i}` });
         }
-
         newStrip.push({ ...winner, uniqueId: `winner-${Date.now()}` });
-
         for (let i = 0; i < 5; i++) {
             newStrip.push({ ...getRandomFiller(), uniqueId: `spin-end-${Date.now()}-${i}` });
         }
 
         setStrip(newStrip);
-
-        // --- RESET VỊ TRÍ VỀ 0 NGAY LẬP TỨC ---
         setTransitionDuration(0);
         setOffset(0);
 
@@ -365,34 +384,34 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             const distanceToIndex = 1 + TARGET_INDEX; 
             const finalOffset = -(distanceToIndex * ITEM_FULL_WIDTH);
 
-            setTransitionDuration(SPIN_DURATION_SEC); // Dùng 6s
+            setTransitionDuration(SPIN_DURATION_SEC);
             setOffset(finalOffset);
             
             setTimeout(() => {
                 setIsSpinning(false);
                 
+                // Xác định giá trị thực tế của phần thưởng để hiển thị
                 let actualValue = winner.value;
-                if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
-                    handleUpdatePickaxes(winner.rewardAmount);
-                    actualValue = winner.rewardAmount;
-                } else if (winner.rarity === 'jackpot') {
-                    actualValue = jackpotPool;
+                
+                if (winner.rarity === 'jackpot') {
+                    actualValue = jackpotPool; // Snapshot giá trị Jackpot hiện tại
                     setJackpotWon(true);
                     setJackpotAnimation(true);
-                    updateCoins(actualValue);
-                    handleUpdateJackpotPool(0, true);
+                    // CHÚ Ý: Không cộng tiền hay reset pool ở đây nữa
                     setTimeout(() => setJackpotAnimation(false), 3000);
-                } else if (winner.rewardType === 'coin') {
-                    updateCoins(winner.value);
+                } else if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
+                    actualValue = winner.rewardAmount;
                 }
 
+                // Lưu thông tin phần thưởng để xử lý khi Claim
                 setWonRewardDetails({ ...winner, value: actualValue });
                 setShowRewardPopup(true);
+
             }, (SPIN_DURATION_SEC * 1000) + 100); 
         }, 50);
     }, 10);
 
-  }, [isSpinning, coins, displayItems, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool, jackpotPool, getRandomFiller, spinMultiplier, wonRewardDetails, strip]);
+  }, [isSpinning, coins, displayItems, updateCoins, handleUpdateJackpotPool, jackpotPool, getRandomFiller, spinMultiplier, wonRewardDetails, strip]);
   
   const currentCost = BASE_COST * spinMultiplier;
 
@@ -457,11 +476,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                     className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
                         transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
-                        // Dùng cubic-bezier để chuyển động mượt mà hơn
                         transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
                     }}
                 >
-                    {/* TỐI ƯU: Render bằng component đã được Memoize */}
                     {strip.map((item) => (
                         <GameCard key={item.uniqueId} item={item} />
                     ))}
@@ -566,7 +583,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           </div>
       )}
 
-      {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
+      {/* Thay đổi: Truyền handleClaimReward vào onClose */}
+      {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={handleClaimReward} /> )}
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;700;800;900&display=swap');
