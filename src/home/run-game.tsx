@@ -191,8 +191,8 @@ const NeonRunner = () => {
   const TIER_1_Y = 0.6; // Ground tier item height
   const TIER_2_Y = 3.2; // Air tier item height
   const FLIGHT_Y = 3.2; // Stable flight height
-  const JUMP_POWER = 0.45; // Tuned for reaching Tier 2
-  const GRAVITY = 0.028; // Tuned gravity
+  const JUMP_POWER = 0.40; // Reduced slightly for shorter character feel
+  const GRAVITY = 0.028; 
 
   const gameRef = useRef({
     scene: null, camera: null, renderer: null,
@@ -230,7 +230,7 @@ const NeonRunner = () => {
     scene.fog = new THREE.FogExp2(bgColor, 0.02);
 
     const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(0, 5, 9);
+    camera.position.set(0, 4.5, 8.5); // Slightly lower and closer camera
     
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -261,11 +261,11 @@ const NeonRunner = () => {
     gridHelper.position.y = -0.5;
     scene.add(gridHelper);
 
-    // --- CHARACTER DESIGN ---
+    // --- UPDATED CHARACTER DESIGN (SHORTER) ---
     const createCharacter = () => {
         const container = new THREE.Group(); 
         const group = new THREE.Group();
-        group.position.y = 0.55; 
+        group.position.y = 0.35; // Lowered base center (was 0.55)
         container.add(group);
 
         const armorMat = new THREE.MeshStandardMaterial({ color: 0xe0e0e0, roughness: 0.4, metalness: 0.5 });
@@ -273,18 +273,33 @@ const NeonRunner = () => {
         const glowMat = new THREE.MeshBasicMaterial({ color: 0x00ffff }); 
         const visorMat = new THREE.MeshStandardMaterial({ color: 0x110033, roughness: 0.1, metalness: 0.9, emissive: 0x001133, emissiveIntensity: 0.5 });
 
-        // Body
+        // COMPACT BODY PROPORTIONS
+        
+        // Chest
         const chest = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.4, 0.3), armorMat);
-        chest.position.y = 0.85; chest.castShadow = true; group.add(chest);
-        const abs = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.35, 8), darkSuitMat);
-        abs.position.y = 0.55; group.add(abs);
-        const core = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), glowMat);
-        core.position.set(0, 0.85, 0.16); group.add(core);
-        const hips = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.2, 0.28), armorMat);
-        hips.position.y = 0.3; group.add(hips);
+        chest.position.y = 0.65; // Lowered from 0.85
+        chest.castShadow = true; 
+        group.add(chest);
 
-        // Head
-        const headGroup = new THREE.Group(); headGroup.position.set(0, 1.05, 0); 
+        // Abs (Shortened)
+        const abs = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.2, 0.25, 8), darkSuitMat); // Height 0.25 (was 0.35)
+        abs.position.y = 0.38; // Lowered from 0.55
+        group.add(abs);
+
+        // Core
+        const core = new THREE.Mesh(new THREE.CircleGeometry(0.08, 16), glowMat);
+        core.position.set(0, 0.65, 0.16); 
+        group.add(core);
+
+        // Hips
+        const hips = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.2, 0.28), armorMat);
+        hips.position.y = 0.20; // Lowered from 0.3
+        group.add(hips);
+
+        // Head (Lowered)
+        const headGroup = new THREE.Group(); 
+        headGroup.position.set(0, 0.85, 0); // Lowered from 1.05
+        
         const helmet = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.35, 0.35), armorMat);
         helmet.position.y = 0.18; helmet.castShadow = true;
         const visor = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.15, 0.1), visorMat);
@@ -293,31 +308,60 @@ const NeonRunner = () => {
         ear.position.y = 0.18;
         headGroup.add(ear); headGroup.add(helmet); headGroup.add(visor); group.add(headGroup);
 
-        // Jetpack
-        const packGroup = new THREE.Group(); packGroup.position.set(0, 0.85, -0.15);
+        // Jetpack (Adjusted)
+        const packGroup = new THREE.Group(); 
+        packGroup.position.set(0, 0.65, -0.15); // Aligned with chest
         const mainPack = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.45, 0.15), armorMat); packGroup.add(mainPack);
-        const tGeo = new THREE.CylinderGeometry(0.05, 0.08, 0.4, 8);
-        const t1 = new THREE.Mesh(tGeo, darkSuitMat); t1.position.set(-0.18, -0.1, 0); packGroup.add(t1);
-        const t2 = new THREE.Mesh(tGeo, darkSuitMat); t2.position.set(0.18, -0.1, 0); packGroup.add(t2);
-        const fGeo = new THREE.ConeGeometry(0.08, 0.6, 8); fGeo.rotateX(Math.PI);
-        const f1 = new THREE.Mesh(fGeo, glowMat); f1.position.set(-0.18, -0.4, 0); f1.visible = false; packGroup.add(f1);
-        const f2 = new THREE.Mesh(fGeo, glowMat); f2.position.set(0.18, -0.4, 0); f2.visible = false; packGroup.add(f2);
+        
+        const tGeo = new THREE.CylinderGeometry(0.05, 0.08, 0.3, 8); // Shorter tanks
+        const t1 = new THREE.Mesh(tGeo, darkSuitMat); t1.position.set(-0.18, -0.05, 0); packGroup.add(t1);
+        const t2 = new THREE.Mesh(tGeo, darkSuitMat); t2.position.set(0.18, -0.05, 0); packGroup.add(t2);
+        
+        const fGeo = new THREE.ConeGeometry(0.08, 0.5, 8); fGeo.rotateX(Math.PI);
+        const f1 = new THREE.Mesh(fGeo, glowMat); f1.position.set(-0.18, -0.3, 0); f1.visible = false; packGroup.add(f1);
+        const f2 = new THREE.Mesh(fGeo, glowMat); f2.position.set(0.18, -0.3, 0); f2.visible = false; packGroup.add(f2);
         group.add(packGroup);
 
-        // Limbs
+        // Limbs (Shortened)
         const createLimb = (isArm, xPos) => {
-            const lg = new THREE.Group(); lg.position.set(xPos, isArm ? 1.0 : 0.3, 0);
-            const j = new THREE.Mesh(new THREE.SphereGeometry(isArm?0.12:0.13,8,8), darkSuitMat); lg.add(j);
-            const u = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.12:0.15, isArm?0.35:0.45, isArm?0.12:0.15), darkSuitMat);
-            u.translateY(isArm?-0.18:-0.22); lg.add(u);
-            const p = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.14:0.17, isArm?0.2:0.25, isArm?0.14:0.17), armorMat);
-            p.translateY(isArm?-0.15:-0.2); lg.add(p);
-            const l = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.1:0.12, isArm?0.3:0.4, isArm?0.1:0.12), armorMat);
-            l.translateY(isArm?-0.45:-0.6); lg.add(l);
-            if(isArm) { const h = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.12,0.1), darkSuitMat); h.translateY(-0.65); lg.add(h); }
-            else { const f = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.1,0.25), darkSuitMat); f.translate(0,-0.8,0.05); lg.add(f); }
+            const lg = new THREE.Group(); 
+            // Arm starts at shoulder (0.75), Leg starts at hip (0.2)
+            lg.position.set(xPos, isArm ? 0.75 : 0.2, 0); 
+
+            // Joint
+            const j = new THREE.Mesh(new THREE.SphereGeometry(isArm?0.12:0.12,8,8), darkSuitMat); 
+            lg.add(j);
+            
+            // Upper Limb (Shortened)
+            const uHeight = isArm ? 0.28 : 0.32; // Reduced
+            const u = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.12:0.15, uHeight, isArm?0.12:0.15), darkSuitMat);
+            u.translateY(-(uHeight/2 + 0.05)); 
+            lg.add(u);
+
+            // Pad
+            const p = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.14:0.17, 0.2, isArm?0.14:0.17), armorMat);
+            p.translateY(-(uHeight/2)); 
+            lg.add(p);
+
+            // Lower Limb (Shortened)
+            const lHeight = isArm ? 0.25 : 0.3; // Reduced
+            const l = new THREE.Mesh(new THREE.BoxGeometry(isArm?0.1:0.12, lHeight, isArm?0.1:0.12), armorMat);
+            l.translateY(-(uHeight + lHeight/2 + 0.05)); 
+            lg.add(l);
+
+            if(isArm) { 
+                const h = new THREE.Mesh(new THREE.BoxGeometry(0.1,0.12,0.1), darkSuitMat); 
+                h.translateY(-(uHeight + lHeight + 0.1)); 
+                lg.add(h); 
+            } else { 
+                // Feet
+                const f = new THREE.Mesh(new THREE.BoxGeometry(0.14,0.1,0.25), darkSuitMat); 
+                f.translate(0, -(uHeight + lHeight + 0.1), 0.05); 
+                lg.add(f); 
+            }
             return lg;
         };
+
         const leftArm = createLimb(true, -0.32); const rightArm = createLimb(true, 0.32);
         const leftLeg = createLimb(false, -0.14); const rightLeg = createLimb(false, 0.14);
         group.add(leftArm); group.add(rightArm); group.add(leftLeg); group.add(rightLeg);
@@ -353,47 +397,56 @@ const NeonRunner = () => {
 
     const createRocketTexture = () => {
         const canvas = document.createElement('canvas');
-        canvas.width = 128; canvas.height = 128;
+        canvas.width = 256; canvas.height = 256; 
         const ctx = canvas.getContext('2d');
         
-        // 1. Dark Metallic Hull
-        const grad = ctx.createLinearGradient(0, 0, 128, 0);
-        grad.addColorStop(0, '#223344');
-        grad.addColorStop(0.5, '#445566');
-        grad.addColorStop(1, '#223344');
+        const grad = ctx.createLinearGradient(0, 0, 256, 0);
+        grad.addColorStop(0, '#e0e7ff'); 
+        grad.addColorStop(0.5, '#ffffff'); 
+        grad.addColorStop(1, '#e0e7ff');
         ctx.fillStyle = grad;
-        ctx.fillRect(0, 0, 128, 128);
+        ctx.fillRect(0, 0, 256, 256);
 
-        // 2. Plasma Core Window (Vertical Strip)
-        ctx.fillStyle = '#000';
-        ctx.fillRect(40, 10, 48, 108);
-        
-        // Glowing Core
-        const coreGrad = ctx.createLinearGradient(0, 0, 128, 0);
-        coreGrad.addColorStop(0.3, '#00ff00');
-        coreGrad.addColorStop(0.5, '#ccffcc'); // Hot white center
-        coreGrad.addColorStop(0.7, '#00ff00');
-        ctx.fillStyle = coreGrad;
-        ctx.shadowColor = '#00ff00';
-        ctx.shadowBlur = 20;
-        ctx.fillRect(48, 15, 32, 98);
-        ctx.shadowBlur = 0;
-
-        // 3. Tech Panels / Lines
-        ctx.strokeStyle = '#8899aa';
+        ctx.strokeStyle = '#94a3b8'; 
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(0, 30); ctx.lineTo(128, 30); // Top ring
-        ctx.moveTo(0, 100); ctx.lineTo(128, 100); // Bottom ring
+        for(let i=0; i<256; i+=32) {
+            ctx.moveTo(0, i); ctx.lineTo(256, i);
+        }
         ctx.stroke();
 
-        // 4. Warning Label
+        const coreGrad = ctx.createLinearGradient(80, 0, 176, 0);
+        coreGrad.addColorStop(0, '#06b6d4'); 
+        coreGrad.addColorStop(0.5, '#ecfeff'); 
+        coreGrad.addColorStop(1, '#06b6d4');
+        
+        ctx.fillStyle = coreGrad;
+        ctx.fillRect(100, 20, 56, 216);
+        
+        ctx.shadowColor = '#06b6d4';
+        ctx.shadowBlur = 20;
+        ctx.strokeStyle = '#22d3ee';
+        ctx.lineWidth = 4;
+        ctx.strokeRect(100, 20, 56, 216);
+        ctx.shadowBlur = 0;
+
+        ctx.fillStyle = '#64748b';
+        for(let y=10; y<256; y+=32) {
+            ctx.beginPath(); ctx.arc(90, y, 4, 0, Math.PI*2); ctx.fill();
+            ctx.beginPath(); ctx.arc(166, y, 4, 0, Math.PI*2); ctx.fill();
+        }
+
+        ctx.fillStyle = '#f59e0b'; 
+        for(let i=0; i<6; i++) {
+             ctx.fillRect(0, 220 + i*10, 256, 5);
+        }
+
         ctx.save();
-        ctx.translate(20, 64);
+        ctx.translate(60, 128);
         ctx.rotate(-Math.PI / 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.font = '10px monospace';
-        ctx.fillText('FUEL-X', 0, 0);
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'bold 24px Arial';
+        ctx.fillText('HYPER', 0, 0);
         ctx.restore();
 
         return new THREE.CanvasTexture(canvas);
@@ -443,7 +496,7 @@ const NeonRunner = () => {
       // Rocket Parts
       rocketBody: new THREE.CylinderGeometry(0.12, 0.12, 0.6, 16),
       rocketNose: new THREE.ConeGeometry(0.12, 0.25, 16),
-      rocketFin: new THREE.BoxGeometry(0.05, 0.2, 0.2),
+      rocketFin: new THREE.BoxGeometry(0.05, 0.25, 0.25), 
       
       speedLine: new THREE.BoxGeometry(0.04, 0.04, 5),
       plane: new THREE.PlaneGeometry(1, 1) 
@@ -463,11 +516,11 @@ const NeonRunner = () => {
     
     game.cachedMaterials.rocketBody = new THREE.MeshStandardMaterial({ 
         map: rocketTexture, 
-        metalness: 0.6, roughness: 0.4, 
-        emissive: 0x003300, emissiveMap: rocketTexture, emissiveIntensity: 0.8 
+        metalness: 0.3, roughness: 0.2, 
+        emissive: 0xffffff, emissiveMap: rocketTexture, emissiveIntensity: 0.4 
     });
-    game.cachedMaterials.rocketNose = new THREE.MeshStandardMaterial({ color: 0xcc0000, metalness: 0.8, roughness: 0.2 });
-    game.cachedMaterials.rocketFin = new THREE.MeshStandardMaterial({ color: 0x333333, metalness: 0.5 });
+    game.cachedMaterials.rocketNose = new THREE.MeshStandardMaterial({ color: 0xff4500, metalness: 0.6, roughness: 0.2, emissive: 0xff4500, emissiveIntensity: 0.2 }); 
+    game.cachedMaterials.rocketFin = new THREE.MeshStandardMaterial({ color: 0xffffff, metalness: 0.4, roughness: 0.3 }); 
     
     game.cachedMaterials.speedLine = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.3 });
 
@@ -653,7 +706,7 @@ const NeonRunner = () => {
           game.camera.position.y = 5 + (Math.random() - 0.5) * game.cameraShake;
           game.cameraShake *= 0.9;
       } else {
-          game.camera.position.y += (5 - game.camera.position.y) * 0.1;
+          game.camera.position.y += (4.5 - game.camera.position.y) * 0.1;
       }
       game.camera.lookAt(0, 1, -5); 
 
@@ -776,10 +829,6 @@ const NeonRunner = () => {
                           }
                       } else if (idx === 1 || idx === 2) { // Coin or Rocket
                           // STRICT VERTICAL CHECK FOR 2 TIERS
-                          // Player Y + 0.5 is approx Center Body.
-                          // Distance must be < 1.0 to ensure you can't pick up Air items while on Ground
-                          // Air Item Y = 3.2. Ground Player Center = 0.5. Diff = 2.7 (No pickup).
-                          // Air Item Y = 3.2. Jump Peak Player Center = ~3.2. Diff = 0 (Pickup).
                           const dy = Math.abs(obj.position.y - (game.playerContainer.position.y + 0.5));
                           
                           if (dy < 1.0) {
