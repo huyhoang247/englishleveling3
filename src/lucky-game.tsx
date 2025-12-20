@@ -175,7 +175,7 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                          <div className="bg-cyan-900/30 p-1.5 rounded-lg">
                             <InfoIcon className="w-5 h-5 text-cyan-400" />
                          </div>
-                         <h3 className="text-xl font-lilita text-white tracking-wide uppercase">Tỷ lệ rơi vật phẩm</h3>
+                         <h3 className="text-xl font-lilita text-white tracking-wide uppercase">Drop Rate</h3>
                     </div>
                     <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
                         <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
