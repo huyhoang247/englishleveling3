@@ -280,7 +280,10 @@ const App: React.FC = () => {
     return (
       <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
-          <p className="mt-1 mb-5 text-sm text-white tracking-wide font-lilita">{text}<span className="inline-block w-3 text-left">{ellipsis}</span></p>
+          {/* --- UPDATE: Sử dụng font Lilita One trực tiếp, in hoa và to hơn --- */}
+          <p className="mt-1 mb-5 text-xl text-white tracking-wider font-['Lilita_One'] uppercase">
+            {text}<span className="inline-block w-3 text-left">{ellipsis}</span>
+          </p>
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
               <div
