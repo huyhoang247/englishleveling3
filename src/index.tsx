@@ -25,6 +25,24 @@ type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 // ==================================================================
 // HÀM HELPER (Không thay đổi)
 // ==================================================================
+
+// --- CHANGE START: Hàm tải Font cho toàn bộ hệ thống ---
+function loadGlobalFonts() {
+  const fontUrl = "https://fonts.googleapis.com/css2?family=Lilita+One&display=swap";
+  
+  // Kiểm tra xem font đã được thêm chưa để tránh trùng lặp
+  if (!document.querySelector(`link[href="${fontUrl}"]`)) {
+    const link = document.createElement('link');
+    link.href = fontUrl;
+    link.rel = "stylesheet";
+    document.head.appendChild(link);
+    console.log("Global font 'Lilita One' loaded via index.tsx");
+  }
+}
+// Gọi hàm ngay lập tức
+loadGlobalFonts();
+// --- CHANGE END ---
+
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
     const img = new Image();
