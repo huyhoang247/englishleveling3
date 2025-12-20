@@ -4,7 +4,7 @@ import HomeButton from './ui//home-button.tsx';
 import { useGame } from './GameContext.tsx'; 
 import { useAnimateValue } from './ui/useAnimateValue.ts'; 
 
-// --- SVG Icons ---
+// --- SVG Icons (Removed drop-shadows inside icons) ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -77,15 +77,16 @@ const getRarityColor = (rarity: Item['rarity']) => {
     }
 };
 
+// [OPTIMIZED] Removed heavy glow shadows, used borders instead
 const getCardStyle = (rarity: Item['rarity']) => {
     switch(rarity) {
-      case 'common': return { bg: 'bg-gradient-to-br from-slate-800 to-slate-900', border: 'border-slate-600', glow: 'shadow-inner' };
-      case 'uncommon': return { bg: 'bg-gradient-to-br from-emerald-900/60 to-slate-900', border: 'border-emerald-500', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)]' };
-      case 'rare': return { bg: 'bg-gradient-to-br from-cyan-900/60 to-slate-900', border: 'border-cyan-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]' };
-      case 'epic': return { bg: 'bg-gradient-to-br from-fuchsia-900/60 to-slate-900', border: 'border-fuchsia-500', glow: 'shadow-[0_0_20px_rgba(232,121,249,0.4)]' };
-      case 'legendary': return { bg: 'bg-gradient-to-br from-amber-700/60 to-slate-900', border: 'border-amber-400', glow: 'shadow-[0_0_25px_rgba(251,191,36,0.5)]' };
-      case 'jackpot': return { bg: 'bg-gradient-to-br from-red-600 via-amber-600 to-slate-900', border: 'border-yellow-300', glow: 'shadow-[0_0_30px_rgba(252,211,77,0.7)]' };
-      default: return { bg: 'bg-slate-800', border: 'border-slate-700', glow: '' };
+      case 'common': return { bg: 'bg-slate-800', border: 'border-slate-600', text: 'text-slate-400' };
+      case 'uncommon': return { bg: 'bg-emerald-900/40', border: 'border-emerald-600', text: 'text-emerald-400' };
+      case 'rare': return { bg: 'bg-cyan-900/40', border: 'border-cyan-600', text: 'text-cyan-400' };
+      case 'epic': return { bg: 'bg-fuchsia-900/40', border: 'border-fuchsia-600', text: 'text-fuchsia-400' };
+      case 'legendary': return { bg: 'bg-amber-900/40', border: 'border-amber-500', text: 'text-amber-400' };
+      case 'jackpot': return { bg: 'bg-gradient-to-b from-red-900/60 to-amber-900/60', border: 'border-yellow-400', text: 'text-yellow-400' };
+      default: return { bg: 'bg-slate-800', border: 'border-slate-700', text: 'text-slate-400' };
     }
 };
 
@@ -99,38 +100,38 @@ const RARITY_WEIGHTS = {
     'jackpot': 5
 };
 
-// --- COMPONENT: GameCard ---
+// --- OPTIMIZED COMPONENT: GameCard ---
+// Removed drop-shadows, simplified rendering structure
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
     return (
         <div 
-            className="flex-shrink-0 flex items-center justify-center transform"
+            className="flex-shrink-0 flex items-center justify-center transform will-change-transform" // added will-change-transform
             style={{ width: 110, marginRight: 12 }} 
         >
             <div className={`
                 relative w-full aspect-[4/5] rounded-xl 
-                bg-gradient-to-b ${style.bg}
-                border ${style.border}
+                ${style.bg} border ${style.border}
                 flex flex-col items-center justify-center gap-2
-                ${style.glow}
-                shadow-lg
-            `}>
-                <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
-
-                <div className="relative z-10 p-2 rounded-xl bg-slate-900/70 ring-1 ring-white/5 w-14 h-14 flex items-center justify-center shadow-inner">
+                shadow-sm 
+            `}> 
+                {/* Removed internal glow divs and heavy gradients */}
+                
+                <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-14 h-14 flex items-center justify-center">
                     {typeof item.icon === 'string' ? (
-                        <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain drop-shadow-md" />
+                        <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain" />
                     ) : (
-                        <item.icon className={`w-9 h-9 ${item.color} drop-shadow-md`} />
+                        <item.icon className={`w-9 h-9 ${item.color}`} />
                     )}
                 </div>
                 
                 <div className="relative z-10 text-center w-full px-1">
-                    <div className={`text-[10px] font-bold uppercase tracking-wider opacity-80 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
+                    <div className={`text-[10px] font-bold uppercase tracking-wider opacity-90 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
                         {item.name || item.rarity}
                     </div>
-                    <div className="text-sm font-black text-white drop-shadow-sm mt-1 font-lilita tracking-wide">
+                    {/* Removed drop-shadow from text */}
+                    <div className="text-sm font-black text-white mt-1 font-lilita tracking-wide">
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
                 </div>
@@ -164,14 +165,14 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
     }, [items, getWeight]);
 
     return (
-        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={onClose}>
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={onClose}>
             <div 
-                className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
+                className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
                 onClick={(e) => e.stopPropagation()}
             >
-                <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl">
+                <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800 rounded-t-2xl">
                     <div className="flex items-center gap-2">
-                         <div className="bg-cyan-500/20 p-1.5 rounded-lg">
+                         <div className="bg-cyan-900/30 p-1.5 rounded-lg">
                             <InfoIcon className="w-5 h-5 text-cyan-400" />
                          </div>
                          <h3 className="text-xl font-lilita text-white tracking-wide uppercase">Tỷ lệ rơi vật phẩm</h3>
@@ -192,7 +193,7 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
 
                         const style = getCardStyle(item.rarity);
                         return (
-                            <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border bg-slate-800/50 ${isJackpot ? 'border-yellow-500/50 bg-gradient-to-r from-yellow-900/20 to-transparent' : 'border-slate-700/50'}`}>
+                            <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border bg-slate-800 ${isJackpot ? 'border-yellow-500/50' : 'border-slate-700/50'}`}>
                                 <div className="flex items-center gap-3">
                                     <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${style.bg} border ${style.border} shadow-sm`}>
                                          {typeof item.icon === 'string' ? (
@@ -218,10 +219,6 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                         );
                     })}
                 </div>
-                
-                <div className="p-3 text-center border-t border-slate-700 bg-slate-800/30 rounded-b-2xl">
-                    <p className="text-[10px] text-slate-500">Tỷ lệ được tính toán dựa trên hệ thống trọng số (Weighted System).</p>
-                </div>
             </div>
         </div>
     );
@@ -237,15 +234,16 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     };
 
     return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
+    // [OPTIMIZED] bg-black/95 instead of blur
+    <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
-        className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
-            ${jackpotWon ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-slate-600'}`
+        className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
+            ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`
         }
         onClick={(e) => e.stopPropagation()}
       >
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
-             <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
+             <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-lg ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
                     <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
                 ) : (
@@ -257,32 +255,32 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         <div className="mt-14 mb-2">
             {jackpotWon ? (
                 <>
-                    <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-1 drop-shadow-md animate-pulse">JACKPOT!</h2>
+                    <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-1 animate-pulse">JACKPOT!</h2>
                     <p className="font-sans text-yellow-200/80 text-sm">Bạn đã trúng toàn bộ quỹ thưởng!</p>
                 </>
             ) : (
                 <>
-                    <h2 className="text-3xl font-bold uppercase tracking-wide drop-shadow-sm" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
+                    <h2 className="text-3xl font-bold uppercase tracking-wide" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
                     <p className="font-sans text-slate-400 text-xs uppercase tracking-widest mt-1 font-semibold">{item.rarity} Reward</p>
                 </>
             )}
         </div>
 
         <div className="flex flex-col gap-2 w-full my-6">
-            <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
+            <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col items-center justify-center">
                  <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
                  <div className="flex items-center gap-3">
                     {item.rewardType === 'coin' && (
                         <>
-                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8 drop-shadow-md" />
-                            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-500 drop-shadow-sm">{item.value.toLocaleString()}</span>
+                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
+                            <span className="text-4xl font-black text-yellow-400">{item.value.toLocaleString()}</span>
                         </>
                     )}
                     {(item.rewardType === 'pickaxe' || item.rewardType === 'other') && (
                         <>
-                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-8 h-8 drop-shadow-md" />}
-                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-8 h-8 ${item.color} drop-shadow-md`} />}
-                            <span className="text-4xl font-black text-white drop-shadow-sm">x{item.rewardAmount?.toLocaleString()}</span>
+                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-8 h-8" />}
+                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-8 h-8 ${item.color}`} />}
+                            <span className="text-4xl font-black text-white">x{item.rewardAmount?.toLocaleString()}</span>
                         </>
                     )}
                  </div>
@@ -291,16 +289,15 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         
         <div className="flex w-full gap-3 mt-1">
             <button onClick={handleWatchAds} className="group relative flex-1">
-                <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
-                <div className="relative h-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-xl border-t border-white/20 shadow-lg flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
+                <div className="relative h-full bg-emerald-600 hover:bg-emerald-500 rounded-xl border-t border-white/20 shadow-md flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
                     <div className="flex items-center gap-1.5 mb-0.5">
                         <div className="bg-black/20 p-1 rounded-full"><PlayIcon className="w-3.5 h-3.5 text-white" /></div>
-                        <span className="text-xl font-black text-white italic tracking-wide drop-shadow-md">x2</span>
+                        <span className="text-xl font-black text-white italic tracking-wide">x2</span>
                     </div>
                     <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
                 </div>
             </button>
-            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all">
+            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-md flex items-center justify-center active:scale-95 transition-all">
                 <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
             </button>
         </div>
@@ -327,7 +324,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   
   // Game Logic States
   const [pendingContribution, setPendingContribution] = useState(0);
-  const [lastWinItem, setLastWinItem] = useState<StripItem | null>(null); // State mới để lưu item thắng cuộc
+  const [lastWinItem, setLastWinItem] = useState<StripItem | null>(null);
 
   const [strip, setStrip] = useState<StripItem[]>([]);
   const [offset, setOffset] = useState(0);
@@ -373,21 +370,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     return fillerItems[Math.floor(Math.random() * fillerItems.length)];
   }, [displayItems]);
 
-  // --- MODIFIED USEEFFECT ---
-  // Chỉ chạy khi thay đổi hệ số nhân (x1, x10) hoặc lần đầu vào game
   useEffect(() => {
-    // Reset last item khi đổi multiplier vì giá trị/item thay đổi
     setLastWinItem(null); 
-    
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
     }
     setStrip(initStrip);
     setOffset(0);
-  }, [getRandomFiller, spinMultiplier]); // BỎ wonRewardDetails khỏi dependency
+  }, [getRandomFiller, spinMultiplier]); 
 
-  // --- UPDATED SPIN LOGIC ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
@@ -402,7 +394,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         setJackpotWon(false);
         setShowRewardPopup(false);
 
-        // --- WEIGHTED SELECTION ---
         let totalWeight = 0;
         const weightedPool = displayItems.map(item => {
             const weight = getItemWeight(item.rarity);
@@ -423,8 +414,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
-        // --- LOGIC MỚI ĐỂ LẤY ITEM BẮT ĐẦU ---
-        // Sử dụng lastWinItem nếu có, nếu không thì dùng strip hiện tại, hoặc random
         const startNode = lastWinItem 
             ? { ...lastWinItem, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
@@ -465,9 +454,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                     setTimeout(() => setJackpotAnimation(false), 3000);
                 }
                 
-                // LƯU LẠI ITEM THẮNG ĐỂ LÀM MỐC CHO VÒNG SAU
                 setLastWinItem(winner);
-
                 setWonRewardDetails({ ...winner, value: actualValue });
                 setShowRewardPopup(true);
             }, (SPIN_DURATION_SEC * 1000) + 100); 
@@ -476,7 +463,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
   }, [isSpinning, coins, displayItems, updateCoins, jackpotPool, getRandomFiller, spinMultiplier, lastWinItem, strip, getItemWeight]);
   
-  // --- HANDLE CLAIM ---
   const handleClaimReward = useCallback(() => {
       if (!wonRewardDetails) {
           setShowRewardPopup(false);
@@ -498,7 +484,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       setShowRewardPopup(false);
       setWonRewardDetails(null);
       setJackpotWon(false);
-      // KHÔNG reset strip ở đây nữa
 
   }, [wonRewardDetails, pendingContribution, updateCoins, handleUpdateJackpotPool, handleUpdatePickaxes]);
 
@@ -507,15 +492,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
-      {/* --- BACKGROUND --- */}
+      {/* --- BACKGROUND (Removed heavy noise overlay and blur) --- */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,#1e1b4b_0%,#000000_80%)]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/20 blur-[100px] rounded-full"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-slate-950" />
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/10 blur-[80px] rounded-full"></div>
       </div>
 
       {/* --- HEADER --- */}
-      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
+      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-800 z-[60] shadow-sm">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
             <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={isStatsFullscreen} />
@@ -524,26 +508,23 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
-        {/* --- JACKPOT UI --- */}
+        {/* --- JACKPOT UI (Reduced Shadows) --- */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
-                ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-pulse' : 'bg-gradient-to-br from-slate-900/90 to-black border-slate-700 shadow-2xl backdrop-blur-md' }
+                ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-600 to-red-600 border-yellow-300' : 'bg-slate-900 border-slate-700 shadow-md' }
             `}>
-              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
-              
               <button 
                 onClick={() => setShowRatePopup(true)}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-all shadow-md z-20 group"
-                title="Xem tỷ lệ trúng thưởng"
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-all shadow-sm z-20 group"
               >
                   <InfoIcon className="w-4 h-4" />
               </button>
 
-              <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
-              <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">{animatedJackpot.toLocaleString()}</span>
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
+              <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase"> JACKPOT POOL </div>
+              <div className={`text-5xl font-lilita text-white flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
+                <span className="text-white">{animatedJackpot.toLocaleString()}</span>
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10" />
               </div>
               
               {(() => {
@@ -555,18 +536,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                     <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide"> Tỉ lệ quay trúng ô JACKPOT: <span className="text-yellow-400 font-bold">{jackpotRate.toFixed(2)}%</span> </div>
                   );
               })()}
-              
-              {jackpotAnimation && ( <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div> )}
             </div>
         </div>
         
-        {/* --- SPINNER UI --- */}
+        {/* --- SPINNER UI (Optimized shadows) --- */}
         <div className="relative w-full max-w-4xl mb-12">
-            <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden">
-                <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] rounded-xl"></div>
+            <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-lg overflow-hidden">
+                {/* Removed heavy inset shadow div */}
                 <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-[#050505] via-transparent to-[#050505] opacity-80"></div>
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-900 to-transparent z-20"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-900 to-transparent z-20"></div>
 
                 <div className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
@@ -581,36 +560,31 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             {/* TARGET UI */}
             <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
                  <div className="absolute h-full w-[130px] bg-gradient-to-r from-transparent via-yellow-400/5 to-transparent"></div>
-                 <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/20 rounded-xl">
-                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-yellow-400 rounded-tl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
-                    <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-yellow-400 rounded-tr-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
-                    <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-yellow-400 rounded-bl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
-                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-yellow-400 rounded-br-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
-                 </div>
-                 <div className="absolute inset-0 flex justify-center"><div className="h-full w-[1px] bg-gradient-to-b from-transparent via-yellow-300/80 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.8)]"></div></div>
-                 <div className="absolute top-0 transform -translate-y-1/2 z-40"><div className="relative flex flex-col items-center"><div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div></div></div>
-                 <div className="absolute bottom-0 transform translate-y-1/2 z-40"><div className="relative flex flex-col items-center"><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div><div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_-2px_10px_rgba(0,0,0,0.5)]"></div></div></div>
+                 <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/30 rounded-xl"></div>
+                 <div className="absolute inset-0 flex justify-center"><div className="h-full w-[1px] bg-yellow-500/50"></div></div>
+                 <div className="absolute top-0 transform -translate-y-1/2 z-40"><div className="w-4 h-4 bg-yellow-500 rotate-45 border border-yellow-900"></div></div>
+                 <div className="absolute bottom-0 transform translate-y-1/2 z-40"><div className="w-4 h-4 bg-yellow-500 rotate-45 border border-yellow-900"></div></div>
             </div>
         </div>
 
         {/* --- CONTROLS --- */}
         <div className="flex flex-col items-center justify-center z-20">
-              <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg backdrop-blur-sm">
-                 <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x1</button>
-                 <button onClick={() => !isSpinning && setSpinMultiplier(10)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x10</button>
+              <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 mb-4 shadow-md">
+                 <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x1</button>
+                 <button onClick={() => !isSpinning && setSpinMultiplier(10)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x10</button>
               </div>
 
               <button
                 onClick={spinChest}
                 disabled={isSpinning || coins < currentCost}
-                className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)] border-2 bg-slate-900 border-cyan-600"
+                className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 border-2 bg-slate-900 border-cyan-700"
               >
-                <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} bg-gradient-to-r from-cyan-600/20 to-blue-600/20`}></div>
+                <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} bg-cyan-900/30`}></div>
                 <div className="relative z-10 flex flex-col items-center justify-center h-full pb-1">
-                    {isSpinning ? ( <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span> ) : (
+                    {isSpinning ? ( <span className="font-lilita text-lg text-slate-400 tracking-wider">SPINNING...</span> ) : (
                         <>
-                            <span className="font-lilita text-2xl uppercase tracking-widest drop-shadow-md text-cyan-400 group-hover:text-cyan-300">SPIN</span>
-                            <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
+                            <span className="font-lilita text-2xl uppercase tracking-widest text-cyan-400 group-hover:text-cyan-300">SPIN</span>
+                            <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5">
                                 <span className={`text-lg font-lilita tracking-wide leading-none ${coins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>{currentCost}</span>
                                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
                             </div>
@@ -623,8 +597,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       
       {coins < currentCost && !isSpinning && (
           <div className="fixed bottom-3 right-3 z-[100] animate-fade-in pointer-events-none">
-              <div className="bg-slate-900/95 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-2xl backdrop-blur-md flex items-center gap-2">
-                   <svg className="w-4 h-4 text-red-500 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+              <div className="bg-slate-900 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-xl flex items-center gap-2">
                    <span className="font-bold text-xs tracking-wide">Không đủ xu để quay!</span>
               </div>
           </div>
@@ -659,6 +632,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .will-change-transform { will-change: transform; }
       `}</style>
     </div>
   );
