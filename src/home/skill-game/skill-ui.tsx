@@ -411,8 +411,14 @@ function SkillScreenContent() {
                             <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10" />
                             <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{ancientBooks}</span><span className="text-base text-slate-400">/ {CRAFTING_COST}</span></div>
                         </div>
-                        {/* Cập nhật nút Craft với sự kiện onCraftClick mới */}
-                        <button onClick={onCraftClick} className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-bold py-3 px-8 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" disabled={ancientBooks < CRAFTING_COST || isProcessing || ownedSkills.length >= MAX_SKILLS_IN_STORAGE}>Craft</button>
+                        {/* Cập nhật nút Craft với style mới */}
+                        <button 
+                            onClick={onCraftClick} 
+                            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-lilita uppercase text-lg tracking-wider py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" 
+                            disabled={ancientBooks < CRAFTING_COST || isProcessing || ownedSkills.length >= MAX_SKILLS_IN_STORAGE}
+                        >
+                            Craft
+                        </button>
                     </section>
                     
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
