@@ -120,7 +120,7 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                     </div>
                 </div>
                 
-                <div className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full opacity-50" style={{ backgroundColor: getRarityColor(item.rarity) }}></div>
+                {/* ĐÃ XÓA: Đường kẻ ngang màu ở bottom */}
             </div>
         </div>
     );
