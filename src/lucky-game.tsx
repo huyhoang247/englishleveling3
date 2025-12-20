@@ -39,7 +39,7 @@ interface Item {
   name: string;
   value: number; 
   rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' | 'jackpot';
-  color?: string; // Giữ lại để tương thích, nhưng chủ yếu dùng style map mới
+  color: string;
   rewardType?: 'coin' | 'pickaxe' | 'other';
   rewardAmount?: number;
 }
@@ -61,77 +61,48 @@ interface RewardPopupProps {
 interface RateInfoPopupProps {
     items: Item[];
     onClose: () => void;
+    // Truyền hàm lấy trọng số vào để popup tính đúng logic với game
     getWeight: (rarity: string) => number;
 }
 
-// --- NEW STYLE LOGIC (MATCHING EQUIPMENT-UI) ---
-const getRarityStyles = (rarity: Item['rarity']) => {
+// --- UTILITY FUNCTIONS ---
+const getRarityColor = (rarity: Item['rarity']) => {
     switch(rarity) {
-      case 'common': // Rank E - Gray
-        return { 
-            border: 'border-gray-500', 
-            text: 'text-gray-400', 
-            bgGradient: 'from-gray-800/80 to-slate-900',
-            rankName: 'Rank E'
-        };
-      case 'uncommon': // Rank D - Green
-        return { 
-            border: 'border-green-500', 
-            text: 'text-green-400', 
-            bgGradient: 'from-green-900/80 to-slate-900',
-            rankName: 'Rank D'
-        };
-      case 'rare': // Rank B - Blue
-        return { 
-            border: 'border-blue-500', 
-            text: 'text-blue-400', 
-            bgGradient: 'from-blue-900/80 to-slate-900',
-            rankName: 'Rank B'
-        };
-      case 'epic': // Rank A - Purple
-        return { 
-            border: 'border-purple-500', 
-            text: 'text-purple-400', 
-            bgGradient: 'from-purple-900/80 to-slate-900',
-            rankName: 'Rank A'
-        };
-      case 'legendary': // Rank S - Yellow
-        return { 
-            border: 'border-yellow-400', 
-            text: 'text-yellow-400', 
-            bgGradient: 'from-yellow-900/80 to-slate-900',
-            rankName: 'Rank S'
-        };
-      case 'jackpot': // Rank SSR - Red
-        return { 
-            border: 'border-red-500', 
-            text: 'text-red-500', 
-            bgGradient: 'from-red-900/80 to-slate-900',
-            rankName: 'Rank SSR'
-        };
-      default: 
-        return { 
-            border: 'border-gray-600', 
-            text: 'text-gray-500', 
-            bgGradient: 'from-gray-900 to-slate-900',
-            rankName: 'Unknown'
-        };
+      case 'common': return '#9ca3af'; 
+      case 'uncommon': return '#34d399'; 
+      case 'rare': return '#38bdf8'; 
+      case 'epic': return '#a78bfa'; 
+      case 'legendary': return '#fbbf24'; 
+      case 'jackpot': return '#f59e0b'; 
+      default: return '#9ca3af';
     }
 };
 
-// --- WEIGHT CONFIGURATION ---
-const RARITY_WEIGHTS = {
-    'common': 2000,
-    'uncommon': 800,
-    'rare': 300,
-    'epic': 80,
-    'legendary': 20,
-    'jackpot': 5
+const getCardStyle = (rarity: Item['rarity']) => {
+    switch(rarity) {
+      case 'common': return { bg: 'bg-gradient-to-br from-slate-800 to-slate-900', border: 'border-slate-600', glow: 'shadow-inner' };
+      case 'uncommon': return { bg: 'bg-gradient-to-br from-emerald-900/60 to-slate-900', border: 'border-emerald-500', glow: 'shadow-[0_0_15px_rgba(16,185,129,0.2)]' };
+      case 'rare': return { bg: 'bg-gradient-to-br from-cyan-900/60 to-slate-900', border: 'border-cyan-500', glow: 'shadow-[0_0_15px_rgba(34,211,238,0.3)]' };
+      case 'epic': return { bg: 'bg-gradient-to-br from-fuchsia-900/60 to-slate-900', border: 'border-fuchsia-500', glow: 'shadow-[0_0_20px_rgba(232,121,249,0.4)]' };
+      case 'legendary': return { bg: 'bg-gradient-to-br from-amber-700/60 to-slate-900', border: 'border-amber-400', glow: 'shadow-[0_0_25px_rgba(251,191,36,0.5)]' };
+      case 'jackpot': return { bg: 'bg-gradient-to-br from-red-600 via-amber-600 to-slate-900', border: 'border-yellow-300', glow: 'shadow-[0_0_30px_rgba(252,211,77,0.7)]' };
+      default: return { bg: 'bg-slate-800', border: 'border-slate-700', glow: '' };
+    }
 };
 
-// --- COMPONENT: GameCard (Redesigned) ---
+// --- [LOGIC] WEIGHT CONFIGURATION ---
+const RARITY_WEIGHTS = {
+    'common': 2000,    // Rất dễ
+    'uncommon': 800,   // Dễ
+    'rare': 300,       // Trung bình
+    'epic': 80,        // Khó
+    'legendary': 20,   // Rất khó
+    'jackpot': 5       // Cực khó
+};
+
+// --- OPTIMIZED COMPONENT: GameCard ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
-    const style = getRarityStyles(item.rarity);
+    const style = getCardStyle(item.rarity);
     
     return (
         <div 
@@ -140,34 +111,27 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
         >
             <div className={`
                 relative w-full aspect-[4/5] rounded-xl 
-                bg-gradient-to-br ${style.bgGradient}
-                border-2 ${style.border}
-                flex flex-col items-center justify-center gap-3
+                bg-gradient-to-b ${style.bg}
+                border ${style.border}
+                flex flex-col items-center justify-center gap-2
+                ${style.glow}
                 shadow-lg
             `}>
-                {/* Background Pattern - Subtle */}
-                <div className="absolute inset-0 bg-black/20 pointer-events-none rounded-xl" />
+                <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
-                {/* Rank Badge */}
-                <div className={`absolute top-2 right-2 px-1.5 py-0.5 text-[10px] font-bold bg-black/60 ${style.text} rounded border border-slate-600/50 z-20`}>
-                    {style.rankName.split(' ')[1]}
-                </div>
-
-                {/* Icon Container */}
-                <div className={`relative z-10 w-14 h-14 flex items-center justify-center bg-black/40 rounded-xl border ${style.border} shadow-inner`}>
+                <div className="relative z-10 p-2 rounded-xl bg-slate-900/70 ring-1 ring-white/5 w-14 h-14 flex items-center justify-center shadow-inner">
                     {typeof item.icon === 'string' ? (
-                        <img src={item.icon} alt={item.name} loading="lazy" className="w-10 h-10 object-contain" />
+                        <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain drop-shadow-md" />
                     ) : (
-                        <item.icon className={`w-10 h-10 ${style.text}`} />
+                        <item.icon className={`w-9 h-9 ${item.color} drop-shadow-md`} />
                     )}
                 </div>
                 
-                {/* Text Info */}
                 <div className="relative z-10 text-center w-full px-1">
-                    <div className={`text-[10px] font-bold uppercase tracking-wider opacity-90 truncate text-slate-300`}>
-                        {item.name}
+                    <div className={`text-[10px] font-bold uppercase tracking-wider opacity-80 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
+                        {item.name || item.rarity}
                     </div>
-                    <div className={`text-sm font-black mt-0.5 font-lilita tracking-wide ${style.text}`}>
+                    <div className="text-sm font-black text-white drop-shadow-sm mt-1 font-lilita tracking-wide">
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
                 </div>
@@ -184,11 +148,13 @@ const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
 const SPIN_DURATION_SEC = 6;
 
-// --- RATE INFO POPUP ---
-const RateInfoPopup = ({ items, onClose, getWeight }: RateInfoPopupProps) => {
+// --- RATE INFO POPUP (OPTIMIZED WITH MEMO) ---
+const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupProps) => {
+    // Sắp xếp item theo độ hiếm
     const rarityOrder: Record<string, number> = { 'jackpot': 0, 'legendary': 1, 'epic': 2, 'rare': 3, 'uncommon': 4, 'common': 5 };
     
     const { sortedItems, totalWeight } = useMemo(() => {
+        // Tính tổng trọng số của TOÀN BỘ danh sách item hiện có
         let total = 0;
         const itemsWithWeight = items.map(item => {
             const w = getWeight(item.rarity);
@@ -201,19 +167,22 @@ const RateInfoPopup = ({ items, onClose, getWeight }: RateInfoPopupProps) => {
     }, [items, getWeight]);
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={onClose}>
+        // [PERFORMANCE] Dùng bg-black/85 thay vì backdrop-blur để nhẹ máy
+        <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={onClose}>
             <div 
-                className="relative w-full max-w-md bg-slate-900 border-2 border-slate-700 rounded-xl shadow-2xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
+                className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
                 onClick={(e) => e.stopPropagation()}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/80">
+                <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl">
                     <div className="flex items-center gap-2">
-                         <InfoIcon className="w-5 h-5 text-cyan-400" />
-                         <h3 className="text-lg font-bold text-white uppercase tracking-wide">Drop Rates</h3>
+                         <div className="bg-cyan-500/20 p-1.5 rounded-lg">
+                            <InfoIcon className="w-5 h-5 text-cyan-400" />
+                         </div>
+                         <h3 className="text-xl font-lilita text-white tracking-wide uppercase">Tỷ lệ rơi vật phẩm</h3>
                     </div>
-                    <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors">
-                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                         </svg>
                     </button>
@@ -223,32 +192,36 @@ const RateInfoPopup = ({ items, onClose, getWeight }: RateInfoPopupProps) => {
                 <div className="overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {sortedItems.map((item, idx) => {
                         const isJackpot = item.rarity === 'jackpot';
+                        // Tính % dựa trên trọng số thực tế
                         const rate = (item.weight / totalWeight) * 100;
+                        
+                        // Hiển thị tối đa 2 số thập phân, nếu < 0.01 thì hiện < 0.01
                         let displayRate = rate < 0.01 ? '< 0.01' : rate.toFixed(2);
+                        // Làm tròn số nếu là số nguyên cho đẹp (vd: 20.00 -> 20)
                         if (rate >= 1 && rate % 1 === 0) displayRate = rate.toFixed(0);
 
-                        const style = getRarityStyles(item.rarity);
+                        const style = getCardStyle(item.rarity);
                         
                         return (
-                            <div key={idx} className={`flex items-center justify-between p-2 rounded-lg border bg-slate-900/50 ${style.border}`}>
+                            <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border bg-slate-800/50 ${isJackpot ? 'border-yellow-500/50 bg-gradient-to-r from-yellow-900/20 to-transparent' : 'border-slate-700/50'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 flex items-center justify-center bg-black/40 rounded-lg border ${style.border}`}>
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${style.bg} border ${style.border} shadow-sm`}>
                                          {typeof item.icon === 'string' ? (
                                             <img src={item.icon} alt={item.name} className="w-6 h-6 object-contain" />
                                         ) : (
-                                            <item.icon className={`w-6 h-6 ${style.text}`} />
+                                            <item.icon className={`w-6 h-6 ${item.color}`} />
                                         )}
                                     </div>
                                     <div>
-                                        <div className={`font-bold text-sm ${style.text}`}>{item.name}</div>
-                                        <div className="text-[10px] uppercase font-semibold text-slate-500">
-                                            {style.rankName}
-                                            {!isJackpot && <span className="ml-1">• {item.rewardAmount ? `x${item.rewardAmount}` : item.value}</span>}
+                                        <div className="font-bold text-sm text-slate-200">{item.name || 'Item'}</div>
+                                        <div className="text-[10px] uppercase font-bold tracking-wider" style={{ color: getRarityColor(item.rarity) }}>
+                                            {item.rarity}
+                                            {!isJackpot && <span className="text-slate-500 ml-1">• {item.rewardAmount ? `x${item.rewardAmount}` : item.value}</span>}
                                         </div>
                                     </div>
                                 </div>
                                 <div className="text-right">
-                                    <div className={`font-lilita text-base ${style.text}`}>
+                                    <div className={`font-lilita text-lg ${isJackpot ? 'text-yellow-400' : 'text-white'}`}>
                                         {displayRate}%
                                     </div>
                                 </div>
@@ -256,14 +229,19 @@ const RateInfoPopup = ({ items, onClose, getWeight }: RateInfoPopupProps) => {
                         );
                     })}
                 </div>
+                
+                {/* Footer Note */}
+                <div className="p-3 text-center border-t border-slate-700 bg-slate-800/30 rounded-b-2xl">
+                    <p className="text-[10px] text-slate-500">Tỷ lệ được tính toán dựa trên hệ thống trọng số (Weighted System).</p>
+                </div>
             </div>
         </div>
     );
-};
+});
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
-    const style = getRarityStyles(item.rarity);
+    const rarityColor = getRarityColor(item.rarity);
 
     const handleWatchAds = () => {
         console.log("Watching Ads for x2 Reward...");
@@ -271,58 +249,75 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
     };
 
     return (
+    // [PERFORMANCE] Dùng bg-black/90 thay vì backdrop-blur
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
-        className={`relative w-[320px] bg-gradient-to-br ${style.bgGradient} p-6 rounded-xl border-2 ${style.border} shadow-2xl text-center flex flex-col items-center gap-4 animate-fade-in-scale-fast`}
+        className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
+            ${jackpotWon ? 'border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.5)]' : 'border-slate-600'}`
+        }
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">
-            {jackpotWon ? 'JACKPOT WON!' : 'Congratulations'}
-        </h2>
+        {/* Floating Icon */}
+        <div className="absolute -top-14 left-1/2 -translate-x-1/2">
+             <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
+                {typeof item.icon === 'string' ? (
+                    <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Lỗi'; }} />
+                ) : (
+                    <item.icon className={`w-16 h-16 ${item.color}`} />
+                )}
+             </div>
+        </div>
 
-        {/* Item Icon Box */}
-        <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${style.border} shadow-inner`}>
-            {typeof item.icon === 'string' ? (
-                <img src={item.icon} alt={item.name} className="w-20 h-20 object-contain" />
+        <div className="mt-14 mb-2">
+            {jackpotWon ? (
+                <>
+                    <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-1 drop-shadow-md animate-pulse">JACKPOT!</h2>
+                    <p className="font-sans text-yellow-200/80 text-sm">Bạn đã trúng toàn bộ quỹ thưởng!</p>
+                </>
             ) : (
-                <item.icon className={`w-20 h-20 ${style.text}`} />
+                <>
+                    <h2 className="text-3xl font-bold uppercase tracking-wide drop-shadow-sm" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
+                    <p className="font-sans text-slate-400 text-xs uppercase tracking-widest mt-1 font-semibold">{item.rarity} Reward</p>
+                </>
             )}
         </div>
 
-        {/* Info Box */}
-        <div className="w-full p-4 bg-black/25 rounded-lg border border-slate-700/50 text-center flex flex-col gap-1">
-            <h3 className={`text-xl font-bold ${style.text}`}>{item.name}</h3>
-            <p className={`font-semibold ${style.text} opacity-80 uppercase text-xs`}>{style.rankName}</p>
-            
-            <hr className="border-slate-700/50 my-2" />
-            
-            <div className="flex items-center justify-center gap-2">
-                 <span className="text-slate-300 text-sm">You received:</span>
-                 <div className="flex items-center gap-1">
+        {/* Reward Box */}
+        <div className="flex flex-col gap-2 w-full my-6">
+            <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
+                 <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
+                 <div className="flex items-center gap-3">
                     {item.rewardType === 'coin' && (
                         <>
-                            <span className={`text-xl font-black ${style.text}`}>{item.value.toLocaleString()}</span>
-                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-5 h-5" />
+                            <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8 drop-shadow-md" />
+                            <span className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-500 drop-shadow-sm">{item.value.toLocaleString()}</span>
                         </>
                     )}
                     {(item.rewardType === 'pickaxe' || item.rewardType === 'other') && (
-                        <span className={`text-xl font-black ${style.text}`}>x{item.rewardAmount?.toLocaleString()}</span>
+                        <>
+                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-8 h-8 drop-shadow-md" />}
+                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-8 h-8 ${item.color} drop-shadow-md`} />}
+                            <span className="text-4xl font-black text-white drop-shadow-sm">x{item.rewardAmount?.toLocaleString()}</span>
+                        </>
                     )}
                  </div>
             </div>
         </div>
         
-        {/* Buttons */}
-        <div className="flex w-full gap-3 mt-2">
-            <button onClick={handleWatchAds} className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-500 hover:to-teal-600 border border-emerald-500 text-white py-2.5 rounded-lg shadow-lg flex flex-col items-center justify-center active:scale-95 transition-all">
-                <div className="flex items-center gap-1">
-                    <PlayIcon className="w-3 h-3" />
-                    <span className="font-bold text-sm">x2 Reward</span>
+        {/* Buttons Action Area */}
+        <div className="flex w-full gap-3 mt-1">
+            <button onClick={handleWatchAds} className="group relative flex-1">
+                <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
+                <div className="relative h-full bg-gradient-to-br from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 rounded-xl border-t border-white/20 shadow-lg flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                        <div className="bg-black/20 p-1 rounded-full"><PlayIcon className="w-3.5 h-3.5 text-white" /></div>
+                        <span className="text-xl font-black text-white italic tracking-wide drop-shadow-md">x2</span>
+                    </div>
+                    <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
                 </div>
-                <span className="text-[9px] opacity-80 uppercase tracking-wide">Watch Ad</span>
             </button>
-            <button onClick={onClose} className="flex-1 bg-slate-700 hover:bg-slate-600 border border-slate-600 text-slate-200 font-bold py-2.5 rounded-lg shadow-lg active:scale-95 transition-all uppercase text-sm">
-                Claim
+            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-lg flex items-center justify-center active:scale-95 transition-all">
+                <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
             </button>
         </div>
       </div>
@@ -348,23 +343,29 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   const [offset, setOffset] = useState(0);
   const [transitionDuration, setTransitionDuration] = useState(0);
 
+  // Helper function to get weight
   const getItemWeight = useCallback((rarity: string) => {
       return RARITY_WEIGHTS[rarity as keyof typeof RARITY_WEIGHTS] || 50;
   }, []);
 
+  // OPTIMIZED: Memoized handler for closing rate popup
+  const handleCloseRatePopup = useCallback(() => {
+    setShowRatePopup(false);
+  }, []);
+
   const baseItems: Item[] = useMemo(() => [
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 150, rarity: 'common', rewardType: 'coin', rewardAmount: 150 },
-    { icon: ZapIcon, name: 'Energy', value: 0, rarity: 'uncommon', rewardType: 'other', rewardAmount: 1 },
-    { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'uncommon', rewardType: 'pickaxe', rewardAmount: 5 },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 300, rarity: 'uncommon', rewardType: 'coin', rewardAmount: 300 },
-    { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'rare', rewardType: 'pickaxe', rewardAmount: 10 },
-    { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'epic', rewardType: 'pickaxe', rewardAmount: 15 },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 500, rarity: 'rare', rewardType: 'coin', rewardAmount: 500 },
-    { icon: TrophyIcon, name: 'Trophy', value: 0, rarity: 'legendary', rewardType: 'other', rewardAmount: 1 },
-    { icon: HeartIcon, name: 'Life', value: 0, rarity: 'uncommon', rewardType: 'other', rewardAmount: 1 },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT', value: 0, rarity: 'jackpot', rewardType: 'coin' },
-    { icon: GiftIcon, name: 'Mystery', value: 0, rarity: 'epic', rewardType: 'other', rewardAmount: 1 },
-    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 100, rarity: 'common', rewardType: 'coin', rewardAmount: 100 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 150, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 150 },
+    { icon: ZapIcon, name: 'Energy', value: 0, rarity: 'uncommon', color: 'text-cyan-400', rewardType: 'other', rewardAmount: 1 },
+    { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'uncommon', color: '', rewardType: 'pickaxe', rewardAmount: 5 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 300, rarity: 'uncommon', color: '', rewardType: 'coin', rewardAmount: 300 },
+    { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'rare', color: '', rewardType: 'pickaxe', rewardAmount: 10 },
+    { icon: pickaxeIconUrl, name: 'Pickaxes', value: 0, rarity: 'epic', color: '', rewardType: 'pickaxe', rewardAmount: 15 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 500, rarity: 'rare', color: '', rewardType: 'coin', rewardAmount: 500 },
+    { icon: TrophyIcon, name: 'Trophy', value: 0, rarity: 'legendary', color: 'text-orange-400', rewardType: 'other', rewardAmount: 1 },
+    { icon: HeartIcon, name: 'Life', value: 0, rarity: 'uncommon', color: 'text-red-400', rewardType: 'other', rewardAmount: 1 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/jackpot.png', name: 'JACKPOT', value: 0, rarity: 'jackpot', color: '', rewardType: 'coin' },
+    { icon: GiftIcon, name: 'Mystery', value: 0, rarity: 'epic', color: 'text-pink-400', rewardType: 'other', rewardAmount: 1 },
+    { icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png', name: 'Coins', value: 100, rarity: 'common', color: '', rewardType: 'coin', rewardAmount: 100 },
   ], []);
 
   const displayItems = useMemo(() => {
@@ -395,6 +396,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     setOffset(0);
   }, [getRandomFiller, spinMultiplier, isSpinning, wonRewardDetails]);
 
+  // --- UPDATED SPIN LOGIC WITH WEIGHTS ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
@@ -409,6 +411,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         setJackpotWon(false);
         setShowRewardPopup(false);
 
+        // --- WEIGHTED SELECTION ALGORITHM ---
+        // 1. Calculate total weight
         let totalWeight = 0;
         const weightedPool = displayItems.map(item => {
             const weight = getItemWeight(item.rarity);
@@ -416,9 +420,11 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             return { ...item, weight };
         });
 
+        // 2. Random number between 0 and totalWeight
         let randomValue = Math.random() * totalWeight;
         let winner = weightedPool[0];
 
+        // 3. Find the item
         for (const item of weightedPool) {
             if (randomValue < item.weight) {
                 winner = item;
@@ -426,6 +432,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             }
             randomValue -= item.weight;
         }
+        // ------------------------------------
 
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
@@ -491,12 +498,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       {/* --- BACKGROUND --- */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,#1e1b4b_0%,#000000_80%)]" />
-        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-5"></div>
-        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/10 blur-[100px] rounded-full"></div>
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-10"></div>
+        <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/20 blur-[100px] rounded-full"></div>
       </div>
 
       {/* --- HEADER --- */}
-      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/90 border-b border-slate-700 z-[60] shadow-lg">
+      <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900 border-b border-slate-700 backdrop-blur-md z-[60] shadow-lg">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-3">
             <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={isStatsFullscreen} />
@@ -506,47 +513,51 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
         {/* --- JACKPOT UI --- */}
-        <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10">
+        <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
-                relative p-4 rounded-xl border-2 transition-all duration-500 overflow-hidden
-                ${ jackpotAnimation ? 'bg-gradient-to-r from-red-900 via-orange-900 to-red-900 border-yellow-400 shadow-[0_0_50px_rgba(250,204,21,0.4)]' : 'bg-gradient-to-br from-red-900/80 to-slate-900 border-red-500 shadow-xl' }
+                relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
+                ${ jackpotAnimation ? 'bg-gradient-to-r from-yellow-500 via-orange-600 to-red-600 border-yellow-300 shadow-[0_0_50px_rgba(250,204,21,0.6)] animate-pulse' : 'bg-gradient-to-br from-slate-900/90 to-black border-slate-700 shadow-2xl backdrop-blur-md' }
             `}>
+              <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               
               {/* INFO BUTTON */}
               <button 
                 onClick={() => setShowRatePopup(true)}
-                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-all shadow-md z-20"
-                title="View Drop Rates"
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-all shadow-md z-20 group"
+                title="Xem tỷ lệ trúng thưởng"
               >
                   <InfoIcon className="w-4 h-4" />
               </button>
 
-              <div className="text-red-400 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
-              <div className={`text-4xl font-lilita text-white drop-shadow-md flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
-                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-200">{animatedJackpot.toLocaleString()}</span>
-                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8 drop-shadow-md" />
+              <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
+              <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
+                <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">{animatedJackpot.toLocaleString()}</span>
+                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
               
+              {/* Tính tỷ lệ Jackpot để hiển thị ở đây cho khớp */}
               {(() => {
                   const jackpotWeight = RARITY_WEIGHTS['jackpot'];
+                  // Tính tổng trọng số
                   let total = 0;
                   baseItems.forEach(i => total += RARITY_WEIGHTS[i.rarity as keyof typeof RARITY_WEIGHTS] || 50);
                   const jackpotRate = (jackpotWeight / total) * 100;
                   return (
-                    <div className="text-slate-400 text-[10px] mt-2 font-medium tracking-wide opacity-80"> Jackpot Chance: <span className="text-red-400 font-bold">{jackpotRate.toFixed(2)}%</span> </div>
+                    <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide"> Tỉ lệ quay trúng ô JACKPOT: <span className="text-yellow-400 font-bold">{jackpotRate.toFixed(2)}%</span> </div>
                   );
               })()}
+              
+              {jackpotAnimation && ( <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-ping rounded-xl"></div> )}
             </div>
         </div>
         
         {/* --- SPINNER UI --- */}
         <div className="relative w-full max-w-4xl mb-12">
-            <div className="relative h-60 w-full bg-black/60 rounded-xl border border-slate-700 shadow-2xl overflow-hidden">
-                <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-black via-transparent to-black opacity-90"></div>
-                
-                {/* Decoration Lines */}
-                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-600 to-transparent z-20"></div>
-                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-slate-600 to-transparent z-20"></div>
+            <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.8)] overflow-hidden">
+                <div className="absolute inset-0 pointer-events-none z-20 shadow-[inset_0_0_40px_rgba(0,0,0,0.8)] rounded-xl"></div>
+                <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-[#050505] via-transparent to-[#050505] opacity-80"></div>
+                <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
+                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-500/50 to-transparent z-20"></div>
 
                 <div className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
@@ -558,42 +569,41 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 </div>
             </div>
 
-            {/* TARGET UI - Clean & Technical */}
+            {/* TARGET UI */}
             <div className="absolute inset-0 pointer-events-none z-30 flex items-center justify-center">
-                 {/* Center Highlight */}
-                 <div className="absolute h-full w-[130px] bg-white/5 border-x border-yellow-500/30"></div>
-                 
-                 {/* Indicator Triangle Top */}
-                 <div className="absolute top-[-10px] transform z-40">
-                    <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[12px] border-t-yellow-400 filter drop-shadow-md"></div>
+                 <div className="absolute h-full w-[130px] bg-gradient-to-r from-transparent via-yellow-400/5 to-transparent"></div>
+                 <div className="relative w-[124px] h-[calc(100%-24px)] border border-yellow-500/20 rounded-xl">
+                    <div className="absolute -top-[1px] -left-[1px] w-3 h-3 border-t-2 border-l-2 border-yellow-400 rounded-tl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                    <div className="absolute -top-[1px] -right-[1px] w-3 h-3 border-t-2 border-r-2 border-yellow-400 rounded-tr-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                    <div className="absolute -bottom-[1px] -left-[1px] w-3 h-3 border-b-2 border-l-2 border-yellow-400 rounded-bl-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
+                    <div className="absolute -bottom-[1px] -right-[1px] w-3 h-3 border-b-2 border-r-2 border-yellow-400 rounded-br-md drop-shadow-[0_0_5px_rgba(250,204,21,0.5)]"></div>
                  </div>
-                 
-                 {/* Indicator Triangle Bottom */}
-                 <div className="absolute bottom-[-10px] transform z-40">
-                    <div className="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-b-[12px] border-b-yellow-400 filter drop-shadow-md"></div>
-                 </div>
+                 <div className="absolute inset-0 flex justify-center"><div className="h-full w-[1px] bg-gradient-to-b from-transparent via-yellow-300/80 to-transparent shadow-[0_0_8px_rgba(250,204,21,0.8)]"></div></div>
+                 <div className="absolute top-0 transform -translate-y-1/2 z-40"><div className="relative flex flex-col items-center"><div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_2px_10px_rgba(0,0,0,0.5)]"></div><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div></div></div>
+                 <div className="absolute bottom-0 transform translate-y-1/2 z-40"><div className="relative flex flex-col items-center"><div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 bg-yellow-400/40 blur-md rounded-full"></div><div className="w-4 h-4 bg-gradient-to-br from-yellow-200 via-yellow-400 to-amber-600 rotate-45 border border-yellow-100 shadow-[0_-2px_10px_rgba(0,0,0,0.5)]"></div></div></div>
             </div>
         </div>
 
         {/* --- CONTROLS --- */}
         <div className="flex flex-col items-center justify-center z-20">
-              <div className="flex bg-slate-900 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg">
-                 <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-700 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`} disabled={isSpinning}>x1</button>
-                 <button onClick={() => !isSpinning && setSpinMultiplier(10)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-700 text-white shadow-md' : 'text-slate-500 hover:text-slate-300'}`} disabled={isSpinning}>x10</button>
+              <div className="flex bg-slate-800/80 p-1 rounded-lg border border-slate-700 mb-4 shadow-lg backdrop-blur-sm">
+                 <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x1</button>
+                 <button onClick={() => !isSpinning && setSpinMultiplier(10)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-600 text-white shadow-md' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x10</button>
               </div>
 
               <button
                 onClick={spinChest}
                 disabled={isSpinning || coins < currentCost}
-                className="group relative w-48 h-16 rounded-lg overflow-hidden transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 border-2 bg-slate-800 border-cyan-600 hover:border-cyan-400 hover:bg-slate-700 shadow-lg"
+                className="group relative w-48 h-16 rounded-xl overflow-hidden transition-all duration-200 disabled:opacity-70 disabled:cursor-not-allowed active:scale-95 hover:enabled:shadow-[0_0_20px_rgba(8,145,178,0.5)] border-2 bg-slate-900 border-cyan-600"
               >
+                <div className={`absolute inset-0 transition-transform duration-1000 ${isSpinning ? 'translate-x-full' : 'translate-x-0'} bg-gradient-to-r from-cyan-600/20 to-blue-600/20`}></div>
                 <div className="relative z-10 flex flex-col items-center justify-center h-full pb-1">
-                    {isSpinning ? ( <span className="font-lilita text-lg text-slate-500 tracking-wider">SPINNING...</span> ) : (
+                    {isSpinning ? ( <span className="font-lilita text-lg text-slate-400 tracking-wider animate-pulse">SPINNING...</span> ) : (
                         <>
-                            <span className="font-lilita text-2xl uppercase tracking-widest text-cyan-400 group-hover:text-cyan-300">SPIN</span>
-                            <div className="flex items-center gap-1.5 mt-0.5 px-3 py-0.5 rounded bg-black/30">
-                                <span className={`text-sm font-bold tracking-wide ${coins < currentCost ? 'text-red-500' : 'text-white'}`}>{currentCost}</span>
-                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3 h-3" />
+                            <span className="font-lilita text-2xl uppercase tracking-widest drop-shadow-md text-cyan-400 group-hover:text-cyan-300">SPIN</span>
+                            <div className="flex items-center gap-1.5 mt-0.5 bg-black/40 px-3 py-0.5 rounded-md border border-white/5 shadow-inner">
+                                <span className={`text-lg font-lilita tracking-wide leading-none ${coins < currentCost ? 'text-red-500' : 'text-slate-200'}`}>{currentCost}</span>
+                                <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-3.5 h-3.5" />
                             </div>
                         </>
                     )}
@@ -604,14 +614,21 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       
       {coins < currentCost && !isSpinning && (
           <div className="fixed bottom-3 right-3 z-[100] animate-fade-in pointer-events-none">
-              <div className="bg-slate-900 border border-red-500 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-xl flex items-center gap-2">
-                   <span className="font-bold text-xs tracking-wide">Not enough coins!</span>
+              <div className="bg-slate-900/95 border border-red-500/40 text-red-400 pl-2.5 pr-3 py-1.5 rounded-lg shadow-2xl backdrop-blur-md flex items-center gap-2">
+                   <svg className="w-4 h-4 text-red-500 mb-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+                   <span className="font-bold text-xs tracking-wide">Không đủ xu để quay!</span>
               </div>
           </div>
       )}
 
-      {/* RENDER RATE POPUP */}
-      {showRatePopup && <RateInfoPopup items={baseItems} onClose={() => setShowRatePopup(false)} getWeight={getItemWeight} />}
+      {/* RENDER RATE POPUP (Optimized with handleCloseRatePopup) */}
+      {showRatePopup && (
+          <RateInfoPopup 
+              items={baseItems} 
+              onClose={handleCloseRatePopup} 
+              getWeight={getItemWeight} 
+          />
+      )}
       
       {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
 
