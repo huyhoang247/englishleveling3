@@ -30,6 +30,8 @@ const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
 const PlayIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 24 24"> <path d="M8 5v14l11-7z" /> </svg> );
+// [NEW] Info Icon
+const InfoIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /> </svg> );
 
 
 // --- Interfaces ---
@@ -55,6 +57,12 @@ interface RewardPopupProps {
   item: Item;
   jackpotWon: boolean;
   onClose: () => void;
+}
+
+// [NEW] Interface for Rates Popup
+interface RateInfoPopupProps {
+    items: Item[];
+    onClose: () => void;
 }
 
 // --- UTILITY FUNCTIONS ---
@@ -83,7 +91,6 @@ const getCardStyle = (rarity: Item['rarity']) => {
 };
 
 // --- OPTIMIZED COMPONENT: GameCard ---
-// Tách ra và dùng React.memo để tránh re-render không cần thiết khi state cha thay đổi
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
@@ -102,7 +109,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
             `}>
                 <div className="absolute inset-[1px] rounded-lg bg-gradient-to-b from-white/10 to-transparent pointer-events-none"></div>
 
-                {/* TỐI ƯU: Đã xóa backdrop-blur-sm, thay bằng màu nền bán trong suốt để nhẹ GPU */}
                 <div className="relative z-10 p-2 rounded-xl bg-slate-900/70 ring-1 ring-white/5 w-14 h-14 flex items-center justify-center shadow-inner">
                     {typeof item.icon === 'string' ? (
                         <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain drop-shadow-md" />
@@ -119,8 +125,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
                 </div>
-                
-                {/* ĐÃ XÓA: Đường kẻ ngang màu ở bottom */}
             </div>
         </div>
     );
@@ -132,7 +136,88 @@ const CARD_GAP = 12;
 const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
 const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
-const SPIN_DURATION_SEC = 6; // Giảm thời gian xuống 6s để phù hợp với số lượng item giảm đi
+const SPIN_DURATION_SEC = 6;
+
+// --- [NEW] RATE INFO POPUP ---
+const RateInfoPopup = ({ items, onClose }: RateInfoPopupProps) => {
+    // Sắp xếp item theo độ hiếm để hiển thị đẹp hơn
+    const rarityOrder: Record<string, number> = { 'jackpot': 0, 'legendary': 1, 'epic': 2, 'rare': 3, 'uncommon': 4, 'common': 5 };
+    
+    const sortedItems = useMemo(() => {
+        return [...items].sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity]);
+    }, [items]);
+
+    // Tính toán tỷ lệ (giả định theo logic game: 1% jackpot, còn lại chia đều cho các item khác)
+    // Lưu ý: Logic này phải khớp với hàm spinChest
+    const otherItemsCount = items.filter(i => i.rarity !== 'jackpot').length;
+    const jackpotRate = 1;
+    const otherRate = 99 / otherItemsCount;
+
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[110] p-4 animate-fade-in backdrop-blur-sm" onClick={onClose}>
+            <div 
+                className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
+                onClick={(e) => e.stopPropagation()}
+            >
+                {/* Header */}
+                <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl">
+                    <div className="flex items-center gap-2">
+                         <div className="bg-cyan-500/20 p-1.5 rounded-lg">
+                            <InfoIcon className="w-5 h-5 text-cyan-400" />
+                         </div>
+                         <h3 className="text-xl font-lilita text-white tracking-wide uppercase">Tỷ lệ rơi vật phẩm</h3>
+                    </div>
+                    <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
+                        <svg className="w-6 h-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
+                </div>
+
+                {/* Content List */}
+                <div className="overflow-y-auto p-4 space-y-2 custom-scrollbar">
+                    {sortedItems.map((item, idx) => {
+                        const isJackpot = item.rarity === 'jackpot';
+                        const rate = isJackpot ? jackpotRate : otherRate;
+                        const style = getCardStyle(item.rarity);
+                        
+                        return (
+                            <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border bg-slate-800/50 ${isJackpot ? 'border-yellow-500/50 bg-gradient-to-r from-yellow-900/20 to-transparent' : 'border-slate-700/50'}`}>
+                                <div className="flex items-center gap-3">
+                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${style.bg} border ${style.border} shadow-sm`}>
+                                         {typeof item.icon === 'string' ? (
+                                            <img src={item.icon} alt={item.name} className="w-6 h-6 object-contain" />
+                                        ) : (
+                                            <item.icon className={`w-6 h-6 ${item.color}`} />
+                                        )}
+                                    </div>
+                                    <div>
+                                        <div className="font-bold text-sm text-slate-200">{item.name || 'Item'}</div>
+                                        <div className="text-[10px] uppercase font-bold tracking-wider" style={{ color: getRarityColor(item.rarity) }}>
+                                            {item.rarity}
+                                            {!isJackpot && <span className="text-slate-500 ml-1">• {item.rewardAmount ? `x${item.rewardAmount}` : item.value}</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="text-right">
+                                    <div className={`font-lilita text-lg ${isJackpot ? 'text-yellow-400' : 'text-white'}`}>
+                                        {rate.toFixed(1)}%
+                                    </div>
+                                    {isJackpot && <div className="text-[9px] text-yellow-500/80 font-bold uppercase tracking-widest">Siêu hiếm</div>}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+                
+                {/* Footer Note */}
+                <div className="p-3 text-center border-t border-slate-700 bg-slate-800/30 rounded-b-2xl">
+                    <p className="text-[10px] text-slate-500">Tỷ lệ được tính toán dựa trên thuật toán ngẫu nhiên của hệ thống.</p>
+                </div>
+            </div>
+        </div>
+    );
+};
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
@@ -245,7 +330,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   } = useGame();
 
   // --- [NEW] ANIMATED VALUES ---
-  // Tạo hiệu ứng số nhảy cho Coins và Jackpot
   const animatedCoins = useAnimateValue(coins, 800);
   const animatedJackpot = useAnimateValue(jackpotPool, 800);
 
@@ -255,6 +339,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
+  
+  // [NEW] State for Rate Popup
+  const [showRatePopup, setShowRatePopup] = useState(false);
 
   // Spinner State
   const [strip, setStrip] = useState<StripItem[]>([]);
@@ -297,9 +384,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   // Initial Strip
   useEffect(() => {
     if (isSpinning) return;
-    if (wonRewardDetails) return; // Nếu đã có winner thì để logic trong spin xử lý, không reset
+    if (wonRewardDetails) return; 
     
-    // Chỉ tạo strip ngẫu nhiên khi component load lần đầu hoặc đổi multiplier mà chưa quay
     const initStrip: StripItem[] = [];
     for(let i=0; i<VISIBLE_CARDS + 5; i++) {
         initStrip.push({ ...getRandomFiller(), uniqueId: `init-${spinMultiplier}-${i}` });
@@ -332,12 +418,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             winner = others[Math.floor(Math.random() * others.length)];
         }
 
-        // TỐI ƯU: GIẢM TARGET_INDEX XUỐNG 50 (từ 100)
-        // Điều này giảm đáng kể số lượng DOM node cần render và transform, giúp FPS mượt hơn
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
-        // --- BƯỚC QUAN TRỌNG: NỐI TIẾP VÒNG QUAY ---
         const startNode = wonRewardDetails 
             ? { ...wonRewardDetails, uniqueId: `anchor-prev-${Date.now()}` } 
             : (strip.length > 0 ? strip[0] : { ...getRandomFiller(), uniqueId: `anchor-init-${Date.now()}` });
@@ -356,16 +439,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
         setStrip(newStrip);
 
-        // --- RESET VỊ TRÍ VỀ 0 NGAY LẬP TỨC ---
         setTransitionDuration(0);
         setOffset(0);
 
-        // Animation Trigger
         setTimeout(() => {
             const distanceToIndex = 1 + TARGET_INDEX; 
             const finalOffset = -(distanceToIndex * ITEM_FULL_WIDTH);
 
-            setTransitionDuration(SPIN_DURATION_SEC); // Dùng 6s
+            setTransitionDuration(SPIN_DURATION_SEC);
             setOffset(finalOffset);
             
             setTimeout(() => {
@@ -430,6 +511,15 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             `}>
               <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               
+              {/* [NEW] INFO BUTTON */}
+              <button 
+                onClick={() => setShowRatePopup(true)}
+                className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-all shadow-md z-20 group"
+                title="Xem tỷ lệ trúng thưởng"
+              >
+                  <InfoIcon className="w-4 h-4" />
+              </button>
+
               <div className="text-yellow-400/90 text-sm font-bold tracking-[0.3em] mb-1 uppercase drop-shadow-sm"> JACKPOT POOL </div>
               <div className={`text-5xl font-lilita text-white drop-shadow-[0_4px_4px_rgba(0,0,0,0.5)] flex items-center justify-center gap-2 ${ jackpotAnimation ? 'animate-bounce' : '' }`}>
                 <span className="bg-clip-text text-transparent bg-gradient-to-b from-white to-slate-300">
@@ -457,11 +547,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                     className="absolute top-0 bottom-0 left-[50%] flex items-center pl-0 will-change-transform z-10"
                     style={{
                         transform: `translateX(calc(${offset}px - ${CARD_WIDTH / 2}px))`, 
-                        // Dùng cubic-bezier để chuyển động mượt mà hơn
                         transition: isSpinning ? `transform ${transitionDuration}s cubic-bezier(0.15, 0.85, 0.35, 1.0)` : 'none',
                     }}
                 >
-                    {/* TỐI ƯU: Render bằng component đã được Memoize */}
                     {strip.map((item) => (
                         <GameCard key={item.uniqueId} item={item} />
                     ))}
@@ -566,6 +654,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           </div>
       )}
 
+      {/* [NEW] RENDER RATE POPUP */}
+      {showRatePopup && <RateInfoPopup items={baseItems} onClose={() => setShowRatePopup(false)} />}
+      
       {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
 
       <style jsx global>{`
@@ -578,6 +669,12 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; }
+
+        /* Custom Scrollbar for popup */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { bg: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
       `}</style>
     </div>
   );
