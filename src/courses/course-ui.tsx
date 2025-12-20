@@ -147,11 +147,12 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
             <div className="text-center"><h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Select a mode</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
             <div className="space-y-5 w-full">
+              {/* --- UPDATE: Sử dụng font-['Lilita_One'] trực tiếp --- */}
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center"><img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice icon" className="h-10 w-10" /></div>
                   <div className="ml-5 flex-1">
-                    <h3 className="text-lg font-lilita uppercase tracking-wider">Multiple choice</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider">Multiple choice</h3>
                     <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
                   </div>
                 </div>
@@ -160,7 +161,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center"><img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match Icon" className="h-10 w-10" /></div>
                   <div className="ml-5 flex-1">
-                    <h3 className="text-lg font-lilita uppercase tracking-wider">Voca Match</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider">Voca Match</h3>
                     <p className="text-sm text-cyan-100 mt-1">Nối từ tiếng Anh với nghĩa tiếng Việt.</p>
                   </div>
                 </div>
@@ -169,7 +170,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center"><img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank icon" className="h-10 w-10" /></div>
                   <div className="ml-5 flex-1">
-                    <h3 className="text-lg font-lilita uppercase tracking-wider">Fill in the blank</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider">Fill in the blank</h3>
                     <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
                   </div>
                 </div>
@@ -194,9 +195,12 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           </div>
         </main>
       </div>
+      {/* --- UPDATE: Định nghĩa CSS thủ công để đảm bảo hoạt động --- */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
+        /* Định nghĩa class font-lilita thủ công nếu Tailwind arbitrary value không hoạt động */
+        .font-lilita { font-family: 'Lilita One', cursive; }
       `}</style>
     </div>
   );
