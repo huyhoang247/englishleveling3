@@ -61,7 +61,6 @@ interface RewardPopupProps {
 interface RateInfoPopupProps {
     items: Item[];
     onClose: () => void;
-    // Truyền hàm lấy trọng số vào để popup tính đúng logic với game
     getWeight: (rarity: string) => number;
 }
 
@@ -90,17 +89,17 @@ const getCardStyle = (rarity: Item['rarity']) => {
     }
 };
 
-// --- [LOGIC] WEIGHT CONFIGURATION ---
+// --- WEIGHT CONFIGURATION ---
 const RARITY_WEIGHTS = {
-    'common': 2000,    // Rất dễ
-    'uncommon': 800,   // Dễ
-    'rare': 300,       // Trung bình
-    'epic': 80,        // Khó
-    'legendary': 20,   // Rất khó
-    'jackpot': 5       // Cực khó
+    'common': 2000,
+    'uncommon': 800,
+    'rare': 300,
+    'epic': 80,
+    'legendary': 20,
+    'jackpot': 5
 };
 
-// --- OPTIMIZED COMPONENT: GameCard ---
+// --- COMPONENT: GameCard ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
@@ -148,13 +147,11 @@ const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
 const SPIN_DURATION_SEC = 6;
 
-// --- RATE INFO POPUP (OPTIMIZED WITH MEMO) ---
+// --- RATE INFO POPUP ---
 const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupProps) => {
-    // Sắp xếp item theo độ hiếm
     const rarityOrder: Record<string, number> = { 'jackpot': 0, 'legendary': 1, 'epic': 2, 'rare': 3, 'uncommon': 4, 'common': 5 };
     
     const { sortedItems, totalWeight } = useMemo(() => {
-        // Tính tổng trọng số của TOÀN BỘ danh sách item hiện có
         let total = 0;
         const itemsWithWeight = items.map(item => {
             const w = getWeight(item.rarity);
@@ -167,13 +164,11 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
     }, [items, getWeight]);
 
     return (
-        // [PERFORMANCE] Dùng bg-black/85 thay vì backdrop-blur để nhẹ máy
         <div className="fixed inset-0 bg-black/85 flex items-center justify-center z-[110] p-4 animate-fade-in" onClick={onClose}>
             <div 
                 className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
                 onClick={(e) => e.stopPropagation()}
             >
-                {/* Header */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800/50 rounded-t-2xl">
                     <div className="flex items-center gap-2">
                          <div className="bg-cyan-500/20 p-1.5 rounded-lg">
@@ -188,20 +183,14 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                     </button>
                 </div>
 
-                {/* Content List */}
                 <div className="overflow-y-auto p-4 space-y-2 custom-scrollbar">
                     {sortedItems.map((item, idx) => {
                         const isJackpot = item.rarity === 'jackpot';
-                        // Tính % dựa trên trọng số thực tế
                         const rate = (item.weight / totalWeight) * 100;
-                        
-                        // Hiển thị tối đa 2 số thập phân, nếu < 0.01 thì hiện < 0.01
                         let displayRate = rate < 0.01 ? '< 0.01' : rate.toFixed(2);
-                        // Làm tròn số nếu là số nguyên cho đẹp (vd: 20.00 -> 20)
                         if (rate >= 1 && rate % 1 === 0) displayRate = rate.toFixed(0);
 
                         const style = getCardStyle(item.rarity);
-                        
                         return (
                             <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border bg-slate-800/50 ${isJackpot ? 'border-yellow-500/50 bg-gradient-to-r from-yellow-900/20 to-transparent' : 'border-slate-700/50'}`}>
                                 <div className="flex items-center gap-3">
@@ -230,7 +219,6 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                     })}
                 </div>
                 
-                {/* Footer Note */}
                 <div className="p-3 text-center border-t border-slate-700 bg-slate-800/30 rounded-b-2xl">
                     <p className="text-[10px] text-slate-500">Tỷ lệ được tính toán dựa trên hệ thống trọng số (Weighted System).</p>
                 </div>
@@ -245,11 +233,10 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
     const handleWatchAds = () => {
         console.log("Watching Ads for x2 Reward...");
-        onClose();
+        onClose(); // Lưu ý: Logic x2 cần được xử lý thêm trong handleClaimReward nếu muốn
     };
 
     return (
-    // [PERFORMANCE] Dùng bg-black/90 thay vì backdrop-blur
     <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
         className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
@@ -257,7 +244,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         }
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Floating Icon */}
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
              <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-xl ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
                 {typeof item.icon === 'string' ? (
@@ -282,7 +268,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             )}
         </div>
 
-        {/* Reward Box */}
         <div className="flex flex-col gap-2 w-full my-6">
             <div className="bg-gradient-to-b from-slate-800 to-slate-800/50 rounded-2xl p-4 border border-slate-700 shadow-inner flex flex-col items-center justify-center">
                  <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
@@ -304,7 +289,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             </div>
         </div>
         
-        {/* Buttons Action Area */}
         <div className="flex w-full gap-3 mt-1">
             <button onClick={handleWatchAds} className="group relative flex-1">
                 <div className="absolute inset-0 bg-emerald-500 rounded-xl blur opacity-25 group-hover:opacity-50 transition-opacity duration-300"></div>
@@ -338,6 +322,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   const [showRewardPopup, setShowRewardPopup] = useState(false);
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
   const [showRatePopup, setShowRatePopup] = useState(false);
+  
+  // NEW STATE: Lưu số coin sẽ cộng vào hũ
+  const [pendingContribution, setPendingContribution] = useState(0);
 
   const [strip, setStrip] = useState<StripItem[]>([]);
   const [offset, setOffset] = useState(0);
@@ -348,7 +335,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       return RARITY_WEIGHTS[rarity as keyof typeof RARITY_WEIGHTS] || 50;
   }, []);
 
-  // OPTIMIZED: Memoized handler for closing rate popup
   const handleCloseRatePopup = useCallback(() => {
     setShowRatePopup(false);
   }, []);
@@ -396,23 +382,24 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     setOffset(0);
   }, [getRandomFiller, spinMultiplier, isSpinning, wonRewardDetails]);
 
-  // --- UPDATED SPIN LOGIC WITH WEIGHTS ---
+  // --- UPDATED SPIN LOGIC (DELAYED REWARD) ---
   const spinChest = useCallback(() => {
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
 
+    // 1. Trừ tiền cược
     updateCoins(-cost);
     
-    const randomCoinsToAdd = (Math.floor(Math.random() * (100 - 10 + 1)) + 10) * spinMultiplier;
-    handleUpdateJackpotPool(randomCoinsToAdd);
+    // 2. Tính toán tiền sẽ vào hũ (nhưng CHƯA cộng ngay)
+    const contribution = (Math.random() * (100 - 10) + 10) * spinMultiplier;
+    setPendingContribution(Math.floor(contribution)); 
 
     setTimeout(() => {
         setIsSpinning(true);
         setJackpotWon(false);
         setShowRewardPopup(false);
 
-        // --- WEIGHTED SELECTION ALGORITHM ---
-        // 1. Calculate total weight
+        // --- WEIGHTED SELECTION ---
         let totalWeight = 0;
         const weightedPool = displayItems.map(item => {
             const weight = getItemWeight(item.rarity);
@@ -420,11 +407,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             return { ...item, weight };
         });
 
-        // 2. Random number between 0 and totalWeight
         let randomValue = Math.random() * totalWeight;
         let winner = weightedPool[0];
 
-        // 3. Find the item
         for (const item of weightedPool) {
             if (randomValue < item.weight) {
                 winner = item;
@@ -432,7 +417,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             }
             randomValue -= item.weight;
         }
-        // ------------------------------------
 
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
@@ -467,19 +451,15 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             setTimeout(() => {
                 setIsSpinning(false);
                 
+                // Xác định giá trị hiển thị (nhưng CHƯA cộng vào ví)
                 let actualValue = winner.value;
                 if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
-                    handleUpdatePickaxes(winner.rewardAmount);
                     actualValue = winner.rewardAmount;
                 } else if (winner.rarity === 'jackpot') {
-                    actualValue = jackpotPool;
+                    actualValue = jackpotPool; 
                     setJackpotWon(true);
                     setJackpotAnimation(true);
-                    updateCoins(actualValue);
-                    handleUpdateJackpotPool(0, true);
                     setTimeout(() => setJackpotAnimation(false), 3000);
-                } else if (winner.rewardType === 'coin') {
-                    updateCoins(winner.value);
                 }
 
                 setWonRewardDetails({ ...winner, value: actualValue });
@@ -488,8 +468,37 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         }, 50);
     }, 10);
 
-  }, [isSpinning, coins, displayItems, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool, jackpotPool, getRandomFiller, spinMultiplier, wonRewardDetails, strip, getItemWeight]);
+  }, [isSpinning, coins, displayItems, updateCoins, jackpotPool, getRandomFiller, spinMultiplier, wonRewardDetails, strip, getItemWeight]);
   
+  // --- HANDLE CLAIM (THIS IS WHERE UPDATES HAPPEN) ---
+  const handleClaimReward = useCallback(() => {
+      if (!wonRewardDetails) {
+          setShowRewardPopup(false);
+          return;
+      }
+
+      // Xử lý Jackpot
+      if (wonRewardDetails.rarity === 'jackpot') {
+          updateCoins(wonRewardDetails.value); // Cộng toàn bộ Jackpot
+          handleUpdateJackpotPool(0, true);    // Reset Hũ
+      } else {
+          // Xử lý Thường: Cộng tiền cược vào Hũ + Cộng quà cho user
+          handleUpdateJackpotPool(pendingContribution);
+
+          if (wonRewardDetails.rewardType === 'coin') {
+              updateCoins(wonRewardDetails.value);
+          } else if (wonRewardDetails.rewardType === 'pickaxe' && wonRewardDetails.rewardAmount) {
+              handleUpdatePickaxes(wonRewardDetails.rewardAmount);
+          }
+          // Logic cho Life/Energy có thể thêm ở đây
+      }
+
+      setShowRewardPopup(false);
+      setWonRewardDetails(null);
+      setJackpotWon(false);
+
+  }, [wonRewardDetails, pendingContribution, updateCoins, handleUpdateJackpotPool, handleUpdatePickaxes]);
+
   const currentCost = BASE_COST * spinMultiplier;
 
   return (
@@ -520,7 +529,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             `}>
               <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-white/20 to-transparent"></div>
               
-              {/* INFO BUTTON */}
               <button 
                 onClick={() => setShowRatePopup(true)}
                 className="absolute top-2 right-2 p-1.5 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white transition-all shadow-md z-20 group"
@@ -535,10 +543,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-10 h-10 drop-shadow-md" />
               </div>
               
-              {/* Tính tỷ lệ Jackpot để hiển thị ở đây cho khớp */}
               {(() => {
                   const jackpotWeight = RARITY_WEIGHTS['jackpot'];
-                  // Tính tổng trọng số
                   let total = 0;
                   baseItems.forEach(i => total += RARITY_WEIGHTS[i.rarity as keyof typeof RARITY_WEIGHTS] || 50);
                   const jackpotRate = (jackpotWeight / total) * 100;
@@ -621,7 +627,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           </div>
       )}
 
-      {/* RENDER RATE POPUP (Optimized with handleCloseRatePopup) */}
+      {/* POPUPS */}
       {showRatePopup && (
           <RateInfoPopup 
               items={baseItems} 
@@ -630,7 +636,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           />
       )}
       
-      {showRewardPopup && wonRewardDetails && ( <RewardPopup item={wonRewardDetails} jackpotWon={jackpotWon} onClose={() => setShowRewardPopup(false)} /> )}
+      {showRewardPopup && wonRewardDetails && ( 
+          <RewardPopup 
+            item={wonRewardDetails} 
+            jackpotWon={jackpotWon} 
+            onClose={handleClaimReward} 
+          /> 
+      )}
 
       <style jsx global>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;500;600;700;800;900&display=swap');
