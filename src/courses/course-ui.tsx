@@ -147,34 +147,47 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
             <div className="text-center"><h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-teal-500 to-blue-600">Select a mode</h2><p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p></div>
             <div className="space-y-5 w-full">
-              {/* --- UPDATE: Sử dụng font-['Lilita_One'] trực tiếp --- */}
+              {/* --- UPDATE: THAY ĐỔI GIAO DIỆN DESCRIPTION SANG DẠNG TAG --- */}
+              
+              {/* Card 1 */}
               <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-6 bg-gradient-to-br from-teal-400 to-blue-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center"><img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice icon" className="h-10 w-10" /></div>
                   <div className="ml-5 flex-1">
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider">Multiple choice</h3>
-                    <p className="text-sm text-blue-100 mt-1">Chọn đáp án đúng từ các lựa chọn.</p>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2">Multiple choice</h3>
+                    <div className="inline-flex px-3 py-1.5 bg-white/20 rounded-lg backdrop-blur-sm border border-white/10 shadow-sm">
+                      <span className="text-xs font-medium text-white/95 leading-none">Chọn đáp án đúng từ các lựa chọn</span>
+                    </div>
                   </div>
                 </div>
               </button>
+
+              {/* Card 2 */}
               <button onClick={() => handleTypeSelect('vocaMatch')} className="w-full text-left p-6 bg-gradient-to-br from-green-400 to-cyan-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center"><img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match Icon" className="h-10 w-10" /></div>
                   <div className="ml-5 flex-1">
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider">Voca Match</h3>
-                    <p className="text-sm text-cyan-100 mt-1">Nối từ tiếng Anh với nghĩa tiếng Việt.</p>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2">Voca Match</h3>
+                     <div className="inline-flex px-3 py-1.5 bg-white/20 rounded-lg backdrop-blur-sm border border-white/10 shadow-sm">
+                      <span className="text-xs font-medium text-white/95 leading-none">Nối từ tiếng Anh với nghĩa tiếng Việt</span>
+                    </div>
                   </div>
                 </div>
               </button>
+
+              {/* Card 3 */}
               <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-6 bg-gradient-to-br from-purple-500 to-pink-500 text-white rounded-2xl shadow-lg hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 group">
                 <div className="flex items-center">
                   <div className="h-16 w-16 bg-white/20 rounded-xl flex items-center justify-center"><img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank icon" className="h-10 w-10" /></div>
                   <div className="ml-5 flex-1">
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider">Fill in the blank</h3>
-                    <p className="text-sm text-pink-100 mt-1">Hoàn thành câu bằng cách điền từ còn thiếu.</p>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2">Fill in the blank</h3>
+                    <div className="inline-flex px-3 py-1.5 bg-white/20 rounded-lg backdrop-blur-sm border border-white/10 shadow-sm">
+                      <span className="text-xs font-medium text-white/95 leading-none">Điền từ còn thiếu vào ô trống</span>
+                    </div>
                   </div>
                 </div>
               </button>
+
             </div>
           </div>
         );
