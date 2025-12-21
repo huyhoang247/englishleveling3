@@ -359,7 +359,18 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, 
                 >
                   Rewards
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); onReviewClick(practiceNumber); }} disabled={!isCompleted} className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"><RefreshIcon className="w-4 h-4" /><span>Ôn tập</span>{!isCompleted && <LockIcon className="w-4 h-4 ml-1 text-gray-400"/>}</button>
+                <button 
+                    onClick={(e) => { e.stopPropagation(); onReviewClick(practiceNumber); }} 
+                    disabled={!isCompleted} 
+                    className={`px-3 py-1 rounded-full text-xs font-lilita uppercase tracking-wider shadow-sm hover:shadow transition-colors duration-200 flex items-center gap-1 ${
+                        isCompleted
+                        ? 'bg-gray-100 hover:bg-gray-200 text-indigo-600'
+                        : 'bg-gray-50 text-gray-400 cursor-not-allowed'
+                    }`}
+                >
+                    <span>Review</span>
+                    {!isCompleted && <LockIcon className="w-3 h-3"/>}
+                </button>
             </div>
         </div>
     );
