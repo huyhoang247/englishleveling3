@@ -355,7 +355,7 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, 
             <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                 <button 
                   onClick={(e) => { e.stopPropagation(); onRewardsClick(practiceNumber, details.title); }} 
-                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white text-sm font-lilita uppercase tracking-wider shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
+                  className="px-3 py-1 rounded-full bg-gray-100 hover:bg-gray-200 text-gray-500 hover:text-gray-700 text-xs font-lilita uppercase tracking-wider shadow-sm hover:shadow transition-colors duration-200"
                 >
                   Rewards
                 </button>
