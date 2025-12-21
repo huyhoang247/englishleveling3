@@ -588,7 +588,9 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
         <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4 animate-fade-in" onClick={onClose}>
             <div className="bg-white rounded-2xl w-full max-w-lg shadow-xl overflow-hidden transform transition-all animate-scale-up" onClick={e => e.stopPropagation()}>
                 <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gray-50">
-                    <div className="flex items-center gap-2"><GradientGiftIcon className="w-6 h-6 from-blue-500 to-indigo-500" /><h3 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{practiceTitle}</h3></div>
+                    <h3 className="text-lg font-lilita uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                        {practiceTitle}
+                    </h3>
                     <button onClick={onClose} className="p-1 rounded-full hover:bg-gray-200 transition-colors"><img src={uiAssets.closeIcon} alt="Close" className="w-6 h-6"/></button>
                 </div>
                 <div className="p-4 sm:p-6 max-h-[70vh] overflow-y-auto space-y-4 bg-gray-50 hide-scrollbar">{renderedTiers}</div>
