@@ -164,7 +164,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-bold text-gray-800 group-hover:text-blue-600 transition-colors mb-1">Multiple choice</h3>
+                    {/* TITLE UPDATED: Font Lilita + Uppercase */}
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wide text-gray-800 group-hover:text-blue-600 transition-colors mb-1">Multiple choice</h3>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
                         Trắc nghiệm 4 đáp án
@@ -192,7 +193,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-bold text-gray-800 group-hover:text-emerald-600 transition-colors mb-1">Voca Match</h3>
+                     {/* TITLE UPDATED: Font Lilita + Uppercase */}
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wide text-gray-800 group-hover:text-emerald-600 transition-colors mb-1">Voca Match</h3>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-colors">
                         Nối từ Anh - Việt
@@ -220,7 +222,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-bold text-gray-800 group-hover:text-purple-600 transition-colors mb-1">Fill in the blank</h3>
+                     {/* TITLE UPDATED: Font Lilita + Uppercase */}
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wide text-gray-800 group-hover:text-purple-600 transition-colors mb-1">Fill in the blank</h3>
                     <div className="flex items-center gap-2">
                       <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 group-hover:bg-purple-50 group-hover:text-purple-600 group-hover:border-purple-100 transition-colors">
                         Điền từ còn thiếu
