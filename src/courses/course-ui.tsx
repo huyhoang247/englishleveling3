@@ -144,6 +144,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto pt-2">
+            {/* ĐÃ XÓA: Header Text (Select Mode & Description) */}
             
             <div className="space-y-5 w-full px-1">
               
@@ -336,82 +337,30 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, 
     const colors = colorClasses[details.color] || colorClasses.gray;
     const isCompleted = progress && progress.total > 0 && progress.completed >= progress.total;
     const percentage = progress && progress.total > 0 ? Math.round((progress.completed / progress.total) * 100) : 0;
-    
     return (
-        <div onClick={() => handlePracticeSelect(practiceNumber)} className={`w-full bg-white border border-gray-200 ${colors.border} p-4 rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 flex flex-col group cursor-pointer relative overflow-hidden`}>
-            {/* Background decoration circle */}
-            <div className={`absolute -right-6 -top-6 w-24 h-24 rounded-full ${colors.bg} opacity-20 group-hover:scale-150 transition-transform duration-500`}></div>
-
-            <div className="flex justify-between items-center z-10">
+        <div onClick={() => handlePracticeSelect(practiceNumber)} className={`w-full bg-white border border-gray-200 ${colors.border} p-4 rounded-xl shadow-sm hover:shadow-md transition-all duration-300 flex flex-col group cursor-pointer`}>
+            <div className="flex justify-between items-center">
                 <div className="flex items-center flex-grow">
-                    <div className="relative w-12 h-12 flex-shrink-0 mr-4 flex items-center justify-center bg-white rounded-full shadow-sm">
-                        <CircularProgress percentage={percentage} size={48} strokeWidth={5} trackColor="text-gray-100" />
-                        <div className="absolute inset-0 flex items-center justify-center">
-                            {isCompleted ? 
-                                <CheckIcon className="w-6 h-6 text-green-500 drop-shadow-sm" /> : 
-                                <span className="text-xs font-black text-slate-700 font-lilita">{`${percentage}%`}</span>
-                            }
-                        </div>
+                    <div className="relative w-10 h-10 flex-shrink-0 mr-4 flex items-center justify-center">
+                        <CircularProgress percentage={percentage} size={40} strokeWidth={4} trackColor="text-gray-200" />
+                        <div className="absolute inset-0 flex items-center justify-center">{isCompleted ? <CheckIcon className="w-5 h-5 text-green-500" /> : <span className="text-xs font-bold text-indigo-600">{`${percentage}%`}</span>}</div>
                     </div>
                     <div className="text-left flex-grow">
-                        <h3 className="text-lg font-bold text-gray-800 font-lilita tracking-wide">{details.title}</h3>
-                        {Array.isArray(details.desc) ? (
-                            <div className="mt-1 flex flex-wrap gap-1.5">
-                                {details.desc.map((tag: any) => (
-                                    <span key={tag} className={`inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-500 border border-slate-200`}>{tag}</span>
-                                ))}
-                            </div>
-                        ) : (
-                            <p className="text-xs text-gray-500 mt-1 font-medium">{details.desc}</p>
-                        )}
+                        <h3 className="font-medium text-gray-800">{details.title}</h3>
+                        {Array.isArray(details.desc) ? (<div className="mt-1.5 flex flex-wrap gap-1.5">{details.desc.map((tag: any) => <span key={tag} className={`inline-block text-xs font-semibold px-3 py-1 rounded-full bg-indigo-100 text-indigo-800`}>{tag}</span>)}</div>) : (<p className="text-xs text-gray-500 mt-1">{details.desc}</p>)}
                     </div>
                 </div>
-                
-                <div className="flex items-center pl-2">
-                   {/* Score Badge */}
-                   {progress && progress.total > 0 && !isCompleted && (
-                        <div className="flex flex-col items-end">
-                            <span className="text-[10px] uppercase font-bold text-gray-400">Progress</span>
-                            <div className="text-sm font-black text-slate-700">
-                                <span className="text-indigo-600">{progress.completed}</span>
-                                <span className="text-gray-300 mx-0.5">/</span>
-                                <span>{progress.total}</span>
-                            </div>
-                        </div>
-                   )}
-                   {isCompleted && <div className="bg-green-100 text-green-600 p-1.5 rounded-full"><CompletedIcon className="w-5 h-5" /></div>}
-                </div>
+                <div className="flex items-center gap-3 sm:gap-4 pl-2">{isCompleted ? <CompletedIcon className="w-6 h-6 text-green-500" /> : (progress && progress.total > 0 && <div className="text-right text-sm font-medium bg-gray-100 rounded-md px-2 py-0.5"><span className="font-bold text-gray-800">{progress.completed}</span><span className="text-gray-400">/{progress.total}</span></div>)}</div>
             </div>
-
-            {/* Footer Actions - Redesigned */}
-            <div className="border-t border-gray-100 mt-4 pt-3 flex justify-between items-center z-10">
-                {/* 
-                    REDESIGNED REWARDS BUTTON 
-                    Style: 3D, Gradient, Font-Lilita, Animation
-                */}
+            <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                 <button 
-                    onClick={(e) => { e.stopPropagation(); onRewardsClick(practiceNumber, details.title); }} 
-                    className="relative group/btn flex items-center gap-2 pl-3 pr-4 py-1.5 bg-gradient-to-b from-yellow-400 to-orange-500 rounded-2xl shadow-[0_4px_0_rgb(194,65,12)] hover:shadow-[0_5px_0_rgb(194,65,12)] hover:-translate-y-0.5 active:shadow-none active:translate-y-1 transition-all duration-150"
+                  onClick={(e) => { e.stopPropagation(); onRewardsClick(practiceNumber, details.title); }} 
+                  className="flex items-center gap-2 text-lg font-lilita text-indigo-600 hover:text-indigo-800 transition-colors tracking-wide"
                 >
-                    <div className="bg-white/20 p-1 rounded-lg group-hover/btn:rotate-12 transition-transform duration-300">
-                        <GiftIcon className="w-4 h-4 text-white drop-shadow-md" />
-                    </div>
-                    <span className="font-lilita text-lg text-white tracking-wider uppercase drop-shadow-md pt-0.5">Rewards</span>
-                    
-                    {/* Shine effect overlay */}
-                    <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-t-2xl pointer-events-none"></div>
+                  <GiftIcon className="w-5 h-5 mb-0.5" />
+                  <span>Rewards</span>
                 </button>
-
-                {/* Styled Review Button */}
-                <button 
-                    onClick={(e) => { e.stopPropagation(); onReviewClick(practiceNumber); }} 
-                    disabled={!isCompleted} 
-                    className="flex items-center gap-1.5 px-3 py-1.5 text-slate-400 font-lilita tracking-wide uppercase hover:text-indigo-600 hover:bg-indigo-50 rounded-xl transition-all disabled:opacity-40 disabled:hover:bg-transparent disabled:cursor-not-allowed group/review"
-                >
-                    <RefreshIcon className="w-4 h-4 mb-0.5 group-hover/review:rotate-180 transition-transform duration-500" />
-                    <span className="pt-0.5">Ôn tập</span>
-                    {!isCompleted && <LockIcon className="w-3 h-3 ml-1 text-slate-300"/>}
-                </button>
+                <button onClick={(e) => { e.stopPropagation(); onReviewClick(practiceNumber); }} disabled={!isCompleted} className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"><RefreshIcon className="w-4 h-4" /><span>Ôn tập</span>{!isCompleted && <LockIcon className="w-4 h-4 ml-1 text-gray-400"/>}</button>
             </div>
         </div>
     );
