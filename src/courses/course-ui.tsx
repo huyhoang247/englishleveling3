@@ -143,13 +143,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
         );
       case 'quizTypes':
         return (
-          <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center pt-2 pb-2">
-              <h2 className="text-4xl font-['Lilita_One'] uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">
-                Select Mode
-              </h2>
-              <p className="mt-2 text-base text-gray-500 font-medium">Chọn chế độ luyện tập của bạn</p>
-            </div>
+          <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto pt-2">
+            {/* ĐÃ XÓA: Header Text (Select Mode & Description) */}
+            
             <div className="space-y-5 w-full px-1">
               
               {/* Card 1: Multiple Choice */}
@@ -160,10 +156,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600"></div>
                 
-                {/* ĐÃ XÓA: Decorative Background Blob */}
-
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container - Updated: bg-white/30 and text-white */}
+                  {/* Icon Container: bg-white/30 and text-white */}
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-9 w-9" />
                   </div>
@@ -177,8 +171,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                       </span>
                     </div>
                   </div>
-
-                  {/* ĐÃ XÓA: Arrow Action */}
                 </div>
               </button>
 
@@ -190,10 +182,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                  {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"></div>
                 
-                 {/* ĐÃ XÓA: Decorative Background Blob */}
-
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container - Updated: bg-white/30 and text-white */}
+                  {/* Icon Container: bg-white/30 and text-white */}
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-9 w-9" />
                   </div>
@@ -207,8 +197,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                       </span>
                     </div>
                   </div>
-
-                  {/* ĐÃ XÓA: Arrow Action */}
                 </div>
               </button>
 
@@ -220,10 +208,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                  {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 via-purple-500 to-violet-600"></div>
                 
-                 {/* ĐÃ XÓA: Decorative Background Blob */}
-
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container - Updated: bg-white/30 and text-white */}
+                  {/* Icon Container: bg-white/30 and text-white */}
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-9 w-9" />
                   </div>
@@ -237,8 +223,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                       </span>
                     </div>
                   </div>
-
-                  {/* ĐÃ XÓA: Arrow Action */}
                 </div>
               </button>
 
