@@ -559,7 +559,14 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             if (levelTiers.length > 0) {
               return (
                 <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
-                    <div className="flex justify-between items-center mb-3"><h4 className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">{levelTitle}</h4>{multiplier > 1 && (<div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${isInactivePreview ? 'bg-gray-300 text-gray-500' : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'}`}>x{multiplier} Thưởng</div>)}</div>
+                    {/* --- START CHANGE: Level Header Font --- */}
+                    <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-lg font-lilita uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600">
+                            {levelTitle}
+                        </h4>
+                        {multiplier > 1 && (<div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${isInactivePreview ? 'bg-gray-300 text-gray-500' : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'}`}>x{multiplier} Thưởng</div>)}
+                    </div>
+                    {/* --- END CHANGE --- */}
                     <div className="space-y-3">{levelTiers}</div>
                 </div>
               );
