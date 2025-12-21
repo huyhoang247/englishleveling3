@@ -444,7 +444,9 @@ function PracticeList() {
     return <PracticeListLoadingSkeleton />;
   }
 
-  if (isRewardsPopupOpen) { return <RewardsPopup isOpen={isRewardsPopupOpen} onClose={() => setIsRewardsPopupOpen(false)} practiceNumber={selectedPracticeForRewards.number} practiceTitle={selectedPracticeForRewards.title} progressData={progressData} claimedRewards={claimedRewards} setClaimedRewards={setClaimedRewards} user={user} selectedType={selectedType} MAX_PREVIEWS={MAX_PREVIEWS} />; }
+  // --- SỬA Ở ĐÂY: Xóa đoạn return sớm khi popup mở ---
+  // if (isRewardsPopupOpen) { return <RewardsPopup ... /> } <-- ĐÃ XÓA
+
   if (view === 'reviews' && selectedPracticeForReview) {
       const basePracticeDetails = practiceDetails[selectedType as string]?.[String(selectedPracticeForReview)];
       if (!basePracticeDetails) { return ( <div className="text-center text-red-500"><p>Lỗi: Không tìm thấy chi tiết bài tập.</p><button onClick={() => setView('main')} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Quay lại</button></div> ); }
@@ -479,6 +481,8 @@ function PracticeList() {
   }
 
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
+  
+  // --- SỬA Ở ĐÂY: Render Popup cùng với danh sách bài tập ---
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="space-y-4 w-full pt-2">
@@ -487,6 +491,20 @@ function PracticeList() {
             return <PracticeCard key={practiceNumber} practiceNumber={practiceNumber} details={practiceDetails[selectedType as string][practiceNumber]} progress={progressData[practiceNumber]} onReviewClick={handleReviewClick} onRewardsClick={handleRewardsClick} />;
           })}
       </div>
+      
+      {/* Đặt Popup ở cuối để hiển thị đè lên nội dung */}
+      <RewardsPopup 
+          isOpen={isRewardsPopupOpen} 
+          onClose={() => setIsRewardsPopupOpen(false)} 
+          practiceNumber={selectedPracticeForRewards.number} 
+          practiceTitle={selectedPracticeForRewards.title} 
+          progressData={progressData} 
+          claimedRewards={claimedRewards} 
+          setClaimedRewards={setClaimedRewards} 
+          user={user} 
+          selectedType={selectedType} 
+          MAX_PREVIEWS={MAX_PREVIEWS} 
+      />
     </div>
   );
 };
