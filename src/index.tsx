@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { GameProvider } from './GameContext.tsx';
-import { QuizAppProvider } from './courses/course-context.tsx'; // <<< THÊM DÒNG NÀY
+import { QuizAppProvider } from './courses/course-context.tsx';
 import { createRoot } from 'react-dom/client';
 import Home from './background-game.tsx';
 import NavigationBarBottom from './navigation-bar-bottom.tsx';
@@ -19,18 +19,16 @@ import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 
 // Định nghĩa các loại tab
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
-// Định nghĩa các bước của quá trình tải (ĐÃ ĐƠN GIẢN HÓA)
+// Định nghĩa các bước của quá trình tải
 type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 
 // ==================================================================
-// HÀM HELPER (Không thay đổi)
+// HÀM HELPER
 // ==================================================================
 
-// --- CHANGE START: Hàm tải Font cho toàn bộ hệ thống ---
 function loadGlobalFonts() {
   const fontUrl = "https://fonts.googleapis.com/css2?family=Lilita+One&display=swap";
   
-  // Kiểm tra xem font đã được thêm chưa để tránh trùng lặp
   if (!document.querySelector(`link[href="${fontUrl}"]`)) {
     const link = document.createElement('link');
     link.href = fontUrl;
@@ -39,9 +37,7 @@ function loadGlobalFonts() {
     console.log("Global font 'Lilita One' loaded via index.tsx");
   }
 }
-// Gọi hàm ngay lập tức
 loadGlobalFonts();
-// --- CHANGE END ---
 
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -84,7 +80,7 @@ const enterFullScreen = async () => {
 const appVersion = "1.0.1";
 
 // ==================================================================
-// CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE (Không thay đổi)
+// CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE
 // ==================================================================
 const ASSET_CACHE_PREFIX = 'english-leveling-assets';
 const ASSET_CACHE_NAME = `${ASSET_CACHE_PREFIX}-v${appVersion}`;
@@ -130,7 +126,7 @@ async function cleanupOldCaches() {
 }
 
 // ==================================================================
-// COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING (Không thay đổi)
+// COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING
 // ==================================================================
 interface LoadingScreenLayoutProps {
   logoFloating: boolean;
@@ -215,7 +211,6 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
 
-  // --- THAY ĐỔI LỚN: Logic tải và cache tài nguyên, tự động chuyển tiếp ---
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
     let isCancelled = false;
@@ -241,10 +236,7 @@ const App: React.FC = () => {
         }
       }
 
-      // 3. Sau khi hoàn tất, tự động chuyển sang bước launching
       if (!isCancelled) {
-        // Tự động vào game sau khi tải xong, không cần hỏi
-        // Thử vào chế độ toàn màn hình nếu đã lưu trước đó
         const savedMode = localStorage.getItem('displayMode');
         if (savedMode === 'fullscreen') {
             await enterFullScreen();
@@ -257,12 +249,11 @@ const App: React.FC = () => {
     return () => { isCancelled = true; };
   }, [loadingStep, currentUser]);
   
-  // Tự động chuyển từ launching sang ready sau một khoảng thời gian
   useEffect(() => {
     if (loadingStep === 'launching') {
       const stepTimer = setTimeout(() => {
           setLoadingStep('ready');
-      }, 2000); // Thời gian cho hiệu ứng chuyển cảnh
+      }, 2000);
       return () => { clearTimeout(stepTimer); };
     }
   }, [loadingStep]);
@@ -280,10 +271,12 @@ const App: React.FC = () => {
     return (
       <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
-          {/* --- UPDATE: Chuyển xuống text-base (16px) cho tinh tế --- */}
-          <p className="mt-1 mb-5 text-base text-white tracking-widest font-['Lilita_One'] uppercase">
+          
+          {/* --- CHANGE HERE: text-sm và text-white/85 --- */}
+          <p className="mt-1 mb-5 text-sm text-white/85 tracking-widest font-['Lilita_One'] uppercase">
             {text}<span className="inline-block w-3 text-left">{ellipsis}</span>
           </p>
+
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
               <div
@@ -302,9 +295,7 @@ const App: React.FC = () => {
   // Màn hình đăng nhập nếu chưa có user
   if (!currentUser) { return <AuthComponent appVersion={appVersion} />; }
   
-  // --- CHANGE START ---
-  // Khi loadingStep đã là 'ready' hoặc 'launching', hiển thị giao diện game
-  // Bọc toàn bộ ứng dụng trong GameProvider để context có sẵn ở mọi nơi.
+  // Giao diện chính của ứng dụng
   return (
     <div className="relative w-screen" style={{ height: 'var(--app-height, 100vh)' }}>
       <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
@@ -318,13 +309,11 @@ const App: React.FC = () => {
             {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
           </div>
           
-          {/* Hiệu ứng mờ dần khi game bắt đầu */}
           <GameSkeletonLoader show={loadingStep === 'launching'} />
         </QuizAppProvider>
       </GameProvider>
     </div>
   );
-  // --- CHANGE END ---
 };
 
 const container = document.getElementById('root');
