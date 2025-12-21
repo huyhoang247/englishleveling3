@@ -145,95 +145,115 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            <div className="text-center pt-2">
-              <h2 className="text-3xl font-extrabold text-gray-800">Select a mode</h2>
-              <p className="mt-2 text-base text-gray-500">Chọn cách bạn muốn luyện tập</p>
+            <div className="text-center pt-2 pb-2">
+              <h2 className="text-4xl font-['Lilita_One'] uppercase tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-indigo-600 drop-shadow-sm">
+                Select Mode
+              </h2>
+              <p className="mt-2 text-base text-gray-500 font-medium">Chọn chế độ luyện tập của bạn</p>
             </div>
-            <div className="space-y-4 w-full px-1">
+            <div className="space-y-5 w-full px-1">
               
-              {/* Card 1: Multiple Choice - Clean Light Theme */}
+              {/* Card 1: Multiple Choice - Vibrant Blue Gradient */}
               <button 
                 onClick={() => handleTypeSelect('tracNghiem')} 
-                className="w-full text-left p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-blue-100 hover:border-blue-200 transform hover:-translate-y-1 transition-all duration-300 group"
+                className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-blue-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
               >
-                <div className="flex items-center">
-                  {/* Icon Container - Soft Blue */}
-                  <div className="h-16 w-16 bg-blue-50 text-blue-500 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-9 w-9 drop-shadow-sm" />
+                {/* Gradient Border/Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600"></div>
+                
+                {/* Decorative Background Blob */}
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/20 rounded-full blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+
+                <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
+                  {/* Icon Container - White for pop */}
+                  <div className="h-16 w-16 bg-white text-blue-500 rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:rotate-6 transition-transform duration-300">
+                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-9 w-9" />
                   </div>
                   
                   {/* Content */}
-                  <div className="ml-5 flex-1 flex flex-col justify-center">
+                  <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     {/* TITLE UPDATED: Font Lilita + Uppercase */}
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wide text-gray-800 group-hover:text-blue-600 transition-colors mb-1">Multiple choice</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 group-hover:bg-blue-50 group-hover:text-blue-600 group-hover:border-blue-100 transition-colors">
-                        Trắc nghiệm 4 đáp án
+                    <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Multiple choice</h3>
+                    <div className="flex items-center">
+                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
+                        4 Đáp án
                       </span>
                     </div>
                   </div>
 
                   {/* Arrow Action */}
-                  <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-blue-500 transition-colors">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                  <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-blue-600 text-white transition-all duration-300">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </div>
               </button>
 
-              {/* Card 2: Voca Match - Clean Light Theme */}
+              {/* Card 2: Voca Match - Vibrant Green Gradient */}
               <button 
                 onClick={() => handleTypeSelect('vocaMatch')} 
-                className="w-full text-left p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-emerald-100 hover:border-emerald-200 transform hover:-translate-y-1 transition-all duration-300 group"
+                className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-emerald-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
               >
-                <div className="flex items-center">
-                  {/* Icon Container - Soft Green */}
-                  <div className="h-16 w-16 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-9 w-9 drop-shadow-sm" />
+                 {/* Gradient Border/Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"></div>
+                
+                 {/* Decorative Background Blob */}
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/20 rounded-full blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+
+                <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
+                  {/* Icon Container - White for pop */}
+                  <div className="h-16 w-16 bg-white text-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:rotate-6 transition-transform duration-300">
+                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-9 w-9" />
                   </div>
                   
                   {/* Content */}
-                  <div className="ml-5 flex-1 flex flex-col justify-center">
+                  <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                      {/* TITLE UPDATED: Font Lilita + Uppercase */}
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wide text-gray-800 group-hover:text-emerald-600 transition-colors mb-1">Voca Match</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 group-hover:bg-emerald-50 group-hover:text-emerald-600 group-hover:border-emerald-100 transition-colors">
-                        Nối từ Anh - Việt
+                    <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Voca Match</h3>
+                    <div className="flex items-center">
+                      <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
+                        Nối từ
                       </span>
                     </div>
                   </div>
 
                   {/* Arrow Action */}
-                  <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                  <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-emerald-600 text-white transition-all duration-300">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </div>
               </button>
 
-              {/* Card 3: Fill in the blank - Clean Light Theme */}
+              {/* Card 3: Fill in the blank - Vibrant Purple Gradient */}
               <button 
                 onClick={() => handleTypeSelect('dienTu')} 
-                className="w-full text-left p-4 bg-white border border-gray-100 rounded-3xl shadow-sm hover:shadow-xl hover:shadow-purple-100 hover:border-purple-200 transform hover:-translate-y-1 transition-all duration-300 group"
+                className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-purple-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
               >
-                <div className="flex items-center">
-                  {/* Icon Container - Soft Purple */}
-                  <div className="h-16 w-16 bg-purple-50 text-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-9 w-9 drop-shadow-sm" />
+                 {/* Gradient Border/Background */}
+                <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 via-purple-500 to-violet-600"></div>
+                
+                 {/* Decorative Background Blob */}
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/20 rounded-full blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+
+                <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
+                  {/* Icon Container - White for pop */}
+                  <div className="h-16 w-16 bg-white text-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:rotate-6 transition-transform duration-300">
+                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-9 w-9" />
                   </div>
                   
                   {/* Content */}
-                  <div className="ml-5 flex-1 flex flex-col justify-center">
+                  <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                      {/* TITLE UPDATED: Font Lilita + Uppercase */}
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wide text-gray-800 group-hover:text-purple-600 transition-colors mb-1">Fill in the blank</h3>
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs font-medium px-2.5 py-1 rounded-lg bg-gray-50 text-gray-500 border border-gray-100 group-hover:bg-purple-50 group-hover:text-purple-600 group-hover:border-purple-100 transition-colors">
-                        Điền từ còn thiếu
+                    <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Fill in the blank</h3>
+                    <div className="flex items-center">
+                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
+                        Điền từ
                       </span>
                     </div>
                   </div>
 
                   {/* Arrow Action */}
-                  <div className="h-10 w-10 rounded-full bg-gray-50 flex items-center justify-center group-hover:bg-purple-500 transition-colors">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400 group-hover:text-white transition-colors transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 5l7 7-7 7" /></svg>
+                  <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-purple-600 text-white transition-all duration-300">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </div>
               </button>
