@@ -104,7 +104,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-blue-400 group"
             >
               <img src={quizHomeAssets.quizIcon} alt="Quiz" className="h-20 w-20 mb-3" />
-              {/* Gradient: Blue -> Black */}
+              {/* Quiz Color (Standard) */}
               <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Quiz</h3>
             </button>
             <button
@@ -112,16 +112,16 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-purple-400 group"
             >
               <img src={quizHomeAssets.wordChainGameIcon} alt="Word Chain" className="h-20 w-20 mb-3" />
-              {/* Gradient: Purple -> Black */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-purple-700 to-black bg-clip-text text-transparent transition-all opacity-30">Word Chain</h3>
+              {/* Synchronized to Blue Gradient */}
+              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Word Chain</h3>
             </button>
             <button
               onClick={() => setCurrentView('exampleView')}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-green-400 group"
             >
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/example-icon.webp" alt="Examples" className="h-20 w-20 mb-3" />
-              {/* Gradient: Green -> Black */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-green-700 to-black bg-clip-text text-transparent transition-all opacity-30">Example</h3>
+              {/* Synchronized to Blue Gradient */}
+              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Example</h3>
             </button>
             
             <button
@@ -129,21 +129,21 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-orange-400 group"
             >
               <img src="https://cdn-icons-png.flaticon.com/512/3408/3408595.png" alt="Topics" className="h-20 w-20 mb-3 opacity-90" />
-              {/* Gradient: Orange -> Black */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-orange-700 to-black bg-clip-text text-transparent transition-all opacity-30">Topics</h3>
+              {/* Synchronized to Blue Gradient */}
+              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Topics</h3>
             </button>
 
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
-              {/* Gradient: Gray -> Black */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-gray-600 to-black bg-clip-text text-transparent opacity-30">Exam</h3>
+              {/* Synchronized to Blue Gradient */}
+              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent opacity-30">Exam</h3>
             </div>
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
-              {/* Gradient: Gray -> Black */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-gray-600 to-black bg-clip-text text-transparent opacity-30">Grammar</h3>
+              {/* Synchronized to Blue Gradient */}
+              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent opacity-30">Grammar</h3>
             </div>
           </div>
         );
