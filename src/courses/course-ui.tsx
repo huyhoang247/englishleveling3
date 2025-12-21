@@ -164,7 +164,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
-                    <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Multiple choice</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Multiple choice</h3>
                     <div className="flex items-center">
                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
                         4 Đáp án
@@ -190,7 +190,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
-                    <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Voca Match</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Voca Match</h3>
                     <div className="flex items-center">
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
                         Nối từ
@@ -216,7 +216,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
-                    <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Fill in the blank</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Fill in the blank</h3>
                     <div className="flex items-center">
                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
                         Điền từ
