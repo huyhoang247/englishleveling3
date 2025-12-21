@@ -355,10 +355,9 @@ const PracticeCard = memo(({ practiceNumber, details, progress, onRewardsClick, 
             <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
                 <button 
                   onClick={(e) => { e.stopPropagation(); onRewardsClick(practiceNumber, details.title); }} 
-                  className="flex items-center gap-2 text-lg font-lilita text-indigo-600 hover:text-indigo-800 transition-colors tracking-wide"
+                  className="px-4 py-1.5 rounded-full bg-gradient-to-r from-amber-400 to-orange-500 hover:from-amber-500 hover:to-orange-600 text-white text-sm font-lilita uppercase tracking-wider shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200"
                 >
-                  <GiftIcon className="w-5 h-5 mb-0.5" />
-                  <span>Rewards</span>
+                  Rewards
                 </button>
                 <button onClick={(e) => { e.stopPropagation(); onReviewClick(practiceNumber); }} disabled={!isCompleted} className="flex items-center gap-2 text-sm font-semibold text-indigo-600 hover:text-indigo-800 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors"><RefreshIcon className="w-4 h-4" /><span>Ôn tập</span>{!isCompleted && <LockIcon className="w-4 h-4 ml-1 text-gray-400"/>}</button>
             </div>
