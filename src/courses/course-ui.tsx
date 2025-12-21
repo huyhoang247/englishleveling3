@@ -75,7 +75,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               break;
           
           // --- RENDER TRỰC TIẾP (KHÔNG CẦN SUSPENSE) ---
-          // PhraseViewer sẽ tự lo việc hiện Skeleton bên trong nó
           case 'exampleView':
               ViewComponent = <PhraseViewer onGoBack={goBack} />;
               break;
@@ -153,7 +152,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
             </div>
             <div className="space-y-5 w-full px-1">
               
-              {/* Card 1: Multiple Choice - Vibrant Blue Gradient */}
+              {/* Card 1: Multiple Choice */}
               <button 
                 onClick={() => handleTypeSelect('tracNghiem')} 
                 className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-blue-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
@@ -161,18 +160,16 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600"></div>
                 
-                {/* Decorative Background Blob */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/20 rounded-full blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+                {/* ĐÃ XÓA: Decorative Background Blob */}
 
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container - White for pop */}
-                  <div className="h-16 w-16 bg-white text-blue-500 rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:rotate-6 transition-transform duration-300">
+                  {/* Icon Container - Updated: bg-white/30 and text-white */}
+                  <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-9 w-9" />
                   </div>
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
-                    {/* TITLE UPDATED: Font Lilita + Uppercase */}
                     <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Multiple choice</h3>
                     <div className="flex items-center">
                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
@@ -181,14 +178,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                     </div>
                   </div>
 
-                  {/* Arrow Action */}
-                  <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-blue-600 text-white transition-all duration-300">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                  </div>
+                  {/* ĐÃ XÓA: Arrow Action */}
                 </div>
               </button>
 
-              {/* Card 2: Voca Match - Vibrant Green Gradient */}
+              {/* Card 2: Voca Match */}
               <button 
                 onClick={() => handleTypeSelect('vocaMatch')} 
                 className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-emerald-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
@@ -196,18 +190,16 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                  {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"></div>
                 
-                 {/* Decorative Background Blob */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/20 rounded-full blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+                 {/* ĐÃ XÓA: Decorative Background Blob */}
 
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container - White for pop */}
-                  <div className="h-16 w-16 bg-white text-emerald-500 rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:rotate-6 transition-transform duration-300">
+                  {/* Icon Container - Updated: bg-white/30 and text-white */}
+                  <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-9 w-9" />
                   </div>
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
-                     {/* TITLE UPDATED: Font Lilita + Uppercase */}
                     <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Voca Match</h3>
                     <div className="flex items-center">
                       <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
@@ -216,14 +208,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                     </div>
                   </div>
 
-                  {/* Arrow Action */}
-                  <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-emerald-600 text-white transition-all duration-300">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                  </div>
+                  {/* ĐÃ XÓA: Arrow Action */}
                 </div>
               </button>
 
-              {/* Card 3: Fill in the blank - Vibrant Purple Gradient */}
+              {/* Card 3: Fill in the blank */}
               <button 
                 onClick={() => handleTypeSelect('dienTu')} 
                 className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-purple-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
@@ -231,18 +220,16 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                  {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 via-purple-500 to-violet-600"></div>
                 
-                 {/* Decorative Background Blob */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-32 h-32 bg-white/20 rounded-full blur-2xl transform group-hover:scale-150 transition-transform duration-700"></div>
+                 {/* ĐÃ XÓA: Decorative Background Blob */}
 
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container - White for pop */}
-                  <div className="h-16 w-16 bg-white text-purple-500 rounded-2xl flex items-center justify-center shrink-0 shadow-md group-hover:rotate-6 transition-transform duration-300">
+                  {/* Icon Container - Updated: bg-white/30 and text-white */}
+                  <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-9 w-9" />
                   </div>
                   
                   {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
-                     {/* TITLE UPDATED: Font Lilita + Uppercase */}
                     <h3 className="text-xl font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md">Fill in the blank</h3>
                     <div className="flex items-center">
                        <span className="text-xs font-bold px-3 py-1 rounded-full bg-white/20 border border-white/20 text-white backdrop-blur-md">
@@ -251,10 +238,7 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                     </div>
                   </div>
 
-                  {/* Arrow Action */}
-                  <div className="h-10 w-10 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-white group-hover:text-purple-600 text-white transition-all duration-300">
-                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 transform group-hover:translate-x-0.5 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M9 5l7 7-7 7" /></svg>
-                  </div>
+                  {/* ĐÃ XÓA: Arrow Action */}
                 </div>
               </button>
 
