@@ -145,66 +145,92 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto">
-            {/* --- UPDATE: Tiêu đề màu xám đen tinh tế --- */}
             <div className="text-center">
-              <h2 className="text-3xl font-extrabold text-slate-800">
-                Select a mode
-              </h2>
+              <h2 className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900">Select a mode</h2>
               <p className="mt-2 text-md text-gray-500">Bạn muốn luyện tập theo cách nào?</p>
             </div>
-
             <div className="space-y-4 w-full">
               
-              {/* Card 1: Multiple Choice (Style trắng, chữ đen, icon gradient) */}
-              <button onClick={() => handleTypeSelect('tracNghiem')} className="w-full text-left p-4 bg-white border border-gray-200 text-slate-800 rounded-2xl shadow-md hover:shadow-xl hover:border-blue-300 transform hover:-translate-y-1 transition-all duration-300 group">
+              {/* Card 1: Multiple Choice - Dark Theme (Blue Accent) */}
+              <button 
+                onClick={() => handleTypeSelect('tracNghiem')} 
+                className="w-full text-left p-5 bg-slate-900 border border-slate-800 hover:border-blue-500/50 text-white rounded-2xl shadow-md hover:shadow-blue-500/10 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 group"
+              >
                 <div className="flex items-center">
-                  <div className="h-16 w-16 bg-gradient-to-br from-teal-400 to-blue-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner">
-                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice icon" className="h-9 w-9" />
+                  {/* Icon Box */}
+                  <div className="h-16 w-16 bg-blue-500/10 group-hover:bg-blue-500/20 border border-blue-500/10 rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice icon" className="h-9 w-9 opacity-90 group-hover:opacity-100 transition-opacity" />
                   </div>
+                  
+                  {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-1 group-hover:text-blue-600 transition-colors">Multiple choice</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-1.5 text-slate-100 group-hover:text-blue-400 transition-colors">Multiple choice</h3>
                     <div className="inline-flex">
-                        <span className="text-xs font-medium text-gray-500 leading-tight">Chọn đáp án đúng từ các lựa chọn</span>
+                      <div className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700/50">
+                        <span className="text-xs font-medium text-slate-400 leading-none block">Chọn đáp án đúng</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+
+                  {/* Arrow Indicator */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </div>
               </button>
 
-              {/* Card 2: Voca Match */}
-              <button onClick={() => handleTypeSelect('vocaMatch')} className="w-full text-left p-4 bg-white border border-gray-200 text-slate-800 rounded-2xl shadow-md hover:shadow-xl hover:border-green-300 transform hover:-translate-y-1 transition-all duration-300 group">
+              {/* Card 2: Voca Match - Dark Theme (Green Accent) */}
+              <button 
+                onClick={() => handleTypeSelect('vocaMatch')} 
+                className="w-full text-left p-5 bg-slate-900 border border-slate-800 hover:border-emerald-500/50 text-white rounded-2xl shadow-md hover:shadow-emerald-500/10 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 group"
+              >
                 <div className="flex items-center">
-                  <div className="h-16 w-16 bg-gradient-to-br from-green-400 to-cyan-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner">
-                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match Icon" className="h-9 w-9" />
+                  {/* Icon Box */}
+                  <div className="h-16 w-16 bg-emerald-500/10 group-hover:bg-emerald-500/20 border border-emerald-500/10 rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match Icon" className="h-9 w-9 opacity-90 group-hover:opacity-100 transition-opacity" />
                   </div>
+                  
+                  {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-1 group-hover:text-green-600 transition-colors">Voca Match</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-1.5 text-slate-100 group-hover:text-emerald-400 transition-colors">Voca Match</h3>
                      <div className="inline-flex">
-                        <span className="text-xs font-medium text-gray-500 leading-tight">Nối từ Tiếng Anh với Tiếng Việt</span>
+                      <div className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700/50">
+                        <span className="text-xs font-medium text-slate-400 leading-none block">Nối từ Anh - Việt</span>
+                      </div>
                     </div>
                   </div>
-                  <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+
+                  {/* Arrow Indicator */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </div>
               </button>
 
-              {/* Card 3: Fill in the blank */}
-              <button onClick={() => handleTypeSelect('dienTu')} className="w-full text-left p-4 bg-white border border-gray-200 text-slate-800 rounded-2xl shadow-md hover:shadow-xl hover:border-purple-300 transform hover:-translate-y-1 transition-all duration-300 group">
+              {/* Card 3: Fill in the blank - Dark Theme (Purple Accent) */}
+              <button 
+                onClick={() => handleTypeSelect('dienTu')} 
+                className="w-full text-left p-5 bg-slate-900 border border-slate-800 hover:border-purple-500/50 text-white rounded-2xl shadow-md hover:shadow-purple-500/10 hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 group"
+              >
                 <div className="flex items-center">
-                  <div className="h-16 w-16 bg-gradient-to-br from-purple-500 to-pink-500 rounded-xl flex items-center justify-center shrink-0 shadow-inner">
-                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank icon" className="h-9 w-9" />
+                  {/* Icon Box */}
+                  <div className="h-16 w-16 bg-purple-500/10 group-hover:bg-purple-500/20 border border-purple-500/10 rounded-xl flex items-center justify-center shrink-0 transition-colors">
+                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank icon" className="h-9 w-9 opacity-90 group-hover:opacity-100 transition-opacity" />
                   </div>
+                  
+                  {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center">
-                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-1 group-hover:text-purple-600 transition-colors">Fill in the blank</h3>
+                    <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-1.5 text-slate-100 group-hover:text-purple-400 transition-colors">Fill in the blank</h3>
                     <div className="inline-flex">
-                        <span className="text-xs font-medium text-gray-500 leading-tight">Điền từ còn thiếu vào ô trống</span>
+                      <div className="px-3 py-1 bg-slate-800 rounded-lg border border-slate-700/50">
+                        <span className="text-xs font-medium text-slate-400 leading-none block">Điền từ còn thiếu</span>
+                      </div>
                     </div>
                   </div>
-                   <div className="pr-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+
+                  {/* Arrow Indicator */}
+                  <div className="opacity-0 group-hover:opacity-100 transition-opacity transform translate-x-[-10px] group-hover:translate-x-0">
+                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
                   </div>
                 </div>
               </button>
