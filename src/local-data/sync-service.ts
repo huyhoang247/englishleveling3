@@ -1,6 +1,6 @@
 // --- START OF FILE src/sync-service.ts ---
 
-import { db } from './firebase'; // Đảm bảo đường dẫn đúng
+import { db } from '../firebase'; // Đảm bảo đường dẫn đúng
 import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { 
   localDB, 
