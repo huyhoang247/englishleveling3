@@ -92,7 +92,8 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
                         <img src={totalClaimableRewards.masteryCards > 0 && !isUpdating ? uiAssets.giftBoxIcon : uiAssets.giftBoxDisabledIcon} alt="Claim all rewards" className="w-8 h-8" />
-                        <span className="font-bold text-lg">{isUpdating ? 'Claiming...' : 'Claim All'}</span>
+                        {/* SỬA ĐỔI: font-lilita, uppercase, text-xl */}
+                        <span className="font-lilita uppercase text-xl tracking-wide pt-1">{isUpdating ? 'CLAIMING...' : 'CLAIM ALL'}</span>
                     </div>
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
                         {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
@@ -163,7 +164,14 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
       </div>
       <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
-        <button onClick={handleClaimClick} disabled={!isClaimable || isAnyClaiming} className={`flex items-center justify-center w-auto px-4 py-2 rounded-lg font-semibold text-sm transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70'}`}>{isAnyClaiming ? 'Claiming...' : 'Claim'}</button>
+        <button 
+            onClick={handleClaimClick} 
+            disabled={!isClaimable || isAnyClaiming} 
+            // SỬA ĐỔI: font-lilita, uppercase, text-base
+            className={`flex items-center justify-center w-auto px-4 py-2 rounded-lg font-lilita uppercase text-base tracking-wide transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer pt-2.5 pb-2' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70 pt-2.5 pb-2'}`}
+        >
+            {isAnyClaiming ? 'CLAIMING...' : 'CLAIM'}
+        </button>
       </div>
     </div>
   );
