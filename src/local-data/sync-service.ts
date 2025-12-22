@@ -1,233 +1,173 @@
 // --- START OF FILE src/sync-service.ts ---
 
-import { doc, getDoc, writeBatch } from 'firebase/firestore';
-import { db } from '../firebase'; 
+import { db } from './firebase'; // Đảm bảo đường dẫn đúng
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { 
   localDB, 
   IOpenedVocab, 
   IVocabAchievement, 
   ICompletedWord, 
   ICompletedMultiWord 
-} from './local-vocab-db.ts';
+} from './local-vocab-db.ts'; // Import từ file DB của bạn
 
-// ==========================================
-// 1. ĐỊNH NGHĨA CẤU TRÚC DỮ LIỆU TRÊN CLOUD
-// ==========================================
-
-// Document 1: Chứa danh sách từ vựng đã mở (để tránh document quá nặng)
-interface IVocabDoc {
-  data: IOpenedVocab[];
+// Định nghĩa cấu trúc dữ liệu trên Firestore (Gom tất cả vào 1 Object lớn)
+interface ICloudSyncData {
+  lastSyncedAt: any; // Firestore Timestamp
+  openedVocab: Record<number, IOpenedVocab>; // Dùng Map (Object) để tránh duplicate ID
+  vocabAchievements: Record<string, IVocabAchievement>; // Key là word
+  completedWords: Record<string, ICompletedWord>; // Key là word
+  completedMultiWords: Record<string, ICompletedMultiWord>; // Key là phrase
 }
-
-// Document 2: Chứa thông tin cấp độ và EXP của từ
-interface IAchieveDoc {
-  data: IVocabAchievement[];
-}
-
-// Document 3: Chứa lịch sử chơi game (từ đơn và cụm từ)
-interface IStatsDoc {
-  words: Record<string, ICompletedWord>;       // Dùng Map (Object) để dễ merge
-  multi: Record<string, ICompletedMultiWord>;  // Dùng Map (Object) để dễ merge
-}
-
-// ==========================================
-// 2. HÀM HELPER
-// ==========================================
 
 /**
- * Helper để lấy timestamp an toàn từ dữ liệu Firestore hoặc Date object
- * Firestore trả về Timestamp object (seconds, nanoseconds), còn Local trả về Date string/object
+ * Hàm chuyển đổi mảng sang Object (Map) để dễ merge
  */
-const getSafeTime = (dateInput: any): number => {
-  if (!dateInput) return 0;
-  // Nếu là Firestore Timestamp
-  if (typeof dateInput.toMillis === 'function') {
-    return dateInput.toMillis();
-  }
-  // Nếu là Date object hoặc String
-  return new Date(dateInput).getTime();
+const arrayToMap = <T>(arr: T[], keyField: keyof T): Record<string | number, T> => {
+  return arr.reduce((acc, item) => {
+    // @ts-ignore
+    acc[item[keyField]] = item;
+    return acc;
+  }, {} as Record<string | number, T>);
 };
 
-// ==========================================
-// 3. SERVICE ĐỒNG BỘ CHÍNH
-// ==========================================
+/**
+ * Hàm chuyển đổi Firestore Timestamp về JS Date
+ */
+const convertTimestampsToDates = (obj: any): any => {
+  if (!obj) return obj;
+  if (obj instanceof Timestamp) return obj.toDate();
+  if (Array.isArray(obj)) return obj.map(convertTimestampsToDates);
+  if (typeof obj === 'object') {
+    const newObj: any = {};
+    for (const key in obj) {
+        // Xử lý đặc biệt cho các trường Date cụ thể trong interface của bạn
+        if (['collectedAt', 'lastCompletedAt', 'createdAt'].includes(key) && obj[key]?.seconds) {
+            newObj[key] = new Timestamp(obj[key].seconds, obj[key].nanoseconds).toDate();
+        } else {
+            newObj[key] = convertTimestampsToDates(obj[key]);
+        }
+    }
+    return newObj;
+  }
+  return obj;
+};
 
-export const SyncService = {
-  /**
-   * Hàm đồng bộ dữ liệu hai chiều (Local <-> Cloud)
-   * Chiến thuật: Merge thông minh (Union IDs, Max EXP, Latest Timestamp)
-   */
-  syncUserData: async (userId: string) => {
-    if (!userId) {
-      console.error("SyncService: No user ID provided.");
-      return;
+/**
+ * HÀM CHÍNH: Đồng bộ dữ liệu
+ * @param userId UID của người dùng
+ */
+export const syncUserData = async (userId: string) => {
+  if (!userId) return;
+
+  console.log("🔄 Starting Sync Process...");
+
+  try {
+    const userSyncDocRef = doc(db, 'users', userId, 'sync_data', 'main_progress');
+
+    // 1. Lấy dữ liệu Local
+    const [localOpened, localAchieve, localWords, localMulti] = await Promise.all([
+      localDB.getAllOpenedVocab(),
+      localDB.getVocabAchievements(),
+      localDB.getCompletedWords(),
+      localDB.getCompletedMultiWords()
+    ]);
+
+    // 2. Lấy dữ liệu Cloud
+    const cloudSnapshot = await getDoc(userSyncDocRef);
+    let cloudData: ICloudSyncData = {
+      lastSyncedAt: null,
+      openedVocab: {},
+      vocabAchievements: {},
+      completedWords: {},
+      completedMultiWords: {}
+    };
+
+    if (cloudSnapshot.exists()) {
+      const rawData = cloudSnapshot.data();
+      // Chuyển đổi dữ liệu thô từ Firestore thành cấu trúc chuẩn (xử lý Date)
+      cloudData = {
+        lastSyncedAt: rawData.lastSyncedAt,
+        openedVocab: convertTimestampsToDates(rawData.openedVocab) || {},
+        vocabAchievements: rawData.vocabAchievements || {},
+        completedWords: convertTimestampsToDates(rawData.completedWords) || {},
+        completedMultiWords: convertTimestampsToDates(rawData.completedMultiWords) || {}
+      };
     }
 
-    console.log("🔄 Starting Smart Sync (Multi-document Strategy)...");
+    // 3. MERGE LOGIC (Hợp nhất dữ liệu)
+    
+    // a. Merge Opened Vocab (Ưu tiên giữ lại tất cả từ đã mở)
+    const mergedOpened = { ...cloudData.openedVocab, ...arrayToMap(localOpened, 'id') };
 
-    try {
-      // ---------------------------------------------------------
-      // BƯỚC 1: LẤY DỮ LIỆU TỪ LOCAL (DEXIE)
-      // ---------------------------------------------------------
-      const [localVocab, localAchievs, localCompletedWords, localMulti] = await Promise.all([
-        localDB.getAllOpenedVocab(),
-        localDB.getVocabAchievements(),
-        localDB.getCompletedWords(),
-        localDB.getCompletedMultiWords()
-      ]);
-
-      // ---------------------------------------------------------
-      // BƯỚC 2: THIẾT LẬP REFERENCE TỚI FIRESTORE
-      // Chia nhỏ thành 3 documents trong sub-collection 'progress'
-      // ---------------------------------------------------------
-      const vocabRef = doc(db, 'users', userId, 'progress', 'vocab_list');
-      const achievRef = doc(db, 'users', userId, 'progress', 'achievements');
-      const statsRef = doc(db, 'users', userId, 'progress', 'game_stats');
-
-      // ---------------------------------------------------------
-      // BƯỚC 3: LẤY DỮ LIỆU TỪ CLOUD (3 READS)
-      // ---------------------------------------------------------
-      const [vocabSnap, achievSnap, statsSnap] = await Promise.all([
-        getDoc(vocabRef),
-        getDoc(achievRef),
-        getDoc(statsRef)
-      ]);
-
-      // Parse dữ liệu từ snapshot (xử lý trường hợp chưa có dữ liệu)
-      const cloudVocab = vocabSnap.exists() ? (vocabSnap.data() as IVocabDoc).data : [];
-      const cloudAchiev = achievSnap.exists() ? (achievSnap.data() as IAchieveDoc).data : [];
-      const cloudStatsRaw = statsSnap.exists() ? (statsSnap.data() as IStatsDoc) : { words: {}, multi: {} };
-      
-      const cloudWordStats = cloudStatsRaw.words || {};
-      const cloudMultiStats = cloudStatsRaw.multi || {};
-
-      // ---------------------------------------------------------
-      // BƯỚC 4: THỰC HIỆN MERGE (HỢP NHẤT DỮ LIỆU)
-      // ---------------------------------------------------------
-
-      // --- A. Merge Opened Vocab (Hợp nhất danh sách ID) ---
-      // Logic: Nếu từ vựng có ở Cloud hoặc Local thì giữ lại.
-      const mergedVocabMap = new Map<number, IOpenedVocab>();
-      
-      // Ưu tiên load từ Cloud trước
-      cloudVocab.forEach(v => mergedVocabMap.set(v.id, v));
-      // Thêm từ Local nếu chưa có
-      localVocab.forEach(v => {
-        if (!mergedVocabMap.has(v.id)) {
-          mergedVocabMap.set(v.id, v);
-        }
-      });
-      const finalVocab = Array.from(mergedVocabMap.values());
-
-
-      // --- B. Merge Achievements (Lấy EXP cao nhất) ---
-      // Logic: Dù chơi ở đâu, giữ lại level/exp cao nhất của từ đó.
-      const mergedAchievMap = new Map<string, IVocabAchievement>();
-
-      // Đưa Cloud vào Map
-      cloudAchiev.forEach(a => mergedAchievMap.set(a.word, a));
-
-      // So sánh với Local
-      localAchievs.forEach(localA => {
-        const cloudA = mergedAchievMap.get(localA.word);
-        if (cloudA) {
-          // Nếu Cloud có, so sánh EXP. Giữ cái nào lớn hơn.
-          if (localA.exp > cloudA.exp) {
-            mergedAchievMap.set(localA.word, localA);
-          }
-        } else {
-          // Nếu Cloud chưa có, thêm Local vào
-          mergedAchievMap.set(localA.word, localA);
-        }
-      });
-      const finalAchievements = Array.from(mergedAchievMap.values());
-
-
-      // --- C. Merge Game Stats (Lấy lần chơi mới nhất) ---
-      // Logic: So sánh `lastCompletedAt`. Cái nào mới hơn thì lấy.
-      
-      // 1. Stats Words
-      const finalWordStats: Record<string, ICompletedWord> = { ...cloudWordStats };
-      
-      localCompletedWords.forEach(localW => {
-        const cloudW = finalWordStats[localW.word];
-        if (cloudW) {
-          const localTime = getSafeTime(localW.lastCompletedAt);
-          const cloudTime = getSafeTime(cloudW.lastCompletedAt);
-          
-          if (localTime > cloudTime) {
-            finalWordStats[localW.word] = localW;
-          }
-        } else {
-          finalWordStats[localW.word] = localW;
-        }
-      });
-
-      // 2. Stats Multi-words
-      const finalMultiStats: Record<string, ICompletedMultiWord> = { ...cloudMultiStats };
-
-      localMulti.forEach(localM => {
-        const cloudM = finalMultiStats[localM.phrase];
-        if (cloudM) {
-          const localTime = getSafeTime(localM.lastCompletedAt);
-          const cloudTime = getSafeTime(cloudM.lastCompletedAt);
-
-          if (localTime > cloudTime) {
-            finalMultiStats[localM.phrase] = localM;
-          }
-        } else {
-          finalMultiStats[localM.phrase] = localM;
-        }
-      });
-
-      // ---------------------------------------------------------
-      // BƯỚC 5: CẬP NHẬT LÊN CLOUD (BATCH WRITE - 3 WRITES)
-      // ---------------------------------------------------------
-      const batch = writeBatch(db);
-
-      // Set vocab list
-      batch.set(vocabRef, { data: finalVocab });
-      
-      // Set achievements
-      batch.set(achievRef, { data: finalAchievements });
-      
-      // Set stats (gộp 2 object stats vào 1 doc để tiết kiệm 1 write)
-      batch.set(statsRef, { 
-        words: finalWordStats, 
-        multi: finalMultiStats 
-      });
-
-      await batch.commit();
-      console.log(`✅ Cloud Sync Success: ${finalVocab.length} words, ${finalAchievements.length} achievements.`);
-
-      // ---------------------------------------------------------
-      // BƯỚC 6: CẬP NHẬT NGƯỢC LẠI LOCAL DB
-      // Để thiết bị hiện tại có dữ liệu mới nhất từ các thiết bị khác
-      // ---------------------------------------------------------
-      
-      // Update Vocab
-      await localDB.addBulkWords(finalVocab);
-      
-      // Update Achievements
-      await localDB.saveVocabAchievements(finalAchievements);
-      
-      // Update Stats (Words)
-      const wordStatsArray = Object.values(finalWordStats);
-      if (wordStatsArray.length > 0) {
-        await localDB.completedWords.bulkPut(wordStatsArray);
+    // b. Merge Achievements (Lấy level/exp cao nhất)
+    const localAchieveMap = arrayToMap(localAchieve, 'word');
+    const mergedAchieve: Record<string, IVocabAchievement> = { ...cloudData.vocabAchievements };
+    
+    Object.values(localAchieveMap).forEach(localItem => {
+      const cloudItem = mergedAchieve[localItem.word];
+      if (!cloudItem || localItem.exp > cloudItem.exp) {
+        mergedAchieve[localItem.word] = localItem;
       }
+    });
 
-      // Update Stats (Multi)
-      const multiStatsArray = Object.values(finalMultiStats);
-      if (multiStatsArray.length > 0) {
-        await localDB.completedMultiWord.bulkPut(multiStatsArray);
-      }
+    // c. Merge Completed Words (Logic phức tạp hơn: gộp gameModes)
+    const localWordsMap = arrayToMap(localWords, 'word');
+    const mergedWords: Record<string, ICompletedWord> = { ...cloudData.completedWords };
 
-      console.log("✅ Local Sync Success: Dexie updated with merged data.");
+    Object.values(localWordsMap).forEach(localItem => {
+        const cloudItem = mergedWords[localItem.word];
+        if (!cloudItem) {
+            mergedWords[localItem.word] = localItem;
+        } else {
+            // Nếu cả 2 đều có, merge gameModes và lấy ngày mới nhất
+            mergedWords[localItem.word] = {
+                word: localItem.word,
+                lastCompletedAt: localItem.lastCompletedAt > cloudItem.lastCompletedAt ? localItem.lastCompletedAt : cloudItem.lastCompletedAt,
+                gameModes: { ...cloudItem.gameModes, ...localItem.gameModes } // Gộp các mode đã chơi
+            };
+        }
+    });
 
-    } catch (error) {
-      console.error("❌ Critical Error during SyncService:", error);
-      // Không throw error để app vẫn chạy bình thường dù sync lỗi
-    }
+    // d. Merge Multi Words
+    const localMultiMap = arrayToMap(localMulti, 'phrase');
+    const mergedMulti: Record<string, ICompletedMultiWord> = { ...cloudData.completedMultiWords };
+    
+    Object.values(localMultiMap).forEach(localItem => {
+        const cloudItem = mergedMulti[localItem.phrase];
+        if (!cloudItem) {
+            mergedMulti[localItem.phrase] = localItem;
+        } else {
+             mergedMulti[localItem.phrase] = {
+                phrase: localItem.phrase,
+                lastCompletedAt: localItem.lastCompletedAt > cloudItem.lastCompletedAt ? localItem.lastCompletedAt : cloudItem.lastCompletedAt,
+                completedIn: { ...cloudItem.completedIn, ...localItem.completedIn }
+            };
+        }
+    });
+
+    // 4. Update CLOUD (Chỉ tốn 1 Write)
+    const dataToSaveToCloud = {
+        lastSyncedAt: new Date(),
+        openedVocab: mergedOpened,
+        vocabAchievements: mergedAchieve,
+        completedWords: mergedWords,
+        completedMultiWords: mergedMulti
+    };
+    
+    await setDoc(userSyncDocRef, dataToSaveToCloud);
+    console.log("✅ Cloud Sync Complete.");
+
+    // 5. Update LOCAL (Để thiết bị đồng bộ với dữ liệu mới nhất từ cloud)
+    // Chuyển lại từ Map sang Array cho Dexie
+    await Promise.all([
+        localDB.addBulkWords(Object.values(mergedOpened)),
+        localDB.saveVocabAchievements(Object.values(mergedAchieve)),
+        localDB.completedWords.bulkPut(Object.values(mergedWords)),
+        localDB.completedMultiWord.bulkPut(Object.values(mergedMulti))
+    ]);
+    console.log("✅ Local DB Updated with Merged Data.");
+
+  } catch (error) {
+    console.error("❌ Sync Failed:", error);
   }
 };
