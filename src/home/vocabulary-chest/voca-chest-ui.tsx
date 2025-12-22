@@ -1,4 +1,4 @@
-// --- START OF FILE voca-chest-ui.tsx (FIXED SMOOTH FLIP) ---
+// --- START OF FILE voca-chest-ui.tsx (ULTRA SMOOTH FLIP) ---
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
 
@@ -24,7 +24,7 @@ export const CHEST_DEFINITIONS = {
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 1. COMPONENT CSS (ĐÃ SỬA LỖI FLIP) ================================
+// === 1. COMPONENT CSS (ĐÃ TINH CHỈNH ĐỘ MƯỢT) ==========================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
@@ -92,8 +92,8 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .footer-btn.primary:hover { background-color: #a78bfa; color: #1e293b; }
         .vocabulary-chest-root .footer-btn:disabled { color: rgba(255, 255, 255, 0.4); border-color: rgba(255, 255, 255, 0.2); cursor: not-allowed; background-color: transparent; }
         
-        /* --- CARD FLIP STYLES (UPDATED FOR SMOOTHNESS) --- */
-        .vocabulary-chest-root .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1000px; display: inline-block; }
+        /* --- CARD FLIP STYLES (ULTRA SMOOTH VERSION) --- */
+        .vocabulary-chest-root .card-container { width: 100%; aspect-ratio: 5 / 7; perspective: 1200px; display: inline-block; }
         
         .vocabulary-chest-root .card-inner { 
             position: relative; 
@@ -101,18 +101,17 @@ const ScopedStyles = () => (
             height: 100%; 
             transform-style: preserve-3d; 
             will-change: transform;
-            /* CHANGED: Use transition instead of animation for smoother flip */
-            transition: transform 0.6s cubic-bezier(0.4, 0.0, 0.2, 1);
+            /* CẬP NHẬT QUAN TRỌNG: Tăng thời gian lên 1.1s và dùng curve Exponential Ease Out siêu mượt */
+            transition: transform 1.1s cubic-bezier(0.19, 1, 0.22, 1);
         }
         
         .vocabulary-chest-root .card-container.is-flipping .card-inner { 
-            /* CHANGED: Direct transform state change */
             transform: rotateY(180deg); 
         }
         
-        .vocabulary-chest-root .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; }
+        .vocabulary-chest-root .card-face { position: absolute; width: 100%; height: 100%; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 15px; box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3); overflow: hidden; transform: translateZ(1px); /* Ngăn lỗi flicker */ }
         .vocabulary-chest-root .card-back { background: linear-gradient(45deg, #16213e, #0f3460); border: 2px solid #533483; display: flex; justify-content: center; align-items: center; font-size: 15vw; color: #a78bfa; text-shadow: 0 0 10px #a78bfa; }
-        .vocabulary-chest-root .card-front { transform: rotateY(180deg); padding: 6px; box-sizing: border-box; background: rgba(42, 49, 78, 0.85); border: 1px solid rgba(255, 255, 255, 0.18); }
+        .vocabulary-chest-root .card-front { transform: rotateY(180deg) translateZ(1px); padding: 6px; box-sizing: border-box; background: rgba(42, 49, 78, 0.85); border: 1px solid rgba(255, 255, 255, 0.18); }
         .vocabulary-chest-root .card-image-in-card { width: 100%; height: 100%; object-fit: contain; border-radius: 10px; }
         
         .vocabulary-chest-root .four-card-grid-container { width: 100%; max-width: 550px; display: grid; gap: 15px; justify-content: center; margin: 0 auto; grid-template-columns: repeat(2, 1fr); }
@@ -121,12 +120,11 @@ const ScopedStyles = () => (
 );
 
 // ========================================================================
-// === 2. CÁC COMPONENT CON ==============================================
+// === 2. CÁC COMPONENT CON (UPDATE TIMEOUTS) ============================
 // ========================================================================
 const HomeIcon = ({ className = '' }: { className?: string }) => (<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}><path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /></svg>);
 interface ImageCard { id: number; url: string; }
 
-// --- UPDATED CARD COMPONENT (Uses transitionDelay) ---
 const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, isFlipping: boolean, flipDelay: number }) => (
     <div className={`card-container ${isFlipping ? 'is-flipping' : ''}`}>
         <div 
@@ -139,8 +137,48 @@ const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, i
     </div>
 ));
 
-const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => { const [isFlipping, setIsFlipping] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1 = setTimeout(() => setIsFlipping(true), 300); const t2 = setTimeout(() => setIsProcessing(false), 1100); return () => { clearTimeout(t1); clearTimeout(t2); }; }, [card]); const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(() => onOpenAgain(), 300); }; return (<><div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
-const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => { const [startFlipping, setStartFlipping] = useState(false); const [phase, setPhase] = useState('DEALING'); const startRound = useCallback(() => { setPhase('DEALING'); setStartFlipping(false); const totalDealTime = 500 + 80 * (cards.length - 1); setTimeout(() => { setPhase('FLIPPING'); setStartFlipping(true); const totalFlipTime = 800 + 200 * (cards.length - 1); setTimeout(() => setPhase('REVEALED'), totalFlipTime); }, totalDealTime); }, [cards.length]); useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]); const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); }; const btnProps = (() => { switch (phase) { case 'DEALING': return { text: 'Đang chia bài...', disabled: true }; case 'FLIPPING': return { text: 'Đang lật...', disabled: true }; case 'REVEALED': return { text: 'Mở Lại x4', disabled: false }; default: return { text: '', disabled: true }; } })(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
+const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => { 
+    const [isFlipping, setIsFlipping] = useState(false); 
+    const [isProcessing, setIsProcessing] = useState(true); 
+    useEffect(() => { 
+        // Đợi 300ms rồi bắt đầu lật
+        const t1 = setTimeout(() => setIsFlipping(true), 300); 
+        // Đợi 1500ms (1.1s lật + dư chút) để xong hoàn toàn
+        const t2 = setTimeout(() => setIsProcessing(false), 1500); 
+        return () => { clearTimeout(t1); clearTimeout(t2); }; 
+    }, [card]); 
+    const handleOpenAgain = () => { 
+        if (isProcessing) return; 
+        setIsProcessing(true); 
+        setIsFlipping(false); 
+        setTimeout(() => onOpenAgain(), 300); 
+    }; 
+    return (<><div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); 
+};
+
+const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => { 
+    const [startFlipping, setStartFlipping] = useState(false); 
+    const [phase, setPhase] = useState('DEALING'); 
+    
+    const startRound = useCallback(() => { 
+        setPhase('DEALING'); 
+        setStartFlipping(false); 
+        const totalDealTime = 500 + 80 * (cards.length - 1); 
+        setTimeout(() => { 
+            setPhase('FLIPPING'); 
+            setStartFlipping(true); 
+            // CẬP NHẬT: Tăng thời gian chờ lật thẻ (1400ms base) để khớp với CSS 1.1s
+            const totalFlipTime = 1400 + 300 * (cards.length - 1); 
+            setTimeout(() => setPhase('REVEALED'), totalFlipTime); 
+        }, totalDealTime); 
+    }, [cards.length]); 
+    
+    useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]); 
+    const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); }; 
+    const btnProps = (() => { switch (phase) { case 'DEALING': return { text: 'Đang chia bài...', disabled: true }; case 'FLIPPING': return { text: 'Đang lật...', disabled: true }; case 'REVEALED': return { text: 'Mở Lại x4', disabled: false }; default: return { text: '', disabled: true }; } })(); 
+    return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 300} /></div>))}</div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); 
+};
+
 interface ChestUIProps { headerTitle: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; isProcessing: boolean; }
 const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount, isProcessing }) => (<div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''} ${isProcessing ? 'is-processing' : ''}`}>{isProcessing && (<div className="chest-processing-overlay"><div className="chest-spinner"></div></div>)}<header className="chest-header">{headerTitle}</header><main className="chest-body"><div className="chest-top-section"><div className="chest-level-info">{levelName && !isComingSoon && <button className="chest-help-icon" title="Thông tin">?</button>}{levelName && <span className="chest-level-name">{levelName}</span>}</div><p className="remaining-count-text">{isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}</p></div><div className="chest-visual-row"><img src={imageUrl} alt={headerTitle} className="chest-image" /><div className="info-bubble">{infoText}</div></div><div className="action-button-group" style={{ marginTop: 'auto', paddingTop: '15px' }}><button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}><span>Mở x1</span>{typeof price1 === 'number' && (<span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price1.toLocaleString()}</span>)}</button>{price10 !== null && (<button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}><span>Mở x4</span><span className="button-price"><img src={priceIconUrl} alt="price icon" className="price-icon" />{price10.toLocaleString()}</span></button>)}</div></main></div>);
 
