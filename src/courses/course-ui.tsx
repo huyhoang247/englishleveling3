@@ -321,9 +321,10 @@ const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }: an
     );
 });
 
-// --- NEW COMPONENT: Galaxy Text Effect ---
+// --- FIXED GALAXY TEXT COMPONENT ---
 const GalaxyText = memo(({ text, className = "", disabled = false }: { text: string, className?: string, disabled?: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -336,43 +337,58 @@ const GalaxyText = memo(({ text, className = "", disabled = false }: { text: str
     let particles: Array<{x: number, y: number, r: number, s: number, alpha: number, fade: number}> = [];
     
     // Cấu hình
-    const particleCount = 25;
-    const colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981']; // Blue, Violet, Pink, Emerald
+    const particleCount = 30; // Tăng số lượng sao
+    const colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B']; // Thêm màu vàng cam
 
     const resize = () => {
-      const parent = canvas.parentElement;
+      const parent = containerRef.current;
       if (parent) {
-        canvas.width = parent.clientWidth * 2; // Retina scaling
-        canvas.height = parent.clientHeight * 2;
+        // Lấy size thực tế của text container
+        const rect = parent.getBoundingClientRect();
+        canvas.width = rect.width * 2; 
+        canvas.height = rect.height * 2;
         canvas.style.width = '100%';
         canvas.style.height = '100%';
         ctx.scale(2, 2);
       }
     };
-    resize();
+    
+    // Đợi layout render xong
+    setTimeout(resize, 0);
 
     // Khởi tạo hạt
-    for(let i=0; i<particleCount; i++) {
-        particles.push({
-            x: Math.random() * (canvas.width/2),
-            y: Math.random() * (canvas.height/2),
-            r: Math.random() * 2 + 0.5,
-            s: Math.random() * 0.5 + 0.2, // speed
-            alpha: Math.random(),
-            fade: Math.random() > 0.5 ? 0.01 : -0.01
-        });
-    }
+    const initParticles = () => {
+        particles = [];
+        const w = canvas.width / 2;
+        const h = canvas.height / 2;
+        for(let i=0; i<particleCount; i++) {
+            particles.push({
+                x: Math.random() * w,
+                y: Math.random() * h,
+                r: Math.random() * 2 + 0.5,
+                s: Math.random() * 0.8 + 0.2, 
+                alpha: Math.random(),
+                fade: Math.random() > 0.5 ? 0.02 : -0.02
+            });
+        }
+    };
+    initParticles();
 
     let gradientOffset = 0;
 
     const render = () => {
       const width = canvas.width / 2;
       const height = canvas.height / 2;
+      
+      // Nếu canvas chưa có size (lần render đầu), bỏ qua
+      if (width === 0 || height === 0) {
+         animationFrameId = requestAnimationFrame(render);
+         return;
+      }
 
       // 1. Vẽ nền Gradient động
-      gradientOffset += 0.005;
+      gradientOffset += 0.008; // Tăng tốc độ màu
       const gradient = ctx.createLinearGradient(0, 0, width, height);
-      // Xoay vòng màu sắc
       const c1 = colors[Math.floor(gradientOffset) % colors.length];
       const c2 = colors[Math.floor(gradientOffset + 1) % colors.length];
       const c3 = colors[Math.floor(gradientOffset + 2) % colors.length];
@@ -391,13 +407,14 @@ const GalaxyText = memo(({ text, className = "", disabled = false }: { text: str
         ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
         ctx.fill();
 
-        // Cập nhật vị trí (bay nhẹ lên trên)
         p.y -= p.s;
-        if (p.y < -5) p.y = height + 5;
+        if (p.y < -5) {
+             p.y = height + 5;
+             p.x = Math.random() * width;
+        }
 
-        // Cập nhật độ sáng (lấp lánh)
         p.alpha += p.fade;
-        if (p.alpha > 0.8 || p.alpha < 0.2) p.fade = -p.fade;
+        if (p.alpha > 0.9 || p.alpha < 0.2) p.fade = -p.fade;
       });
 
       animationFrameId = requestAnimationFrame(render);
@@ -413,14 +430,22 @@ const GalaxyText = memo(({ text, className = "", disabled = false }: { text: str
   }
 
   return (
-    <div className="relative isolate inline-block w-full overflow-hidden rounded-lg">
-        {/* Layer 1: Canvas vũ trụ (Background) */}
-        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+    <div ref={containerRef} className="relative inline-block w-full rounded-lg overflow-hidden">
+        {/* Layer 1: Canvas (Nền vũ trụ) - Đặt màu nền đen dự phòng */}
+        <canvas 
+            ref={canvasRef} 
+            className="absolute inset-0 w-full h-full pointer-events-none bg-black" 
+        />
         
-        {/* Layer 2: Mask Text (Foreground) */}
-        {/* mix-blend-mode-screen: Nền trắng sẽ che canvas, Chữ đen sẽ hiện canvas */}
-        <div className="relative z-10 bg-white mix-blend-mode-screen flex items-center justify-center py-1">
-             <h3 className={`${className} text-black`}>{text}</h3>
+        {/* Layer 2: Mask Text (Màu trắng đè lên, chữ đen đục lỗ) */}
+        {/* QUAN TRỌNG: Dùng style inline cho mix-blend-mode để chắc chắn hoạt động */}
+        {/* bg-white ở đây sẽ hòa vào nền trắng của nút bấm => biến mất */}
+        {/* text-black sẽ đục thủng lớp trắng => hiện canvas bên dưới */}
+        <div 
+            className="relative z-10 flex items-center justify-center bg-white"
+            style={{ mixBlendMode: 'screen' }} 
+        >
+             <h3 className={`${className} text-black m-0`}>{text}</h3>
         </div>
     </div>
   );
