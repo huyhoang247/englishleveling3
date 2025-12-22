@@ -16,12 +16,13 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx';
-import { SyncService } from './local-data/sync-service.ts'; // <--- IMPORT MỚI
+// Import service đồng bộ dữ liệu mới tạo
+import { syncUserData } from './sync-service.ts';
 
 // Định nghĩa các loại tab
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
 // Định nghĩa các bước của quá trình tải
-type LoadingStep = 'authenticating' | 'syncing' | 'downloading' | 'launching' | 'ready'; // <--- THÊM 'syncing'
+type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 
 // ==================================================================
 // HÀM HELPER
@@ -192,22 +193,19 @@ const App: React.FC = () => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (isInitialAuthCheck.current) {
         isInitialAuthCheck.current = false;
-        
         const processInitialAuth = async () => {
           const startTime = Date.now();
           if (user) {
             await ensureUserDocumentExists(user);
-            
-            // ============================================================
-            // TÍCH HỢP ĐỒNG BỘ DỮ LIỆU TẠI ĐÂY
-            // ============================================================
-            setLoadingText('Syncing progress');
-            setLoadingStep('syncing'); // Thêm bước hiển thị sync
-            
-            // Gọi service đồng bộ (await để đảm bảo dữ liệu mới nhất trước khi vào game)
-            await SyncService.syncUserData(user.uid);
+            // --- TÍCH HỢP ĐỒNG BỘ DỮ LIỆU ---
+            try {
+              // Gọi hàm đồng bộ và đợi nó hoàn tất để dữ liệu mới nhất được tải về
+              await syncUserData(user.uid);
+            } catch (err) {
+              console.error("Initial sync failed but continuing app load:", err);
+            }
+            // --------------------------------
           }
-
           const elapsedTime = Date.now() - startTime;
           const remainingDelay = 1500 - elapsedTime;
           if (remainingDelay > 0) {
@@ -217,10 +215,9 @@ const App: React.FC = () => {
         };
         processInitialAuth();
       } else {
-        // Trường hợp này thường xảy ra khi session hết hạn hoặc user chủ động logout/login
+        // Trường hợp user đăng nhập lại mà không reload trang (ít gặp nhưng đề phòng)
         if (user) {
-             // Sync ngầm khi login lại mà không refresh trang
-             SyncService.syncUserData(user.uid);
+            syncUserData(user.uid).catch(console.error);
         }
         handleAuthChange(user);
       }
@@ -280,19 +277,11 @@ const App: React.FC = () => {
   const hideNavBar = () => setIsNavBarVisible(false);
   const showNavBar = () => setIsNavBarVisible(true);
 
-  // Màn hình loading (authenticating, syncing, và downloading)
-  if (loadingStep === 'authenticating' || loadingStep === 'downloading' || loadingStep === 'syncing') {
+  // Màn hình loading (authenticating và downloading)
+  if (loadingStep === 'authenticating' || loadingStep === 'downloading') {
     const isAuthenticating = loadingStep === 'authenticating';
-    const isSyncing = loadingStep === 'syncing';
-    
-    // Logic hiển thị thanh loading
-    let progress = 0;
-    if (isAuthenticating) progress = authLoadProgress;
-    else if (isSyncing) progress = 100; // Syncing thường chạy indeterminate hoặc full bar
-    else progress = loadingProgress;
-
-    const text = isAuthenticating ? 'Authenticating' : (isSyncing ? 'Syncing data' : loadingText);
-    
+    const progress = isAuthenticating ? authLoadProgress : loadingProgress;
+    const text = isAuthenticating ? 'Authenticating' : loadingText;
     return (
       <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
@@ -304,14 +293,12 @@ const App: React.FC = () => {
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
               <div
-                className={`h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end ${isSyncing ? 'animate-pulse' : ''}`}
+                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
                 style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
               </div>
             </div>
-            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>
-                {isSyncing ? 'Wait a moment...' : `${Math.round(progress)}%`}
-            </div>
+            <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(progress)}%</div>
           </div>
         </div>
       </LoadingScreenLayout>
