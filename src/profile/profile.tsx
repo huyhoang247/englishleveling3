@@ -260,7 +260,8 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
     };
     if (!isOpen) return null;
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
+        // Changed overlay to just solid semi-transparent black without backdrop-blur for performance
+        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4" onClick={onClose}>
             <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center" onClick={e => e.stopPropagation()}>
                 
                 <h2 className="text-2xl font-roboto font-bold text-slate-100">Upgrade to Premium</h2>
@@ -503,9 +504,10 @@ export default function GameProfile() {
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
         .font-orbitron { font-family: 'Orbitron', sans-serif; } 
         .font-roboto { font-family: 'Roboto', sans-serif; }
+        .font-lilita { font-family: 'Lilita One', cursive; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes scale-in { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
@@ -543,7 +545,7 @@ export default function GameProfile() {
                         {playerInfo.accountType === 'Normal' && (
                             <button 
                                 onClick={() => handleModal('upgrade', true)} 
-                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
+                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-lilita uppercase tracking-wide text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
                             >
                                 <img 
                                     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
