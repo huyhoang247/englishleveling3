@@ -1,7 +1,7 @@
 // --- START OF FILE: course-ui.tsx ---
 
 // quiz-app-home.tsx
-import React, { useMemo, memo, useCallback, useState, useEffect } from 'react'; // Đã bỏ Suspense, lazy
+import React, { useMemo, memo, useCallback, useState, useEffect, useRef } from 'react'; 
 import QuizApp from './multiple-choice/multiple-ui.tsx';
 import VocabularyGame from './fill-in-the-blank/fill-blank-ui.tsx';
 import VocaMatchGame from './voca-match/voca-match-ui.tsx';
@@ -19,7 +19,6 @@ import { uiAssets, dashboardAssets, quizHomeAssets } from '../game-assets.ts';
 import { User } from 'firebase/auth';
 
 // --- IMPORT TĨNH (TRỰC TIẾP) ---
-// Không dùng lazy nữa, file này sẽ được gộp vào bundle chính hoặc load ngay từ đầu
 import PhraseViewer from './phrase/phrase-ui.tsx';
 
 // --- Props cho component chính ---
@@ -73,12 +72,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           case 'analysis':
               ViewComponent = <AnalysisDashboard onGoBack={goHome} />;
               break;
-          
-          // --- RENDER TRỰC TIẾP (KHÔNG CẦN SUSPENSE) ---
           case 'exampleView':
               ViewComponent = <PhraseViewer onGoBack={goBack} />;
               break;
-          
           case 'topics':
               ViewComponent = <TopicViewer onGoBack={goBack} />;
               break;
@@ -104,24 +100,33 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-blue-400 group"
             >
               <img src={quizHomeAssets.quizIcon} alt="Quiz" className="h-20 w-20 mb-3" />
-              {/* Quiz Color (Standard) */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Quiz</h3>
+              {/* --- GALAXY TEXT EFFECT --- */}
+              <GalaxyText 
+                text="Quiz" 
+                className="text-lg font-lilita uppercase tracking-wider" 
+              />
             </button>
             <button
               onClick={() => setCurrentView('wordChainGame')}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-purple-400 group"
             >
               <img src={quizHomeAssets.wordChainGameIcon} alt="Word Chain" className="h-20 w-20 mb-3" />
-              {/* Synchronized to Blue Gradient */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Word Chain</h3>
+              {/* --- GALAXY TEXT EFFECT --- */}
+              <GalaxyText 
+                text="Word Chain" 
+                className="text-lg font-lilita uppercase tracking-wider" 
+              />
             </button>
             <button
               onClick={() => setCurrentView('exampleView')}
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-green-400 group"
             >
               <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/example-icon.webp" alt="Examples" className="h-20 w-20 mb-3" />
-              {/* Synchronized to Blue Gradient */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Example</h3>
+              {/* --- GALAXY TEXT EFFECT --- */}
+              <GalaxyText 
+                text="Example" 
+                className="text-lg font-lilita uppercase tracking-wider" 
+              />
             </button>
             
             <button
@@ -129,20 +134,21 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
               className="aspect-square flex flex-col items-center justify-center p-4 bg-white rounded-3xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition-all duration-300 border border-gray-200 hover:border-orange-400 group"
             >
               <img src="https://cdn-icons-png.flaticon.com/512/3408/3408595.png" alt="Topics" className="h-20 w-20 mb-3 opacity-90" />
-              {/* Synchronized to Blue Gradient */}
-              <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent transition-all opacity-30">Topics</h3>
+              {/* --- GALAXY TEXT EFFECT --- */}
+              <GalaxyText 
+                text="Topics" 
+                className="text-lg font-lilita uppercase tracking-wider" 
+              />
             </button>
 
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.examIcon} alt="Exam" className="h-20 w-20 mb-3" />
-              {/* Synchronized to Blue Gradient */}
               <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent opacity-30">Exam</h3>
             </div>
             <div className="relative aspect-square flex flex-col items-center justify-center p-4 bg-gray-50 rounded-3xl shadow-md border border-gray-200 cursor-not-allowed opacity-80">
               <div className="absolute top-3 right-3 bg-gray-200 text-gray-600 text-xs font-bold px-2.5 py-1 rounded-full">Coming Soon</div>
               <img src={quizHomeAssets.grammarIcon} alt="Grammar" className="h-20 w-20 mb-3" />
-              {/* Synchronized to Blue Gradient */}
               <h3 className="text-lg font-lilita uppercase bg-gradient-to-b from-blue-700 to-black bg-clip-text text-transparent opacity-30">Grammar</h3>
             </div>
           </div>
@@ -150,8 +156,6 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
       case 'quizTypes':
         return (
           <div className="flex flex-col items-center gap-6 w-full max-w-md mx-auto pt-2">
-            {/* ĐÃ XÓA: Header Text (Select Mode & Description) */}
-            
             <div className="space-y-5 w-full px-1">
               
               {/* Card 1: Multiple Choice */}
@@ -159,16 +163,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 onClick={() => handleTypeSelect('tracNghiem')} 
                 className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-blue-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
               >
-                {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600"></div>
-                
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container: bg-white/30 and text-white */}
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-9 w-9" />
                   </div>
-                  
-                  {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md opacity-90">Multiple choice</h3>
                     <div className="flex items-center">
@@ -185,16 +184,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 onClick={() => handleTypeSelect('vocaMatch')} 
                 className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-emerald-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
               >
-                 {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"></div>
-                
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container: bg-white/30 and text-white */}
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-9 w-9" />
                   </div>
-                  
-                  {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md opacity-90">Voca Match</h3>
                     <div className="flex items-center">
@@ -211,16 +205,11 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 onClick={() => handleTypeSelect('dienTu')} 
                 className="w-full relative overflow-hidden text-left p-0.5 rounded-3xl shadow-lg hover:shadow-purple-300/50 hover:shadow-2xl hover:scale-[1.02] transform transition-all duration-300 group"
               >
-                 {/* Gradient Border/Background */}
                 <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 via-purple-500 to-violet-600"></div>
-                
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
-                  {/* Icon Container: bg-white/30 and text-white */}
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
                     <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-9 w-9" />
                   </div>
-                  
-                  {/* Content */}
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md opacity-90">Fill in the blank</h3>
                     <div className="flex items-center">
@@ -252,11 +241,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
           </div>
         </main>
       </div>
-      {/* --- UPDATE: Định nghĩa CSS thủ công để đảm bảo hoạt động --- */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
-        /* Định nghĩa class font-lilita thủ công nếu Tailwind arbitrary value không hoạt động */
         .font-lilita { font-family: 'Lilita One', cursive; }
       `}</style>
     </div>
@@ -313,9 +300,7 @@ function AppHeader() {
 // --- Icons (Static) ---
 const CompletedIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg> );
 const LockIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clipRule="evenodd" /></svg> );
-const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 110 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.001 10a1 1 0 011-1h5a1 1 0 110 2H5a1 1 0 01-1-1zM15 13a1 1 0 011-1h.01a5.002 5.002 0 00-11.588-2.512 1 1 0 11-1.885-.666A7.002 7.002 0 0119 8.899V7a1 1 0 112 0v5a1 1 0 01-1 1h-5a1 1 0 01-1-1z" clipRule="evenodd" /></svg> );
 const GiftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" /></svg> );
-const GradientGiftIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 20 20" fill="url(#gift-gradient)"><defs><linearGradient id="gift-gradient" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style={{ stopColor: 'var(--tw-gradient-from, #60A5FA)' }} /><stop offset="100%" style={{ stopColor: 'var(--tw--gradient-to, #818CF8)' }} /></linearGradient></defs><path fillRule="evenodd" d="M5 5a3 3 0 013-3h4a3 3 0 013 3v1h-2.155a3.003 3.003 0 00-2.845.879l-.15.225-.15-.225A3.003 3.003 0 007.155 6H5V5zm-2 3a2 2 0 00-2 2v5a2 2 0 002 2h14a2 2 0 002-2v-5a2 2 0 00-2-2H3zm12 5a1 1 0 11-2 0 1 1 0 012 0z" clipRule="evenodd" /></svg> );
 const GoldCoinIcon = ({ className }: { className: string }) => ( <img src={uiAssets.goldIcon} alt="Coin icon" className={className} /> );
 const CardCapacityIcon = ({ className }: { className: string }) => ( <img src={uiAssets.cardCapacityIcon} alt="Card Capacity Icon" className={className} /> );
 const CheckIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg> );
@@ -334,6 +319,111 @@ const CircularProgress = memo(({ percentage, size, strokeWidth, trackColor }: an
             <circle stroke="url(#progress-gradient)" strokeWidth={strokeWidth} strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round" fill="transparent" r={radius} cx={size / 2} cy={size / 2} style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}/>
         </svg>
     );
+});
+
+// --- NEW COMPONENT: Galaxy Text Effect ---
+const GalaxyText = memo(({ text, className = "", disabled = false }: { text: string, className?: string, disabled?: boolean }) => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas || disabled) return;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    let animationFrameId: number;
+    let particles: Array<{x: number, y: number, r: number, s: number, alpha: number, fade: number}> = [];
+    
+    // Cấu hình
+    const particleCount = 25;
+    const colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981']; // Blue, Violet, Pink, Emerald
+
+    const resize = () => {
+      const parent = canvas.parentElement;
+      if (parent) {
+        canvas.width = parent.clientWidth * 2; // Retina scaling
+        canvas.height = parent.clientHeight * 2;
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        ctx.scale(2, 2);
+      }
+    };
+    resize();
+
+    // Khởi tạo hạt
+    for(let i=0; i<particleCount; i++) {
+        particles.push({
+            x: Math.random() * (canvas.width/2),
+            y: Math.random() * (canvas.height/2),
+            r: Math.random() * 2 + 0.5,
+            s: Math.random() * 0.5 + 0.2, // speed
+            alpha: Math.random(),
+            fade: Math.random() > 0.5 ? 0.01 : -0.01
+        });
+    }
+
+    let gradientOffset = 0;
+
+    const render = () => {
+      const width = canvas.width / 2;
+      const height = canvas.height / 2;
+
+      // 1. Vẽ nền Gradient động
+      gradientOffset += 0.005;
+      const gradient = ctx.createLinearGradient(0, 0, width, height);
+      // Xoay vòng màu sắc
+      const c1 = colors[Math.floor(gradientOffset) % colors.length];
+      const c2 = colors[Math.floor(gradientOffset + 1) % colors.length];
+      const c3 = colors[Math.floor(gradientOffset + 2) % colors.length];
+      
+      gradient.addColorStop(0, c1);
+      gradient.addColorStop(0.5, c2);
+      gradient.addColorStop(1, c3);
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(0, 0, width, height);
+
+      // 2. Vẽ sao lấp lánh
+      particles.forEach(p => {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+        ctx.fill();
+
+        // Cập nhật vị trí (bay nhẹ lên trên)
+        p.y -= p.s;
+        if (p.y < -5) p.y = height + 5;
+
+        // Cập nhật độ sáng (lấp lánh)
+        p.alpha += p.fade;
+        if (p.alpha > 0.8 || p.alpha < 0.2) p.fade = -p.fade;
+      });
+
+      animationFrameId = requestAnimationFrame(render);
+    };
+
+    render();
+
+    return () => cancelAnimationFrame(animationFrameId);
+  }, [disabled]);
+
+  if (disabled) {
+     return <h3 className={`${className} text-gray-400`}>{text}</h3>;
+  }
+
+  return (
+    <div className="relative isolate inline-block w-full overflow-hidden rounded-lg">
+        {/* Layer 1: Canvas vũ trụ (Background) */}
+        <canvas ref={canvasRef} className="absolute inset-0 w-full h-full pointer-events-none z-0" />
+        
+        {/* Layer 2: Mask Text (Foreground) */}
+        {/* mix-blend-mode-screen: Nền trắng sẽ che canvas, Chữ đen sẽ hiện canvas */}
+        <div className="relative z-10 bg-white mix-blend-mode-screen flex items-center justify-center py-1">
+             <h3 className={`${className} text-black`}>{text}</h3>
+        </div>
+    </div>
+  );
 });
 
 const colorClasses: any = { indigo: { border: 'hover:border-indigo-300', bg: 'bg-indigo-100', text: 'text-indigo-600', hoverBg: 'group-hover:bg-indigo-200', arrow: 'group-hover:text-indigo-500' }, pink: { border: 'hover:border-pink-300', bg: 'bg-pink-100', text: 'text-pink-600', hoverBg: 'group-hover:bg-pink-200', arrow: 'group-hover:text-pink-500' }, teal: { border: 'hover:border-teal-300', bg: 'bg-teal-100', text: 'text-teal-600', hoverBg: 'group-hover:bg-teal-200', arrow: 'group-hover:text-teal-500' }, orange: { border: 'hover:border-orange-300', bg: 'bg-orange-100', text: 'text-orange-600', hoverBg: 'group-hover:bg-orange-200', arrow: 'group-hover:text-orange-500' }, purple: { border: 'hover:border-purple-300', bg: 'bg-purple-100', text: 'text-purple-600', hoverBg: 'group-hover:bg-purple-200', arrow: 'group-hover:text-purple-500' }, red: { border: 'hover:border-red-300', bg: 'bg-red-100', text: 'text-red-600', hoverBg: 'group-hover:bg-red-200', arrow: 'group-hover:text-red-500' }, green: { border: 'hover:border-green-300', bg: 'bg-green-100', text: 'text-green-600', hoverBg: 'group-hover:bg-green-200', arrow: 'group-hover:text-green-500' }, yellow: { border: 'hover:border-yellow-300', bg: 'bg-yellow-100', text: 'text-yellow-600', hoverBg: 'group-hover:bg-yellow-200', arrow: 'group-hover:text-yellow-500' }, cyan: { border: 'hover:border-cyan-300', bg: 'bg-cyan-100', text: 'text-cyan-600', hoverBg: 'group-hover:bg-cyan-200', arrow: 'group-hover:text-cyan-500' }, gray: { border: 'border-gray-300', bg: 'bg-gray-200', text: 'text-gray-500', hoverBg: 'group-hover:bg-gray-200', arrow: 'group-hover:text-gray-400' },};
@@ -450,9 +540,6 @@ function PracticeList() {
     return <PracticeListLoadingSkeleton />;
   }
 
-  // --- SỬA Ở ĐÂY: Xóa đoạn return sớm khi popup mở ---
-  // if (isRewardsPopupOpen) { return <RewardsPopup ... /> } <-- ĐÃ XÓA
-
   if (view === 'reviews' && selectedPracticeForReview) {
       const basePracticeDetails = practiceDetails[selectedType as string]?.[String(selectedPracticeForReview)];
       if (!basePracticeDetails) { return ( <div className="text-center text-red-500"><p>Lỗi: Không tìm thấy chi tiết bài tập.</p><button onClick={() => setView('main')} className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded">Quay lại</button></div> ); }
@@ -488,7 +575,6 @@ function PracticeList() {
 
   const practicesToShow = selectedType ? Object.keys(practiceDetails[selectedType]) : [];
   
-  // --- SỬA Ở ĐÂY: Render Popup cùng với danh sách bài tập ---
   return (
     <div className="w-full max-w-md mx-auto">
       <div className="space-y-4 w-full pt-2">
@@ -498,7 +584,6 @@ function PracticeList() {
           })}
       </div>
       
-      {/* Đặt Popup ở cuối để hiển thị đè lên nội dung */}
       <RewardsPopup 
           isOpen={isRewardsPopupOpen} 
           onClose={() => setIsRewardsPopupOpen(false)} 
@@ -565,14 +650,12 @@ const RewardsPopup = ({ isOpen, onClose, practiceNumber, practiceTitle, progress
             if (levelTiers.length > 0) {
               return (
                 <div key={levelNumber} className="bg-gray-100 p-4 rounded-lg">
-                    {/* --- START CHANGE: Level Header Font & Color --- */}
                     <div className="flex justify-between items-center mb-3">
                         <h4 className="text-base font-lilita uppercase tracking-wide text-gray-500">
                             {levelTitle}
                         </h4>
                         {multiplier > 1 && (<div className={`text-sm font-bold px-2.5 py-1 rounded-full shadow transition-colors ${isInactivePreview ? 'bg-gray-300 text-gray-500' : 'text-white bg-gradient-to-r from-amber-500 to-orange-600'}`}>x{multiplier} Thưởng</div>)}
                     </div>
-                    {/* --- END CHANGE --- */}
                     <div className="space-y-3">{levelTiers}</div>
                 </div>
               );
