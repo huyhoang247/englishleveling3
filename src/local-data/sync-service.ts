@@ -1,14 +1,14 @@
 // --- START OF FILE src/sync-service.ts ---
 
 import { doc, getDoc, writeBatch } from 'firebase/firestore';
-import { db } from './firebase'; 
+import { db } from '../firebase'; 
 import { 
   localDB, 
   IOpenedVocab, 
   IVocabAchievement, 
   ICompletedWord, 
   ICompletedMultiWord 
-} from './local-vocab-db';
+} from './local-vocab-db.ts';
 
 // ==========================================
 // 1. ĐỊNH NGHĨA CẤU TRÚC DỮ LIỆU TRÊN CLOUD
