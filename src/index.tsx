@@ -17,7 +17,7 @@ import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 // Import service đồng bộ dữ liệu mới tạo
-import { syncUserData } from './sync-service.ts';
+import { syncUserData } from './local-data/sync-service.ts';
 
 // Định nghĩa các loại tab
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
