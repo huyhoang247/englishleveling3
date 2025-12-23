@@ -5,15 +5,21 @@ import {
     updateProfileInfo, 
     updateAvatar, 
     performPremiumUpgrade,
-} from './profileService.ts'; // Import only mutation services
-import { auth } from '../firebase'; // Import auth to get current user info
-import { useGame } from '../GameContext.tsx'; // Import the useGame hook
-import WorkoutApp from '../workout/workout.tsx'; // Import the Workout App component
+} from './profileService.ts'; 
+import { auth } from '../firebase'; 
+import { useGame } from '../GameContext.tsx'; 
+import WorkoutApp from '../workout/workout.tsx'; 
 
-// Định nghĩa các loại chế độ hiển thị
+// --- CÁC ĐỊNH NGHĨA GÓI VIP ---
+const VIP_PACKAGES = [
+  { id: 'vip_7', days: 7, cost: 200, label: 'Starter', color: 'from-blue-500 to-cyan-500' },
+  { id: 'vip_14', days: 14, cost: 350, label: 'Pro', color: 'from-purple-500 to-pink-500', popular: true },
+  { id: 'vip_30', days: 30, cost: 600, label: 'Legend', color: 'from-yellow-500 to-orange-600', discount: 'Save 200!' }
+];
+
 type DisplayMode = 'fullscreen' | 'normal';
 
-// --- HÀM HELPER CHO CHẾ ĐỘ TOÀN MÀN HÌNH ---
+// --- HÀM HELPER VÀ ICON ---
 const enterFullScreen = async () => {
   const element = document.documentElement;
   try {
@@ -33,7 +39,6 @@ const exitFullScreen = async () => {
   } catch (error) { console.warn("Failed to exit full-screen mode:", error); }
 };
 
-// Helper function để định dạng bytes
 const formatBytes = (bytes: number, decimals = 2): string => {
   if (!+bytes) return '0 Bytes';
   const k = 1024;
@@ -45,14 +50,12 @@ const formatBytes = (bytes: number, decimals = 2): string => {
 
 const ASSET_CACHE_PREFIX = 'english-leveling-assets';
 
-// --- Icon Component ---
 const Icon = ({ path, className = "w-6 h-6" }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
     <path d={path} />
   </svg>
 );
 
-// --- Specific Icons ---
 const ICONS = {
   sword: "M12.984 2.016l4.5 4.5c0.188 0.188 0.352 0.516 0.352 0.844v3.422l-9.047 9.047c-0.234 0.234-0.516 0.352-0.844 0.352h-2.25c-0.328 0-0.609-0.117-0.844-0.352l-2.016-2.016c-0.234-0.234-0.352-0.516-0.352-0.844v-2.25c0-0.328 0.117-0.609 0.352-0.844l9.047-9.047h3.422c0.328 0 0.656 0.164 0.844 0.352zM14.25 4.688l-9.141 9.141v1.594h1.594l9.141-9.141v-1.594h-1.594zM16.5 3l3.75 3.75-6.188 6.188-3.75-3.75z",
   shield: "M12 1.09375l-9 4.5v6.09375c0 4.57812 3.82812 8.42188 9 9.28125c5.17188-0.85937 9-4.70313 9-9.28125v-6.09375l-9-4.5zM12 3.92188l6.75 3.375v4.40624c0 3.23438-2.67187 5.90625-6.75 6.64063c-4.07812-0.73438-6.75-3.40625-6.75-6.64063v-4.40624z",
@@ -70,7 +73,7 @@ const ICONS = {
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
   dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z",
-  crown: "M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"
+  crown: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
 };
 
 const StatBar = ({ label, value, maxValue, icon }) => {
@@ -238,44 +241,16 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
   );
 };
 
-// Định nghĩa các gói VIP
-const VIP_PACKAGES = [
-    { 
-        id: 'vip_7', 
-        duration: 7, 
-        label: 'VIP 7 Days', 
-        cost: 200, 
-        iconColor: 'text-blue-400',
-        bgColor: 'bg-blue-900/30 border-blue-500',
-        popular: false
-    },
-    { 
-        id: 'vip_14', 
-        duration: 14, 
-        label: 'VIP 14 Days', 
-        cost: 350, 
-        iconColor: 'text-purple-400',
-        bgColor: 'bg-purple-900/30 border-purple-500',
-        popular: false
-    },
-    { 
-        id: 'vip_30', 
-        duration: 30, 
-        label: 'VIP 30 Days', 
-        cost: 650, 
-        iconColor: 'text-yellow-400',
-        bgColor: 'bg-yellow-900/30 border-yellow-500',
-        popular: true // Best Value
-    }
-];
-
+// --- UPDATED UPGRADE MODAL ---
 const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
     const [status, setStatus] = useState('idle'); // 'idle', 'error', 'success'
+    const [selectedPkg, setSelectedPkg] = useState(VIP_PACKAGES[1]); // Mặc định chọn gói giữa
 
-    const handleSelectPackage = async (pkg) => {
-        if (currentGems >= pkg.cost) {
+    const handleConfirm = async () => {
+        if (currentGems >= selectedPkg.cost) {
             try {
-                await onConfirm(pkg);
+                // Pass số ngày và cost của gói đã chọn
+                await onConfirm(selectedPkg.days, selectedPkg.cost);
                 setStatus('success');
                 setTimeout(() => {
                     onClose();
@@ -291,78 +266,82 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
             setTimeout(() => setStatus('idle'), 2000);
         }
     };
-    
+
     if (!isOpen) return null;
-    
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border-2 border-yellow-500/50 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-50 p-4" onClick={onClose}>
+            <div className="bg-slate-900 border-2 border-yellow-500/50 rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)] w-full max-w-md p-6 text-center overflow-hidden relative" onClick={e => e.stopPropagation()}>
                 
-                <div className="text-center mb-6">
-                    <div className="flex justify-center mb-2">
-                        <div className="bg-yellow-500/20 p-3 rounded-full border border-yellow-500/50">
-                            <Icon path={ICONS.crown} className="w-8 h-8 text-yellow-400" />
-                        </div>
+                {/* Background Decor */}
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-70"></div>
+                <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
+
+                <div className="mb-6">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-800 border-2 border-yellow-500 shadow-lg mb-2">
+                         <Icon path={ICONS.crown} className="w-8 h-8 text-yellow-400" />
                     </div>
-                    <h2 className="text-2xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">
-                        Upgrade to VIP
+                    <h2 className="text-3xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 to-yellow-600">
+                        VIP MEMBERSHIP
                     </h2>
-                    <p className="text-slate-400 text-sm mt-1">Unlock exclusive features and premium recognition!</p>
+                    <p className="text-slate-400 text-sm mt-1">Boost XP, Exclusive Badge & More!</p>
                 </div>
 
-                <div className="flex justify-between items-center bg-slate-800 rounded-lg p-3 mb-4 border border-slate-700">
-                     <span className="text-slate-400 text-sm">Your Balance:</span>
-                     <div className="flex items-center space-x-1.5 font-mono text-slate-200"> 
-                        <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> 
-                        <span className="font-bold text-lg">{currentGems}</span> 
-                    </div>
-                </div>
-
-                {status === 'error' && (
-                    <div className="mb-4 bg-red-500/10 border border-red-500 text-red-400 text-center text-sm py-2 rounded-lg font-bold animate-pulse">
-                        Not enough Gems!
-                    </div>
-                )}
-                {status === 'success' && (
-                    <div className="mb-4 bg-green-500/10 border border-green-500 text-green-400 text-center text-sm py-2 rounded-lg font-bold">
-                        Upgrade Successful! Welcome to VIP!
-                    </div>
-                )}
-
-                <div className="space-y-3">
+                {/* Grid Packages */}
+                <div className="grid grid-cols-3 gap-2 mb-6">
                     {VIP_PACKAGES.map((pkg) => (
-                        <button 
-                            key={pkg.id}
-                            disabled={status !== 'idle'}
-                            onClick={() => handleSelectPackage(pkg)}
-                            className={`w-full relative flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 group hover:scale-[1.02] ${pkg.bgColor} ${status !== 'idle' ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-yellow-500/20'}`}
+                        <div 
+                            key={pkg.id} 
+                            onClick={() => setSelectedPkg(pkg)}
+                            className={`relative rounded-xl border-2 cursor-pointer transition-all duration-300 flex flex-col items-center p-2 
+                                ${selectedPkg.id === pkg.id 
+                                    ? 'bg-slate-800 border-yellow-400 shadow-[0_0_15px_rgba(250,204,21,0.3)] scale-105 z-10' 
+                                    : 'bg-slate-800/50 border-slate-700 hover:border-slate-500 opacity-80 hover:opacity-100'}`}
                         >
                             {pkg.popular && (
-                                <span className="absolute -top-3 right-4 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider">
-                                    Best Value
-                                </span>
+                                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-gradient-to-r from-pink-500 to-purple-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap z-20">
+                                    MOST POPULAR
+                                </div>
                             )}
-                            <div className="flex items-center space-x-3">
-                                <div className={`p-2 rounded-full bg-black/20 ${pkg.iconColor}`}>
-                                    <Icon path={ICONS.star} className="w-5 h-5" />
+                            {pkg.discount && (
+                                <div className="absolute -top-2.5 left-1/2 -translate-x-1/2 bg-green-500 text-slate-900 text-[10px] font-bold px-2 py-0.5 rounded-full shadow-sm whitespace-nowrap z-20">
+                                    {pkg.discount}
                                 </div>
-                                <div className="text-left">
-                                    <div className={`font-bold font-orbitron ${pkg.popular ? 'text-yellow-100' : 'text-slate-200'}`}>
-                                        {pkg.label}
-                                    </div>
-                                </div>
+                            )}
+                            
+                            <div className={`w-full h-1.5 rounded-full mb-2 bg-gradient-to-r ${pkg.color}`}></div>
+                            <span className="text-slate-300 text-xs font-bold uppercase mb-1">{pkg.label}</span>
+                            <span className="text-white font-bold text-xl font-orbitron">{pkg.days}<span className="text-xs text-slate-400 font-sans">D</span></span>
+                            
+                            <div className="mt-2 flex items-center space-x-1 bg-slate-900/80 px-2 py-1 rounded-lg border border-slate-700">
+                                <Icon path={ICONS.gem} className="w-3 h-3 text-cyan-400" />
+                                <span className={`text-sm font-bold ${selectedPkg.id === pkg.id ? 'text-yellow-400' : 'text-slate-400'}`}>{pkg.cost}</span>
                             </div>
-                            <div className="flex items-center space-x-1 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
-                                <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" />
-                                <span className="font-bold text-white">{pkg.cost}</span>
-                            </div>
-                        </button>
+                        </div>
                     ))}
                 </div>
 
-                <button onClick={onClose} className="mt-6 w-full text-slate-500 text-sm hover:text-white transition-colors">
-                    Maybe Later
-                </button>
+                {/* Footer Info */}
+                <div className="flex justify-between items-center text-sm mb-4 px-2 bg-slate-800/50 py-2 rounded-lg">
+                    <span className="text-slate-400">Your Gems:</span>
+                    <div className="flex items-center space-x-1 font-mono text-slate-200"> 
+                        <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> 
+                        <span className={currentGems < selectedPkg.cost ? "text-red-400" : "text-white"}>{currentGems}</span> 
+                    </div>
+                </div>
+
+                {status === 'idle' && (
+                    <div className="flex items-center gap-3">
+                        <button onClick={onClose} className="w-1/3 bg-slate-800 text-slate-400 font-bold py-3 rounded-xl hover:bg-slate-700 hover:text-white transition-colors border border-slate-700">
+                            Cancel
+                        </button>
+                        <button onClick={handleConfirm} className="w-2/3 bg-gradient-to-r from-yellow-500 to-yellow-600 text-slate-900 font-bold py-3 rounded-xl hover:from-yellow-400 hover:to-yellow-500 transition-all shadow-lg flex items-center justify-center space-x-2">
+                             <span>Purchase</span>
+                             <Icon path={ICONS.checkCircle} className="w-5 h-5 opacity-50"/>
+                        </button>
+                    </div>
+                )}
+                {status === 'error' && (<div className="bg-red-500/10 border border-red-500 text-red-400 font-bold py-3 rounded-xl animate-pulse">Not enough Gems!</div>)}
+                {status === 'success' && (<div className="bg-green-500/10 border border-green-500 text-green-400 font-bold py-3 rounded-xl">Purchase Successful!</div>)}
             </div>
         </div>
     );
@@ -403,13 +382,12 @@ export default function GameProfile() {
 
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
-  // Component-specific UI state
   const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
   const [systemModal, setSystemModal] = useState({ isOpen: false, title: '', icon: null, iconColor: '', message: '', actions: [] });
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
-  const [isWorkoutOpen, setIsWorkoutOpen] = useState(false); // State to control Workout modal
+  const [isWorkoutOpen, setIsWorkoutOpen] = useState(false);
   
   // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
@@ -418,7 +396,7 @@ export default function GameProfile() {
     if (!user) return;
     try {
         await updateAvatar(user.uid, avatarUrl);
-        await game.refreshUserData(); // Refresh context data
+        await game.refreshUserData(); 
         handleModal('avatar', false);
     } catch (error) {
         console.error("Failed to update avatar:", error);
@@ -429,22 +407,19 @@ export default function GameProfile() {
     if (!user) return;
     try {
         await updateProfileInfo(user.uid, newInfo);
-        await game.refreshUserData(); // Refresh context data
+        await game.refreshUserData(); 
     } catch (error) {
         console.error("Failed to save profile:", error);
     }
   };
 
-  // Logic nâng cấp mới xử lý gói VIP
-  const handleUpgrade = async (selectedPkg) => {
+  // Cập nhật hàm xử lý nâng cấp để nhận thêm tham số
+  const handleUpgrade = async (days: number, cost: number) => {
     if (!user) return;
     try {
-        // Gọi service với giá của gói đã chọn
-        // Note: Backend service should ideally handle duration based on cost or new params
-        await performPremiumUpgrade(user.uid, selectedPkg.cost);
-        await game.refreshUserData(); // Refresh context data
-    } catch (error)
-    {
+        await performPremiumUpgrade(user.uid, cost, days);
+        await game.refreshUserData(); 
+    } catch (error) {
         console.error("Upgrade failed:", error);
         throw error;
     }
@@ -568,13 +543,20 @@ export default function GameProfile() {
     title: (game as any).title || `Lv. ${game.bossBattleHighestFloor + 1} - Rookie`,
     avatarUrl: (game as any).avatarUrl || user.photoURL || 'https://robohash.org/Player.png?set=set4&bgset=bg1',
     accountType: (game as any).accountType || 'Normal',
+    vipExpiration: (game as any).vipExpiration, // Cần đảm bảo context có trả về trường này (Timestamp hoặc Date)
     gems: game.gems,
     masteryPoints: game.masteryCards,
     maxMasteryPoints: 1000, 
   };
+
+  const isVip = playerInfo.accountType === 'VIP' || playerInfo.accountType === 'Premium';
   
-  // Xác định xem user có phải VIP không (Premium hoặc VIP)
-  const isVip = playerInfo.accountType === 'Premium' || playerInfo.accountType === 'VIP';
+  // Format Date VIP Expiration
+  let vipDateString = '';
+  if (playerInfo.vipExpiration) {
+      const date = playerInfo.vipExpiration.seconds ? new Date(playerInfo.vipExpiration.seconds * 1000) : new Date(playerInfo.vipExpiration);
+      vipDateString = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+  }
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -586,12 +568,6 @@ export default function GameProfile() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes scale-in { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
-        .vip-shine {
-            background: linear-gradient(90deg, #FCD34D 0%, #F59E0B 50%, #FCD34D 100%);
-            background-size: 200% auto;
-            animation: shine 3s linear infinite;
-        }
-        @keyframes shine { to { background-position: 200% center; } }
       `}</style>
       
       <main className="w-full max-w-md mx-auto h-full bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col">
@@ -600,8 +576,8 @@ export default function GameProfile() {
            <div className="relative">
               <div className="flex items-center space-x-4">
                 <div className="relative flex-shrink-0">
-                  <div className={`rounded-full p-1 ${isVip ? 'vip-shine' : 'bg-slate-700'}`}>
-                    <img src={playerInfo.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-2 border-slate-900 shadow-lg object-cover"/>
+                  <div className={`rounded-full p-1 ${isVip ? 'bg-gradient-to-tr from-yellow-400 via-orange-500 to-red-500 shadow-orange-500/50 shadow-lg' : 'bg-transparent'}`}>
+                    <img src={playerInfo.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-4 border-slate-800 object-cover"/>
                   </div>
                   <button onClick={() => handleModal('avatar', true)} className="absolute -bottom-1 -right-1 bg-slate-700 w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-slate-300 hover:bg-purple-600 transition-all">
                      <Icon path={ICONS.camera} className="w-5 h-5"/>
@@ -609,42 +585,38 @@ export default function GameProfile() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2 mb-1">
-                      <h1 className="text-xl font-bold font-roboto text-slate-100 tracking-wider">{playerInfo.name}</h1>
+                      <h1 className={`text-xl font-bold font-roboto tracking-wider ${isVip ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 to-yellow-500' : 'text-slate-100'}`}>{playerInfo.name}</h1>
                       <button onClick={() => handleModal('edit', true)} className="text-xs bg-slate-700 text-slate-300 px-2 py-0.5 rounded-full hover:bg-purple-600 hover:text-white transition-colors">
                         Edit
                       </button>
                   </div>
                   <p className="text-purple-400 font-semibold text-sm">{playerInfo.title}</p>
-                   
-                   {/* LOGIC HIỂN THỊ ACCOUNT TYPE & UPGRADE BUTTON */}
                    <div className="flex items-center space-x-2 mt-2">
+                        {/* --- Logic hiển thị VIP --- */}
                         {isVip ? (
-                            // Giao diện khi đã là VIP (Ẩn Normal, hiển thị VIP đẹp)
                             <div className="flex items-center space-x-2">
-                                <span className="text-xs text-slate-900 font-bold px-3 py-1 rounded-full vip-shine flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.5)]">
-                                    <Icon path={ICONS.crown} className="w-3.5 h-3.5"/>
-                                    <span className="tracking-wide">VIP MEMBER</span>
+                                <span className="text-xs bg-gradient-to-r from-yellow-600 to-yellow-800 text-yellow-100 px-2 py-0.5 rounded-sm border border-yellow-500 flex items-center space-x-1 shadow-[0_0_10px_rgba(234,179,8,0.4)]">
+                                    <Icon path={ICONS.crown} className="w-3 h-3 text-yellow-200"/>
+                                    <span className="font-orbitron font-bold tracking-widest">VIP</span>
                                 </span>
+                                {vipDateString && <span className="text-xs text-slate-400">Exp: {vipDateString}</span>}
                             </div>
                         ) : (
-                            // Giao diện khi là Normal (Hiển thị Normal + Nút Upgrade)
-                            <>
-                                <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
-                                <button 
-                                    onClick={() => handleModal('upgrade', true)} 
-                                    className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
-                                >
-                                    <img 
-                                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
-                                        alt="Premium" 
-                                        className="w-4 h-4"
-                                    />
-                                    <span>Upgrade</span>
-                                </button>
-                            </>
+                           <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
                         )}
-                   </div>
 
+                        <button 
+                            onClick={() => handleModal('upgrade', true)} 
+                            className={`flex items-center space-x-1.5 font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md transform transition-all duration-300 ease-in-out hover:scale-105 ${isVip ? 'bg-slate-700 text-yellow-400 border border-yellow-600/50 hover:bg-slate-600' : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-500/30 hover:shadow-pink-500/50'}`}
+                        >
+                            <img 
+                                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
+                                alt="Premium" 
+                                className="w-4 h-4"
+                            />
+                            <span>{isVip ? 'Extend' : 'Upgrade'}</span>
+                        </button>
+                   </div>
                 </div>
               </div>
               <div className="mt-6">
@@ -687,13 +659,8 @@ export default function GameProfile() {
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={playerInfo.avatarUrl}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
       
-      {/* Modal Upgrade Mới */}
-      <UpgradeModal 
-        isOpen={modals.upgrade} 
-        onClose={() => handleModal('upgrade', false)} 
-        onConfirm={handleUpgrade} 
-        currentGems={playerInfo.gems}
-      />
+      {/* Nối state gem và handle confirm vào Modal mới */}
+      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} />
       
       <SystemModal
         isOpen={systemModal.isOpen}
