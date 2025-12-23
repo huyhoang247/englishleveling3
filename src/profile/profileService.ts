@@ -15,12 +15,6 @@ export const updateAvatar = async (userId: string, avatarUrl: string): Promise<v
   await updateDoc(userDocRef, { avatarUrl });
 };
 
-/**
- * Nâng cấp hoặc gia hạn gói VIP.
- * @param userId - ID người dùng.
- * @param cost - Số Gem bị trừ.
- * @param daysToAdd - Số ngày VIP được cộng thêm.
- */
 export const performPremiumUpgrade = async (userId: string, cost: number, daysToAdd: number): Promise<void> => {
   if (!userId) throw new Error("User ID is required.");
   const userDocRef = doc(db, 'users', userId);
@@ -38,19 +32,23 @@ export const performPremiumUpgrade = async (userId: string, cost: number, daysTo
       throw new Error("Not enough gems.");
     }
 
-    // Tính toán thời gian hết hạn mới
+    // Xử lý ngày hết hạn
     const now = new Date();
     let newExpirationDate: Date;
     
-    // Kiểm tra xem user có đang là VIP và còn hạn không
-    // Giả sử vipExpiration lưu dưới dạng Firestore Timestamp
-    const currentExpiration = userData.vipExpiration ? userData.vipExpiration.toDate() : null;
+    // Kiểm tra hạn VIP hiện tại
+    let currentExpiration: Date | null = null;
+    if (userData.vipExpiration) {
+        // Chuyển đổi Firestore Timestamp sang Date
+        currentExpiration = userData.vipExpiration.toDate();
+    }
 
+    // Logic cộng dồn ngày
     if (userData.accountType === 'VIP' && currentExpiration && currentExpiration > now) {
-      // Nếu đang là VIP và còn hạn -> Cộng dồn thời gian vào ngày hết hạn hiện tại
+      // Còn hạn -> Cộng tiếp vào ngày hết hạn cũ
       newExpirationDate = new Date(currentExpiration.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     } else {
-      // Nếu chưa là VIP hoặc đã hết hạn -> Tính từ thời điểm hiện tại
+      // Hết hạn hoặc chưa mua -> Tính từ bây giờ
       newExpirationDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     }
 
@@ -58,8 +56,8 @@ export const performPremiumUpgrade = async (userId: string, cost: number, daysTo
 
     transaction.update(userDocRef, {
       gems: newGems,
-      accountType: 'VIP', // Luôn set là VIP
-      vipExpiration: Timestamp.fromDate(newExpirationDate), // Lưu timestamp Firestore
+      accountType: 'VIP',
+      vipExpiration: Timestamp.fromDate(newExpirationDate), // Lưu dạng Timestamp
     });
   });
 };
