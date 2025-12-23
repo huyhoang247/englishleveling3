@@ -73,7 +73,8 @@ const ICONS = {
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
   dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z",
-  crown: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z"
+  crown: "M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z",
+  clock: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm4.2 14.2L11 13V7h1.5v5.2l4.5 2.7-.8 1.3z"
 };
 
 const StatBar = ({ label, value, maxValue, icon }) => {
@@ -243,8 +244,8 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
 
 // --- UPDATED UPGRADE MODAL ---
 const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
-    const [status, setStatus] = useState('idle'); // 'idle', 'error', 'success'
-    const [selectedPkg, setSelectedPkg] = useState(VIP_PACKAGES[1]); // Mặc định chọn gói giữa
+    const [status, setStatus] = useState('idle'); 
+    const [selectedPkg, setSelectedPkg] = useState(VIP_PACKAGES[1]);
 
     const handleConfirm = async () => {
         if (currentGems >= selectedPkg.cost) {
@@ -272,7 +273,6 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
         <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-50 p-4" onClick={onClose}>
             <div className="bg-slate-900 border-2 border-yellow-500/50 rounded-2xl shadow-[0_0_30px_rgba(234,179,8,0.2)] w-full max-w-md p-6 text-center overflow-hidden relative" onClick={e => e.stopPropagation()}>
                 
-                {/* Background Decor */}
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-500 to-transparent opacity-70"></div>
                 <div className="absolute -top-10 -right-10 w-40 h-40 bg-yellow-500/10 rounded-full blur-3xl"></div>
 
@@ -286,7 +286,6 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
                     <p className="text-slate-400 text-sm mt-1">Boost XP, Exclusive Badge & More!</p>
                 </div>
 
-                {/* Grid Packages */}
                 <div className="grid grid-cols-3 gap-2 mb-6">
                     {VIP_PACKAGES.map((pkg) => (
                         <div 
@@ -320,7 +319,6 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
                     ))}
                 </div>
 
-                {/* Footer Info */}
                 <div className="flex justify-between items-center text-sm mb-4 px-2 bg-slate-800/50 py-2 rounded-lg">
                     <span className="text-slate-400">Your Gems:</span>
                     <div className="flex items-center space-x-1 font-mono text-slate-200"> 
@@ -389,7 +387,6 @@ export default function GameProfile() {
   const [isCacheLoading, setIsCacheLoading] = useState(true);
   const [isWorkoutOpen, setIsWorkoutOpen] = useState(false);
   
-  // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
 
   const handleSelectAvatar = async (avatarUrl: string) => {
@@ -413,12 +410,18 @@ export default function GameProfile() {
     }
   };
 
-  // Cập nhật hàm xử lý nâng cấp để nhận thêm tham số
   const handleUpgrade = async (days: number, cost: number) => {
     if (!user) return;
     try {
         await performPremiumUpgrade(user.uid, cost, days);
-        await game.refreshUserData(); 
+        // QUAN TRỌNG: Cập nhật lại Context để UI hiển thị mới ngay lập tức
+        if (game.refreshUserData) {
+            await game.refreshUserData(); 
+        } else {
+            console.warn("game.refreshUserData is undefined");
+            // Fallback nếu không có refresh: Reload trang (không khuyến khích nhưng đảm bảo data)
+            window.location.reload();
+        }
     } catch (error) {
         console.error("Upgrade failed:", error);
         throw error;
@@ -440,7 +443,6 @@ export default function GameProfile() {
       const cacheKeys = await caches.keys();
       const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX));
       await Promise.all(cachesToDelete.map(key => caches.delete(key)));
-      console.log("All application caches have been deleted:", cachesToDelete);
     } catch (error) {
       console.error("Error while clearing cache:", error);
       throw new Error("An error occurred while trying to clear the cache.");
@@ -456,8 +458,6 @@ export default function GameProfile() {
         console.error("Could not retrieve storage estimate:", error);
         setCacheInfo({ usage: 0, quota: 0 });
       }
-    } else {
-      console.warn("StorageManager API is not supported in this browser.");
     }
     setIsCacheLoading(false);
   }, []);
@@ -543,20 +543,43 @@ export default function GameProfile() {
     title: (game as any).title || `Lv. ${game.bossBattleHighestFloor + 1} - Rookie`,
     avatarUrl: (game as any).avatarUrl || user.photoURL || 'https://robohash.org/Player.png?set=set4&bgset=bg1',
     accountType: (game as any).accountType || 'Normal',
-    vipExpiration: (game as any).vipExpiration, // Cần đảm bảo context có trả về trường này (Timestamp hoặc Date)
+    vipExpiration: (game as any).vipExpiration,
     gems: game.gems,
     masteryPoints: game.masteryCards,
     maxMasteryPoints: 1000, 
   };
 
-  const isVip = playerInfo.accountType === 'VIP' || playerInfo.accountType === 'Premium';
-  
-  // Format Date VIP Expiration
-  let vipDateString = '';
-  if (playerInfo.vipExpiration) {
-      const date = playerInfo.vipExpiration.seconds ? new Date(playerInfo.vipExpiration.seconds * 1000) : new Date(playerInfo.vipExpiration);
-      vipDateString = date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
-  }
+  // --- LOGIC HIỂN THỊ TRẠNG THÁI VIP AN TOÀN ---
+  const calculateVipStatus = () => {
+    // Chỉ xử lý nếu accountType là VIP hoặc Premium
+    if (playerInfo.accountType !== 'VIP' && playerInfo.accountType !== 'Premium') {
+        return null;
+    }
+
+    if (!playerInfo.vipExpiration) return null;
+
+    let expirationDate;
+    // Xử lý cả 2 trường hợp: Firestore Timestamp (có .seconds) hoặc Date object
+    if (playerInfo.vipExpiration.seconds) {
+        expirationDate = new Date(playerInfo.vipExpiration.seconds * 1000);
+    } else {
+        expirationDate = new Date(playerInfo.vipExpiration);
+    }
+
+    const now = new Date();
+    const diffTime = expirationDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); // Làm tròn lên
+
+    if (diffDays <= 0) return null; // Đã hết hạn -> coi như Normal
+
+    return {
+        daysLeft: diffDays,
+        formattedDate: expirationDate.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+    };
+  };
+
+  const vipStatus = calculateVipStatus();
+  const isVip = !!vipStatus; // True nếu có status và còn hạn
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
@@ -592,14 +615,17 @@ export default function GameProfile() {
                   </div>
                   <p className="text-purple-400 font-semibold text-sm">{playerInfo.title}</p>
                    <div className="flex items-center space-x-2 mt-2">
-                        {/* --- Logic hiển thị VIP --- */}
+                        {/* --- Logic hiển thị VIP chính xác --- */}
                         {isVip ? (
-                            <div className="flex items-center space-x-2">
+                            <div className="flex flex-col items-start space-y-1">
                                 <span className="text-xs bg-gradient-to-r from-yellow-600 to-yellow-800 text-yellow-100 px-2 py-0.5 rounded-sm border border-yellow-500 flex items-center space-x-1 shadow-[0_0_10px_rgba(234,179,8,0.4)]">
                                     <Icon path={ICONS.crown} className="w-3 h-3 text-yellow-200"/>
                                     <span className="font-orbitron font-bold tracking-widest">VIP</span>
                                 </span>
-                                {vipDateString && <span className="text-xs text-slate-400">Exp: {vipDateString}</span>}
+                                <div className="flex items-center space-x-1 text-xs text-yellow-500/80 font-mono">
+                                    <Icon path={ICONS.clock} className="w-3 h-3"/>
+                                    <span>{vipStatus.daysLeft} days left</span>
+                                </div>
                             </div>
                         ) : (
                            <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
@@ -607,7 +633,7 @@ export default function GameProfile() {
 
                         <button 
                             onClick={() => handleModal('upgrade', true)} 
-                            className={`flex items-center space-x-1.5 font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md transform transition-all duration-300 ease-in-out hover:scale-105 ${isVip ? 'bg-slate-700 text-yellow-400 border border-yellow-600/50 hover:bg-slate-600' : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-500/30 hover:shadow-pink-500/50'}`}
+                            className={`flex items-center space-x-1.5 font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md transform transition-all duration-300 ease-in-out hover:scale-105 ${isVip ? 'bg-slate-700 text-yellow-400 border border-yellow-600/50 hover:bg-slate-600 ml-auto' : 'bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-purple-500/30 hover:shadow-pink-500/50'}`}
                         >
                             <img 
                                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
@@ -659,7 +685,6 @@ export default function GameProfile() {
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={playerInfo.avatarUrl}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
       
-      {/* Nối state gem và handle confirm vào Modal mới */}
       <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} />
       
       <SystemModal
