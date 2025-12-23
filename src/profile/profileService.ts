@@ -1,28 +1,14 @@
 // --- START OF FILE profileService.ts ---
 
-import { db } from '../firebase'; // Assuming firebase is initialized in './firebase'
-import { doc, runTransaction, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase'; 
+import { doc, runTransaction, updateDoc, Timestamp } from 'firebase/firestore';
 
-// This service now only contains functions that MODIFY user data.
-// All data reading/fetching is handled by GameContext for a single source of truth.
-
-/**
- * Updates the user's profile name and title.
- * @param userId - The ID of the user.
- * @param updates - An object containing the new name and/or title.
- */
 export const updateProfileInfo = async (userId: string, updates: { name: string; title: string }): Promise<void> => {
   if (!userId) throw new Error("User ID is required.");
   const userDocRef = doc(db, 'users', userId);
-  // Using 'username' for name to be consistent with potential existing data structures
   await updateDoc(userDocRef, { username: updates.name, title: updates.title });
 };
 
-/**
- * Updates the user's avatar URL.
- * @param userId - The ID of the user.
- * @param avatarUrl - The new URL for the avatar.
- */
 export const updateAvatar = async (userId: string, avatarUrl: string): Promise<void> => {
   if (!userId) throw new Error("User ID is required.");
   const userDocRef = doc(db, 'users', userId);
@@ -30,13 +16,12 @@ export const updateAvatar = async (userId: string, avatarUrl: string): Promise<v
 };
 
 /**
- * Handles the logic for upgrading a user's account to Premium.
- * It runs as a transaction to ensure atomicity: it reads the current gem count
- * and updates it only if the user can afford the upgrade.
- * @param userId - The ID of the user.
- * @param cost - The number of gems required for the upgrade.
+ * Nâng cấp hoặc gia hạn gói VIP.
+ * @param userId - ID người dùng.
+ * @param cost - Số Gem bị trừ.
+ * @param daysToAdd - Số ngày VIP được cộng thêm.
  */
-export const performPremiumUpgrade = async (userId: string, cost: number): Promise<void> => {
+export const performPremiumUpgrade = async (userId: string, cost: number, daysToAdd: number): Promise<void> => {
   if (!userId) throw new Error("User ID is required.");
   const userDocRef = doc(db, 'users', userId);
 
@@ -46,18 +31,35 @@ export const performPremiumUpgrade = async (userId: string, cost: number): Promi
       throw new Error("User document does not exist!");
     }
 
-    const currentGems = userDoc.data().gems || 0;
+    const userData = userDoc.data();
+    const currentGems = userData.gems || 0;
+    
     if (currentGems < cost) {
-      throw new Error("Not enough gems to upgrade.");
+      throw new Error("Not enough gems.");
+    }
+
+    // Tính toán thời gian hết hạn mới
+    const now = new Date();
+    let newExpirationDate: Date;
+    
+    // Kiểm tra xem user có đang là VIP và còn hạn không
+    // Giả sử vipExpiration lưu dưới dạng Firestore Timestamp
+    const currentExpiration = userData.vipExpiration ? userData.vipExpiration.toDate() : null;
+
+    if (userData.accountType === 'VIP' && currentExpiration && currentExpiration > now) {
+      // Nếu đang là VIP và còn hạn -> Cộng dồn thời gian vào ngày hết hạn hiện tại
+      newExpirationDate = new Date(currentExpiration.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
+    } else {
+      // Nếu chưa là VIP hoặc đã hết hạn -> Tính từ thời điểm hiện tại
+      newExpirationDate = new Date(now.getTime() + daysToAdd * 24 * 60 * 60 * 1000);
     }
 
     const newGems = currentGems - cost;
+
     transaction.update(userDocRef, {
       gems: newGems,
-      accountType: 'Premium',
+      accountType: 'VIP', // Luôn set là VIP
+      vipExpiration: Timestamp.fromDate(newExpirationDate), // Lưu timestamp Firestore
     });
-    // No need to return the new gem count, GameContext's listener will update the UI.
   });
 };
-
-// --- END OF FILE profileService.ts ---
