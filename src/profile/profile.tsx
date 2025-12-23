@@ -69,7 +69,8 @@ const ICONS = {
   trash: "M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z",
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
-  dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z"
+  dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z",
+  crown: "M5 16L3 5l5.5 5L12 4l3.5 6L21 5l-2 11H5zm14 3c0 .6-.4 1-1 1H6c-.6 0-1-.4-1-1v-1h14v1z"
 };
 
 const StatBar = ({ label, value, maxValue, icon }) => {
@@ -236,13 +237,45 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
     </div>
   );
 };
-const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
+
+// Định nghĩa các gói VIP
+const VIP_PACKAGES = [
+    { 
+        id: 'vip_7', 
+        duration: 7, 
+        label: 'VIP 7 Days', 
+        cost: 200, 
+        iconColor: 'text-blue-400',
+        bgColor: 'bg-blue-900/30 border-blue-500',
+        popular: false
+    },
+    { 
+        id: 'vip_14', 
+        duration: 14, 
+        label: 'VIP 14 Days', 
+        cost: 350, 
+        iconColor: 'text-purple-400',
+        bgColor: 'bg-purple-900/30 border-purple-500',
+        popular: false
+    },
+    { 
+        id: 'vip_30', 
+        duration: 30, 
+        label: 'VIP 30 Days', 
+        cost: 650, 
+        iconColor: 'text-yellow-400',
+        bgColor: 'bg-yellow-900/30 border-yellow-500',
+        popular: true // Best Value
+    }
+];
+
+const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
     const [status, setStatus] = useState('idle'); // 'idle', 'error', 'success'
 
-    const handleConfirm = async () => {
-        if (currentGems >= cost) {
+    const handleSelectPackage = async (pkg) => {
+        if (currentGems >= pkg.cost) {
             try {
-                await onConfirm();
+                await onConfirm(pkg);
                 setStatus('success');
                 setTimeout(() => {
                     onClose();
@@ -250,7 +283,7 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
                 }, 1500);
             } catch (error) {
                 console.error("Upgrade failed:", error);
-                setStatus('error'); // Show error if onConfirm promise rejects
+                setStatus('error');
                 setTimeout(() => setStatus('idle'), 2000);
             }
         } else {
@@ -258,38 +291,78 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems, cost }) => {
             setTimeout(() => setStatus('idle'), 2000);
         }
     };
+    
     if (!isOpen) return null;
+    
     return (
-        // Changed overlay to just solid semi-transparent black without backdrop-blur for performance
-        <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border-2 border-yellow-500 rounded-2xl shadow-2xl w-full max-w-sm p-8 text-center" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
+            <div className="bg-slate-900 border-2 border-yellow-500/50 rounded-2xl shadow-2xl w-full max-w-md p-6" onClick={e => e.stopPropagation()}>
                 
-                <h2 className="text-2xl font-roboto font-bold text-slate-100">Upgrade to Premium</h2>
-                <p className="text-slate-400 mt-2 mb-6">Mở khóa các tính năng độc quyền, sự công nhận cao cấp và nhiều phần thưởng hơn!</p>
-                
-                <div className="bg-slate-800 rounded-lg p-4 mb-6 border border-slate-700">
-                    <div className="flex justify-between items-center text-lg">
-                        <span className="text-slate-300">Cost:</span>
-                        <div className="flex items-center space-x-2 font-bold text-yellow-400"> <Icon path={ICONS.gem} className="w-5 h-5" /> <span>{cost}</span> </div>
+                <div className="text-center mb-6">
+                    <div className="flex justify-center mb-2">
+                        <div className="bg-yellow-500/20 p-3 rounded-full border border-yellow-500/50">
+                            <Icon path={ICONS.crown} className="w-8 h-8 text-yellow-400" />
+                        </div>
                     </div>
-                    <div className="flex justify-between items-center text-sm mt-2">
-                        <span className="text-slate-400">Your Gems:</span>
-                        <div className="flex items-center space-x-2 font-mono text-slate-200"> <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> <span>{currentGems}</span> </div>
+                    <h2 className="text-2xl font-orbitron font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-amber-500">
+                        Upgrade to VIP
+                    </h2>
+                    <p className="text-slate-400 text-sm mt-1">Unlock exclusive features and premium recognition!</p>
+                </div>
+
+                <div className="flex justify-between items-center bg-slate-800 rounded-lg p-3 mb-4 border border-slate-700">
+                     <span className="text-slate-400 text-sm">Your Balance:</span>
+                     <div className="flex items-center space-x-1.5 font-mono text-slate-200"> 
+                        <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" /> 
+                        <span className="font-bold text-lg">{currentGems}</span> 
                     </div>
                 </div>
 
-                {status === 'idle' && (
-                    <div className="flex items-center gap-4">
-                        <button onClick={onClose} className="w-full bg-slate-700 text-slate-200 font-bold py-3 rounded-lg hover:bg-slate-600 transition-colors">
-                            Cancel
-                        </button>
-                        <button onClick={handleConfirm} className="w-full bg-yellow-500 text-slate-900 font-bold py-3 rounded-lg hover:bg-yellow-400 transition-colors shadow-lg">
-                            Upgrade
-                        </button>
+                {status === 'error' && (
+                    <div className="mb-4 bg-red-500/10 border border-red-500 text-red-400 text-center text-sm py-2 rounded-lg font-bold animate-pulse">
+                        Not enough Gems!
                     </div>
                 )}
-                {status === 'error' && (<p className="text-red-500 font-bold py-3">Not enough Gems to upgrade!</p>)}
-                {status === 'success' && (<p className="text-green-500 font-bold py-3">Upgrade Successful!</p>)}
+                {status === 'success' && (
+                    <div className="mb-4 bg-green-500/10 border border-green-500 text-green-400 text-center text-sm py-2 rounded-lg font-bold">
+                        Upgrade Successful! Welcome to VIP!
+                    </div>
+                )}
+
+                <div className="space-y-3">
+                    {VIP_PACKAGES.map((pkg) => (
+                        <button 
+                            key={pkg.id}
+                            disabled={status !== 'idle'}
+                            onClick={() => handleSelectPackage(pkg)}
+                            className={`w-full relative flex items-center justify-between p-4 rounded-xl border-2 transition-all duration-300 group hover:scale-[1.02] ${pkg.bgColor} ${status !== 'idle' ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-lg hover:shadow-yellow-500/20'}`}
+                        >
+                            {pkg.popular && (
+                                <span className="absolute -top-3 right-4 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-md uppercase tracking-wider">
+                                    Best Value
+                                </span>
+                            )}
+                            <div className="flex items-center space-x-3">
+                                <div className={`p-2 rounded-full bg-black/20 ${pkg.iconColor}`}>
+                                    <Icon path={ICONS.star} className="w-5 h-5" />
+                                </div>
+                                <div className="text-left">
+                                    <div className={`font-bold font-orbitron ${pkg.popular ? 'text-yellow-100' : 'text-slate-200'}`}>
+                                        {pkg.label}
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="flex items-center space-x-1 bg-black/30 px-3 py-1.5 rounded-lg border border-white/5">
+                                <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" />
+                                <span className="font-bold text-white">{pkg.cost}</span>
+                            </div>
+                        </button>
+                    ))}
+                </div>
+
+                <button onClick={onClose} className="mt-6 w-full text-slate-500 text-sm hover:text-white transition-colors">
+                    Maybe Later
+                </button>
             </div>
         </div>
     );
@@ -328,7 +401,6 @@ export default function GameProfile() {
   const game = useGame();
   const user = auth.currentUser;
 
-  const UPGRADE_COST = 500;
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
   // Component-specific UI state
@@ -363,15 +435,17 @@ export default function GameProfile() {
     }
   };
 
-  const handleUpgrade = async () => {
+  // Logic nâng cấp mới xử lý gói VIP
+  const handleUpgrade = async (selectedPkg) => {
     if (!user) return;
     try {
-        await performPremiumUpgrade(user.uid, UPGRADE_COST);
+        // Gọi service với giá của gói đã chọn
+        // Note: Backend service should ideally handle duration based on cost or new params
+        await performPremiumUpgrade(user.uid, selectedPkg.cost);
         await game.refreshUserData(); // Refresh context data
     } catch (error)
     {
         console.error("Upgrade failed:", error);
-        // The modal will show its own error message, but we re-throw to prevent it from closing
         throw error;
     }
   };
@@ -489,8 +563,6 @@ export default function GameProfile() {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white p-8 text-center">Please log in to view your profile.</div>;
   }
   
-  // Create a playerInfo object from the context for easier prop passing to sub-components
-  // NOTE: This assumes `username`, `title`, `avatarUrl`, `accountType` are available in your GameContext
   const playerInfo = {
     name: (game as any).username || user.displayName || 'CyberWarrior',
     title: (game as any).title || `Lv. ${game.bossBattleHighestFloor + 1} - Rookie`,
@@ -498,20 +570,28 @@ export default function GameProfile() {
     accountType: (game as any).accountType || 'Normal',
     gems: game.gems,
     masteryPoints: game.masteryCards,
-    maxMasteryPoints: 1000, // This can be a constant or derived from context
+    maxMasteryPoints: 1000, 
   };
+  
+  // Xác định xem user có phải VIP không (Premium hoặc VIP)
+  const isVip = playerInfo.accountType === 'Premium' || playerInfo.accountType === 'VIP';
 
   return (
     <div className="bg-slate-900 w-full h-full font-sans text-white p-4">
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Roboto:wght@400;500;700&display=swap'); 
         .font-orbitron { font-family: 'Orbitron', sans-serif; } 
         .font-roboto { font-family: 'Roboto', sans-serif; }
-        .font-lilita { font-family: 'Lilita One', cursive; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes scale-in { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
+        .vip-shine {
+            background: linear-gradient(90deg, #FCD34D 0%, #F59E0B 50%, #FCD34D 100%);
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
+        }
+        @keyframes shine { to { background-position: 200% center; } }
       `}</style>
       
       <main className="w-full max-w-md mx-auto h-full bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col">
@@ -520,7 +600,9 @@ export default function GameProfile() {
            <div className="relative">
               <div className="flex items-center space-x-4">
                 <div className="relative flex-shrink-0">
-                  <img src={playerInfo.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-4 border-purple-500 shadow-lg object-cover"/>
+                  <div className={`rounded-full p-1 ${isVip ? 'vip-shine' : 'bg-slate-700'}`}>
+                    <img src={playerInfo.avatarUrl} alt="Player Avatar" className="w-20 h-20 rounded-full border-2 border-slate-900 shadow-lg object-cover"/>
+                  </div>
                   <button onClick={() => handleModal('avatar', true)} className="absolute -bottom-1 -right-1 bg-slate-700 w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-slate-300 hover:bg-purple-600 transition-all">
                      <Icon path={ICONS.camera} className="w-5 h-5"/>
                   </button>
@@ -533,29 +615,36 @@ export default function GameProfile() {
                       </button>
                   </div>
                   <p className="text-purple-400 font-semibold text-sm">{playerInfo.title}</p>
+                   
+                   {/* LOGIC HIỂN THỊ ACCOUNT TYPE & UPGRADE BUTTON */}
                    <div className="flex items-center space-x-2 mt-2">
-                        {playerInfo.accountType === 'Premium' ? (
-                            <span className="text-xs bg-yellow-500/20 text-yellow-300 px-2 py-0.5 rounded-full border border-yellow-500 flex items-center space-x-1">
-                                <Icon path={ICONS.star} className="w-3 h-3"/>
-                                <span>Premium</span>
-                            </span>
+                        {isVip ? (
+                            // Giao diện khi đã là VIP (Ẩn Normal, hiển thị VIP đẹp)
+                            <div className="flex items-center space-x-2">
+                                <span className="text-xs text-slate-900 font-bold px-3 py-1 rounded-full vip-shine flex items-center space-x-1 shadow-[0_0_10px_rgba(245,158,11,0.5)]">
+                                    <Icon path={ICONS.crown} className="w-3.5 h-3.5"/>
+                                    <span className="tracking-wide">VIP MEMBER</span>
+                                </span>
+                            </div>
                         ) : (
-                            <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
-                        )}
-                        {playerInfo.accountType === 'Normal' && (
-                            <button 
-                                onClick={() => handleModal('upgrade', true)} 
-                                className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-lilita uppercase tracking-wide text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
-                            >
-                                <img 
-                                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
-                                    alt="Premium" 
-                                    className="w-4 h-4"
-                                />
-                                <span>Upgrade</span>
-                            </button>
+                            // Giao diện khi là Normal (Hiển thị Normal + Nút Upgrade)
+                            <>
+                                <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500">Normal</span>
+                                <button 
+                                    onClick={() => handleModal('upgrade', true)} 
+                                    className="flex items-center space-x-1.5 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-md shadow-purple-500/30 transform transition-all duration-300 ease-in-out hover:scale-105 hover:shadow-lg hover:shadow-pink-500/50"
+                                >
+                                    <img 
+                                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-premium.webp" 
+                                        alt="Premium" 
+                                        className="w-4 h-4"
+                                    />
+                                    <span>Upgrade</span>
+                                </button>
+                            </>
                         )}
                    </div>
+
                 </div>
               </div>
               <div className="mt-6">
@@ -597,7 +686,14 @@ export default function GameProfile() {
 
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={playerInfo.avatarUrl}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
-      <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems} cost={UPGRADE_COST}/>
+      
+      {/* Modal Upgrade Mới */}
+      <UpgradeModal 
+        isOpen={modals.upgrade} 
+        onClose={() => handleModal('upgrade', false)} 
+        onConfirm={handleUpgrade} 
+        currentGems={playerInfo.gems}
+      />
       
       <SystemModal
         isOpen={systemModal.isOpen}
