@@ -27,12 +27,25 @@ const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns
 // --- TYPE DEFINITIONS ---
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
+// --- HELPER COMPONENT: Styled Section Title ---
+// Tạo component này để tái sử dụng style tiêu đề đẹp
+const StyledSectionTitle = ({ title }: { title: string }) => (
+    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
+        {/* Dấu chấm trang trí màu gradient */}
+        <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 mr-2.5 shadow-sm"></div>
+        {/* Tiêu đề chính */}
+        <h3 className="text-lg font-lilita uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900 mt-0.5">
+            {title}
+        </h3>
+    </div>
+);
+
 // --- REUSABLE COMPONENTS ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <div className="flex items-center justify-between mb-4">
-            {/* UPDATED: Added font-lilita, uppercase, tracking-wider */}
-            <h3 className="text-lg font-lilita uppercase tracking-wider text-gray-800">{title}</h3>
+            {/* Sử dụng StyledSectionTitle ở đây */}
+            <StyledSectionTitle title={title} />
             {extra && <div>{extra}</div>}
         </div>
         <div className="h-64 sm:h-72 w-full">{children}</div>
@@ -86,7 +99,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <img src={iconSrc} alt={title} className="w-11 h-11" />
                     <div>
-                        {/* ALSO UPDATING THESE TITLES FOR CONSISTENCY (OPTIONAL BUT GOOD) */}
                         <h3 className="text-base sm:text-lg font-lilita uppercase tracking-wider text-gray-800">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
@@ -151,8 +163,8 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                     <CalendarIcon />
                 </div>
-                {/* UPDATED: Added font-lilita, uppercase, tracking-wider */}
-                <h3 className="text-lg font-lilita uppercase tracking-wider text-gray-800">Activity</h3>
+                {/* Sử dụng StyledSectionTitle ở đây */}
+                <StyledSectionTitle title="Activity" />
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
                 {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>)}
@@ -305,8 +317,10 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                 <StudyActivityChart data={learningActivity} />
 
                                 <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                                    {/* UPDATED: Added font-lilita, uppercase, tracking-wider */}
-                                    <h3 className="text-lg font-lilita uppercase tracking-wider text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
+                                    <div className="mb-4">
+                                        {/* Sử dụng StyledSectionTitle ở đây */}
+                                        <StyledSectionTitle title="Vocabulary Mastery Analysis" />
+                                    </div>
                                     {sortedWordMastery.length > 0 ? (<>
                                         <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
                                             <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
@@ -322,8 +336,10 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                     </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
                                 </div>
                                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                                     {/* UPDATED: Added font-lilita, uppercase, tracking-wider */}
-                                     <h3 className="text-lg font-lilita uppercase tracking-wider text-gray-800 mb-4">Recent Activity</h3>
+                                     <div className="mb-4">
+                                        {/* Sử dụng StyledSectionTitle ở đây */}
+                                        <StyledSectionTitle title="Recent Activity" />
+                                     </div>
                                      {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
                                         <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors"><span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span></li>
                                      ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
@@ -342,7 +358,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
   return (
     <AnalysisDashboardProvider>
       <DashboardContent onGoBack={onGoBack} />
-      {/* Added style definition for font-lilita */}
       <style jsx>{`
         .font-lilita { font-family: 'Lilita One', cursive; }
       `}</style>
