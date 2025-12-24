@@ -4,10 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
     updateProfileInfo, 
     updateAvatar, 
-    performVipUpgrade, // Đã đổi tên function import từ service
+    performVipUpgrade, // Import hàm nâng cấp VIP mới
 } from './profileService.ts'; 
 import { auth } from '../firebase'; 
-import { useGame } from '../GameContext.tsx'; 
+import { useGame } from '../GameContext.tsx'; // Import hook context đã cập nhật
 import WorkoutApp from '../workout/workout.tsx'; 
 
 // Định nghĩa các loại chế độ hiển thị
@@ -58,7 +58,7 @@ const ICONS = {
   shield: "M12 1.09375l-9 4.5v6.09375c0 4.57812 3.82812 8.42188 9 9.28125c5.17188-0.85937 9-4.70313 9-9.28125v-6.09375l-9-4.5zM12 3.92188l6.75 3.375v4.40624c0 3.23438-2.67187 5.90625-6.75 6.64063c-4.07812-0.73438-6.75-3.40625-6.75-6.64063v-4.40624z",
   potion: "M15 3c-0.828 0-1.5 0.672-1.5 1.5v1.5h-3v-1.5c0-0.828-0.672-1.5-1.5-1.5s-1.5 0.672-1.5 1.5v1.5h-1.5c-0.828 0-1.5 0.672-1.5 1.5s0.672 1.5 1.5 1.5h1.5v10.5c0 0.828 0.672 1.5 1.5 1.5h6c0.828 0 1.5-0.672 1.5-1.5v-10.5h1.5c0.828 0 1.5-0.672 1.5-1.5s-0.672-1.5-1.5-1.5h-1.5v-1.5c0-0.828-0.672-1.5-1.5-1.5zM9 19.5v-10.5h6v10.5z",
   chest: "M5.25 5.25c-0.828 0-1.5 0.672-1.5 1.5v1.5h15v-1.5c0-0.828-0.672-1.5-1.5-1.5zM3.75 9.75v7.5c0 0.828 0.672 1.5 1.5 1.5h13.5c0.828 0 1.5-0.672 1.5-1.5v-7.5h-16.5zM11.25 12.75h1.5v3h-1.5z",
-  cog: "M12 8.25c-2.078 0-3.75 1.672-3.75 3.75s1.672 3.75 3.75 3.75 3.75-1.672 3.75-3.75-1.672-3.75-3.75-3.75zM12 14.25c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zM22.5 12.75h-1.781c-0.141 0.703-0.375 1.359-0.656 1.969l1.266 1.266c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352 0.844l-1.063 1.063c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.266-1.266c-0.609 0.281-1.266 0.516-1.969 0.656v1.781c0 0.828-0.672 1.5-1.5 1.5h-1.5c-0.828 0-1.5-0.672-1.5-1.5v-1.781c-0.703-0.141-1.359-0.375-1.969-0.656l-1.266 1.266c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.063-1.063c-0.234 0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.266-1.266c-0.281-0.609-0.516-1.266-0.656-1.969h-1.781c-0.828 0-1.5-0.672-1.5-1.5v-1.5c0-0.828 0.672-1.5 1.5-1.5h1.781c0.141-0.703 0.375-1.359 0.656-1.969l-1.266-1.266c-0.234-0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.063-1.063c0.234 0.234 0.516 0.352 0.844 0.352s0.609 0.117 0.844 0.352l1.266 1.266c0.609-0.281 1.266-0.516 1.969-0.656v-1.781c0-0.828 0.672-1.5 1.5-1.5h1.5c0.828 0 1.5 0.672 1.5 1.5v1.781c0.703 0.141 1.359 0.375 1.969 0.656l1.266-1.266c0.234-0.234 0.516-0.352 0.844-0.352s0.609 0.117 0.844 0.352l1.063 1.063c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352-0.844l-1.266 1.266c0.281 0.609 0.516 1.266 0.656 1.969h1.781c0.828 0 1.5 0.672 1.5 1.5v1.5c0 0.828-0.672 1.5-1.5 1.5z",
+  cog: "M12 8.25c-2.078 0-3.75 1.672-3.75 3.75s1.672 3.75 3.75 3.75 3.75-1.672 3.75-3.75-1.672-3.75-3.75-3.75zM12 14.25c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zM22.5 12.75h-1.781c-0.141 0.703-0.375 1.359-0.656 1.969l1.266 1.266c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352 0.844l-1.063 1.063c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.266-1.266c-0.609 0.281-1.266 0.516-1.969 0.656v1.781c0 0.828-0.672 1.5-1.5 1.5h-1.5c-0.828 0-1.5-0.672-1.5-1.5v-1.781c-0.703-0.141-1.359-0.375-1.969-0.656l-1.266 1.266c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.063-1.063c-0.234 0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.266-1.266c-0.281-0.609-0.516-1.266-0.656-1.969h-1.781c-0.828 0 1.5 0.672 1.5 1.5v1.5c0 0.828-0.672 1.5-1.5 1.5z",
   map: "M12 0c-4.148 0-7.5 3.352-7.5 7.5c0 4.148 7.5 16.5 7.5 16.5s7.5-12.352 7.5-16.5c0-4.148-3.352-7.5-7.5-7.5zM12 11.25c-2.078 0-3.75-1.672-3.75-3.75s1.672-3.75 3.75-3.75 3.75 1.672 3.75 3.75-1.672 3.75-3.75 3.75z",
   camera: "M6 6c-1.657 0-3 1.343-3 3v9c0 1.657 1.343 3 3 3h12c1.657 0 3-1.343 3-3v-9c0-1.657-1.343-3-3-3h-2.25l-1.5-1.5h-4.5l-1.5 1.5h-2.25zm6 12c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z",
   close: "M6.46875 4.96875l-1.5 1.5 5.53125 5.53125-5.53125 5.53125 1.5 1.5 5.53125-5.53125 5.53125 5.53125 1.5-1.5-5.53125-5.53125 5.53125-5.53125-1.5-1.5-5.53125 5.53125z",
@@ -237,7 +237,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
   );
 };
 
-// --- NEW UPGRADE MODAL WITH VIP PACKAGES ---
+// --- VIP PACKAGES DEFINITION ---
 const VIP_PACKAGES = [
     { id: 'vip_7', days: 7, cost: 250, label: 'Starter', bg: 'from-slate-700 to-slate-800', border: 'border-slate-500', text: 'text-slate-200' },
     { id: 'vip_14', days: 14, cost: 450, label: 'Pro', bg: 'from-blue-900 to-indigo-900', border: 'border-blue-400', text: 'text-blue-100', isPopular: true },
@@ -252,7 +252,7 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
         if (currentGems >= pkg.cost) {
             setProcessingId(pkg.id);
             try {
-                // Execute the upgrade with days
+                // Call the confirm function with cost and days
                 await onConfirm(pkg.cost, pkg.days);
                 setStatus('success');
                 setTimeout(() => {
@@ -404,7 +404,7 @@ export default function GameProfile() {
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
   const [isCacheLoading, setIsCacheLoading] = useState(true);
-  const [isWorkoutOpen, setIsWorkoutOpen] = useState(false); // State to control Workout modal
+  const [isWorkoutOpen, setIsWorkoutOpen] = useState(false); 
   
   // --- UI HANDLERS ---
   const handleModal = (modal, state) => setModals(prev => ({ ...prev, [modal]: state }));
@@ -413,7 +413,7 @@ export default function GameProfile() {
     if (!user) return;
     try {
         await updateAvatar(user.uid, avatarUrl);
-        await game.refreshUserData(); // Refresh context data
+        await game.refreshUserData(); 
         handleModal('avatar', false);
     } catch (error) {
         console.error("Failed to update avatar:", error);
@@ -424,7 +424,7 @@ export default function GameProfile() {
     if (!user) return;
     try {
         await updateProfileInfo(user.uid, newInfo);
-        await game.refreshUserData(); // Refresh context data
+        await game.refreshUserData(); 
     } catch (error) {
         console.error("Failed to save profile:", error);
     }
@@ -434,11 +434,10 @@ export default function GameProfile() {
     if (!user) return;
     try {
         await performVipUpgrade(user.uid, cost, days);
-        await game.refreshUserData(); // Refresh context data
+        await game.refreshUserData(); // Refresh to update VIP status in Context
     } catch (error)
     {
         console.error("Upgrade failed:", error);
-        // The modal will show its own error message, but we re-throw to prevent it from closing
         throw error;
     }
   };
@@ -556,19 +555,20 @@ export default function GameProfile() {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white p-8 text-center">Please log in to view your profile.</div>;
   }
   
-  // --- LOGIC KIỂM TRA VIP ---
-  const gameData = game as any;
-  // Chúng ta kiểm tra nếu accountType là 'VIP' và thời hạn chưa hết
+  // --- LOGIC KIỂM TRA VIP (SỬ DỤNG CONTEXT) ---
   const now = new Date();
-  const isVip = gameData.accountType === 'VIP' && gameData.vipExpiresAt && gameData.vipExpiresAt.toDate() > now;
+  // Bây giờ chúng ta lấy dữ liệu trực tiếp từ Context (game.accountType, game.vipExpiresAt)
+  const isVip = game.accountType === 'VIP' && game.vipExpiresAt && new Date(game.vipExpiresAt) > now;
   
   // Tính số ngày còn lại
   let vipDaysLeft = 0;
-  if (isVip) {
-      const diffTime = Math.abs(gameData.vipExpiresAt.toDate() - now);
+  if (isVip && game.vipExpiresAt) {
+      const diffTime = Math.abs(new Date(game.vipExpiresAt).getTime() - now.getTime());
       vipDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   }
 
+  // Fallback data if context is missing something (though it shouldn't be with the fix)
+  const gameData = game as any;
   const playerInfo = {
     name: gameData.username || user.displayName || 'CyberWarrior',
     title: gameData.title || `Lv. ${game.bossBattleHighestFloor + 1} - Rookie`,
@@ -696,7 +696,7 @@ export default function GameProfile() {
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={playerInfo.avatarUrl}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
       
-      {/* Updated Upgrade Modal */}
+      {/* Updated Upgrade Modal with Props */}
       <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems}/>
       
       <SystemModal
