@@ -4,10 +4,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
     updateProfileInfo, 
     updateAvatar, 
-    performVipUpgrade, // Import hàm nâng cấp VIP mới
+    performVipUpgrade, 
 } from './profileService.ts'; 
 import { auth } from '../firebase'; 
-import { useGame } from '../GameContext.tsx'; // Import hook context đã cập nhật
+import { useGame } from '../GameContext.tsx'; 
 import WorkoutApp from '../workout/workout.tsx'; 
 
 // Định nghĩa các loại chế độ hiển thị
@@ -557,7 +557,6 @@ export default function GameProfile() {
   
   // --- LOGIC KIỂM TRA VIP (SỬ DỤNG CONTEXT) ---
   const now = new Date();
-  // Bây giờ chúng ta lấy dữ liệu trực tiếp từ Context (game.accountType, game.vipExpiresAt)
   const isVip = game.accountType === 'VIP' && game.vipExpiresAt && new Date(game.vipExpiresAt) > now;
   
   // Tính số ngày còn lại
@@ -567,7 +566,7 @@ export default function GameProfile() {
       vipDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   }
 
-  // Fallback data if context is missing something (though it shouldn't be with the fix)
+  // Fallback data if context is missing something
   const gameData = game as any;
   const playerInfo = {
     name: gameData.username || user.displayName || 'CyberWarrior',
@@ -590,8 +589,6 @@ export default function GameProfile() {
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         @keyframes scale-in { 0% { transform: scale(0.95); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
         .animate-scale-in { animation: scale-in 0.2s ease-out forwards; }
-        .animate-spin-slow { animation: spin 3s linear infinite; }
-        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
       
       <main className="w-full max-w-md mx-auto h-full bg-slate-800/30 rounded-2xl shadow-2xl shadow-purple-900/20 flex flex-col">
@@ -600,8 +597,8 @@ export default function GameProfile() {
            <div className="relative">
               <div className="flex items-center space-x-4">
                 <div className="relative flex-shrink-0">
-                  {/* Avatar Border logic based on VIP status */}
-                  <div className={`p-1 rounded-full ${isVip ? 'bg-gradient-to-br from-yellow-400 via-orange-500 to-red-500 animate-spin-slow p-[3px]' : 'bg-transparent'}`}>
+                  {/* VIP Avatar: Static Gold Border with Glow */}
+                  <div className={`rounded-full ${isVip ? 'p-[3px] bg-gradient-to-b from-yellow-300 via-amber-500 to-yellow-600 shadow-[0_0_20px_rgba(251,191,36,0.4)]' : 'p-1 bg-transparent'}`}>
                     <img src={playerInfo.avatarUrl} alt="Player Avatar" className={`w-20 h-20 rounded-full border-4 ${isVip ? 'border-transparent' : 'border-purple-500'} shadow-lg object-cover bg-slate-800`}/>
                   </div>
                   <button onClick={() => handleModal('avatar', true)} className="absolute -bottom-1 -right-1 bg-slate-700 w-8 h-8 rounded-full border-2 border-slate-900 flex items-center justify-center text-slate-300 hover:bg-purple-600 transition-all z-10">
@@ -610,7 +607,7 @@ export default function GameProfile() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2 mb-1">
-                      {/* Name styling for VIP */}
+                      {/* Name styling for VIP: Gold Gradient */}
                       <h1 className={`text-xl font-bold font-lilita tracking-wider ${isVip ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600' : 'text-slate-100'}`}>
                           {playerInfo.name}
                       </h1>
@@ -623,11 +620,15 @@ export default function GameProfile() {
                    {/* HEADER STATUS SECTION */}
                    <div className="flex items-center space-x-2 mt-2">
                         {isVip ? (
-                            // VIP STATUS DISPLAY
+                            // VIP STATUS DISPLAY: REFINED GOLD BADGE
                             <div className="flex items-center space-x-2">
-                                <div className="bg-gradient-to-r from-yellow-600 to-yellow-400 text-slate-900 px-3 py-0.5 rounded-full flex items-center space-x-1 shadow-[0_0_10px_rgba(234,179,8,0.5)] border border-yellow-300">
-                                    <Icon path={ICONS.star} className="w-3.5 h-3.5"/>
-                                    <span className="text-xs font-black font-lilita uppercase">VIP ACTIVE</span>
+                                <div className="relative">
+                                    {/* Inner Glow */}
+                                    <div className="absolute inset-0 bg-yellow-500 blur-sm opacity-50"></div>
+                                    {/* Badge Content - Gold Metal Look */}
+                                    <div className="relative bg-gradient-to-b from-yellow-300 to-amber-500 px-3 py-0.5 rounded flex items-center justify-center shadow-lg border-t border-yellow-200">
+                                        <span className="text-xs font-black font-lilita text-amber-900 tracking-wider drop-shadow-sm">VIP</span>
+                                    </div>
                                 </div>
                                 <span className="text-xs text-yellow-500 font-mono">{vipDaysLeft} days left</span>
                                 <button 
