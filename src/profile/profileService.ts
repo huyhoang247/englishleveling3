@@ -1,7 +1,7 @@
 // --- START OF FILE profileService.ts ---
 
 import { db } from '../firebase'; // Assuming firebase is initialized in './firebase'
-import { doc, runTransaction, updateDoc } from 'firebase/firestore';
+import { doc, runTransaction, updateDoc, Timestamp } from 'firebase/firestore';
 
 // This service now only contains functions that MODIFY user data.
 // All data reading/fetching is handled by GameContext for a single source of truth.
@@ -30,13 +30,15 @@ export const updateAvatar = async (userId: string, avatarUrl: string): Promise<v
 };
 
 /**
- * Handles the logic for upgrading a user's account to Premium.
- * It runs as a transaction to ensure atomicity: it reads the current gem count
- * and updates it only if the user can afford the upgrade.
+ * Handles upgrading user to VIP/Premium with specific duration.
+ * It runs as a transaction to ensure atomicity.
+ * If user is already VIP, it extends the duration.
+ * 
  * @param userId - The ID of the user.
- * @param cost - The number of gems required for the upgrade.
+ * @param cost - The number of gems required.
+ * @param days - The number of days to add to VIP status.
  */
-export const performPremiumUpgrade = async (userId: string, cost: number): Promise<void> => {
+export const performVipUpgrade = async (userId: string, cost: number, days: number): Promise<void> => {
   if (!userId) throw new Error("User ID is required.");
   const userDocRef = doc(db, 'users', userId);
 
@@ -46,17 +48,40 @@ export const performPremiumUpgrade = async (userId: string, cost: number): Promi
       throw new Error("User document does not exist!");
     }
 
-    const currentGems = userDoc.data().gems || 0;
+    const data = userDoc.data();
+    const currentGems = data.gems || 0;
+    
     if (currentGems < cost) {
       throw new Error("Not enough gems to upgrade.");
     }
 
+    // Calculate expiration date
+    const now = new Date();
+    let newExpirationDate = new Date();
+    
+    // Check if user is currently VIP and the VIP status hasn't expired yet
+    // We check accountType AND if vipExpiresAt is in the future
+    if (data.accountType === 'VIP' && data.vipExpiresAt) {
+        const currentExpire = data.vipExpiresAt.toDate();
+        if (currentExpire > now) {
+            // User is valid VIP, extend the current expiration
+            newExpirationDate = new Date(currentExpire.getTime() + (days * 24 * 60 * 60 * 1000));
+        } else {
+            // VIP expired, start fresh from now
+            newExpirationDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
+        }
+    } else {
+        // User is Normal or first time VIP, start from now
+        newExpirationDate = new Date(now.getTime() + (days * 24 * 60 * 60 * 1000));
+    }
+
     const newGems = currentGems - cost;
+    
     transaction.update(userDocRef, {
       gems: newGems,
-      accountType: 'Premium',
+      accountType: 'VIP', // Change account type to VIP
+      vipExpiresAt: Timestamp.fromDate(newExpirationDate) // Store timestamp
     });
-    // No need to return the new gem count, GameContext's listener will update the UI.
   });
 };
 
