@@ -186,11 +186,14 @@ const CacheInfoItem: React.FC<{
         </div>
     );
 };
+
+// --- UPDATED MODALS (No Backdrop Blur, No Borders) ---
+
 const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
-      <div className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4" onClick={onClose}>
+      <div className="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
             <h2 className="text-xl font-roboto font-bold text-slate-100">Select Avatar</h2>
             <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
@@ -215,8 +218,8 @@ const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4" onClick={onClose}>
-      <div className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
+    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4" onClick={onClose}>
+      <div className="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-xl font-roboto font-bold text-slate-100">Edit Profile</h2>
           <button onClick={onClose} className="text-slate-500 hover:text-white"><Icon path={ICONS.close} /></button>
@@ -277,8 +280,8 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-md flex justify-center items-center z-50 p-4" onClick={onClose}>
-            <div className="bg-slate-900 border-4 border-yellow-500 rounded-3xl shadow-[0_0_50px_rgba(234,179,8,0.3)] w-full max-w-md overflow-hidden relative" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4" onClick={onClose}>
+            <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative" onClick={e => e.stopPropagation()}>
                 
                 {/* Header Decoration */}
                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-500/20 to-transparent pointer-events-none"></div>
@@ -307,7 +310,7 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
                         </div>
                     )}
                      {status === 'success' && (
-                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-3xl">
+                        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 rounded-3xl">
                              <div className="text-center animate-scale-in">
                                 <div className="mx-auto w-20 h-20 bg-green-500 rounded-full flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(34,197,94,0.6)]">
                                     <Icon path={ICONS.checkCircle} className="w-12 h-12 text-white" />
@@ -365,9 +368,9 @@ const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, action
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex justify-center items-center z-50 p-4 transition-opacity duration-300" onClick={onClose}>
+    <div className="fixed inset-0 bg-black/80 flex justify-center items-center z-50 p-4 transition-opacity duration-300" onClick={onClose}>
       <div 
-        className="bg-slate-900 border-2 border-purple-500 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform transition-all duration-300 scale-95 opacity-0 animate-scale-in"
+        className="bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm p-6 text-center transform transition-all duration-300 scale-95 opacity-0 animate-scale-in"
         onClick={e => e.stopPropagation()}
       >
         {icon && (
