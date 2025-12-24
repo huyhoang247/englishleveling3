@@ -28,23 +28,18 @@ const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
 // --- HELPER COMPONENT: Styled Section Title ---
-// Tạo component này để tái sử dụng style tiêu đề đẹp
+// Đã loại bỏ icon, giảm size và thêm opacity 30%
 const StyledSectionTitle = ({ title }: { title: string }) => (
-    <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-slate-50 border border-slate-200 shadow-[0_2px_4px_rgba(0,0,0,0.02)]">
-        {/* Dấu chấm trang trí màu gradient */}
-        <div className="h-2.5 w-2.5 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 mr-2.5 shadow-sm"></div>
-        {/* Tiêu đề chính */}
-        <h3 className="text-lg font-lilita uppercase tracking-wider text-transparent bg-clip-text bg-gradient-to-r from-slate-700 to-slate-900 mt-0.5">
-            {title}
-        </h3>
-    </div>
+    <h3 className="text-base font-lilita uppercase tracking-wider text-slate-900 opacity-30 select-none">
+        {title}
+    </h3>
 );
 
 // --- REUSABLE COMPONENTS ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <div className="flex items-center justify-between mb-4">
-            {/* Sử dụng StyledSectionTitle ở đây */}
+            {/* Sử dụng component tiêu đề mới */}
             <StyledSectionTitle title={title} />
             {extra && <div>{extra}</div>}
         </div>
@@ -99,7 +94,8 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <img src={iconSrc} alt={title} className="w-11 h-11" />
                     <div>
-                        <h3 className="text-base sm:text-lg font-lilita uppercase tracking-wider text-gray-800">{title}</h3>
+                        {/* Cập nhật style title cho đồng bộ: size nhỏ, opacity 30% */}
+                        <h3 className="text-base font-lilita uppercase tracking-wider text-gray-900 opacity-30">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                             <span className="flex items-center font-bold text-amber-600">
@@ -163,7 +159,7 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                     <CalendarIcon />
                 </div>
-                {/* Sử dụng StyledSectionTitle ở đây */}
+                {/* Sử dụng component tiêu đề mới */}
                 <StyledSectionTitle title="Activity" />
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
@@ -318,7 +314,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
 
                                 <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                     <div className="mb-4">
-                                        {/* Sử dụng StyledSectionTitle ở đây */}
+                                        {/* Sử dụng component tiêu đề mới */}
                                         <StyledSectionTitle title="Vocabulary Mastery Analysis" />
                                     </div>
                                     {sortedWordMastery.length > 0 ? (<>
@@ -337,7 +333,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                 </div>
                                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                      <div className="mb-4">
-                                        {/* Sử dụng StyledSectionTitle ở đây */}
+                                        {/* Sử dụng component tiêu đề mới */}
                                         <StyledSectionTitle title="Recent Activity" />
                                      </div>
                                      {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
