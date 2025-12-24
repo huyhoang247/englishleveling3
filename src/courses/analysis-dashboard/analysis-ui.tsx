@@ -13,10 +13,9 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
-import HomeButton from '../../ui/home-button.tsx'; // << 1. IMPORT COMPONENT MỚI
+import HomeButton from '../../ui/home-button.tsx'; 
 
 // --- ICONS (Grouped for better organization) ---
-// HomeIcon đã được xóa vì chúng ta sẽ dùng HomeButton component
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
@@ -32,7 +31,8 @@ interface AnalysisDashboardProps { onGoBack: () => void; }
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-bold text-gray-800">{title}</h3>
+            {/* [UPDATED] Font Lilita & Uppercase for Chart Titles (Vocabulary Growth, Study Activity) */}
+            <h3 className="text-xl font-lilita uppercase tracking-wide text-gray-800">{title}</h3>
             {extra && <div>{extra}</div>}
         </div>
         <div className="h-64 sm:h-72 w-full">{children}</div>
@@ -150,7 +150,8 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                     <CalendarIcon />
                 </div>
-                <h3 className="text-lg font-bold text-gray-800">Activity</h3>
+                {/* [UPDATED] Font Lilita & Uppercase for Activity Title */}
+                <h3 className="text-xl font-lilita uppercase tracking-wide text-gray-800">Activity</h3>
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
                 {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>)}
@@ -269,7 +270,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
         <header className="flex-shrink-0 sticky top-0 bg-slate-900/95 backdrop-blur-sm z-10 shadow-md">
           <div className="flex h-14 items-center justify-between px-4">
             <div className="flex items-center">
-                {/* << 2. THAY THẾ NÚT HOME CŨ BẰNG COMPONENT MỚI */}
                 <HomeButton onClick={onGoBack} title="Về trang chủ" />
             </div>
             <div className="flex items-center justify-end gap-3">
@@ -304,7 +304,8 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                 <StudyActivityChart data={learningActivity} />
 
                                 <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                                    <h3 className="text-lg font-bold text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
+                                    {/* [UPDATED] Font Lilita & Uppercase for Vocabulary Mastery Analysis */}
+                                    <h3 className="text-xl font-lilita uppercase tracking-wide text-gray-800 mb-4">Vocabulary Mastery Analysis</h3>
                                     {sortedWordMastery.length > 0 ? (<>
                                         <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
                                             <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
@@ -320,7 +321,8 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                     </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
                                 </div>
                                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
-                                     <h3 className="text-lg font-bold text-gray-800 mb-4">Recent Activity</h3>
+                                     {/* [UPDATED] Font Lilita & Uppercase for Recent Activity */}
+                                     <h3 className="text-xl font-lilita uppercase tracking-wide text-gray-800 mb-4">Recent Activity</h3>
                                      {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
                                         <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors"><span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span></li>
                                      ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
