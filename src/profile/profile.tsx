@@ -70,7 +70,6 @@ const ICONS = {
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
   dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z",
-  rank: "M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z"
 };
 
 const StatBar = ({ label, value, maxValue, icon }) => {
@@ -574,18 +573,16 @@ export default function GameProfile() {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white p-8 text-center">Please log in to view your profile.</div>;
   }
   
-  // --- LOGIC KIỂM TRA VIP (SỬ DỤNG CONTEXT) ---
+  // --- LOGIC KIỂM TRA VIP ---
   const now = new Date();
   const isVip = game.accountType === 'VIP' && game.vipExpiresAt && new Date(game.vipExpiresAt) > now;
   
-  // Tính số ngày còn lại
   let vipDaysLeft = 0;
   if (isVip && game.vipExpiresAt) {
       const diffTime = Math.abs(new Date(game.vipExpiresAt).getTime() - now.getTime());
       vipDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   }
 
-  // Fallback data if context is missing something
   const gameData = game as any;
   const playerInfo = {
     name: gameData.username || user.displayName || 'CyberWarrior',
@@ -635,16 +632,12 @@ export default function GameProfile() {
                       </button>
                   </div>
                   
-                  {/* NEW LEVEL/RANK TAG DISPLAY */}
+                  {/* NEW SIMPLE LEVEL BADGE (Font Lilita One) */}
                   <div className="flex items-center mt-1 mb-2">
-                     <div className="flex items-center bg-slate-800/90 border border-cyan-500/30 rounded-md px-2 py-0.5 shadow-md overflow-hidden relative group cursor-default">
-                        {/* Glow effect */}
-                        <div className="absolute inset-0 bg-cyan-500/10 group-hover:bg-cyan-500/20 transition-colors"></div>
-                        <div className="bg-cyan-500/20 p-0.5 rounded-sm mr-2 z-10">
-                             <Icon path={ICONS.trendingUp} className="w-3 h-3 text-cyan-400" />
-                        </div>
-                        <span className="text-[10px] font-orbitron font-bold text-cyan-100 tracking-wider z-10 uppercase">
-                            {playerInfo.title}
+                     <div className="bg-slate-800 border border-slate-600 rounded-md px-3 py-0.5 shadow-sm inline-flex items-center">
+                        <span className="text-[10px] text-cyan-500 font-bold mr-1 font-orbitron">LV.</span>
+                        <span className="text-sm font-lilita text-cyan-400 tracking-wider">
+                            {game.bossBattleHighestFloor + 1}
                         </span>
                      </div>
                   </div>
@@ -652,12 +645,10 @@ export default function GameProfile() {
                    {/* HEADER STATUS SECTION */}
                    <div className="flex items-center space-x-2">
                         {isVip ? (
-                            // VIP STATUS DISPLAY: REFINED GOLD BADGE
+                            // VIP STATUS DISPLAY
                             <div className="flex items-center space-x-2">
                                 <div className="relative">
-                                    {/* Inner Glow */}
                                     <div className="absolute inset-0 bg-yellow-500 blur-sm opacity-50"></div>
-                                    {/* Badge Content - Gold Metal Look */}
                                     <div className="relative bg-gradient-to-b from-yellow-300 to-amber-500 px-3 py-0.5 rounded flex items-center justify-center shadow-lg border-t border-yellow-200">
                                         <span className="text-xs font-black font-lilita text-amber-900 tracking-wider drop-shadow-sm">VIP</span>
                                     </div>
