@@ -37,6 +37,10 @@ interface IGameContext {
     totalPlayerStats: { hp: number; atk: number; def: number; };
     loginStreak: number;
     lastCheckIn: Date | null;
+    
+    // --- NEW VIP FIELDS ---
+    accountType: string;         // 'Normal' | 'VIP'
+    vipExpiresAt: Date | null;   // Thời hạn VIP
 
     // UI States
     isBackgroundPaused: boolean;
@@ -133,6 +137,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
 
+  // --- NEW STATES FOR VIP ---
+  const [accountType, setAccountType] = useState<string>('Normal');
+  const [vipExpiresAt, setVipExpiresAt] = useState<Date | null>(null);
+
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
@@ -183,6 +191,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setEquippedItems(gameData.equipment.equipped);
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
+      
+      // Update VIP data
+      setAccountType(gameData.accountType || 'Normal');
+      setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
+
     } catch (error) { console.error("Error refreshing user data:", error);
     } finally { setIsLoadingUserData(false); }
   }, []);
@@ -223,6 +236,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
                 setLoginStreak(gameData.loginStreak ?? 0);
                 setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
+                
+                // --- UPDATE REALTIME VIP STATUS ---
+                setAccountType(gameData.accountType ?? 'Normal');
+                setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
+
             } else {
                 console.warn("User document not found, attempting to create one.");
                 fetchOrCreateUserGameData(user.uid);
@@ -250,6 +268,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
+        
+        // Reset VIP status
+        setAccountType('Normal');
+        setVipExpiresAt(null);
       }
     });
 
@@ -461,7 +483,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
     totalEquipmentStats,
     totalPlayerStats,
-    loginStreak, lastCheckIn, isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
+    loginStreak, lastCheckIn, 
+    accountType, vipExpiresAt, // <--- EXPORTING NEW VIP STATE
+    isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
     isCheckInOpen,
