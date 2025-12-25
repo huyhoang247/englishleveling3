@@ -28,7 +28,7 @@ const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
 // --- HELPER COMPONENT: Styled Section Title ---
-// Đã loại bỏ icon, giảm size và thêm opacity 30%
+// Tiêu đề nhỏ, font lilita, opacity 30%
 const StyledSectionTitle = ({ title }: { title: string }) => (
     <h3 className="text-base font-lilita uppercase tracking-wider text-slate-900 opacity-30 select-none">
         {title}
@@ -39,7 +39,6 @@ const StyledSectionTitle = ({ title }: { title: string }) => (
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
         <div className="flex items-center justify-between mb-4">
-            {/* Sử dụng component tiêu đề mới */}
             <StyledSectionTitle title={title} />
             {extra && <div>{extra}</div>}
         </div>
@@ -88,19 +87,24 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         } finally { setIsClaiming(false); }
     }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, title]);
 
+    // Tính toán số vàng hiển thị
+    const rewardValue = currentGoal * Math.max(1, masteryCount);
+
     return (
         <div className="bg-white p-4 sm:p-5 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <img src={iconSrc} alt={title} className="w-11 h-11" />
                     <div>
-                        {/* Cập nhật style title cho đồng bộ: size nhỏ, opacity 30% */}
                         <h3 className="text-base font-lilita uppercase tracking-wider text-gray-900 opacity-30">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
-                            <span className="flex items-center font-bold text-amber-600">
-                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5"/>
-                                <span className="text-sm">{currentGoal * Math.max(1, masteryCount)}</span>
+                            <span className="flex items-center">
+                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-5 w-5 mr-1.5 -mt-1"/>
+                                {/* CẬP NHẬT Ở ĐÂY: Font lilita, format số, size to hơn */}
+                                <span className="text-lg font-lilita text-amber-500">
+                                    {rewardValue.toLocaleString()}
+                                </span>
                             </span>
                         </div>
                         )}
@@ -159,7 +163,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                     <CalendarIcon />
                 </div>
-                {/* Sử dụng component tiêu đề mới */}
                 <StyledSectionTitle title="Activity" />
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
@@ -314,7 +317,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
 
                                 <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                     <div className="mb-4">
-                                        {/* Sử dụng component tiêu đề mới */}
                                         <StyledSectionTitle title="Vocabulary Mastery Analysis" />
                                     </div>
                                     {sortedWordMastery.length > 0 ? (<>
@@ -333,7 +335,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                 </div>
                                 <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                      <div className="mb-4">
-                                        {/* Sử dụng component tiêu đề mới */}
                                         <StyledSectionTitle title="Recent Activity" />
                                      </div>
                                      {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
