@@ -28,7 +28,6 @@ const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
 // --- HELPER COMPONENT: Styled Section Title ---
-// Tiêu đề nhỏ, font lilita, opacity 30%
 const StyledSectionTitle = ({ title }: { title: string }) => (
     <h3 className="text-base font-lilita uppercase tracking-wider text-slate-900 opacity-30 select-none">
         {title}
@@ -99,17 +98,18 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                         <h3 className="text-base font-lilita uppercase tracking-wider text-gray-900 opacity-30">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
-                            {/* CẬP NHẬT: Số trước, icon sau. Icon nhỏ hơn. */}
-                            <span className="flex items-center gap-1">
-                                <span className="text-lg font-lilita text-amber-500">
+                            {/* CẬP NHẬT: Container div với items-center để căn giữa dọc */}
+                            <div className="flex items-center gap-1.5">
+                                {/* leading-none và pt-0.5 giúp căn chỉnh chữ font Lilita với icon */}
+                                <span className="text-lg font-lilita text-amber-500 leading-none pt-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
                                 <img 
                                     src={uiAssets.goldIcon} 
                                     alt="Reward Coin" 
-                                    className="h-4 w-4 mb-0.5" 
+                                    className="h-4 w-4" 
                                 />
-                            </span>
+                            </div>
                         </div>
                         )}
                     </div>
