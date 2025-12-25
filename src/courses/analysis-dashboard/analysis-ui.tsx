@@ -98,16 +98,15 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                         <h3 className="text-base font-lilita uppercase tracking-wider text-gray-900 opacity-30">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
-                            {/* CẬP NHẬT: Container div với items-center để căn giữa dọc */}
-                            <div className="flex items-center gap-1.5">
-                                {/* leading-none và pt-0.5 giúp căn chỉnh chữ font Lilita với icon */}
-                                <span className="text-lg font-lilita text-amber-500 leading-none pt-0.5">
+                            {/* CẬP NHẬT: gap-1 và mt-0.5 cho icon */}
+                            <div className="flex items-center gap-1">
+                                <span className="text-lg font-lilita text-amber-500 leading-none">
                                     {rewardValue.toLocaleString()}
                                 </span>
                                 <img 
                                     src={uiAssets.goldIcon} 
                                     alt="Reward Coin" 
-                                    className="h-4 w-4" 
+                                    className="h-4 w-4 mt-0.5" 
                                 />
                             </div>
                         </div>
