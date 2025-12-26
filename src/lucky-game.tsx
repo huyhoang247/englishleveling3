@@ -1,10 +1,12 @@
+// --- START OF FILE lucky-game.tsx ---
+
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import CoinDisplay from './ui/display/coin-display.tsx';
 import HomeButton from './ui//home-button.tsx';
 import { useGame } from './GameContext.tsx'; 
 import { useAnimateValue } from './ui/useAnimateValue.ts'; 
 
-// --- SVG Icons (Removed drop-shadows inside icons) ---
+// --- SVG Icons ---
 const CoinsIcon = ({ className, src }: { className?: string; src?: string }) => {
   if (src) {
     return (
@@ -29,9 +31,19 @@ const ZapIcon = ({ className }: { className?: string }) => ( <svg className={cla
 const TrophyIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M10 2a2 2 0 00-2 2v2H6a2 2 0 00-2 2v2a2 2 0 002 2h2v2a2 2 0 002 2h4a2 2 0 002-2v-2h2a2 2 0 002-2V8a2 2 0 00-2-2h-2V4a2 2 0 00-2-2h-4zm0 2h4v2h-4V4zm-2 4h12v2H8V8z"></path> </svg> );
 const HeartIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z" clipRule="evenodd"></path> </svg> );
 const GiftIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path d="M12 0H8a2 2 0 00-2 2v2H2a2 2 0 00-2 2v10a2 2 0 002 2h16a2 2 0 002-2V6a2 2 0 00-2-2h-4V2a2 2 0 00-2-2zm-2 2h4v2h-4V2zm-6 6h16v8H2V8z"></path> </svg> );
-const PlayIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 24 24"> <path d="M8 5v14l11-7z" /> </svg> );
 const InfoIcon = ({ className }: { className?: string }) => ( <svg className={className} fill="currentColor" viewBox="0 0 20 20"> <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /> </svg> );
 
+// --- NEW ICONS (Crown & Lock) ---
+const CrownIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5ZM19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" />
+  </svg>
+);
+const LockIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
+    <path fillRule="evenodd" clipRule="evenodd" d="M12 1.5C9.23858 1.5 7 3.73858 7 6.5V9H6C4.89543 9 4 9.89543 4 11V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V11C20 9.89543 19.1046 9 18 9H17V6.5C17 3.73858 14.7614 1.5 12 1.5ZM12 3.5C13.6569 3.5 15 4.84315 15 6.5V9H9V6.5C9 4.84315 10.3431 3.5 12 3.5Z" />
+  </svg>
+);
 
 // --- Interfaces ---
 interface Item {
@@ -77,7 +89,6 @@ const getRarityColor = (rarity: Item['rarity']) => {
     }
 };
 
-// [OPTIMIZED] Removed heavy glow shadows, used borders instead
 const getCardStyle = (rarity: Item['rarity']) => {
     switch(rarity) {
       case 'common': return { bg: 'bg-slate-800', border: 'border-slate-600', text: 'text-slate-400' };
@@ -100,14 +111,13 @@ const RARITY_WEIGHTS = {
     'jackpot': 5
 };
 
-// --- OPTIMIZED COMPONENT: GameCard ---
-// Removed drop-shadows, simplified rendering structure
+// --- COMPONENT: GameCard ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
     return (
         <div 
-            className="flex-shrink-0 flex items-center justify-center transform will-change-transform" // added will-change-transform
+            className="flex-shrink-0 flex items-center justify-center transform will-change-transform" 
             style={{ width: 110, marginRight: 12 }} 
         >
             <div className={`
@@ -116,7 +126,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                 flex flex-col items-center justify-center gap-2
                 shadow-sm 
             `}> 
-                {/* Removed internal glow divs and heavy gradients */}
                 
                 <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-14 h-14 flex items-center justify-center">
                     {typeof item.icon === 'string' ? (
@@ -130,7 +139,6 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                     <div className={`text-[10px] font-bold uppercase tracking-wider opacity-90 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
                         {item.name || item.rarity}
                     </div>
-                    {/* Removed drop-shadow from text */}
                     <div className="text-sm font-black text-white mt-1 font-lilita tracking-wide">
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
@@ -224,17 +232,48 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
     );
 });
 
-// --- REWARD POPUP ---
+// --- REWARD POPUP (MODIFIED FOR VIP & NO ADS) ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
+    // Lấy data từ Context
+    const { accountType, vipLuckySpinClaims, handleVipLuckySpinClaim, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool } = useGame();
+    
+    const isVip = accountType === 'VIP';
+    const vipMaxClaims = 5;
+    const vipClaimsLeft = Math.max(0, vipMaxClaims - vipLuckySpinClaims);
+    const canUseVipClaim = isVip && vipClaimsLeft > 0;
+
     const rarityColor = getRarityColor(item.rarity);
 
-    const handleWatchAds = () => {
-        console.log("Watching Ads for x2 Reward...");
-        onClose();
+    const handleClaim = async (isDouble: boolean) => {
+        if (isDouble) {
+             // Chỉ cho phép VIP và còn lượt mới được gọi hàm này
+             const success = await handleVipLuckySpinClaim();
+             if (!success) return; 
+             
+             // Logic x2
+             if (item.rarity === 'jackpot') {
+                 updateCoins(item.value * 2); 
+                 handleUpdateJackpotPool(0, true);
+             } else {
+                 // Đã nhận x1 gốc ở parent logic (thông qua onClose), 
+                 // ở đây ta cộng thêm 1 lần giá trị nữa để thành x2.
+                 if (item.rewardType === 'coin') {
+                     updateCoins(item.value); 
+                 } else if (item.rewardType === 'pickaxe' && item.rewardAmount) {
+                     handleUpdatePickaxes(item.rewardAmount);
+                 }
+             }
+        }
+        // Nếu không x2, parent component sẽ lo phần claim mặc định khi đóng popup
+        onClose(); 
+    };
+
+    const handleLockedClick = () => {
+        alert("Tính năng x2 chỉ dành cho VIP! Hãy nâng cấp ngay để nhận x2 quà tặng mỗi ngày!");
+        // Ở đây có thể thay bằng logic mở Shop VIP
     };
 
     return (
-    // [OPTIMIZED] bg-black/95 instead of blur
     <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
       <div 
         className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
@@ -267,9 +306,10 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
         </div>
 
         <div className="flex flex-col gap-2 w-full my-6">
-            <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col items-center justify-center">
-                 <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1">BẠN NHẬN ĐƯỢC</span>
-                 <div className="flex items-center gap-3">
+            <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden">
+                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white/5 blur-2xl rounded-full"></div>
+                 <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1 relative z-10">BẠN NHẬN ĐƯỢC</span>
+                 <div className="flex items-center gap-3 relative z-10">
                     {item.rewardType === 'coin' && (
                         <>
                             <CoinsIcon src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/dollar.png" className="w-8 h-8" />
@@ -287,21 +327,80 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
             </div>
         </div>
         
-        <div className="flex w-full gap-3 mt-1">
-            <button onClick={handleWatchAds} className="group relative flex-1">
-                <div className="relative h-full bg-emerald-600 hover:bg-emerald-500 rounded-xl border-t border-white/20 shadow-md flex flex-col items-center justify-center py-2.5 px-1 active:scale-95 transition-all">
-                    <div className="flex items-center gap-1.5 mb-0.5">
-                        <div className="bg-black/20 p-1 rounded-full"><PlayIcon className="w-3.5 h-3.5 text-white" /></div>
-                        <span className="text-xl font-black text-white italic tracking-wide">x2</span>
+        {/* --- BUTTON AREA (NEW DESIGN) --- */}
+        <div className="flex w-full gap-3 mt-1 h-14">
+            
+            {/* BUTTON 1: VIP X2 CLAIM */}
+            {canUseVipClaim && (
+                <button 
+                    onClick={() => handleClaim(true)} 
+                    className="group relative flex-1 overflow-hidden rounded-xl active:scale-95 transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)] hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] border border-yellow-300/50"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600"></div>
+                    <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-20"></div>
+                    <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-white/30 skew-x-[-20deg] animate-[shine_2s_infinite]"></div>
+
+                    <div className="relative h-full flex flex-col items-center justify-center py-1">
+                        <div className="flex items-center gap-1.5">
+                            <CrownIcon className="w-5 h-5 text-yellow-100 drop-shadow-sm" />
+                            <span className="text-xl font-black text-white italic tracking-wide drop-shadow-md">VIP x2</span>
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5 bg-black/20 px-2 py-0.5 rounded-full">
+                            <div className="flex gap-0.5">
+                                {[...Array(vipMaxClaims)].map((_, i) => (
+                                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < vipClaimsLeft ? 'bg-white shadow-[0_0_4px_white]' : 'bg-black/30'}`} />
+                                ))}
+                            </div>
+                            <span className="text-[9px] font-bold text-yellow-100 ml-1 leading-none">{vipClaimsLeft}/{vipMaxClaims}</span>
+                        </div>
                     </div>
-                    <span className="text-[10px] font-bold text-emerald-100 bg-black/20 px-2 py-0.5 rounded-full uppercase tracking-wider">Watch Ads</span>
-                </div>
-            </button>
-            <button onClick={onClose} className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-md flex items-center justify-center active:scale-95 transition-all">
+                </button>
+            )}
+
+            {/* BUTTON 1 (DISABLED): VIP OUT OF CLAIMS */}
+            {isVip && vipClaimsLeft === 0 && (
+                <button disabled className="relative flex-1 bg-slate-800 rounded-xl border border-slate-700 flex flex-col items-center justify-center opacity-70 cursor-not-allowed">
+                     <span className="text-slate-500 font-bold text-sm uppercase">VIP Limit Reached</span>
+                     <span className="text-slate-600 text-[10px]">Reset tomorrow</span>
+                </button>
+            )}
+
+            {/* BUTTON 1 (LOCKED): NORMAL USER - UPSELL */}
+            {!isVip && (
+                <button 
+                    onClick={handleLockedClick}
+                    className="group relative flex-1 overflow-hidden rounded-xl active:scale-95 transition-all border border-yellow-500/30 hover:border-yellow-400/60"
+                >
+                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-yellow-900/20 transition-colors"></div>
+                    <div className="relative h-full flex flex-col items-center justify-center">
+                        <div className="flex items-center gap-1.5 mb-0.5 opacity-50 group-hover:opacity-100 transition-opacity">
+                            <CrownIcon className="w-5 h-5 text-yellow-500" />
+                            <span className="text-xl font-black text-yellow-500/50 group-hover:text-yellow-400 italic tracking-wide">VIP x2</span>
+                        </div>
+                        <div className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-full">
+                            <LockIcon className="w-3 h-3 text-yellow-500" />
+                            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Locked</span>
+                        </div>
+                    </div>
+                </button>
+            )}
+
+            {/* BUTTON 2: NORMAL CLAIM */}
+            <button 
+                onClick={() => handleClaim(false)} 
+                className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-md flex items-center justify-center active:scale-95 transition-all"
+            >
                 <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
             </button>
         </div>
       </div>
+      <style jsx>{`
+        @keyframes shine {
+            0% { left: -100%; opacity: 0; }
+            40% { opacity: 0.5; }
+            100% { left: 200%; opacity: 0; }
+        }
+      `}</style>
     </div>
     );
 };
@@ -492,7 +591,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
-      {/* --- BACKGROUND (Removed heavy noise overlay and blur) --- */}
+      {/* --- BACKGROUND --- */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-0 left-0 w-full h-full bg-slate-950" />
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/10 blur-[80px] rounded-full"></div>
@@ -508,7 +607,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
-        {/* --- JACKPOT UI (Reduced Shadows) --- */}
+        {/* --- JACKPOT UI --- */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
@@ -539,10 +638,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             </div>
         </div>
         
-        {/* --- SPINNER UI (Optimized shadows) --- */}
+        {/* --- SPINNER UI --- */}
         <div className="relative w-full max-w-4xl mb-12">
             <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-lg overflow-hidden">
-                {/* Removed heavy inset shadow div */}
                 <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-[#050505] via-transparent to-[#050505] opacity-80"></div>
                 <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-900 to-transparent z-20"></div>
                 <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-cyan-900 to-transparent z-20"></div>
