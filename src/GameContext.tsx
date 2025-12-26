@@ -1,7 +1,9 @@
+// --- START OF FILE GameContext.tsx ---
+
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore'; 
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
@@ -38,9 +40,10 @@ interface IGameContext {
     loginStreak: number;
     lastCheckIn: Date | null;
     
-    // --- NEW VIP FIELDS ---
+    // --- VIP FIELDS ---
     accountType: string;         // 'Normal' | 'VIP'
     vipExpiresAt: Date | null;   // Thời hạn VIP
+    vipLuckySpinClaims: number;  // Số lượt đã nhận x2 trong ngày (Max 5)
 
     // UI States
     isBackgroundPaused: boolean;
@@ -71,6 +74,7 @@ interface IGameContext {
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
+    handleVipLuckySpinClaim: () => Promise<boolean>; // Hàm xử lý nhận thưởng VIP
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -137,9 +141,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
 
-  // --- NEW STATES FOR VIP ---
+  // --- VIP STATES ---
   const [accountType, setAccountType] = useState<string>('Normal');
   const [vipExpiresAt, setVipExpiresAt] = useState<Date | null>(null);
+  const [vipLuckySpinClaims, setVipLuckySpinClaims] = useState(0);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -195,6 +200,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       // Update VIP data
       setAccountType(gameData.accountType || 'Normal');
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
+      setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
 
     } catch (error) { console.error("Error refreshing user data:", error);
     } finally { setIsLoadingUserData(false); }
@@ -240,6 +246,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 // --- UPDATE REALTIME VIP STATUS ---
                 setAccountType(gameData.accountType ?? 'Normal');
                 setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
+                setVipLuckySpinClaims(gameData.vipLuckySpinClaims ?? 0);
 
             } else {
                 console.warn("User document not found, attempting to create one.");
@@ -272,6 +279,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         // Reset VIP status
         setAccountType('Normal');
         setVipExpiresAt(null);
+        setVipLuckySpinClaims(0);
       }
     });
 
@@ -323,31 +331,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
 
-    // 1. Capture current state for rollback
     const previousCoins = coins;
-
-    // 2. Optimistic Update: Update UI state immediately
     const optimisticCoins = previousCoins + amount;
     setCoins(optimisticCoins);
-    setDisplayedCoins(optimisticCoins); // Force visual update instantly
+    setDisplayedCoins(optimisticCoins); 
 
-    // Set syncing flag (does not block logic, just indicates background activity)
     setIsSyncingData(true);
 
     try {
-      // 3. Make API call
       const serverConfirmedCoins = await updateUserCoins(userId, amount);
-      
-      // 4. Reconcile with server (Source of Truth)
-      // Usually matches optimisticCoins, but good to ensure sync
       setCoins(serverConfirmedCoins);
     } catch (error) {
       console.error("Failed to update coins via context (Rolling back):", error);
-      
-      // 5. Rollback on failure
       setCoins(previousCoins);
       setDisplayedCoins(previousCoins);
-      // Optional: Add a toast notification here for error
     } finally {
       setIsSyncingData(false);
     }
@@ -385,6 +382,32 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
       setJackpotPool(await updateJackpotPool(amount, reset));
+  };
+
+  // --- NEW: Handle VIP Claim Logic ---
+  const handleVipLuckySpinClaim = async (): Promise<boolean> => {
+      const userId = auth.currentUser?.uid;
+      // Chỉ cho phép nếu là VIP và chưa hết hạn
+      if (!userId || accountType !== 'VIP') return false;
+      
+      // Kiểm tra giới hạn (5 lần/ngày)
+      if (vipLuckySpinClaims >= 5) return false;
+
+      // Optimistic Update
+      const oldVal = vipLuckySpinClaims;
+      setVipLuckySpinClaims(oldVal + 1);
+
+      try {
+          const userDocRef = doc(db, 'users', userId);
+          await updateDoc(userDocRef, {
+              vipLuckySpinClaims: oldVal + 1
+          });
+          return true;
+      } catch (error) {
+          console.error("Error updating VIP claim:", error);
+          setVipLuckySpinClaims(oldVal); // Rollback
+          return false;
+      }
   };
   
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
@@ -484,7 +507,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     totalEquipmentStats,
     totalPlayerStats,
     loginStreak, lastCheckIn, 
-    accountType, vipExpiresAt, // <--- EXPORTING NEW VIP STATE
+    
+    // VIP Values
+    accountType, vipExpiresAt, vipLuckySpinClaims,
+
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
@@ -493,6 +519,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     is777GameOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
+    handleVipLuckySpinClaim, // Exported function
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateUserCurrency,
     updateCoins,
