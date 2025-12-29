@@ -34,6 +34,50 @@ const StyledSectionTitle = ({ title }: { title: string }) => (
     </h3>
 );
 
+// --- HELPER COMPONENT: Mastery Score Badge (New Design) ---
+const MasteryScoreBadge = ({ score }: { score: number }) => {
+    // Determine Tier Properties
+    let tierConfig = {
+        label: 'New',
+        bg: 'bg-slate-100',
+        text: 'text-slate-600',
+        dotOn: 'bg-slate-400',
+        dotOff: 'bg-slate-200',
+        border: 'border-slate-200'
+    };
+
+    if (score >= 10) {
+        tierConfig = { label: 'Master', bg: 'bg-purple-50', text: 'text-purple-600', dotOn: 'bg-purple-500', dotOff: 'bg-purple-200', border: 'border-purple-200' };
+    } else if (score >= 8) {
+        tierConfig = { label: 'Expert', bg: 'bg-amber-50', text: 'text-amber-600', dotOn: 'bg-amber-500', dotOff: 'bg-amber-200', border: 'border-amber-200' };
+    } else if (score >= 5) {
+        tierConfig = { label: 'Strong', bg: 'bg-emerald-50', text: 'text-emerald-600', dotOn: 'bg-emerald-500', dotOff: 'bg-emerald-200', border: 'border-emerald-200' };
+    } else if (score >= 3) {
+        tierConfig = { label: 'Learned', bg: 'bg-sky-50', text: 'text-sky-600', dotOn: 'bg-sky-500', dotOff: 'bg-sky-200', border: 'border-sky-200' };
+    }
+
+    // Generate visual "pips" (dots)
+    const maxPips = 5;
+    const activePips = Math.ceil(Math.min(score, 10) / 2); // 10 score = 5 pips
+
+    return (
+        <div className={`inline-flex flex-col items-center justify-center px-3 py-1.5 rounded-xl border ${tierConfig.bg} ${tierConfig.border} min-w-[90px]`}>
+            <div className="flex items-baseline gap-1.5">
+                <span className={`text-lg font-bold font-lilita ${tierConfig.text}`}>{score}</span>
+                <span className={`text-[10px] uppercase font-bold tracking-wider opacity-80 ${tierConfig.text}`}>{tierConfig.label}</span>
+            </div>
+            <div className="flex gap-1 mt-0.5">
+                {[...Array(maxPips)].map((_, i) => (
+                    <div 
+                        key={i} 
+                        className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${i < activePips ? tierConfig.dotOn : tierConfig.dotOff}`}
+                    />
+                ))}
+            </div>
+        </div>
+    );
+};
+
 // --- REUSABLE COMPONENTS ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -325,9 +369,15 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                         <StyledSectionTitle title="Vocabulary Mastery Analysis" />
                                     </div>
                                     {sortedWordMastery.length > 0 ? (<>
-                                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
+                                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-32 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
                                             <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
-                                                <tr key={word} className="bg-white border-b hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td><td className="px-4 py-3 text-center"><div className="inline-flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-12 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td><td className="px-4 py-3 text-right">{lastPracticed.toLocaleDateString('vi-VN')}</td></tr>
+                                                <tr key={word} className="bg-white border-b hover:bg-gray-50">
+                                                    <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap text-center text-base">{word}</td>
+                                                    <td className="px-4 py-3 text-center">
+                                                        <MasteryScoreBadge score={mastery} />
+                                                    </td>
+                                                    <td className="px-4 py-3 text-center text-gray-500">{lastPracticed.toLocaleDateString('vi-VN')}</td>
+                                                </tr>
                                             ))}</tbody></table></div>
                                         {totalPages > 1 && (
                                             <div className="flex items-center justify-between mt-4">
