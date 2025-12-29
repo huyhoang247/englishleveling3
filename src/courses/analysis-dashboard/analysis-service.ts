@@ -1,19 +1,14 @@
-// --- START OF FILE: src/services/analysis-service.ts ---
+// --- START OF FILE: analysis-service.ts ---
 
 import { db } from '../../firebase';
 import { 
     doc, 
-    collection, 
     updateDoc, 
     increment, 
-    arrayUnion,
-    Timestamp
+    arrayUnion
 } from 'firebase/firestore';
 import { fetchOrCreateUser } from '../course-data-service.ts'; 
-// --- START THAY ĐỔI ---
-// Import localDB và các interface cần thiết
-import { localDB, ICompletedWord, ICompletedMultiWord } from '../../local-data/local-vocab-db.ts';
-// --- END THAY ĐỔI ---
+import { localDB } from '../../local-data/local-vocab-db.ts';
 
 // --- TYPE DEFINITIONS ---
 interface WordMastery { word: string; mastery: number; lastPracticed: Date; }
@@ -48,32 +43,25 @@ const formatDateToLocalYYYYMMDD = (date: Date): string => {
 
 /**
  * Lấy và xử lý tất cả dữ liệu cần thiết cho trang Analysis Dashboard.
- * @param userId - ID của người dùng.
- * @param totalWordsAvailable - Tổng số từ vựng có trong hệ thống.
- * @returns {Promise<AnalysisDashboardDataPayload>} Dữ liệu đã được xử lý cho dashboard.
  */
 export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvailable: number): Promise<AnalysisDashboardDataPayload> => {
   if (!userId) throw new Error("User ID is required.");
 
-  // --- START THAY ĐỔI LỚN ---
-  // Thay thế getDocs từ Firestore bằng cách đọc từ Local DB
   const [userData, completedWordsData, completedMultiWordData] = await Promise.all([
     fetchOrCreateUser(userId),
     localDB.getCompletedWords(),
     localDB.getCompletedMultiWords()
   ]);
-  // --- END THAY ĐỔI LỚN ---
 
   const todayString = formatDateToLocalYYYYMMDD(new Date());
 
-  // Xử lý dữ liệu
+  // --- Xử lý dữ liệu thô ---
   const masteryByGame: { [key: string]: number } = { 'Trắc nghiệm': 0, 'Điền từ': 0, 'Nối từ': 0 };
   const wordMasteryMap: { [word: string]: { mastery: number; lastPracticed: Date } } = {};
   const dailyActivityMap: { [date: string]: { new: number; review: number } } = {};
   const allCompletionsForRecent: { word: string; date: Date }[] = [];
 
-  // --- START THAY ĐỔI LỚN ---
-  // Vòng lặp mới, xử lý dữ liệu từ mảng localDB
+  // 1. Duyệt qua từ đơn đã học
   completedWordsData.forEach(item => {
     const lastCompletedAt = item.lastCompletedAt;
     if (!lastCompletedAt) return;
@@ -82,9 +70,8 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
     const dateString = formatDateToLocalYYYYMMDD(lastCompletedAt);
     if (!dailyActivityMap[dateString]) dailyActivityMap[dateString] = { new: 0, review: 0 };
 
-    let totalCompletions = 0, totalCorrectForWord = 0;
+    let totalCorrectForWord = 0;
     if (item.gameModes) {
-      Object.values(item.gameModes).forEach((modeData: any) => { totalCompletions += modeData.correctCount || 0; });
       Object.keys(item.gameModes).forEach(mode => {
         const correctCount = item.gameModes[mode].correctCount || 0;
         totalCorrectForWord += correctCount;
@@ -94,8 +81,7 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
       });
     }
     
-    // Logic này có thể cần điều chỉnh: totalCompletions sẽ luôn tăng.
-    // Để đơn giản, ta dựa vào việc từ này đã tồn tại trong map hay chưa
+    // Logic xác định học mới hay ôn tập
     const isNewWordForDay = !wordMasteryMap[item.word]; 
     if (isNewWordForDay) {
         dailyActivityMap[dateString].new++;
@@ -106,21 +92,68 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
     if (totalCorrectForWord > 0) wordMasteryMap[item.word] = { mastery: totalCorrectForWord, lastPracticed: lastCompletedAt };
   });
 
+  // 2. Duyệt qua cụm từ đã học
   completedMultiWordData.forEach(item => {
     const lastCompletedAt = item.lastCompletedAt;
     if (!lastCompletedAt) return;
     allCompletionsForRecent.push({ word: item.phrase, date: lastCompletedAt });
     if (item.completedIn) Object.keys(item.completedIn).forEach(mode => { if (mode.startsWith('fill-word-')) masteryByGame['Điền từ']++; });
   });
-  // --- END THAY ĐỔI LỚN ---
 
-  const learningActivityData = Object.entries(dailyActivityMap).map(([date, counts]) => ({ date, ...counts })).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+  // --- [LOGIC MỚI] TẠO DỮ LIỆU CHO CHART (Luôn fill đủ 30 ngày) ---
   
-  let cumulative = 0;
-  const vocabularyGrowthData = learningActivityData.map(item => {
-    cumulative += item.new;
-    return { date: new Date(item.date).toLocaleDateString('vi-VN'), cumulative };
+  // 1. Tạo mảng chứa chuỗi ngày của 30 ngày gần nhất (tính cả hôm nay)
+  const last30Days: string[] = [];
+  const todayDate = new Date();
+  todayDate.setHours(0,0,0,0); // Reset giờ để tính toán chính xác
+
+  for (let i = 29; i >= 0; i--) {
+      const d = new Date(todayDate);
+      d.setDate(todayDate.getDate() - i);
+      last30Days.push(formatDateToLocalYYYYMMDD(d));
+  }
+
+  const startDateString = last30Days[0];
+
+  // 2. Tính tổng số từ đã học TRƯỚC khoảng thời gian 30 ngày này 
+  // (để biểu đồ Growth không bị bắt đầu từ 0 nếu người dùng đã học từ lâu)
+  let cumulativeCounter = 0;
+  
+  // Duyệt qua map activity để cộng dồn quá khứ
+  Object.entries(dailyActivityMap).forEach(([dateStr, data]) => {
+      // So sánh chuỗi ngày dạng YYYY-MM-DD hoạt động tốt
+      if (dateStr < startDateString) {
+          cumulativeCounter += data.new;
+      }
   });
+
+  // 3. Map dữ liệu vào 30 ngày đã tạo
+  const filledLearningActivity = [];
+  const filledVocabularyGrowth = [];
+
+  last30Days.forEach(dateStr => {
+      // Lấy data từ map, nếu không có thì trả về 0
+      const activity = dailyActivityMap[dateStr] || { new: 0, review: 0 };
+      
+      // Cộng dồn cho biểu đồ tăng trưởng
+      cumulativeCounter += activity.new;
+
+      // Format ngày để hiển thị đẹp trên Chart (VD: 20/10)
+      const displayDate = new Date(dateStr).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+
+      filledLearningActivity.push({
+          date: displayDate, 
+          new: activity.new,
+          review: activity.review
+      });
+
+      filledVocabularyGrowth.push({
+          date: displayDate,
+          cumulative: cumulativeCounter
+      });
+  });
+
+  // --- Kết thúc Logic Mới ---
 
   const masteryData = Object.entries(masteryByGame).map(([game, completed]) => ({ game, completed })).filter(item => item.completed > 0);
   const recentCompletions = [...allCompletionsForRecent].sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 5).map(c => ({ word: c.word, date: c.date.toLocaleString('vi-VN') }));
@@ -134,13 +167,12 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
       claimedVocabMilestones: userData.claimedVocabMilestones || [],
     },
     analysisData: {
-      // --- START THAY ĐỔI ---
-      totalWordsLearned: completedWordsData.length, // Thay đổi từ snapshot.size
-      // --- END THAY ĐỔI ---
+      totalWordsLearned: completedWordsData.length,
       totalWordsAvailable,
-      learningActivity: learningActivityData.slice(-30).map(d => ({...d, date: new Date(d.date).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })})),
+      // Sử dụng mảng đã fill đủ 30 ngày thay vì slice dữ liệu thô
+      learningActivity: filledLearningActivity,
       masteryByGame: masteryData,
-      vocabularyGrowth: vocabularyGrowthData,
+      vocabularyGrowth: filledVocabularyGrowth,
       recentCompletions,
       wordMastery: wordMasteryData,
     },
@@ -152,7 +184,6 @@ export const fetchAnalysisDashboardData = async (userId: string, totalWordsAvail
  * Ghi nhận việc người dùng nhận thưởng cột mốc hàng ngày.
  */
 export const claimDailyMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
-  // (Hàm này giữ nguyên, không thay đổi)
   if (!userId) return;
   const userDocRef = doc(db, 'users', userId);
   const todayString = formatDateToLocalYYYYMMDD(new Date());
@@ -173,7 +204,6 @@ export const claimDailyMilestoneReward = async (userId: string, milestone: numbe
  * Ghi nhận việc người dùng nhận thưởng cột mốc từ vựng trọn đời.
  */
 export const claimVocabMilestoneReward = async (userId: string, milestone: number, rewardAmount: number): Promise<void> => {
-  // (Hàm này giữ nguyên, không thay đổi)
   if (!userId) return;
   const userDocRef = doc(db, 'users', userId);
 
