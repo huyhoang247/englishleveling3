@@ -365,7 +365,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                                 <td className="px-4 py-3 text-center">
                                                                     <div className="flex flex-col items-center gap-1.5">
                                                                         <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${theme.badge}`}>
-                                                                            Lvl {mastery}
+                                                                            Lv.{mastery}
                                                                         </span>
                                                                         <div className="flex gap-1">
                                                                             {[...Array(totalDots)].map((_, i) => (
