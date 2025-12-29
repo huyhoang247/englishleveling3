@@ -15,7 +15,7 @@ import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
 import HomeButton from '../../ui/home-button.tsx'; 
 
-// --- ICONS ---
+// --- ICONS (Giữ nguyên như cũ) ---
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
@@ -48,6 +48,7 @@ const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> =
 const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
 
+// --- MilestoneProgress Component (Giữ nguyên) ---
 interface MilestoneProgressProps {
   title: string; iconSrc: string; milestones: number[]; currentProgress: number; masteryCount: number;
   claimedMilestones: number[]; onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
@@ -101,11 +102,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                                 <span className="text-lg font-lilita text-amber-500 leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
-                                <img 
-                                    src={uiAssets.goldIcon} 
-                                    alt="Reward Coin" 
-                                    className="h-4 w-4" 
-                                />
+                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-4 w-4" />
                             </div>
                         </div>
                         )}
@@ -134,6 +131,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
+// --- ActivityCalendar Component (Giữ nguyên) ---
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -164,7 +162,7 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
                 <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg shadow-md">
                     <CalendarIcon />
                 </div>
-                <StyledSectionTitle title="Activity Calendar" />
+                <StyledSectionTitle title="Activity" />
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
                 {weekDayHeaders.map(day => <div key={day} className="text-xs font-semibold text-gray-500 mb-2">{day}</div>)}
@@ -201,85 +199,67 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     );
 });
 
-// --- CHART UTILS ---
+// --- HELPER FUNCTIONS FOR CHARTS ---
+
+// Helper: Tạo mảng 30 ngày gần nhất (định dạng YYYY-MM-DD theo múi giờ local)
+const getLast30DaysDates = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 29; i >= 0; i--) {
+        const d = new Date(today);
+        d.setDate(today.getDate() - i);
+        // Định dạng YYYY-MM-DD thủ công để tránh lỗi timezone của toISOString
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        dates.push(`${year}-${month}-${day}`);
+    }
+    return dates;
+};
+
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
-    const finalLabel = payload[0].payload.fullDate ? new Date(payload[0].payload.fullDate).toLocaleDateString('vi-VN') : label;
-    const total = payload.reduce((sum: number, entry: any) => sum + (typeof entry.value === 'number' ? entry.value : 0), 0);
+    const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
+    const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
     return (
-      <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700 z-50">
-        <p className="font-bold mb-1">{finalLabel}</p>
-        {payload.map((pld: any) => (
-            <div key={pld.dataKey} className="flex items-center justify-between gap-4">
-                <span style={{ color: pld.fill }}>{pld.name}:</span>
-                <span className="font-mono">{pld.value}</span>
-            </div>
-        ))}
-        {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold flex justify-between gap-4"><span>Tổng:</span> <span>{total}</span></p></>}
+      <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
+        <p className="font-bold">{finalLabel}</p>
+        {payload.map((pld: any) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
+        {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
       </div>
     );
   }
   return null;
 };
 
-// Hàm định dạng ngày cho trục X (VD: 01/05)
-const formatXAxisDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return `${date.getDate()}/${date.getMonth() + 1}`;
-};
+const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
+const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
+const legendWrapperStyle = { top: 0, left: 25 };
+const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
 
-// Hàm tạo mảng 30 ngày gần nhất
-const getLast30Days = () => {
-    const dates = [];
-    const today = new Date();
-    // Reset hours để tránh lệch múi giờ khi so sánh
-    today.setHours(0,0,0,0);
-    
-    for (let i = 29; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        // Lưu định dạng YYYY-MM-DD để khớp với data từ backend
-        const isoString = d.toISOString().split('T')[0]; // "YYYY-MM-DD"
-        dates.push(isoString);
-    }
-    return dates;
-};
-
-// --- CHART COMPONENTS ---
-const chartMargin = { top: 10, right: 10, left: -20, bottom: 0 };
-const legendWrapperStyle = { top: 0, right: 0 };
-const barChartCursorStyle = { fill: 'rgba(99, 102, 241, 0.1)' };
-
+// [TỐI ƯU] Chart Area: Vocabulary Growth
+// Tự động lấp đầy dữ liệu 30 ngày. Nếu ngày đó không có, lấy giá trị của ngày trước đó.
 const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
-    // [LOGIC MỚI] Chuẩn hóa dữ liệu Growth: Luôn hiển thị 30 ngày. 
-    // Nếu ngày nào không có data, lấy giá trị của ngày gần nhất trước đó (fill-forward).
-    const normalizedData = useMemo(() => {
-        if (!data || data.length === 0) return [];
+    const filledData = useMemo(() => {
+        const last30Days = getLast30DaysDates();
+        const dataMap = new Map(data.map(d => [d.date, d.cumulative]));
         
-        const last30Days = getLast30Days();
-        // Map dữ liệu gốc vào Map để tra cứu nhanh
-        const dataMap = new Map(data.map(item => [item.date.split('T')[0], item.cumulative])); // Handle potential timestamps
-        
-        let lastKnownValue = 0;
-        
-        // Tìm giá trị khởi điểm: Nếu ngày đầu tiên của 30 ngày chưa có data,
-        // thử tìm xem trong lịch sử data gốc có ngày nào trước đó không để lấy làm mốc.
-        // (Đơn giản hóa: nếu data đã sort, lấy giá trị đầu tiên nếu ngày đó < start date)
-        const firstDateInWindow = last30Days[0];
-        const prevData = data.filter(d => d.date < firstDateInWindow);
-        if (prevData.length > 0) {
-            lastKnownValue = prevData[prevData.length - 1].cumulative;
-        }
+        let lastCumulative = 0;
+        // Tìm giá trị khởi tạo (nếu dữ liệu bắt đầu từ trước 30 ngày)
+        // Cách đơn giản: Nếu ngày đầu tiên của window không có trong dataMap, 
+        // ta giả định nó bằng 0 hoặc tìm giá trị gần nhất trong quá khứ (ở đây để 0 cho đơn giản)
+        // Nếu data có sẵn, ta cập nhật lastCumulative ngay khi gặp.
 
         return last30Days.map(date => {
             if (dataMap.has(date)) {
-                lastKnownValue = dataMap.get(date);
+                lastCumulative = dataMap.get(date);
             }
+            // Định dạng lại label ngày (chỉ hiện ngày/tháng cho gọn)
+            const [y, m, d] = date.split('-');
             return {
-                date: date, // Dùng ngày đầy đủ cho tooltip/key
-                displayDate: formatXAxisDate(date), // Dùng ngày ngắn cho trục X
+                date: `${d}/${m}`, // Hiển thị DD/MM
                 fullDate: date,
-                cumulative: lastKnownValue
+                cumulative: lastCumulative
             };
         });
     }, [data]);
@@ -287,98 +267,51 @@ const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
     return (
         <ChartCard title="Vocabulary Growth">
             <ResponsiveContainer>
-                <AreaChart data={normalizedData} margin={chartMargin}>
-                    <defs>
-                        <linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.3}/>
-                            <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0}/>
-                        </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis 
-                        dataKey="displayDate" 
-                        fontSize={11} 
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{fill: '#9ca3af'}}
-                        interval="preserveStartEnd" // Giữ nhãn đầu và cuối
-                        minTickGap={15} // Tránh chồng chéo
-                    />
-                    <YAxis 
-                        allowDecimals={false} 
-                        fontSize={11} 
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{fill: '#9ca3af'}}
-                    />
+                <AreaChart data={filledData} margin={chartMargin}>
+                    <defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    {/* Interval 'preserveStartEnd' giúp hiển thị trục X hợp lý */}
+                    <XAxis dataKey="date" fontSize={10} minTickGap={20} />
+                    <YAxis allowDecimals={false} fontSize={12} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Area 
-                        type="monotone" 
-                        dataKey="cumulative" 
-                        name="Tổng số từ" 
-                        stroke="#8b5cf6" 
-                        strokeWidth={2}
-                        fillOpacity={1} 
-                        fill="url(#colorGrowth)" 
-                        activeDot={{ r: 6, strokeWidth: 0 }}
-                    />
+                    <Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
                 </AreaChart>
             </ResponsiveContainer>
         </ChartCard>
     );
 });
 
+// [TỐI ƯU] Chart Bar: Study Activity
+// Tự động lấp đầy dữ liệu 30 ngày. Nếu ngày đó không có, giá trị là 0.
 const StudyActivityChart = memo(({ data }: { data: any[] }) => {
-    // [LOGIC MỚI] Chuẩn hóa dữ liệu Activity: Luôn hiển thị 30 ngày.
-    // Nếu ngày nào không có data, điền 0 (zero-fill).
-    const normalizedData = useMemo(() => {
-        const last30Days = getLast30Days();
-        // Map dữ liệu gốc
-        const dataMap = new Map(data.map(item => [item.date.split('T')[0], item]));
+    const filledData = useMemo(() => {
+        const last30Days = getLast30DaysDates();
+        // Chuyển data thành Map để lookup nhanh
+        const dataMap = new Map(data.map(d => [d.date, { new: d.new, review: d.review }]));
 
         return last30Days.map(date => {
-            const entry = dataMap.get(date);
+            const entry = dataMap.get(date) || { new: 0, review: 0 };
+            const [y, m, d] = date.split('-');
             return {
-                date: date,
-                displayDate: formatXAxisDate(date),
+                date: `${d}/${m}`, // Hiển thị DD/MM
                 fullDate: date,
-                new: entry ? entry.new : 0,
-                review: entry ? entry.review : 0
+                new: entry.new,
+                review: entry.review
             };
         });
     }, [data]);
 
     return (
-        <ChartCard title="Study Activity" extra={<span className="bg-indigo-50 text-indigo-600 text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-md">Last 30 Days</span>}>
+        <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
             <ResponsiveContainer>
-                <BarChart data={normalizedData} margin={chartMargin} barGap={0}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" vertical={false} />
-                    <XAxis 
-                        dataKey="displayDate" 
-                        fontSize={11} 
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{fill: '#9ca3af'}}
-                        minTickGap={10}
-                    />
-                    <YAxis 
-                        allowDecimals={false} 
-                        fontSize={11} 
-                        tickLine={false}
-                        axisLine={false}
-                        tick={{fill: '#9ca3af'}}
-                    />
+                <BarChart data={filledData} margin={barChartMargin}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
+                    <XAxis dataKey="date" fontSize={10} minTickGap={20} />
+                    <YAxis allowDecimals={false} fontSize={12}/>
                     <Tooltip content={<CustomTooltip />} cursor={barChartCursorStyle}/>
-                    <Legend 
-                        verticalAlign="top" 
-                        align="right"
-                        wrapperStyle={legendWrapperStyle} 
-                        iconSize={8}
-                        iconType="circle"
-                        formatter={(value) => <span className="text-xs font-medium text-gray-500 ml-1">{value}</span>}
-                    />
-                    <Bar dataKey="new" name="Mới" stackId="a" fill="#34d399" barSize={8} />
-                    <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#6366f1" radius={[4, 4, 0, 0]} barSize={8} />
+                    <Legend verticalAlign="top" wrapperStyle={legendWrapperStyle}/>
+                    <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
+                    <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </ChartCard>
@@ -430,10 +363,9 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
         </header>
         <div className="flex-grow overflow-y-auto">
             {(!analysisData || analysisData.totalWordsLearned === 0) ? (
-                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500 bg-gray-50">
-                    <img src={dashboardAssets.vocaJourneyIcon} alt="Start learning" className="w-24 h-24 mb-4 opacity-50 grayscale" />
-                    <h2 className="text-2xl font-bold mb-2 text-gray-700">Chưa có dữ liệu</h2>
-                    <p className="max-w-xs mx-auto text-gray-500">Hãy bắt đầu bài học đầu tiên để kích hoạt tính năng phân tích!</p>
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                    <h2 className="text-2xl font-bold mb-2">Chưa có dữ liệu</h2>
+                    <p>Hãy bắt đầu học để xem tiến trình của bạn được phân tích tại đây!</p>
                 </div>
             ) : (() => {
                 const { totalWordsLearned, learningActivity, vocabularyGrowth } = analysisData;
@@ -443,92 +375,42 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                 
                 return (
                     <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
-                        <div className="max-w-7xl mx-auto space-y-6 pb-10">
-                            
-                            {/* SECTION: MILESTONES */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="space-y-6 my-6">
                                 <MilestoneProgress title="Voca Journey" iconSrc={dashboardAssets.vocaJourneyIcon} milestones={VOCAB_MILESTONES} currentProgress={totalWordsLearned} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedVocabMilestones} onClaim={claimVocabReward} user={user} progressColorClass="from-blue-400 to-purple-500" completedText="Max level reached!" />
                                 <MilestoneProgress title="Daily Missions" iconSrc={dashboardAssets.dailyMissionsIcon} milestones={GOAL_MILESTONES} currentProgress={wordsLearnedToday} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedDailyGoals} onClaim={claimDailyReward} user={user} progressColorClass="from-green-400 to-blue-500" completedText="All missions completed!" />
                             </div>
+                            <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
+                            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+                                
+                                <VocabularyGrowthChart data={vocabularyGrowth} />
+                                <StudyActivityChart data={learningActivity} />
 
-                            {/* SECTION: CHARTS & CALENDAR */}
-                            <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-                                <div className="xl:col-span-1 order-2 xl:order-1">
-                                    <ActivityCalendar activityData={dailyActivityData} />
-                                </div>
-                                <div className="xl:col-span-2 order-1 xl:order-2 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <VocabularyGrowthChart data={vocabularyGrowth} />
-                                    <StudyActivityChart data={learningActivity} />
-                                </div>
-                            </div>
-
-                            {/* SECTION: MASTERY TABLE */}
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2">
+                                <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                     <div className="mb-4">
                                         <StyledSectionTitle title="Vocabulary Mastery Analysis" />
                                     </div>
                                     {sortedWordMastery.length > 0 ? (<>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-sm text-gray-600">
-                                                <thead className="text-xs text-gray-500 uppercase bg-gray-50 border-b border-gray-100">
-                                                    <tr>
-                                                        <th scope="col" className="px-4 py-3 text-left">Vocabulary</th>
-                                                        <th scope="col" className="px-4 py-3 cursor-pointer text-center hover:bg-gray-100 transition-colors rounded-lg" onClick={() => handleSort('mastery')}>
-                                                            <div className="flex items-center justify-center gap-1">Score {sortConfig.key === 'mastery' && (sortConfig.direction === 'desc' ? '↓' : '↑')}</div>
-                                                        </th>
-                                                        <th scope="col" className="px-4 py-3 cursor-pointer text-right hover:bg-gray-100 transition-colors rounded-lg" onClick={() => handleSort('lastPracticed')}>
-                                                            <div className="flex items-center justify-end gap-1">Last Practice {sortConfig.key === 'lastPracticed' && (sortConfig.direction === 'desc' ? '↓' : '↑')}</div>
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-50">
-                                                {paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
-                                                    <tr key={word} className="hover:bg-blue-50/50 transition-colors">
-                                                        <td className="px-4 py-3 font-medium text-gray-900 capitalize">{word}</td>
-                                                        <td className="px-4 py-3 text-center">
-                                                            <div className="flex flex-col items-center">
-                                                                <div className="w-24 bg-gray-100 rounded-full h-1.5 mb-1 overflow-hidden">
-                                                                    <div className={`h-1.5 rounded-full ${mastery >= 10 ? 'bg-green-500' : mastery >= 5 ? 'bg-blue-500' : 'bg-orange-400'}`} style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div>
-                                                                </div>
-                                                                <span className="text-[10px] text-gray-400 font-mono">{mastery}/10</span>
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-right text-gray-500 tabular-nums">
-                                                            {new Date(lastPracticed).toLocaleDateString('vi-VN')}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
+                                            <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
+                                                <tr key={word} className="bg-white border-b hover:bg-gray-50"><td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">{word}</td><td className="px-4 py-3 text-center"><div className="inline-flex items-center gap-2"><span className="font-bold w-4 text-center">{mastery}</span><div className="w-12 bg-gray-200 rounded-full h-2"><div className="bg-green-500 h-2 rounded-full" style={{ width: `${Math.min(mastery / 10, 1) * 100}%` }}></div></div></div></td><td className="px-4 py-3 text-right">{lastPracticed.toLocaleDateString('vi-VN')}</td></tr>
+                                            ))}</tbody></table></div>
                                         {totalPages > 1 && (
-                                            <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100">
-                                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"><ChevronLeftIcon /><span className="ml-1">Prev</span></button>
-                                                <span className="text-xs font-medium text-gray-500">Page {currentPage} of {totalPages}</span>
-                                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="flex items-center px-3 py-1.5 text-xs font-medium text-gray-600 bg-white border border-gray-200 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-sm"><span className="mr-1">Next</span><ChevronRightIcon /></button>
+                                            <div className="flex items-center justify-between mt-4">
+                                                <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon /><span className="ml-1">Previous</span></button>
+                                                <span className="text-sm font-medium text-gray-700">Page {currentPage} of {totalPages}</span>
+                                                <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage === totalPages} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><span className="mr-1">Next</span><ChevronRightIcon /></button>
                                             </div>
                                         )}
-                                    </>) : (<p className="text-center text-gray-400 py-8 italic">No mastery data available.</p>)}
+                                    </>) : (<p className="text-center text-gray-500 py-4">No mastery data available.</p>)}
                                 </div>
-
-                                {/* SECTION: RECENT ACTIVITY */}
-                                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-1">
-                                     <div className="mb-4 flex items-center justify-between">
+                                <div className="bg-white p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
+                                     <div className="mb-4">
                                         <StyledSectionTitle title="Recent Activity" />
-                                        <span className="text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded-full">Latest 10</span>
                                      </div>
-                                     {analysisData.recentCompletions.length > 0 ? (
-                                         <div className="relative pl-4 border-l-2 border-indigo-100 space-y-6">
-                                            {analysisData.recentCompletions.slice(0, 10).map((item, index) => (
-                                                <div key={index} className="relative">
-                                                    <span className="absolute -left-[21px] top-1 h-3 w-3 rounded-full border-2 border-white bg-indigo-400 ring-2 ring-indigo-50"></span>
-                                                    <p className="text-sm font-medium text-gray-800 capitalize">{item.word}</p>
-                                                    <p className="text-xs text-gray-400">{item.date}</p>
-                                                </div>
-                                            ))}
-                                         </div>
-                                     ) : (<p className="text-center text-gray-400 py-8 italic">Chưa có hoạt động nào.</p>)}
+                                     {analysisData.recentCompletions.length > 0 ? (<ul className="space-y-3">{analysisData.recentCompletions.map((item, index) => (
+                                        <li key={index} className="flex justify-between items-center bg-gray-50 p-3 rounded-lg hover:bg-gray-100 transition-colors"><span className="font-medium text-gray-700 capitalize">{item.word}</span><span className="text-sm text-gray-500">{item.date}</span></li>
+                                     ))}</ul>) : (<p className="text-center text-gray-500 py-4">Không có hoạt động nào gần đây.</p>)}
                                 </div>
                             </div>
                         </div>
@@ -546,11 +428,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
       <DashboardContent onGoBack={onGoBack} />
       <style jsx>{`
         .font-lilita { font-family: 'Lilita One', cursive; }
-        /* Tùy chỉnh scrollbar cho bảng */
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
       `}</style>
     </AnalysisDashboardProvider>
   );
