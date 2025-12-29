@@ -15,7 +15,7 @@ import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
 import HomeButton from '../../ui/home-button.tsx'; 
 
-// --- ICONS (Giữ nguyên như cũ) ---
+// --- ICONS (Grouped for better organization) ---
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
@@ -48,7 +48,6 @@ const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> =
 const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
 
-// --- MilestoneProgress Component (Giữ nguyên) ---
 interface MilestoneProgressProps {
   title: string; iconSrc: string; milestones: number[]; currentProgress: number; masteryCount: number;
   claimedMilestones: number[]; onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
@@ -87,6 +86,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         } finally { setIsClaiming(false); }
     }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, title]);
 
+    // Tính toán số vàng hiển thị
     const rewardValue = currentGoal * Math.max(1, masteryCount);
 
     return (
@@ -98,11 +98,18 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                         <h3 className="text-base font-lilita uppercase tracking-wider text-gray-900 opacity-30">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
+                            {/* CẬP NHẬT: gap-1 */}
                             <div className="flex items-center gap-1">
+                                {/* CẬP NHẬT: pb-0.5 cho chữ để đẩy chữ lên cao -> icon sẽ trông thấp xuống vừa phải */}
                                 <span className="text-lg font-lilita text-amber-500 leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
-                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-4 w-4" />
+                                {/* CẬP NHẬT: Xóa mt-0.5 ở icon */}
+                                <img 
+                                    src={uiAssets.goldIcon} 
+                                    alt="Reward Coin" 
+                                    className="h-4 w-4" 
+                                />
                             </div>
                         </div>
                         )}
@@ -131,7 +138,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     );
 });
 
-// --- ActivityCalendar Component (Giữ nguyên) ---
 const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     const formatDateForCalendar = (date: Date): string => {
         const year = date.getFullYear();
@@ -199,32 +205,14 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     );
 });
 
-// --- HELPER FUNCTIONS FOR CHARTS ---
-
-// Helper: Tạo mảng 30 ngày gần nhất (định dạng YYYY-MM-DD theo múi giờ local)
-const getLast30DaysDates = () => {
-    const dates = [];
-    const today = new Date();
-    for (let i = 29; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(today.getDate() - i);
-        // Định dạng YYYY-MM-DD thủ công để tránh lỗi timezone của toISOString
-        const year = d.getFullYear();
-        const month = String(d.getMonth() + 1).padStart(2, '0');
-        const day = String(d.getDate()).padStart(2, '0');
-        dates.push(`${year}-${month}-${day}`);
-    }
-    return dates;
-};
-
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
-    const total = payload.reduce((sum: number, entry: any) => sum + entry.value, 0);
+    const total = payload.reduce((sum, entry) => sum + entry.value, 0);
     return (
       <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
         <p className="font-bold">{finalLabel}</p>
-        {payload.map((pld: any) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
+        {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
         {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
       </div>
     );
@@ -232,86 +220,32 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
+// [TỐI ƯU] Định nghĩa các hằng số cho props của biểu đồ để chúng không bị tạo lại trên mỗi lần render.
 const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
 const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
 const legendWrapperStyle = { top: 0, left: 25 };
 const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
 
-// [TỐI ƯU] Chart Area: Vocabulary Growth
-// Tự động lấp đầy dữ liệu 30 ngày. Nếu ngày đó không có, lấy giá trị của ngày trước đó.
+// [TỐI ƯU] Tách biểu đồ thành các component riêng và memoize để ngăn re-render không cần thiết.
 const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
-    const filledData = useMemo(() => {
-        const last30Days = getLast30DaysDates();
-        const dataMap = new Map(data.map(d => [d.date, d.cumulative]));
-        
-        let lastCumulative = 0;
-        // Tìm giá trị khởi tạo (nếu dữ liệu bắt đầu từ trước 30 ngày)
-        // Cách đơn giản: Nếu ngày đầu tiên của window không có trong dataMap, 
-        // ta giả định nó bằng 0 hoặc tìm giá trị gần nhất trong quá khứ (ở đây để 0 cho đơn giản)
-        // Nếu data có sẵn, ta cập nhật lastCumulative ngay khi gặp.
-
-        return last30Days.map(date => {
-            if (dataMap.has(date)) {
-                lastCumulative = dataMap.get(date);
-            }
-            // Định dạng lại label ngày (chỉ hiện ngày/tháng cho gọn)
-            const [y, m, d] = date.split('-');
-            return {
-                date: `${d}/${m}`, // Hiển thị DD/MM
-                fullDate: date,
-                cumulative: lastCumulative
-            };
-        });
-    }, [data]);
-
     return (
         <ChartCard title="Vocabulary Growth">
             <ResponsiveContainer>
-                <AreaChart data={filledData} margin={chartMargin}>
+                <AreaChart data={data} margin={chartMargin}>
                     <defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                    {/* Interval 'preserveStartEnd' giúp hiển thị trục X hợp lý */}
-                    <XAxis dataKey="date" fontSize={10} minTickGap={20} />
-                    <YAxis allowDecimals={false} fontSize={12} />
-                    <Tooltip content={<CustomTooltip />} />
-                    <Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
                 </AreaChart>
             </ResponsiveContainer>
         </ChartCard>
     );
 });
 
-// [TỐI ƯU] Chart Bar: Study Activity
-// Tự động lấp đầy dữ liệu 30 ngày. Nếu ngày đó không có, giá trị là 0.
 const StudyActivityChart = memo(({ data }: { data: any[] }) => {
-    const filledData = useMemo(() => {
-        const last30Days = getLast30DaysDates();
-        // Chuyển data thành Map để lookup nhanh
-        const dataMap = new Map(data.map(d => [d.date, { new: d.new, review: d.review }]));
-
-        return last30Days.map(date => {
-            const entry = dataMap.get(date) || { new: 0, review: 0 };
-            const [y, m, d] = date.split('-');
-            return {
-                date: `${d}/${m}`, // Hiển thị DD/MM
-                fullDate: date,
-                new: entry.new,
-                review: entry.review
-            };
-        });
-    }, [data]);
-
     return (
         <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
             <ResponsiveContainer>
-                <BarChart data={filledData} margin={barChartMargin}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" />
-                    <XAxis dataKey="date" fontSize={10} minTickGap={20} />
-                    <YAxis allowDecimals={false} fontSize={12}/>
-                    <Tooltip content={<CustomTooltip />} cursor={barChartCursorStyle}/>
-                    <Legend verticalAlign="top" wrapperStyle={legendWrapperStyle}/>
-                    <Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" />
-                    <Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                <BarChart data={data} margin={barChartMargin}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={barChartCursorStyle}/><Legend verticalAlign="top" wrapperStyle={legendWrapperStyle}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
                 </BarChart>
             </ResponsiveContainer>
         </ChartCard>
