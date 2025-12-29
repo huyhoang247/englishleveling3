@@ -1,3 +1,4 @@
+--- START OF FILE background-game.tsx ---
 
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
