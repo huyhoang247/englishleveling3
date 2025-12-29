@@ -34,50 +34,6 @@ const StyledSectionTitle = ({ title }: { title: string }) => (
     </h3>
 );
 
-// --- HELPER COMPONENT: Mastery Score Badge (New Design) ---
-const MasteryScoreBadge = ({ score }: { score: number }) => {
-    // Determine Tier Properties
-    let tierConfig = {
-        label: 'New',
-        bg: 'bg-slate-100',
-        text: 'text-slate-600',
-        dotOn: 'bg-slate-400',
-        dotOff: 'bg-slate-200',
-        border: 'border-slate-200'
-    };
-
-    if (score >= 10) {
-        tierConfig = { label: 'Master', bg: 'bg-purple-50', text: 'text-purple-600', dotOn: 'bg-purple-500', dotOff: 'bg-purple-200', border: 'border-purple-200' };
-    } else if (score >= 8) {
-        tierConfig = { label: 'Expert', bg: 'bg-amber-50', text: 'text-amber-600', dotOn: 'bg-amber-500', dotOff: 'bg-amber-200', border: 'border-amber-200' };
-    } else if (score >= 5) {
-        tierConfig = { label: 'Strong', bg: 'bg-emerald-50', text: 'text-emerald-600', dotOn: 'bg-emerald-500', dotOff: 'bg-emerald-200', border: 'border-emerald-200' };
-    } else if (score >= 3) {
-        tierConfig = { label: 'Learned', bg: 'bg-sky-50', text: 'text-sky-600', dotOn: 'bg-sky-500', dotOff: 'bg-sky-200', border: 'border-sky-200' };
-    }
-
-    // Generate visual "pips" (dots)
-    const maxPips = 5;
-    const activePips = Math.ceil(Math.min(score, 10) / 2); // 10 score = 5 pips
-
-    return (
-        <div className={`inline-flex flex-col items-center justify-center px-3 py-1.5 rounded-xl border ${tierConfig.bg} ${tierConfig.border} min-w-[90px]`}>
-            <div className="flex items-baseline gap-1.5">
-                <span className={`text-lg font-bold font-lilita ${tierConfig.text}`}>{score}</span>
-                <span className={`text-[10px] uppercase font-bold tracking-wider opacity-80 ${tierConfig.text}`}>{tierConfig.label}</span>
-            </div>
-            <div className="flex gap-1 mt-0.5">
-                {[...Array(maxPips)].map((_, i) => (
-                    <div 
-                        key={i} 
-                        className={`h-1.5 w-1.5 rounded-full transition-colors duration-300 ${i < activePips ? tierConfig.dotOn : tierConfig.dotOff}`}
-                    />
-                ))}
-            </div>
-        </div>
-    );
-};
-
 // --- REUSABLE COMPONENTS ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
     <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
@@ -142,13 +98,10 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                         <h3 className="text-base font-lilita uppercase tracking-wider text-gray-900 opacity-30">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-600 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-500 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
-                            {/* CẬP NHẬT: gap-1 */}
                             <div className="flex items-center gap-1">
-                                {/* CẬP NHẬT: pb-0.5 cho chữ để đẩy chữ lên cao -> icon sẽ trông thấp xuống vừa phải */}
                                 <span className="text-lg font-lilita text-amber-500 leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
-                                {/* CẬP NHẬT: Xóa mt-0.5 ở icon */}
                                 <img 
                                     src={uiAssets.goldIcon} 
                                     alt="Reward Coin" 
@@ -264,13 +217,11 @@ const CustomTooltip = ({ active, payload, label }: any) => {
   return null;
 };
 
-// [TỐI ƯU] Định nghĩa các hằng số cho props của biểu đồ để chúng không bị tạo lại trên mỗi lần render.
 const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
 const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
 const legendWrapperStyle = { top: 0, left: 25 };
 const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
 
-// [TỐI ƯU] Tách biểu đồ thành các component riêng và memoize để ngăn re-render không cần thiết.
 const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
     return (
         <ChartCard title="Vocabulary Growth">
@@ -369,16 +320,72 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                         <StyledSectionTitle title="Vocabulary Mastery Analysis" />
                                     </div>
                                     {sortedWordMastery.length > 0 ? (<>
-                                        <div className="overflow-x-auto"><table className="w-full text-sm text-gray-600 table-fixed"><thead className="text-xs text-gray-700 uppercase bg-gray-50"><tr><th scope="col" className="px-4 py-3 text-center">Vocabulary</th><th scope="col" className="px-4 py-3 cursor-pointer w-32 text-center" onClick={() => handleSort('mastery')}>Score</th><th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th></tr></thead>
-                                            <tbody>{paginatedMasteryData.map(({ word, mastery, lastPracticed }) => (
-                                                <tr key={word} className="bg-white border-b hover:bg-gray-50">
-                                                    <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap text-center text-base">{word}</td>
-                                                    <td className="px-4 py-3 text-center">
-                                                        <MasteryScoreBadge score={mastery} />
-                                                    </td>
-                                                    <td className="px-4 py-3 text-center text-gray-500">{lastPracticed.toLocaleDateString('vi-VN')}</td>
-                                                </tr>
-                                            ))}</tbody></table></div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-sm text-gray-600 table-fixed">
+                                                <thead className="text-xs text-gray-700 uppercase bg-gray-50">
+                                                    <tr>
+                                                        <th scope="col" className="px-4 py-3 text-center">Vocabulary</th>
+                                                        <th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('mastery')}>Score</th>
+                                                        <th scope="col" className="px-4 py-3 cursor-pointer w-28 text-center" onClick={() => handleSort('lastPracticed')}>Latest</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {paginatedMasteryData.map(({ word, mastery, lastPracticed }) => {
+                                                        // Logic xác định màu sắc (Theme) dựa trên điểm số
+                                                        let theme = { 
+                                                            badge: "bg-slate-100 text-slate-600 border-slate-200", 
+                                                            dotActive: "bg-slate-400", 
+                                                            dotInactive: "bg-slate-100" 
+                                                        };
+
+                                                        if (mastery >= 8) {
+                                                            theme = { 
+                                                                badge: "bg-emerald-50 text-emerald-700 border-emerald-200", 
+                                                                dotActive: "bg-emerald-500", 
+                                                                dotInactive: "bg-emerald-100" 
+                                                            };
+                                                        } else if (mastery >= 4) {
+                                                            theme = { 
+                                                                badge: "bg-amber-50 text-amber-700 border-amber-200", 
+                                                                dotActive: "bg-amber-500", 
+                                                                dotInactive: "bg-amber-100" 
+                                                            };
+                                                        }
+
+                                                        // Tính toán số lượng chấm (trên thang 5 chấm)
+                                                        const totalDots = 5;
+                                                        const activeDots = Math.ceil(Math.min(mastery, 10) / 2);
+
+                                                        return (
+                                                            <tr key={word} className="bg-white border-b hover:bg-gray-50 transition-colors duration-150">
+                                                                <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">
+                                                                    {word}
+                                                                </td>
+                                                                {/* CỘT SCORE ĐƯỢC THIẾT KẾ LẠI */}
+                                                                <td className="px-4 py-3 text-center">
+                                                                    <div className="flex flex-col items-center gap-1.5">
+                                                                        <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${theme.badge}`}>
+                                                                            Lvl {mastery}
+                                                                        </span>
+                                                                        <div className="flex gap-1">
+                                                                            {[...Array(totalDots)].map((_, i) => (
+                                                                                <div 
+                                                                                    key={i} 
+                                                                                    className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${i < activeDots ? theme.dotActive : theme.dotInactive}`}
+                                                                                />
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-4 py-3 text-right text-xs">
+                                                                    {lastPracticed.toLocaleDateString('vi-VN')}
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                         {totalPages > 1 && (
                                             <div className="flex items-center justify-between mt-4">
                                                 <button onClick={() => handlePageChange(currentPage - 1)} disabled={currentPage === 1} className="inline-flex items-center px-3 py-2 text-sm font-medium text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"><ChevronLeftIcon /><span className="ml-1">Previous</span></button>
