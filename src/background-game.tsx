@@ -1,3 +1,5 @@
+--- START OF FILE background-game.tsx ---
+
 import React, { useEffect, useRef, Component, lazy, Suspense, useCallback, useState } from 'react';
 import { DotLottieReact } from '@lottiefiles/dotlottie-react';
 import CoinDisplay from './ui/display/coin-display.tsx';
@@ -148,10 +150,18 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 <div className="flex items-center space-x-1 currency-display-container relative z-10"><GemDisplay displayedGems={gems} /><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /></div>
             </div>
             <RateLimitToast show={showRateLimitToast} />
-            <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
+            
+            {/* 
+                FIX: Thay đổi bottom-32 thành bottom-24 và thêm transition-all.
+                Điều này giúp vị trí icon thấp hơn một chút để bù trừ cho việc màn hình cao lên khi full screen,
+                và hiệu ứng transition giúp icon trượt êm thay vì giật cục.
+            */}
+            <div className="absolute left-4 bottom-24 transition-all duration-300 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/777-icon.webp" alt="777 Slot Game Icon" className="w-full h-full object-contain" />, onClick: toggle777Game } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
-            <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
+            
+            {/* FIX: Tương tự cho cột bên phải */}
+            <div className="absolute right-4 bottom-24 transition-all duration-300 flex flex-col space-y-4 z-30">
               {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
             </div>
           </div>
