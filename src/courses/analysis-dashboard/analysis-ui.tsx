@@ -249,7 +249,7 @@ const StudyActivityChart = memo(({ data }: { data: any[] }) => {
 
 
 // --- MAIN DISPLAY COMPONENT ---
-const ITEMS_PER_PAGE = 10;
+const ITEMS_PER_PAGE = 5;
 
 function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
   const { user, loading, error, analysisData, dailyActivityData, userProgress, wordsLearnedToday, claimDailyReward, claimVocabReward } = useAnalysisDashboard();
