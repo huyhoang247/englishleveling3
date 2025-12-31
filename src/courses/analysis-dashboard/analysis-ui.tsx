@@ -420,12 +420,12 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
       <style jsx>{`
         .font-lilita { font-family: 'Lilita One', cursive; }
         
-        /* Loại bỏ viền đen khi click vào biểu đồ (Recharts) */
-        :global(.recharts-wrapper:focus),
-        :global(.recharts-surface:focus),
-        :global(.recharts-wrapper),
+        /* Loại bỏ viền đen khi focus vào biểu đồ Recharts */
+        :global(.recharts-wrapper) {
+            outline: none !important;
+        }
         :global(.recharts-surface) {
-          outline: none !important;
+            outline: none !important;
         }
       `}</style>
     </AnalysisDashboardProvider>
