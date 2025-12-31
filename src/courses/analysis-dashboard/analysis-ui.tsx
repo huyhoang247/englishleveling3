@@ -1,9 +1,11 @@
 // --- START OF FILE: analysis-ui.tsx ---
 
-import React, { useState, useMemo, FC, ReactNode, useCallback, memo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, FC, ReactNode, useCallback, memo } from 'react';
 import { User } from 'firebase/auth';
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './analysis-context.tsx';
 import AnalysisDashboardSkeleton from './analysis-loading.tsx'; 
+
+// ĐÃ XÓA: Recharts imports
 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
@@ -11,7 +13,7 @@ import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
 import HomeButton from '../../ui/home-button.tsx'; 
 
-// --- ICONS ---
+// --- ICONS (Grouped for better organization) ---
 const ActivityCompletedIcon = ({ className = "h-6 w-6" }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none"><defs><linearGradient id="activityGradient" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#2DD4BF" /><stop offset="100%" stopColor="#06B6D4" /></linearGradient></defs><circle cx="12" cy="12" r="12" fill="url(#activityGradient)" /><path d="M8 12.5l3 3 5-6" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" /></svg>);
 const CalendarIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>;
 const ChevronLeftIcon = () => <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" /></svg>;
@@ -32,216 +34,15 @@ const StyledSectionTitle = ({ title }: { title: string }) => (
 
 // --- REUSABLE COMPONENTS ---
 const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> = ({ title, children, extra }) => (
-    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 h-full flex flex-col">
-        <div className="flex items-center justify-between mb-4 flex-shrink-0">
+    <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div className="flex items-center justify-between mb-4">
             <StyledSectionTitle title={title} />
             {extra && <div>{extra}</div>}
         </div>
-        <div className="flex-grow w-full relative min-h-[250px]">{children}</div>
+        {/* Adjusted height for custom charts */}
+        <div className="h-64 sm:h-72 w-full flex flex-col">{children}</div>
     </div>
 );
-
-// --- CUSTOM CHART COMPONENTS (No Libraries) ---
-
-// 1. Custom Area Chart (Vocabulary Growth)
-const CustomAreaChart = memo(({ data }: { data: { date: string, cumulative: number }[] }) => {
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-    
-    // Calculate dimensions and scales
-    const maxValue = useMemo(() => Math.max(...data.map(d => d.cumulative), 1), [data]);
-    
-    // Normalize logic
-    // We work on a 100x100 coordinate system for SVG logic
-    const getX = (index: number) => (index / (data.length - 1)) * 100;
-    const getY = (value: number) => 100 - ((value / maxValue) * 100);
-
-    const points = useMemo(() => {
-        if (data.length < 2) return "0,100 100,100";
-        return data.map((d, i) => `${getX(i)},${getY(d.cumulative)}`).join(' ');
-    }, [data, maxValue]);
-
-    const areaPath = useMemo(() => {
-        if (data.length < 2) return "";
-        return `${points} 100,100 0,100`;
-    }, [points, data]);
-
-    if (data.length === 0) return <div className="h-full flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>;
-
-    return (
-        <div className="w-full h-full relative group select-none">
-            {/* Y-Axis Labels (Optional - Simple Max/Half/Zero) */}
-            <div className="absolute left-0 top-0 bottom-0 flex flex-col justify-between text-[10px] text-gray-400 font-medium pointer-events-none z-10">
-                <span>{maxValue}</span>
-                <span>{Math.round(maxValue / 2)}</span>
-                <span>0</span>
-            </div>
-
-            {/* SVG Chart */}
-            <svg 
-                viewBox="0 0 100 100" 
-                preserveAspectRatio="none" 
-                className="w-full h-full pl-6 overflow-visible"
-            >
-                {/* Grid Lines */}
-                <line x1="0" y1="0" x2="100" y2="0" stroke="#f3f4f6" strokeWidth="0.5" />
-                <line x1="0" y1="50" x2="100" y2="50" stroke="#f3f4f6" strokeWidth="0.5" />
-                <line x1="0" y1="100" x2="100" y2="100" stroke="#f3f4f6" strokeWidth="0.5" />
-
-                <defs>
-                    <linearGradient id="gradientGrowth" x1="0" x2="0" y1="0" y2="1">
-                        <stop offset="0%" stopColor="#818cf8" stopOpacity="0.5" />
-                        <stop offset="100%" stopColor="#818cf8" stopOpacity="0.05" />
-                    </linearGradient>
-                </defs>
-
-                {/* The Area Fill */}
-                <polygon points={areaPath} fill="url(#gradientGrowth)" className="transition-all duration-300" />
-                
-                {/* The Stroke Line */}
-                <polyline points={points} fill="none" stroke="#6366f1" strokeWidth="1.5" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-
-                {/* Hover Targets (Invisible vertical bars for better hit detection) */}
-                {data.map((d, i) => (
-                    <rect 
-                        key={i}
-                        x={getX(i) - (50 / data.length)} 
-                        y="0" 
-                        width={100 / data.length} 
-                        height="100" 
-                        fill="transparent" 
-                        onMouseEnter={() => setHoveredIndex(i)}
-                        onMouseLeave={() => setHoveredIndex(null)}
-                        className="cursor-pointer"
-                    />
-                ))}
-
-                {/* Active Point Highlight */}
-                {hoveredIndex !== null && (
-                    <circle 
-                        cx={getX(hoveredIndex)} 
-                        cy={getY(data[hoveredIndex].cumulative)} 
-                        r="3" // Radius needs to be visually handled carefully in non-scaling aspect ratio, but here it's relative to 0-100 viewBox. 
-                        // Using vector-effect to keep circle round might fail in svg 1.1, so simple trick: CSS transform or just keep it small.
-                        fill="white"
-                        stroke="#6366f1"
-                        strokeWidth="1"
-                        style={{ vectorEffect: 'non-scaling-stroke' }}
-                    />
-                )}
-            </svg>
-
-            {/* Tooltip Overlay */}
-            {hoveredIndex !== null && (
-                <div 
-                    className="absolute bg-slate-800 text-white text-xs rounded py-1 px-2 shadow-xl pointer-events-none transform -translate-x-1/2 -translate-y-full z-20 whitespace-nowrap"
-                    style={{ 
-                        left: `calc(${getX(hoveredIndex)}% + 24px)`, // +24px for left padding offset
-                        top: `calc(${getY(data[hoveredIndex].cumulative)}% - 10px)` 
-                    }}
-                >
-                    <div className="font-bold mb-0.5">{data[hoveredIndex].cumulative} từ</div>
-                    <div className="text-[10px] text-slate-300">{data[hoveredIndex].date}</div>
-                    {/* Arrow */}
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-                </div>
-            )}
-        </div>
-    );
-});
-
-// 2. Custom Bar Chart (Study Activity)
-const CustomBarChart = memo(({ data }: { data: { date: string, new: number, review: number }[] }) => {
-    const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-    const maxTotal = useMemo(() => {
-        const max = Math.max(...data.map(d => d.new + d.review), 1);
-        return max < 5 ? 5 : max; // Minimum scale of 5 for aesthetics
-    }, [data]);
-
-    if (data.length === 0) return <div className="h-full flex items-center justify-center text-gray-400">Chưa có dữ liệu</div>;
-
-    return (
-        <div className="w-full h-full flex flex-col relative pl-6">
-            {/* Y-Axis Grid & Labels */}
-            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none pl-6">
-                 {[1, 0.75, 0.5, 0.25, 0].map((tick) => (
-                    <div key={tick} className="flex items-center w-full h-0 relative">
-                        <span className="absolute left-[-24px] w-5 text-right text-[10px] text-gray-400">
-                            {Math.round(maxTotal * tick)}
-                        </span>
-                        <div className="w-full border-t border-gray-100 border-dashed"></div>
-                    </div>
-                ))}
-            </div>
-
-            {/* Bars Container */}
-            <div className="flex-grow flex items-end justify-between gap-1 sm:gap-2 z-10 pt-2">
-                {data.map((day, index) => {
-                    const total = day.new + day.review;
-                    const heightPercent = (total / maxTotal) * 100;
-                    const newPercent = total > 0 ? (day.new / total) * 100 : 0;
-                    const reviewPercent = total > 0 ? (day.review / total) * 100 : 0;
-
-                    return (
-                        <div 
-                            key={index}
-                            className="relative flex flex-col justify-end w-full h-full group cursor-pointer"
-                            onMouseEnter={() => setHoveredIndex(index)}
-                            onMouseLeave={() => setHoveredIndex(null)}
-                        >
-                            {/* Bar Wrapper */}
-                            <div 
-                                className="w-full max-w-[30px] mx-auto rounded-t-md overflow-hidden flex flex-col-reverse transition-all duration-300 ease-out hover:brightness-110 shadow-sm"
-                                style={{ height: `${heightPercent}%` }}
-                            >
-                                {/* Stacked Segments */}
-                                {/* Review Segment (Purple) */}
-                                <div style={{ height: `${reviewPercent}%` }} className="bg-indigo-400 w-full"></div>
-                                {/* New Segment (Green) */}
-                                <div style={{ height: `${newPercent}%` }} className="bg-emerald-400 w-full"></div>
-                            </div>
-
-                            {/* X-Axis Date Label */}
-                            <div className="text-[10px] text-gray-400 text-center mt-1 truncate w-full">
-                                {day.date.split('/')[0] /* Just show day */}
-                            </div>
-
-                            {/* Tooltip */}
-                            {hoveredIndex === index && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 bg-slate-800 text-white text-xs rounded-lg p-2 shadow-xl z-20 min-w-[100px] pointer-events-none">
-                                    <div className="font-bold border-b border-slate-600 pb-1 mb-1 text-center">{day.date}</div>
-                                    <div className="flex justify-between gap-3 text-emerald-300">
-                                        <span>New:</span> <span className="font-bold">{day.new}</span>
-                                    </div>
-                                    <div className="flex justify-between gap-3 text-indigo-300">
-                                        <span>Review:</span> <span className="font-bold">{day.review}</span>
-                                    </div>
-                                    <div className="mt-1 pt-1 border-t border-slate-700 flex justify-between gap-3 font-bold">
-                                        <span>Total:</span> <span>{total}</span>
-                                    </div>
-                                    {/* Arrow */}
-                                    <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-slate-800"></div>
-                                </div>
-                            )}
-                        </div>
-                    );
-                })}
-            </div>
-            {/* Legend */}
-            <div className="mt-2 flex items-center justify-center gap-4 text-xs">
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded bg-emerald-400"></div>
-                    <span className="text-gray-600">Từ mới</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                    <div className="w-3 h-3 rounded bg-indigo-400"></div>
-                    <span className="text-gray-600">Ôn tập</span>
-                </div>
-            </div>
-        </div>
-    );
-});
-
 
 const GOAL_MILESTONES = [5, 10, 20, 50, 100, 200];
 const VOCAB_MILESTONES = [100, 200, 500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500];
@@ -284,7 +85,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         } finally { setIsClaiming(false); }
     }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, title]);
 
-    // Tính toán số vàng hiển thị
     const rewardValue = currentGoal * Math.max(1, masteryCount);
 
     return (
@@ -300,11 +100,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                                 <span className="text-lg font-lilita text-amber-500 leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
-                                <img 
-                                    src={uiAssets.goldIcon} 
-                                    alt="Reward Coin" 
-                                    className="h-4 w-4" 
-                                />
+                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-4 w-4" />
                             </div>
                         </div>
                         )}
@@ -400,6 +196,162 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     );
 });
 
+// --- CUSTOM SVG CHARTS REPLACING RECHARTS ---
+
+// 1. Custom Area Chart for Vocabulary Growth
+const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
+    // Nếu không có data, hiển thị placeholder
+    if (!data || data.length === 0) return <ChartCard title="Vocabulary Growth"><div className="h-full flex items-center justify-center text-gray-400">No Data</div></ChartCard>;
+
+    // Tính toán Max value để scale
+    const maxVal = Math.max(...data.map(d => d.cumulative), 10);
+    const dataPoints = data.length;
+    
+    // Config hiển thị
+    const svgHeight = 150;
+    const svgWidth = 300;
+    const paddingX = 10;
+    
+    // Tính toạ độ các điểm
+    // X chia đều theo số lượng data
+    // Y scale theo giá trị (lưu ý: toạ độ SVG: 0 là đỉnh, height là đáy)
+    const points = data.map((d, index) => {
+        const x = (index / (dataPoints - 1)) * (svgWidth - paddingX * 2) + paddingX;
+        const y = svgHeight - (d.cumulative / maxVal) * svgHeight;
+        return { x, y, value: d.cumulative, label: d.date };
+    });
+
+    // Tạo string cho attribute 'points' của <polyline> và <polygon>
+    const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
+    const areaPoints = `${points[0].x},${svgHeight} ${polylinePoints} ${points[points.length-1].x},${svgHeight}`;
+
+    return (
+        <ChartCard title="Vocabulary Growth">
+            <div className="relative w-full h-full flex flex-col">
+                <div className="flex-grow relative overflow-hidden group">
+                     {/* SVG Container */}
+                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
+                         <defs>
+                            <linearGradient id="gradientGrowth" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stopColor="#818cf8" stopOpacity={0.5} />
+                                <stop offset="100%" stopColor="#818cf8" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
+                        
+                        {/* Grid lines (horizontal only) */}
+                        <line x1="0" y1="0" x2={svgWidth} y2="0" stroke="#f3f4f6" strokeWidth="1" />
+                        <line x1="0" y1={svgHeight/2} x2={svgWidth} y2={svgHeight/2} stroke="#f3f4f6" strokeWidth="1" />
+                        <line x1="0" y1={svgHeight} x2={svgWidth} y2={svgHeight} stroke="#e5e7eb" strokeWidth="1" />
+
+                        {/* Area Fill */}
+                        <polygon points={areaPoints} fill="url(#gradientGrowth)" />
+                        
+                        {/* Line Stroke */}
+                        <polyline points={polylinePoints} fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+
+                        {/* Interactive Dots (Invisible until hovered) */}
+                        {points.map((p, i) => (
+                            <g key={i} className="group/dot">
+                                <circle cx={p.x} cy={p.y} r="4" fill="#fff" stroke="#6366f1" strokeWidth="2" className="opacity-0 group-hover/dot:opacity-100 transition-opacity duration-200" />
+                                {/* Custom Tooltip HTML Overlay logic is cleaner, but SVG title works for simple native tooltip */}
+                                <title>{`${p.label}: ${p.value} words`}</title>
+                            </g>
+                        ))}
+                    </svg>
+                    
+                    {/* Y-Axis Labels (Absolute positioned HTML) */}
+                    <div className="absolute top-0 left-0 h-full w-full pointer-events-none flex flex-col justify-between text-[10px] text-gray-400 font-medium pl-1">
+                        <span>{maxVal}</span>
+                        <span>{Math.round(maxVal/2)}</span>
+                        <span>0</span>
+                    </div>
+                </div>
+                
+                {/* X-Axis Labels */}
+                <div className="flex justify-between text-[10px] text-gray-500 mt-2 px-1">
+                    <span>{data[0]?.date}</span>
+                    <span>{data[Math.floor(data.length/2)]?.date}</span>
+                    <span>{data[data.length-1]?.date}</span>
+                </div>
+            </div>
+        </ChartCard>
+    );
+});
+
+// 2. Custom Bar Chart for Study Activity (Using CSS Flexbox)
+const StudyActivityChart = memo(({ data }: { data: any[] }) => {
+    if (!data || data.length === 0) return <ChartCard title="Study Activity"><div className="h-full flex items-center justify-center text-gray-400">No Data</div></ChartCard>;
+
+    // Tính max value (tổng New + Review) để tính chiều cao cột
+    const maxVal = Math.max(...data.map(d => (d.new || 0) + (d.review || 0)), 5); // Minimum 5 to avoid div by zero or flat charts
+
+    return (
+        <ChartCard title="Study Activity" extra={
+            // Legend
+            <div className="flex gap-3 text-xs">
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400"></span><span className="text-gray-500">New</span></div>
+                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-400"></span><span className="text-gray-500">Review</span></div>
+            </div>
+        }>
+            <div className="flex flex-col h-full w-full">
+                {/* Chart Area */}
+                <div className="flex-grow flex items-end justify-between gap-1 sm:gap-2 pt-4 relative">
+                    {/* Background Grid Lines */}
+                    <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
+                        <div className="border-t border-gray-100 w-full h-0"></div>
+                        <div className="border-t border-gray-100 w-full h-0"></div>
+                        <div className="border-t border-gray-200 w-full h-0"></div>
+                    </div>
+
+                    {data.map((day, idx) => {
+                        const total = (day.new || 0) + (day.review || 0);
+                        const heightPct = (total / maxVal) * 100;
+                        const newPct = total > 0 ? (day.new / total) * 100 : 0;
+                        const reviewPct = total > 0 ? (day.review / total) * 100 : 0;
+                        
+                        // Show label every few items if too many
+                        const showLabel = data.length > 7 ? idx % 2 === 0 : true;
+
+                        return (
+                            <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end z-10">
+                                {/* The Bar Container */}
+                                <div 
+                                    className="w-full max-w-[20px] sm:max-w-[30px] rounded-t-md overflow-hidden flex flex-col-reverse transition-all duration-500 ease-out hover:scale-110 hover:shadow-lg cursor-help relative"
+                                    style={{ height: `${heightPct}%` }}
+                                >
+                                    {/* Tooltip Popup */}
+                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-slate-800 text-white text-[10px] p-1.5 rounded min-w-[80px] z-50 pointer-events-none">
+                                        <div className="font-bold border-b border-slate-600 mb-1 pb-0.5 whitespace-nowrap">{day.date}</div>
+                                        <div className="text-emerald-300">New: {day.new}</div>
+                                        <div className="text-indigo-300">Rev: {day.review}</div>
+                                    </div>
+
+                                    {/* New Words Segment (Bottom) */}
+                                    {day.new > 0 && (
+                                        <div style={{ height: `${newPct}%` }} className="bg-emerald-400 w-full"></div>
+                                    )}
+                                    {/* Review Words Segment (Top) */}
+                                    {day.review > 0 && (
+                                        <div style={{ height: `${reviewPct}%` }} className="bg-indigo-400 w-full"></div>
+                                    )}
+                                    
+                                    {/* Empty state holder if 0 */}
+                                    {total === 0 && <div className="h-1 w-full bg-gray-200"></div>}
+                                </div>
+                                {/* X-Axis Date */}
+                                <div className="text-[10px] text-gray-400 mt-2 h-4 overflow-hidden text-center w-full">
+                                    {showLabel ? day.date.split('/')[0] : ''} {/* Only showing Day part roughly */}
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            </div>
+        </ChartCard>
+    );
+});
+
+
 // --- MAIN DISPLAY COMPONENT ---
 const ITEMS_PER_PAGE = 5;
 
@@ -464,15 +416,9 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                             <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                 
-                                {/* REPLACED CHART 1: Vocabulary Growth */}
-                                <ChartCard title="Vocabulary Growth">
-                                    <CustomAreaChart data={vocabularyGrowth} />
-                                </ChartCard>
-
-                                {/* REPLACED CHART 2: Study Activity */}
-                                <ChartCard title="Study Activity">
-                                    <CustomBarChart data={learningActivity} />
-                                </ChartCard>
+                                {/* REPLACED RECHARTS COMPONENTS WITH CUSTOM COMPONENTS */}
+                                <VocabularyGrowthChart data={vocabularyGrowth} />
+                                <StudyActivityChart data={learningActivity} />
 
                                 <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 lg:col-span-2 xl:col-span-3">
                                     <div className="mb-4">
@@ -490,7 +436,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                 </thead>
                                                 <tbody>
                                                     {paginatedMasteryData.map(({ word, mastery, lastPracticed }) => {
-                                                        // Logic xác định màu sắc (Theme) dựa trên điểm số
                                                         let theme = { 
                                                             badge: "bg-slate-100 text-slate-600 border-slate-200", 
                                                             dotActive: "bg-slate-400", 
@@ -511,7 +456,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                             };
                                                         }
 
-                                                        // Tính toán số lượng chấm (trên thang 5 chấm)
                                                         const totalDots = 5;
                                                         const activeDots = Math.ceil(Math.min(mastery, 10) / 2);
 
@@ -520,7 +464,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                                 <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">
                                                                     {word}
                                                                 </td>
-                                                                {/* CỘT SCORE ĐƯỢC THIẾT KẾ LẠI */}
                                                                 <td className="px-4 py-3 text-center">
                                                                     <div className="flex flex-col items-center gap-1.5">
                                                                         <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${theme.badge}`}>
