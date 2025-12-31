@@ -5,8 +5,10 @@ import { User } from 'firebase/auth';
 import { AnalysisDashboardProvider, useAnalysisDashboard, WordMastery } from './analysis-context.tsx';
 import AnalysisDashboardSkeleton from './analysis-loading.tsx'; 
 
-// ĐÃ XÓA: Recharts imports
-
+import { 
+    AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, 
+    Tooltip, Legend, ResponsiveContainer
+} from 'recharts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { uiAssets, dashboardAssets } from '../../game-assets.ts'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
@@ -39,8 +41,7 @@ const ChartCard: FC<{ title: string; children: ReactNode; extra?: ReactNode }> =
             <StyledSectionTitle title={title} />
             {extra && <div>{extra}</div>}
         </div>
-        {/* Adjusted height for custom charts */}
-        <div className="h-64 sm:h-72 w-full flex flex-col">{children}</div>
+        <div className="h-64 sm:h-72 w-full">{children}</div>
     </div>
 );
 
@@ -85,6 +86,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
         } finally { setIsClaiming(false); }
     }, [isGoalMet, areAllGoalsMet, user, isClaiming, currentGoal, masteryCount, onClaim, title]);
 
+    // Tính toán số vàng hiển thị
     const rewardValue = currentGoal * Math.max(1, masteryCount);
 
     return (
@@ -100,7 +102,11 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                                 <span className="text-lg font-lilita text-amber-500 leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
-                                <img src={uiAssets.goldIcon} alt="Reward Coin" className="h-4 w-4" />
+                                <img 
+                                    src={uiAssets.goldIcon} 
+                                    alt="Reward Coin" 
+                                    className="h-4 w-4" 
+                                />
                             </div>
                         </div>
                         )}
@@ -196,157 +202,47 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     );
 });
 
-// --- CUSTOM SVG CHARTS REPLACING RECHARTS ---
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const finalLabel = payload[0].payload.game ? payload[0].payload.game : `Ngày: ${label}`;
+    const total = payload.reduce((sum, entry) => sum + entry.value, 0);
+    return (
+      <div className="p-2 bg-gray-800 text-white rounded-md shadow-lg text-sm border border-gray-700">
+        <p className="font-bold">{finalLabel}</p>
+        {payload.map((pld) => <p key={pld.dataKey} style={{ color: pld.fill }}>{`${pld.name}: ${pld.value}`}</p>)}
+        {payload.length > 1 && total > 0 && <><hr className="my-1 border-gray-600" /><p className="font-semibold">{`Tổng: ${total}`}</p></>}
+      </div>
+    );
+  }
+  return null;
+};
 
-// 1. Custom Area Chart for Vocabulary Growth
+const chartMargin = { top: 5, right: 20, left: -10, bottom: 5 };
+const barChartMargin = { top: 20, right: 20, left: -20, bottom: 5 };
+const legendWrapperStyle = { top: 0, left: 25 };
+const barChartCursorStyle = { fill: 'rgba(136, 132, 216, 0.1)' };
+
 const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
-    // Nếu không có data, hiển thị placeholder
-    if (!data || data.length === 0) return <ChartCard title="Vocabulary Growth"><div className="h-full flex items-center justify-center text-gray-400">No Data</div></ChartCard>;
-
-    // Tính toán Max value để scale
-    const maxVal = Math.max(...data.map(d => d.cumulative), 10);
-    const dataPoints = data.length;
-    
-    // Config hiển thị
-    const svgHeight = 150;
-    const svgWidth = 300;
-    const paddingX = 10;
-    
-    // Tính toạ độ các điểm
-    // X chia đều theo số lượng data
-    // Y scale theo giá trị (lưu ý: toạ độ SVG: 0 là đỉnh, height là đáy)
-    const points = data.map((d, index) => {
-        const x = (index / (dataPoints - 1)) * (svgWidth - paddingX * 2) + paddingX;
-        const y = svgHeight - (d.cumulative / maxVal) * svgHeight;
-        return { x, y, value: d.cumulative, label: d.date };
-    });
-
-    // Tạo string cho attribute 'points' của <polyline> và <polygon>
-    const polylinePoints = points.map(p => `${p.x},${p.y}`).join(' ');
-    const areaPoints = `${points[0].x},${svgHeight} ${polylinePoints} ${points[points.length-1].x},${svgHeight}`;
-
     return (
         <ChartCard title="Vocabulary Growth">
-            <div className="relative w-full h-full flex flex-col">
-                <div className="flex-grow relative overflow-hidden group">
-                     {/* SVG Container */}
-                    <svg viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="w-full h-full" preserveAspectRatio="none">
-                         <defs>
-                            <linearGradient id="gradientGrowth" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#818cf8" stopOpacity={0.5} />
-                                <stop offset="100%" stopColor="#818cf8" stopOpacity={0} />
-                            </linearGradient>
-                        </defs>
-                        
-                        {/* Grid lines (horizontal only) */}
-                        <line x1="0" y1="0" x2={svgWidth} y2="0" stroke="#f3f4f6" strokeWidth="1" />
-                        <line x1="0" y1={svgHeight/2} x2={svgWidth} y2={svgHeight/2} stroke="#f3f4f6" strokeWidth="1" />
-                        <line x1="0" y1={svgHeight} x2={svgWidth} y2={svgHeight} stroke="#e5e7eb" strokeWidth="1" />
-
-                        {/* Area Fill */}
-                        <polygon points={areaPoints} fill="url(#gradientGrowth)" />
-                        
-                        {/* Line Stroke */}
-                        <polyline points={polylinePoints} fill="none" stroke="#6366f1" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
-
-                        {/* Interactive Dots (Invisible until hovered) */}
-                        {points.map((p, i) => (
-                            <g key={i} className="group/dot">
-                                <circle cx={p.x} cy={p.y} r="4" fill="#fff" stroke="#6366f1" strokeWidth="2" className="opacity-0 group-hover/dot:opacity-100 transition-opacity duration-200" />
-                                {/* Custom Tooltip HTML Overlay logic is cleaner, but SVG title works for simple native tooltip */}
-                                <title>{`${p.label}: ${p.value} words`}</title>
-                            </g>
-                        ))}
-                    </svg>
-                    
-                    {/* Y-Axis Labels (Absolute positioned HTML) */}
-                    <div className="absolute top-0 left-0 h-full w-full pointer-events-none flex flex-col justify-between text-[10px] text-gray-400 font-medium pl-1">
-                        <span>{maxVal}</span>
-                        <span>{Math.round(maxVal/2)}</span>
-                        <span>0</span>
-                    </div>
-                </div>
-                
-                {/* X-Axis Labels */}
-                <div className="flex justify-between text-[10px] text-gray-500 mt-2 px-1">
-                    <span>{data[0]?.date}</span>
-                    <span>{data[Math.floor(data.length/2)]?.date}</span>
-                    <span>{data[data.length-1]?.date}</span>
-                </div>
-            </div>
+            <ResponsiveContainer>
+                <AreaChart data={data} margin={chartMargin}>
+                    <defs><linearGradient id="colorGrowth" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/><stop offset="95%" stopColor="#8884d8" stopOpacity={0}/></linearGradient></defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12} /><Tooltip content={<CustomTooltip />} /><Area type="monotone" dataKey="cumulative" name="Tổng số từ" stroke="#8884d8" fillOpacity={1} fill="url(#colorGrowth)" />
+                </AreaChart>
+            </ResponsiveContainer>
         </ChartCard>
     );
 });
 
-// 2. Custom Bar Chart for Study Activity (Using CSS Flexbox)
 const StudyActivityChart = memo(({ data }: { data: any[] }) => {
-    if (!data || data.length === 0) return <ChartCard title="Study Activity"><div className="h-full flex items-center justify-center text-gray-400">No Data</div></ChartCard>;
-
-    // Tính max value (tổng New + Review) để tính chiều cao cột
-    const maxVal = Math.max(...data.map(d => (d.new || 0) + (d.review || 0)), 5); // Minimum 5 to avoid div by zero or flat charts
-
     return (
-        <ChartCard title="Study Activity" extra={
-            // Legend
-            <div className="flex gap-3 text-xs">
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-emerald-400"></span><span className="text-gray-500">New</span></div>
-                <div className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-indigo-400"></span><span className="text-gray-500">Review</span></div>
-            </div>
-        }>
-            <div className="flex flex-col h-full w-full">
-                {/* Chart Area */}
-                <div className="flex-grow flex items-end justify-between gap-1 sm:gap-2 pt-4 relative">
-                    {/* Background Grid Lines */}
-                    <div className="absolute inset-0 flex flex-col justify-between pointer-events-none z-0">
-                        <div className="border-t border-gray-100 w-full h-0"></div>
-                        <div className="border-t border-gray-100 w-full h-0"></div>
-                        <div className="border-t border-gray-200 w-full h-0"></div>
-                    </div>
-
-                    {data.map((day, idx) => {
-                        const total = (day.new || 0) + (day.review || 0);
-                        const heightPct = (total / maxVal) * 100;
-                        const newPct = total > 0 ? (day.new / total) * 100 : 0;
-                        const reviewPct = total > 0 ? (day.review / total) * 100 : 0;
-                        
-                        // Show label every few items if too many
-                        const showLabel = data.length > 7 ? idx % 2 === 0 : true;
-
-                        return (
-                            <div key={idx} className="flex-1 flex flex-col items-center group h-full justify-end z-10">
-                                {/* The Bar Container */}
-                                <div 
-                                    className="w-full max-w-[20px] sm:max-w-[30px] rounded-t-md overflow-hidden flex flex-col-reverse transition-all duration-500 ease-out hover:scale-110 hover:shadow-lg cursor-help relative"
-                                    style={{ height: `${heightPct}%` }}
-                                >
-                                    {/* Tooltip Popup */}
-                                    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-slate-800 text-white text-[10px] p-1.5 rounded min-w-[80px] z-50 pointer-events-none">
-                                        <div className="font-bold border-b border-slate-600 mb-1 pb-0.5 whitespace-nowrap">{day.date}</div>
-                                        <div className="text-emerald-300">New: {day.new}</div>
-                                        <div className="text-indigo-300">Rev: {day.review}</div>
-                                    </div>
-
-                                    {/* New Words Segment (Bottom) */}
-                                    {day.new > 0 && (
-                                        <div style={{ height: `${newPct}%` }} className="bg-emerald-400 w-full"></div>
-                                    )}
-                                    {/* Review Words Segment (Top) */}
-                                    {day.review > 0 && (
-                                        <div style={{ height: `${reviewPct}%` }} className="bg-indigo-400 w-full"></div>
-                                    )}
-                                    
-                                    {/* Empty state holder if 0 */}
-                                    {total === 0 && <div className="h-1 w-full bg-gray-200"></div>}
-                                </div>
-                                {/* X-Axis Date */}
-                                <div className="text-[10px] text-gray-400 mt-2 h-4 overflow-hidden text-center w-full">
-                                    {showLabel ? day.date.split('/')[0] : ''} {/* Only showing Day part roughly */}
-                                </div>
-                            </div>
-                        );
-                    })}
-                </div>
-            </div>
+        <ChartCard title="Study Activity">
+            <ResponsiveContainer>
+                <BarChart data={data} margin={barChartMargin}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={barChartCursorStyle}/><Legend verticalAlign="top" wrapperStyle={legendWrapperStyle}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
+                </BarChart>
+            </ResponsiveContainer>
         </ChartCard>
     );
 });
@@ -416,7 +312,6 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                             <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                 
-                                {/* REPLACED RECHARTS COMPONENTS WITH CUSTOM COMPONENTS */}
                                 <VocabularyGrowthChart data={vocabularyGrowth} />
                                 <StudyActivityChart data={learningActivity} />
 
@@ -436,6 +331,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                 </thead>
                                                 <tbody>
                                                     {paginatedMasteryData.map(({ word, mastery, lastPracticed }) => {
+                                                        // Logic xác định màu sắc (Theme) dựa trên điểm số
                                                         let theme = { 
                                                             badge: "bg-slate-100 text-slate-600 border-slate-200", 
                                                             dotActive: "bg-slate-400", 
@@ -456,6 +352,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                             };
                                                         }
 
+                                                        // Tính toán số lượng chấm (trên thang 5 chấm)
                                                         const totalDots = 5;
                                                         const activeDots = Math.ceil(Math.min(mastery, 10) / 2);
 
@@ -464,6 +361,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                                                 <td className="px-4 py-3 font-medium text-gray-900 capitalize whitespace-nowrap">
                                                                     {word}
                                                                 </td>
+                                                                {/* CỘT SCORE ĐƯỢC THIẾT KẾ LẠI */}
                                                                 <td className="px-4 py-3 text-center">
                                                                     <div className="flex flex-col items-center gap-1.5">
                                                                         <span className={`inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider border ${theme.badge}`}>
