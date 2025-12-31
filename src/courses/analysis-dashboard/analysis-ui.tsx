@@ -237,7 +237,7 @@ const VocabularyGrowthChart = memo(({ data }: { data: any[] }) => {
 
 const StudyActivityChart = memo(({ data }: { data: any[] }) => {
     return (
-        <ChartCard title="Study Activity" extra={<span className="bg-indigo-100 text-indigo-800 text-xs font-semibold px-2.5 py-0.5 rounded-full">Last 30 Days</span>}>
+        <ChartCard title="Study Activity">
             <ResponsiveContainer>
                 <BarChart data={data} margin={barChartMargin}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#e0e0e0" /><XAxis dataKey="date" fontSize={12} /><YAxis allowDecimals={false} fontSize={12}/><Tooltip content={<CustomTooltip />} cursor={barChartCursorStyle}/><Legend verticalAlign="top" wrapperStyle={legendWrapperStyle}/><Bar dataKey="new" name="Từ mới" stackId="a" fill="#82ca9d" /><Bar dataKey="review" name="Ôn tập" stackId="a" fill="#8884d8" radius={[4, 4, 0, 0]} />
