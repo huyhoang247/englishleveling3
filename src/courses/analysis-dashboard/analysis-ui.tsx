@@ -419,14 +419,6 @@ export default function AnalysisDashboard({ onGoBack }: AnalysisDashboardProps) 
       <DashboardContent onGoBack={onGoBack} />
       <style jsx>{`
         .font-lilita { font-family: 'Lilita One', cursive; }
-        
-        /* Loại bỏ viền đen khi focus vào biểu đồ Recharts */
-        :global(.recharts-wrapper) {
-            outline: none !important;
-        }
-        :global(.recharts-surface) {
-            outline: none !important;
-        }
       `}</style>
     </AnalysisDashboardProvider>
   );
