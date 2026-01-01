@@ -10,7 +10,7 @@ import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import { 
   listenToTopicData, 
   unlockTopicPageTransaction, 
-  claimTopicRewardTransaction,
+  claimTopicRewardTransaction, 
   toggleTopicFavoriteTransaction, 
   saveTopicCurrentPage, 
   TopicProgressData 
@@ -445,7 +445,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
-            {/* Header (Updated: h-14, removed py-3) */}
+            {/* Header (h-14, removed py-3) */}
             <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0">
                 <div className="flex items-center gap-3">
                     <span className="text-white font-black text-lg">
@@ -1149,30 +1149,18 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
             </div>
             
             <div className="flex items-center gap-4">
-                {/* Mode Switcher */}
-                <div className="flex items-center bg-slate-800 rounded-lg p-0.5 border border-slate-600">
-                     <button
-                        onClick={() => setViewMode('all')}
-                        className={`px-3 py-1.5 rounded-md text-xs font-bold transition-all ${
-                            viewMode === 'all' 
-                                ? 'bg-slate-600 text-white shadow-sm' 
-                                : 'text-slate-400 hover:text-white'
-                        }`}
-                     >
-                        Browse
-                     </button>
-                     <div className="w-[1px] h-4 bg-slate-600 mx-0.5"></div>
-                     <button
-                         onClick={handleStartFlashcardMode}
-                         className="px-3 py-1.5 rounded-md text-xs font-bold transition-all text-orange-400 hover:bg-slate-700 hover:text-orange-300 flex items-center gap-1"
-                         title="Random 20 cards from unlocked pages"
-                     >
-                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-3.5 h-3.5">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
-                         </svg>
-                         Flip
-                     </button>
-                </div>
+                {/* Mode Switcher - REPLACED WITH SINGLE ICON BUTTON */}
+                <button 
+                    onClick={handleStartFlashcardMode}
+                    className="relative group transition-transform hover:scale-110 active:scale-95"
+                    title="Start Flashcard Mode"
+                >
+                    <img 
+                        src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/flashcard.webp" 
+                        alt="Flashcard" 
+                        className="w-10 h-10 object-contain" 
+                    />
+                </button>
             </div>
 
             <div className="flex items-center gap-3">
