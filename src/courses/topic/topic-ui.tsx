@@ -1,5 +1,3 @@
-// --- START OF FILE: topic.tsx ---
-
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 
 // --- Imports từ các file khác ---
@@ -326,6 +324,12 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             currentX.current = deltaX;
 
             requestAnimationFrame(() => {
+                // --- FIX: QUAN TRỌNG ---
+                // Nếu người dùng đã thả tay ra, không cập nhật vị trí nữa
+                // để tránh conflict với resetCard
+                if (!isDragging.current) return;
+                // -----------------------
+
                 if (cardRef.current) {
                     const rotateDeg = (deltaX / screenWidth) * 20;
                     cardRef.current.style.transform = `translateX(${deltaX}px) rotate(${rotateDeg}deg)`;
@@ -423,8 +427,9 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     const resetCard = () => {
         if (cardRef.current) {
+            // FIX: Đặt transition và reset vị trí cụ thể hơn để tránh bị kẹt
             cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            cardRef.current.style.transform = 'none';
+            cardRef.current.style.transform = 'translateX(0px) rotate(0deg)'; // FIX: Cụ thể 0px thay vì 'none'
             cardRef.current.style.cursor = 'grab';
         }
         // Reset background card về trạng thái mờ
