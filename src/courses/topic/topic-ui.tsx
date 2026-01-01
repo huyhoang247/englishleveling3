@@ -272,7 +272,10 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// ADDED: Flashcard Skeleton Component (Z-INDEX cao hơn Real UI)
+// ADDED: Flashcard Skeleton Component
+// - Z-INDEX 200 to overlay real UI
+// - Removed SVG Icon
+// - Adjusted size (w-[90%] and h-[70vh]) to mimic real image size better
 const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
         {/* Header Skeleton */}
@@ -288,21 +291,17 @@ const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
 
         {/* Card Area Skeleton */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            <div className="relative w-full max-w-lg h-[75vh] bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50">
+            {/* Reduced size slightly to match 'object-contain' feel */}
+            <div className="relative w-[90%] max-w-md h-[70vh] bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50">
                 {/* Shimmer Effect */}
                 <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-slate-700/30 to-transparent z-10"></div>
-                
-                <div className="w-full h-full flex items-center justify-center flex-col gap-4 opacity-50">
-                    <svg className="w-16 h-16 text-slate-600 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
-                    </svg>
-                </div>
+                {/* No content/icon here */}
             </div>
         </div>
     </div>
 );
 
-// --- FLASHCARD OVERLAY COMPONENT (UPDATED: Render Song Song) ---
+// --- FLASHCARD OVERLAY COMPONENT ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -334,7 +333,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     // --- PRELOAD LOGIC (UPDATED) ---
     useEffect(() => {
-        // 1. Chạy ngầm việc tải ảnh (không chặn UI vì UI đã render bên dưới)
+        // 1. Chạy ngầm việc tải ảnh
         const runBackgroundLoading = async () => {
             if (cards.length === 0) return;
 
@@ -359,10 +358,10 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             }
         };
 
-        // 2. Timer cố định 5 giây
+        // 2. Timer cố định 4 giây (Updated from 5s)
         const timer = setTimeout(() => {
             setIsInitialLoading(false);
-        }, 5000);
+        }, 4000);
 
         // Kích hoạt chạy ngầm
         runBackgroundLoading();
@@ -391,9 +390,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     // --- EVENT LISTENERS (GLOBAL) ---
     useEffect(() => {
-        // Vẫn gán event listener nhưng nếu isInitialLoading=true thì Skeleton che mất nên user không tương tác được
-        // Hoặc có thể thêm check isInitialLoading bên trong handler nếu cần chặn tuyệt đối.
-        
         const handleMove = (e: MouseEvent | TouchEvent) => {
             if (isInitialLoading) return; // Chặn drag khi đang load
             if (!isDragging.current || isAnimating) return;
