@@ -261,7 +261,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (UPDATED FOR PHYSICS DRAG) ---
+// --- FLASHCARD OVERLAY COMPONENT (SMOOTH LABELS & PHYSICS) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -278,11 +278,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     const startXRef = useRef<number | null>(null);
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
-    const threshold = screenWidth * 0.3; // Drag 30% to swipe
+    
+    // Ngưỡng kéo để xác nhận chuyển trang (35% chiều rộng màn hình)
+    const threshold = screenWidth * 0.35; 
 
     // Handle Touch Start
     const onTouchStart = (e: React.TouchEvent) => {
-        if (exitDirection) return; // Prevent interaction during exit animation
+        if (exitDirection) return;
         startXRef.current = e.touches[0].clientX;
         setIsDragging(true);
         setExitDirection(null);
@@ -303,7 +305,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         startXRef.current = null;
 
         if (Math.abs(dragX) > threshold) {
-            // Swipe Success
             const direction = dragX > 0 ? 'right' : 'left';
             
             if (direction === 'left' && currentIndex < cards.length - 1) {
@@ -313,9 +314,9 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     setCurrentIndex(prev => prev + 1);
                     setDragX(0);
                     setExitDirection(null);
-                }, 300); // Matches transition duration
+                }, 300); // 300ms khớp với transition duration
             } else if (direction === 'right' && currentIndex > 0) {
-                // Prev Card (Optional: usually Tinder style only goes forward, but here we allow back)
+                // Prev Card
                 setExitDirection('right');
                 setTimeout(() => {
                     setCurrentIndex(prev => prev - 1);
@@ -323,20 +324,20 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     setExitDirection(null);
                 }, 300);
             } else {
-                // Edge case: End of list or Start of list -> Snap back
+                // Snap back (kéo chưa đủ hoặc hết thẻ)
                 setDragX(0);
             }
         } else {
-            // Swipe Cancel (Snap back)
+            // Snap back
             setDragX(0);
         }
     };
 
-    // Button Controls
+    // Button Controls (Click)
     const handleNext = () => {
         if (currentIndex < cards.length - 1) {
-            setExitDirection('left'); // Simulate swipe left
-            setDragX(-screenWidth);   // Move off screen
+            setExitDirection('left'); 
+            setDragX(-screenWidth); 
             setTimeout(() => {
                 setCurrentIndex(prev => prev + 1);
                 setDragX(0);
@@ -370,20 +371,19 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
     const progress = ((currentIndex + 1) / cards.length) * 100;
 
     // --- Dynamic Styles ---
-    const rotateDeg = (dragX / screenWidth) * 20; // Max 20deg rotation
+    const rotateDeg = (dragX / screenWidth) * 20; 
     
-    // Style for the top card (active)
+    // Style cho thẻ đang được kéo (Active)
     const activeCardStyle = {
         transform: `translateX(${dragX}px) rotate(${rotateDeg}deg)`,
         transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
         zIndex: 10
     };
 
-    // Style for the background card (next card hint)
-    // As active card moves away (abs(dragX) increases), the next card scales up to 1
+    // Style cho thẻ nền (Background - Next card preview)
     const dragPercentage = Math.min(Math.abs(dragX) / screenWidth, 1);
-    const backCardScale = 0.92 + (0.08 * dragPercentage); // From 0.92 to 1.0
-    const backCardOpacity = 0.6 + (0.4 * dragPercentage); // From 0.6 to 1.0
+    const backCardScale = 0.92 + (0.08 * dragPercentage); // Từ 0.92 -> 1.0
+    const backCardOpacity = 0.6 + (0.4 * dragPercentage); // Từ 0.6 -> 1.0
 
     const backCardStyle = {
         transform: `scale(${backCardScale})`,
@@ -391,6 +391,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         zIndex: 5,
         transition: isDragging ? 'none' : 'all 0.3s ease-out'
     };
+
+    // --- LOGIC NHÃN NEXT/BACK (STAMPS) ---
+    // Tính opacity dựa trên khoảng cách kéo. Chia cho 0.8 threshold để nó hiện rõ sớm hơn một chút.
+    const overlayOpacity = Math.min(Math.abs(dragX) / (threshold * 0.8), 1);
+    const showOverlay = overlayOpacity > 0.1; // Chỉ render nếu có độ mờ nhất định
+    const isRightSwipe = dragX > 0; // Kéo phải -> BACK
+    const isLeftSwipe = dragX < 0;  // Kéo trái -> NEXT
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none">
@@ -420,7 +427,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
                 <div className="relative w-full max-w-md aspect-[3/4] max-h-[70vh]">
                     
-                    {/* 1. Background Card (Next Card Preview) */}
+                    {/* Background Card */}
                     {currentIndex < cards.length - 1 && (
                         <div 
                             className="absolute inset-0 bg-white rounded-3xl shadow-xl border border-white/10 overflow-hidden flex items-center justify-center"
@@ -434,7 +441,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                         </div>
                     )}
 
-                    {/* 2. Active Card (Draggable) */}
+                    {/* Active Card */}
                     <div 
                         className="absolute inset-0 bg-white rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing"
                         style={activeCardStyle}
@@ -443,14 +450,23 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                         onTouchEnd={onTouchEnd}
                     >
                         <div className="relative w-full h-full bg-gray-50 flex items-center justify-center">
-                            {/* Overlay indications for Swipe */}
-                            {isDragging && dragX > 50 && (
-                                <div className="absolute top-4 left-4 z-20 border-4 border-green-500 text-green-500 font-black text-2xl uppercase px-2 rounded -rotate-12 opacity-80">
+                            
+                            {/* --- OVERLAY STAMPS (BACK) --- */}
+                            {showOverlay && isRightSwipe && (
+                                <div 
+                                    className="absolute top-8 left-6 z-20 border-[6px] border-green-500 text-green-500 font-black text-4xl uppercase px-4 py-1 rounded-xl -rotate-[15deg] pointer-events-none tracking-widest bg-white/10 backdrop-blur-[2px]"
+                                    style={{ opacity: overlayOpacity }}
+                                >
                                     BACK
                                 </div>
                             )}
-                            {isDragging && dragX < -50 && (
-                                <div className="absolute top-4 right-4 z-20 border-4 border-red-500 text-red-500 font-black text-2xl uppercase px-2 rounded rotate-12 opacity-80">
+
+                            {/* --- OVERLAY STAMPS (NEXT) --- */}
+                            {showOverlay && isLeftSwipe && (
+                                <div 
+                                    className="absolute top-8 right-6 z-20 border-[6px] border-red-500 text-red-500 font-black text-4xl uppercase px-4 py-1 rounded-xl rotate-[15deg] pointer-events-none tracking-widest bg-white/10 backdrop-blur-[2px]"
+                                    style={{ opacity: overlayOpacity }}
+                                >
                                     NEXT
                                 </div>
                             )}
@@ -458,7 +474,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain p-2 pointer-events-none select-none" // prevent img drag default
+                                className="w-full h-full object-contain p-2 pointer-events-none select-none" 
                             />
                             
                             <FavoriteButton 
@@ -493,7 +509,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     </svg>
                 </button>
 
-                {/* Reset / Shuffle Button */}
+                {/* Restart Button */}
                 <button 
                     onClick={() => {
                         setCurrentIndex(0);
