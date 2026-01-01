@@ -90,6 +90,18 @@ const styles = `
   .animate-shake {
     animation: shake 0.3s ease-in-out;
   }
+
+  /* Flashcard Animations */
+  @keyframes slide-in-right {
+    from { transform: translateX(100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  @keyframes slide-in-left {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  .animate-slide-in-right { animation: slide-in-right 0.3s ease-out; }
+  .animate-slide-in-left { animation: slide-in-left 0.3s ease-out; }
   
   .btn-game-green {
     background: linear-gradient(to bottom, #4ade80, #22c55e);
@@ -168,7 +180,7 @@ const TopicSkeleton = () => (
   </div>
 );
 
-// FavoriteButton giống hệt VerticalFlashcardGallery
+// FavoriteButton
 const FavoriteButton = ({ 
   isFavorite, 
   onToggle, 
@@ -217,12 +229,14 @@ const TopicImageCard = React.memo(({
     index, 
     isFavorite, 
     onToggleFavorite, 
-    isTogglingFavorite 
+    isTogglingFavorite,
+    customClass = ""
 }: { 
     index: number, 
     isFavorite: boolean, 
     onToggleFavorite: (id: number) => void,
-    isTogglingFavorite: boolean
+    isTogglingFavorite: boolean,
+    customClass?: string
 }) => {
   const [hasError, setHasError] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -231,7 +245,7 @@ const TopicImageCard = React.memo(({
   if (hasError) return null;
 
   return (
-    <div className="relative group w-full">
+    <div className={`relative group w-full ${customClass}`}>
       {isLoading && <TopicSkeleton />}
       <div className={`bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden transition-all duration-500 ${
         isLoading 
@@ -257,6 +271,164 @@ const TopicImageCard = React.memo(({
     </div>
   );
 });
+
+// --- FLASHCARD MODE COMPONENT ---
+interface TopicFlashcardViewProps {
+    maxUnlockedPage: number;
+    favorites: number[];
+    onToggleFavorite: (id: number) => void;
+    togglingIds: Set<number>;
+    onExit: () => void;
+}
+
+const TopicFlashcardView = ({
+    maxUnlockedPage,
+    favorites,
+    onToggleFavorite,
+    togglingIds,
+    onExit
+}: TopicFlashcardViewProps) => {
+    const [queue, setQueue] = useState<number[]>([]);
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [animationClass, setAnimationClass] = useState("animate-popup-zoom");
+
+    // Initialize Random Queue
+    const generateQueue = useCallback(() => {
+        const maxItem = maxUnlockedPage * ITEMS_PER_PAGE;
+        const poolSize = Math.min(maxItem, MAX_TOTAL_ITEMS);
+        const count = 20;
+        
+        const newSet = new Set<number>();
+        // Nếu số lượng item mở khóa < 20, lấy tất cả và shuffle
+        if (poolSize <= count) {
+            for (let i = 1; i <= poolSize; i++) newSet.add(i);
+        } else {
+            while (newSet.size < count) {
+                const randomId = Math.floor(Math.random() * poolSize) + 1;
+                newSet.add(randomId);
+            }
+        }
+        setQueue(Array.from(newSet));
+        setCurrentIndex(0);
+        setAnimationClass("animate-popup-zoom");
+    }, [maxUnlockedPage]);
+
+    useEffect(() => {
+        generateQueue();
+    }, [generateQueue]);
+
+    const handleNext = () => {
+        if (currentIndex < queue.length - 1) {
+            setAnimationClass("");
+            setTimeout(() => {
+                setCurrentIndex(prev => prev + 1);
+                setAnimationClass("animate-slide-in-right");
+            }, 10);
+        } else {
+            // Auto shuffle when end reached? Or just stop. Let's loop for now or stop.
+            // Let's stop and ask to shuffle.
+        }
+    };
+
+    const handlePrev = () => {
+        if (currentIndex > 0) {
+            setAnimationClass("");
+            setTimeout(() => {
+                setCurrentIndex(prev => prev - 1);
+                setAnimationClass("animate-slide-in-left");
+            }, 10);
+        }
+    };
+
+    // Keyboard support
+    useEffect(() => {
+        const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === 'ArrowRight') handleNext();
+            if (e.key === 'ArrowLeft') handlePrev();
+        };
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [currentIndex, queue.length]);
+
+    const currentId = queue[currentIndex];
+
+    if (queue.length === 0) return (
+        <div className="flex flex-col items-center justify-center h-full gap-4">
+             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500"></div>
+             <p className="text-slate-500 font-bold">Shuffling Deck...</p>
+        </div>
+    );
+
+    return (
+        <div className="flex flex-col h-full bg-slate-100 overflow-hidden relative">
+            {/* Header Controls */}
+            <div className="flex items-center justify-between p-4 pb-2">
+                 <button onClick={onExit} className="flex items-center gap-1 text-slate-500 font-bold hover:text-slate-800 transition-colors bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                    Close
+                 </button>
+                 
+                 <div className="flex flex-col items-center">
+                    <span className="text-xs font-bold text-orange-500 uppercase tracking-widest">Flashcard Mode</span>
+                    <span className="text-sm font-black text-slate-700">{currentIndex + 1} / {queue.length}</span>
+                 </div>
+
+                 <button onClick={generateQueue} className="flex items-center gap-1 text-blue-500 font-bold hover:text-blue-700 transition-colors bg-white px-3 py-1.5 rounded-full shadow-sm border border-slate-200">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182m0-4.991v4.99" />
+                    </svg>
+                    Shuffle
+                 </button>
+            </div>
+
+            {/* Main Card Area */}
+            <div className="flex-1 flex items-center justify-center p-4 overflow-y-auto">
+                <div key={currentId} className={`w-full max-w-lg ${animationClass}`}>
+                    <TopicImageCard 
+                        index={currentId}
+                        isFavorite={favorites.includes(currentId)}
+                        onToggleFavorite={onToggleFavorite}
+                        isTogglingFavorite={togglingIds.has(currentId)}
+                        customClass="shadow-2xl ring-4 ring-white"
+                    />
+                </div>
+            </div>
+
+            {/* Footer Navigation */}
+            <div className="p-6 pb-8 flex justify-center gap-6 bg-slate-100/90 backdrop-blur-sm">
+                <button 
+                    onClick={handlePrev} 
+                    disabled={currentIndex === 0}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-b-4 transition-all ${
+                        currentIndex === 0 
+                            ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed' 
+                            : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50 active:translate-y-1 active:border-b-0'
+                    }`}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                    </svg>
+                </button>
+
+                <button 
+                    onClick={handleNext}
+                    disabled={currentIndex === queue.length - 1}
+                    className={`w-14 h-14 rounded-full flex items-center justify-center shadow-lg border-b-4 transition-all ${
+                        currentIndex === queue.length - 1
+                            ? 'bg-slate-200 text-slate-400 border-slate-300 cursor-not-allowed'
+                            : 'bg-orange-500 text-white border-orange-700 hover:bg-orange-400 active:translate-y-1 active:border-b-0'
+                    }`}
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    );
+};
 
 // --- UPDATED LEVEL MAP MODAL ---
 interface LevelMapModalProps {
@@ -636,8 +808,9 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
   });
   const [isDataLoaded, setIsDataLoaded] = useState(false);
 
-  // --- STATE 2: View Mode (All vs Favorites) ---
+  // --- STATE 2: View Mode (All vs Favorites) & Type (List vs Flashcard) ---
   const [viewMode, setViewMode] = useState<'all' | 'favorites'>('all');
+  const [viewModeType, setViewModeType] = useState<'list' | 'flashcard'>('list');
 
   // --- STATE 3: Trang hiện tại (UI State) ---
   const [currentPage, setCurrentPage] = useState(1);
@@ -669,15 +842,15 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
   // --- LOGIC LƯU TRANG HIỆN TẠI VÀO FIRESTORE (DEBOUNCE) ---
   useEffect(() => {
-    // Chỉ lưu nếu đang ở chế độ 'all'
-    if (isDataLoaded && user && viewMode === 'all') {
+    // Chỉ lưu nếu đang ở chế độ 'all' và xem dạng List
+    if (isDataLoaded && user && viewMode === 'all' && viewModeType === 'list') {
         const timeoutId = setTimeout(() => {
             saveTopicCurrentPage(user.uid, currentPage);
         }, 1000); 
 
         return () => clearTimeout(timeoutId);
     }
-  }, [currentPage, viewMode, isDataLoaded, user]);
+  }, [currentPage, viewMode, viewModeType, isDataLoaded, user]);
 
   // --- TÍNH TOÁN SỐ TRANG ---
   const totalPages = useMemo(() => {
@@ -712,7 +885,7 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
     }
   };
 
-  // --- TÍNH TOÁN ITEM HIỂN THỊ ---
+  // --- TÍNH TOÁN ITEM HIỂN THỊ (List Mode) ---
   const currentItems = useMemo(() => {
     if (viewMode === 'all') {
         const start = (currentPage - 1) * ITEMS_PER_PAGE + 1;
@@ -792,6 +965,23 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
         .catch(err => console.error("Reward claim failed", err));
   }, [user]);
 
+  // --- RENDER FLASHCARD MODE ---
+  if (viewModeType === 'flashcard') {
+      return (
+          <>
+            <style>{styles}</style>
+            <TopicFlashcardView 
+                maxUnlockedPage={maxUnlockedPage}
+                favorites={favorites}
+                onToggleFavorite={handleToggleFavorite}
+                togglingIds={togglingIds}
+                onExit={() => setViewModeType('list')}
+            />
+          </>
+      );
+  }
+
+  // --- RENDER LIST MODE (Original) ---
   return (
     <div className="flex flex-col h-full bg-gray-100 relative overflow-hidden">
       <style>{styles}</style>
@@ -891,7 +1081,8 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
 
           {/* Controls Navigation */}
           {(viewMode === 'all' || favorites.length > 0) && (
-            <div className="flex justify-center items-center gap-3 py-2 mt-2 w-full">
+            <div className="flex flex-col justify-center items-center gap-3 py-2 mt-2 w-full">
+                {/* Pagination */}
                 <div className="bg-white p-1.5 rounded-full shadow-lg border border-gray-200 flex items-center gap-2 transform transition-transform hover:scale-105">
                     
                     <button
@@ -908,7 +1099,6 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                     </svg>
                     </button>
 
-                    {/* <<< THAY ĐỔI: Sử dụng justify-center để căn giữa Page X/Y >>> */}
                     <button
                         onClick={() => setIsMapOpen(true)}
                         className="relative group font-bold py-2 px-4 rounded-full shadow-sm min-w-[140px] text-center text-sm btn-select-3d backdrop-blur-sm flex items-center justify-center gap-2 text-white bg-slate-800/70 hover:bg-slate-800"
@@ -943,6 +1133,17 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                         )}
                     </button>
                 </div>
+
+                {/* Flashcard Button Toggle */}
+                <button
+                    onClick={() => setViewModeType('flashcard')}
+                    className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl shadow-md btn-nav font-bold text-sm mt-2 transform hover:scale-105"
+                >
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-5 h-5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12c0-1.232-.046-2.453-.138-3.662a4.006 4.006 0 00-3.7-3.7 48.678 48.678 0 00-7.324 0 4.006 4.006 0 00-3.7 3.7c-.017.22-.032.441-.046.662M19.5 12l3-3m-3 3l-3-3m-12 3c0 1.232.046 2.453.138 3.662a4.006 4.006 0 003.7 3.7 48.656 48.656 0 007.324 0 4.006 4.006 0 003.7-3.7c.017-.22.032-.441.046-.662M4.5 12l3 3m-3-3l-3 3" />
+                    </svg>
+                    Start Flashcard Mode
+                </button>
             </div>
           )}
 
