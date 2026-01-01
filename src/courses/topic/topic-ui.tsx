@@ -158,14 +158,14 @@ const calculatePageCost = (page: number): number => {
   return Math.floor(cost);
 };
 
-// ADDED: Hàm preload ảnh trả về Promise
+// Hàm preload ảnh trả về Promise
 const preloadImages = (urls: string[]): Promise<void[]> => {
     return Promise.all(urls.map(src => {
         return new Promise<void>((resolve) => {
             const img = new Image();
             img.src = src;
             img.onload = () => resolve();
-            img.onerror = () => resolve(); // Vẫn resolve dù lỗi để không bị treo
+            img.onerror = () => resolve(); 
         });
     }));
 };
@@ -272,9 +272,9 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// ADDED: Flashcard Skeleton Component
+// ADDED: Flashcard Skeleton Component (Z-INDEX cao hơn Real UI)
 const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
-    <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
+    <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
         {/* Header Skeleton */}
         <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0 border-b border-white/5">
             <BackButton onClick={onClose} label="Back" />
@@ -296,14 +296,13 @@ const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
                     <svg className="w-16 h-16 text-slate-600 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                     </svg>
-                    <span className="text-slate-500 font-medium text-sm animate-pulse">Loading cards...</span>
                 </div>
             </div>
         </div>
     </div>
 );
 
-// --- FLASHCARD OVERLAY COMPONENT (UPDATED WITH PRELOAD) ---
+// --- FLASHCARD OVERLAY COMPONENT (UPDATED: Render Song Song) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -333,44 +332,47 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     const threshold = screenWidth * 0.35; 
 
-    // --- PRELOAD LOGIC (NEW) ---
+    // --- PRELOAD LOGIC (UPDATED) ---
     useEffect(() => {
-        const loadCards = async () => {
-            if (cards.length === 0) {
-                setIsInitialLoading(false);
-                return;
-            }
+        // 1. Chạy ngầm việc tải ảnh (không chặn UI vì UI đã render bên dưới)
+        const runBackgroundLoading = async () => {
+            if (cards.length === 0) return;
 
-            // 1. Lấy danh sách URL
+            // Lấy danh sách URL
             const allUrls = cards.map(id => getTopicImageUrl(id));
 
-            // 2. Tách 6 ảnh đầu tiên
+            // Tách 6 ảnh đầu tiên (ưu tiên)
             const priorityCount = 6;
             const priorityUrls = allUrls.slice(0, priorityCount);
             const remainingUrls = allUrls.slice(priorityCount);
 
-            // 3. Load 6 ảnh đầu -> Đợi xong mới tắt Skeleton
+            // Load 6 ảnh đầu
             try {
                 await preloadImages(priorityUrls);
             } catch (error) {
                 console.error("Error preloading initial batch", error);
-            } finally {
-                setIsInitialLoading(false);
-                
-                // 4. Load ngầm phần còn lại (Không await để không chặn UI)
-                if (remainingUrls.length > 0) {
-                    preloadImages(remainingUrls).catch(err => console.error("Background load error", err));
-                }
+            }
+            
+            // Load ngầm phần còn lại
+            if (remainingUrls.length > 0) {
+                preloadImages(remainingUrls).catch(err => console.error("Background load error", err));
             }
         };
 
-        loadCards();
+        // 2. Timer cố định 5 giây
+        const timer = setTimeout(() => {
+            setIsInitialLoading(false);
+        }, 5000);
+
+        // Kích hoạt chạy ngầm
+        runBackgroundLoading();
+
+        // Cleanup timer
+        return () => clearTimeout(timer);
     }, [cards]);
 
     // Reset styles khi chuyển card mới
     useEffect(() => {
-        if (isInitialLoading) return;
-
         if (cardRef.current) {
             cardRef.current.style.transform = 'none';
             cardRef.current.style.transition = 'none';
@@ -385,13 +387,15 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         if (backStampRef.current) backStampRef.current.style.opacity = '0';
         
         currentX.current = 0;
-    }, [currentIndex, isInitialLoading]);
+    }, [currentIndex]);
 
     // --- EVENT LISTENERS (GLOBAL) ---
     useEffect(() => {
-        if (isInitialLoading) return;
-
+        // Vẫn gán event listener nhưng nếu isInitialLoading=true thì Skeleton che mất nên user không tương tác được
+        // Hoặc có thể thêm check isInitialLoading bên trong handler nếu cần chặn tuyệt đối.
+        
         const handleMove = (e: MouseEvent | TouchEvent) => {
+            if (isInitialLoading) return; // Chặn drag khi đang load
             if (!isDragging.current || isAnimating) return;
             
             const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
@@ -428,6 +432,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         };
 
         const handleEnd = () => {
+            if (isInitialLoading) return;
             if (!isDragging.current) return;
             isDragging.current = false;
             
@@ -464,6 +469,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
     }, [currentIndex, isAnimating, cards.length, screenWidth, threshold, isInitialLoading]);
 
     const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
+        if (isInitialLoading) return;
         if (isAnimating) return;
         isDragging.current = true;
         startX.current = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
@@ -515,101 +521,102 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         }
     };
 
-    // --- RENDER SKELETON NẾU ĐANG LOAD ---
-    if (isInitialLoading) {
-        return <FlashcardSkeleton onClose={onClose} />;
-    }
-
     const currentCardId = cards[currentIndex];
     const isFavorite = favorites.includes(currentCardId);
     const progress = ((currentIndex + 1) / cards.length) * 100;
 
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
-            {/* Header (UPDATED) */}
-            <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0">
-                {/* Left: Back Button (replaced Close) */}
-                <BackButton onClick={onClose} label="Back" />
+        <>
+            {/* 1. SKELETON LAYER (Hiện khi đang loading, z-index 200) */}
+            {isInitialLoading && <FlashcardSkeleton onClose={onClose} />}
 
-                {/* Right: Counter (Moved from left) */}
-                <div className="flex items-center gap-3">
-                    <span className="text-white font-black text-lg">
-                        {currentIndex + 1} <span className="text-white/50 text-sm">/ {cards.length}</span>
-                    </span>
+            {/* 2. REAL UI LAYER (Luôn render, z-index 100) */}
+            <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
+                {/* Header (UPDATED) */}
+                <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0">
+                    {/* Left: Back Button (replaced Close) */}
+                    <BackButton onClick={onClose} label="Back" />
+
+                    {/* Right: Counter (Moved from left) */}
+                    <div className="flex items-center gap-3">
+                        <span className="text-white font-black text-lg">
+                            {currentIndex + 1} <span className="text-white/50 text-sm">/ {cards.length}</span>
+                        </span>
+                    </div>
                 </div>
-            </div>
 
-            {/* Progress Bar */}
-            <div className="w-full h-1 bg-slate-800 shrink-0">
-                <div className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 transition-all duration-300" style={{ width: `${progress}%` }}></div>
-            </div>
+                {/* Progress Bar */}
+                <div className="w-full h-1 bg-slate-800 shrink-0">
+                    <div className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 transition-all duration-300" style={{ width: `${progress}%` }}></div>
+                </div>
 
-            {/* Card Container Area */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-                <div 
-                    className="relative w-full max-w-lg h-[75vh]"
-                    onTouchStart={handleStart}
-                    onMouseDown={handleStart}
-                >
-                    
-                    {/* Background Card (Next Card Preview) */}
-                    {currentIndex < cards.length - 1 && (
-                        <div 
-                            ref={bgCardRef}
-                            className="absolute inset-0 overflow-hidden flex items-center justify-center"
-                            style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
-                        >
-                            <img 
-                                src={getTopicImageUrl(cards[currentIndex + 1])} 
-                                alt="Next" 
-                                className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl"
-                                draggable={false}
-                            />
-                        </div>
-                    )}
-
-                    {/* Active Card (Draggable) */}
+                {/* Card Container Area */}
+                <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
                     <div 
-                        ref={cardRef}
-                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
+                        className="relative w-full max-w-lg h-[75vh]"
+                        onTouchStart={handleStart}
+                        onMouseDown={handleStart}
                     >
-                        <div className="relative w-full h-full flex items-center justify-center">
-                            
-                            {/* --- TEM NHÃN NEXT/BACK --- */}
+                        
+                        {/* Background Card (Next Card Preview) */}
+                        {currentIndex < cards.length - 1 && (
                             <div 
-                                ref={backStampRef}
-                                className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                ref={bgCardRef}
+                                className="absolute inset-0 overflow-hidden flex items-center justify-center"
+                                style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
                             >
-                                BACK
+                                <img 
+                                    src={getTopicImageUrl(cards[currentIndex + 1])} 
+                                    alt="Next" 
+                                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl"
+                                    draggable={false}
+                                />
                             </div>
+                        )}
 
-                            <div 
-                                ref={nextStampRef}
-                                className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
-                            >
-                                NEXT
+                        {/* Active Card (Draggable) */}
+                        <div 
+                            ref={cardRef}
+                            className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
+                        >
+                            <div className="relative w-full h-full flex items-center justify-center">
+                                
+                                {/* --- TEM NHÃN NEXT/BACK --- */}
+                                <div 
+                                    ref={backStampRef}
+                                    className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                >
+                                    BACK
+                                </div>
+
+                                <div 
+                                    ref={nextStampRef}
+                                    className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                >
+                                    NEXT
+                                </div>
+
+                                {/* MAIN IMAGE - rounded-3xl, NO bg-white, NO shadow */}
+                                <img 
+                                    src={getTopicImageUrl(currentCardId)} 
+                                    alt="Flashcard" 
+                                    className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl pointer-events-none select-none" 
+                                    draggable={false}
+                                />
+                                
+                                {/* Favorite Button */}
+                                <FavoriteButton 
+                                    isFavorite={isFavorite}
+                                    onToggle={() => onToggleFavorite(currentCardId)}
+                                    isToggling={togglingIds.has(currentCardId)}
+                                    customClass="absolute bottom-6 right-6 bg-white opacity-90 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-all"
+                                />
                             </div>
-
-                            {/* MAIN IMAGE - rounded-3xl, NO bg-white, NO shadow */}
-                            <img 
-                                src={getTopicImageUrl(currentCardId)} 
-                                alt="Flashcard" 
-                                className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl pointer-events-none select-none" 
-                                draggable={false}
-                            />
-                            
-                            {/* Favorite Button */}
-                            <FavoriteButton 
-                                isFavorite={isFavorite}
-                                onToggle={() => onToggleFavorite(currentCardId)}
-                                isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-6 right-6 bg-white opacity-90 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-all"
-                            />
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </>
     );
 };
 
