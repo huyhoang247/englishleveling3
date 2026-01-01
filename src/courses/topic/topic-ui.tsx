@@ -259,7 +259,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (UPDATED: Clean & Transparent) ---
+// --- FLASHCARD OVERLAY COMPONENT (UPDATED) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -498,40 +498,40 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     >
                         <div className="relative w-full h-full flex items-center justify-center">
                             
-                            {/* --- TEM NHÃN NEXT/BACK (TRANSPARENT + DROP SHADOW) --- */}
+                            {/* --- TEM NHÃN NEXT/BACK (MOVED INWARDS + NO DROP SHADOW) --- */}
                             <div 
                                 ref={backStampRef}
-                                className="absolute top-6 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                                className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
                             >
                                 BACK
                             </div>
 
                             <div 
                                 ref={nextStampRef}
-                                className="absolute top-6 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]"
+                                className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
                             >
                                 NEXT
                             </div>
 
-                            {/* MAIN IMAGE - FULL SIZE & TRANSPARENT BG */}
+                            {/* MAIN IMAGE - FULL SIZE & TRANSPARENT BG & NO SHADOW */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain pointer-events-none select-none rounded-2xl drop-shadow-2xl" 
+                                className="w-full h-full object-contain pointer-events-none select-none rounded-2xl" 
                                 draggable={false}
                             />
                             
+                            {/* Favorite Button with 85% Opacity */}
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
                                 isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12"
+                                customClass="absolute bottom-4 right-4 bg-white opacity-85 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-opacity"
                             />
                         </div>
                     </div>
                 </div>
             </div>
-            {/* Empty footer area spacer */}
         </div>
     );
 };
