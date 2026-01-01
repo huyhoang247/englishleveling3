@@ -261,7 +261,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (SMOOTH LABELS & PHYSICS) ---
+// --- FLASHCARD OVERLAY COMPONENT (REFINED) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -382,20 +382,21 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     // Style cho thẻ nền (Background - Next card preview)
     const dragPercentage = Math.min(Math.abs(dragX) / screenWidth, 1);
-    const backCardScale = 0.92 + (0.08 * dragPercentage); // Từ 0.92 -> 1.0
-    const backCardOpacity = 0.6 + (0.4 * dragPercentage); // Từ 0.6 -> 1.0
+    // Scale từ 0.95 -> 1.0. 
+    // Opacity luôn là 1 (không mờ đi) để rõ ràng.
+    const backCardScale = 0.95 + (0.05 * dragPercentage); 
 
     const backCardStyle = {
         transform: `scale(${backCardScale})`,
-        opacity: backCardOpacity,
+        opacity: 1, // Fix: Luôn hiển thị rõ ảnh sau
         zIndex: 5,
         transition: isDragging ? 'none' : 'all 0.3s ease-out'
     };
 
     // --- LOGIC NHÃN NEXT/BACK (STAMPS) ---
-    // Tính opacity dựa trên khoảng cách kéo. Chia cho 0.8 threshold để nó hiện rõ sớm hơn một chút.
-    const overlayOpacity = Math.min(Math.abs(dragX) / (threshold * 0.8), 1);
-    const showOverlay = overlayOpacity > 0.1; // Chỉ render nếu có độ mờ nhất định
+    // Opacity của chữ stamp
+    const overlayOpacity = Math.min(Math.abs(dragX) / (threshold * 0.7), 1);
+    const showOverlay = overlayOpacity > 0.05; 
     const isRightSwipe = dragX > 0; // Kéo phải -> BACK
     const isLeftSwipe = dragX < 0;  // Kéo trái -> NEXT
 
@@ -436,7 +437,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
-                                className="w-full h-full object-contain p-2 opacity-80"
+                                className="w-full h-full object-contain p-2"
                             />
                         </div>
                     )}
@@ -451,20 +452,20 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     >
                         <div className="relative w-full h-full bg-gray-50 flex items-center justify-center">
                             
-                            {/* --- OVERLAY STAMPS (BACK) --- */}
+                            {/* --- OVERLAY STAMPS (BACK) - TINH TẾ HƠN --- */}
                             {showOverlay && isRightSwipe && (
                                 <div 
-                                    className="absolute top-8 left-6 z-20 border-[6px] border-green-500 text-green-500 font-black text-4xl uppercase px-4 py-1 rounded-xl -rotate-[15deg] pointer-events-none tracking-widest bg-white/10 backdrop-blur-[2px]"
+                                    className="absolute top-6 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-3 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest"
                                     style={{ opacity: overlayOpacity }}
                                 >
                                     BACK
                                 </div>
                             )}
 
-                            {/* --- OVERLAY STAMPS (NEXT) --- */}
+                            {/* --- OVERLAY STAMPS (NEXT) - TINH TẾ HƠN --- */}
                             {showOverlay && isLeftSwipe && (
                                 <div 
-                                    className="absolute top-8 right-6 z-20 border-[6px] border-red-500 text-red-500 font-black text-4xl uppercase px-4 py-1 rounded-xl rotate-[15deg] pointer-events-none tracking-widest bg-white/10 backdrop-blur-[2px]"
+                                    className="absolute top-6 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-3 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest"
                                     style={{ opacity: overlayOpacity }}
                                 >
                                     NEXT
