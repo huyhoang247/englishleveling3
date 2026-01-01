@@ -261,7 +261,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (REFINED) ---
+// --- FLASHCARD OVERLAY COMPONENT (HIGH PERFORMANCE DOM MANIPULATION) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -272,93 +272,41 @@ interface FlashcardOverlayProps {
 
 const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglingIds }: FlashcardOverlayProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [dragX, setDragX] = useState(0);
-    const [isDragging, setIsDragging] = useState(false);
-    const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
+    const [isAnimating, setIsAnimating] = useState(false);
 
-    const startXRef = useRef<number | null>(null);
-    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+    // Refs cho Direct DOM manipulation (Không gây re-render)
+    const cardRef = useRef<HTMLDivElement>(null);
+    const bgCardRef = useRef<HTMLDivElement>(null);
+    const nextStampRef = useRef<HTMLDivElement>(null);
+    const backStampRef = useRef<HTMLDivElement>(null);
     
-    // Ngưỡng kéo để xác nhận chuyển trang (35% chiều rộng màn hình)
+    // Mutable variables
+    const startX = useRef(0);
+    const currentX = useRef(0);
+    const isDragging = useRef(false);
+
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     const threshold = screenWidth * 0.35; 
 
-    // Handle Touch Start
-    const onTouchStart = (e: React.TouchEvent) => {
-        if (exitDirection) return;
-        startXRef.current = e.touches[0].clientX;
-        setIsDragging(true);
-        setExitDirection(null);
-    };
-
-    // Handle Touch Move
-    const onTouchMove = (e: React.TouchEvent) => {
-        if (!isDragging || startXRef.current === null) return;
-        const currentX = e.touches[0].clientX;
-        const delta = currentX - startXRef.current;
-        setDragX(delta);
-    };
-
-    // Handle Touch End
-    const onTouchEnd = () => {
-        if (!isDragging) return;
-        setIsDragging(false);
-        startXRef.current = null;
-
-        if (Math.abs(dragX) > threshold) {
-            const direction = dragX > 0 ? 'right' : 'left';
-            
-            if (direction === 'left' && currentIndex < cards.length - 1) {
-                // Next Card
-                setExitDirection('left');
-                setTimeout(() => {
-                    setCurrentIndex(prev => prev + 1);
-                    setDragX(0);
-                    setExitDirection(null);
-                }, 300); // 300ms khớp với transition duration
-            } else if (direction === 'right' && currentIndex > 0) {
-                // Prev Card
-                setExitDirection('right');
-                setTimeout(() => {
-                    setCurrentIndex(prev => prev - 1);
-                    setDragX(0);
-                    setExitDirection(null);
-                }, 300);
-            } else {
-                // Snap back (kéo chưa đủ hoặc hết thẻ)
-                setDragX(0);
-            }
-        } else {
-            // Snap back
-            setDragX(0);
+    // Reset styles khi chuyển card mới
+    useEffect(() => {
+        if (cardRef.current) {
+            cardRef.current.style.transform = 'none';
+            cardRef.current.style.transition = 'none';
+            cardRef.current.style.cursor = 'grab';
         }
-    };
-
-    // Button Controls (Click)
-    const handleNext = () => {
-        if (currentIndex < cards.length - 1) {
-            setExitDirection('left'); 
-            setDragX(-screenWidth); 
-            setTimeout(() => {
-                setCurrentIndex(prev => prev + 1);
-                setDragX(0);
-                setExitDirection(null);
-            }, 300);
+        if (bgCardRef.current) {
+            bgCardRef.current.style.transform = 'scale(0.95)';
+            bgCardRef.current.style.opacity = '1';
         }
-    };
+        if (nextStampRef.current) nextStampRef.current.style.opacity = '0';
+        if (backStampRef.current) backStampRef.current.style.opacity = '0';
+        
+        // Reset variables
+        currentX.current = 0;
+    }, [currentIndex]);
 
-    const handlePrev = () => {
-        if (currentIndex > 0) {
-            setExitDirection('right');
-            setDragX(screenWidth);
-            setTimeout(() => {
-                setCurrentIndex(prev => prev - 1);
-                setDragX(0);
-                setExitDirection(null);
-            }, 300);
-        }
-    };
-
-    // Preload next image
+    // Preload image
     useEffect(() => {
         if (currentIndex < cards.length - 1) {
             const img = new Image();
@@ -366,42 +314,136 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         }
     }, [currentIndex, cards]);
 
+    const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+        if (isAnimating) return;
+        isDragging.current = true;
+        startX.current = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        
+        if (cardRef.current) {
+            cardRef.current.style.transition = 'none'; // Tắt transition để kéo mượt tức thì
+            cardRef.current.style.cursor = 'grabbing';
+        }
+    };
+
+    const handleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
+        if (!isDragging.current) return;
+        
+        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
+        const deltaX = clientX - startX.current;
+        currentX.current = deltaX;
+
+        // --- DIRECT DOM UPDATES (NO REACT RENDER) ---
+        requestAnimationFrame(() => {
+            if (cardRef.current) {
+                // Di chuyển và xoay
+                const rotateDeg = (deltaX / screenWidth) * 20;
+                cardRef.current.style.transform = `translateX(${deltaX}px) rotate(${rotateDeg}deg)`;
+            }
+
+            // Hiệu ứng background card (Zoom in nhẹ)
+            if (bgCardRef.current) {
+                const percentage = Math.min(Math.abs(deltaX) / screenWidth, 1);
+                const scale = 0.95 + (0.05 * percentage);
+                bgCardRef.current.style.transform = `scale(${scale})`;
+            }
+
+            // Hiệu ứng tem (Stamps)
+            const opacity = Math.min(Math.abs(deltaX) / (threshold * 0.8), 1);
+            if (deltaX > 0) { // BACK
+                 if (backStampRef.current) backStampRef.current.style.opacity = opacity.toString();
+                 if (nextStampRef.current) nextStampRef.current.style.opacity = '0';
+            } else { // NEXT
+                 if (nextStampRef.current) nextStampRef.current.style.opacity = opacity.toString();
+                 if (backStampRef.current) backStampRef.current.style.opacity = '0';
+            }
+        });
+    };
+
+    const handleTouchEnd = () => {
+        if (!isDragging.current) return;
+        isDragging.current = false;
+        
+        const deltaX = currentX.current;
+        const absDeltaX = Math.abs(deltaX);
+
+        if (absDeltaX > threshold) {
+            // SWIPE THÀNH CÔNG
+            const direction = deltaX > 0 ? 'right' : 'left';
+            
+            // Logic chặn nếu hết bài
+            if (direction === 'left' && currentIndex >= cards.length - 1) {
+                resetCard(); // Hết bài -> Trả về cũ
+                return;
+            }
+            if (direction === 'right' && currentIndex <= 0) {
+                resetCard(); // Đầu bài -> Trả về cũ
+                return;
+            }
+
+            finishSwipe(direction);
+
+        } else {
+            // SWIPE KHÔNG ĐẠT -> TRẢ VỀ CŨ
+            resetCard();
+        }
+    };
+
+    const finishSwipe = (direction: 'left' | 'right') => {
+        setIsAnimating(true);
+        if (cardRef.current) {
+            const endX = direction === 'left' ? -screenWidth * 1.5 : screenWidth * 1.5;
+            const rotateDeg = (endX / screenWidth) * 20;
+            
+            cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            cardRef.current.style.transform = `translateX(${endX}px) rotate(${rotateDeg}deg)`;
+        }
+
+        setTimeout(() => {
+            if (direction === 'left') {
+                setCurrentIndex(prev => prev + 1);
+            } else {
+                setCurrentIndex(prev => prev - 1);
+            }
+            setIsAnimating(false);
+        }, 300);
+    };
+
+    const resetCard = () => {
+        if (cardRef.current) {
+            cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            cardRef.current.style.transform = 'none';
+            cardRef.current.style.cursor = 'grab';
+        }
+        if (bgCardRef.current) {
+            bgCardRef.current.style.transition = 'all 0.3s ease';
+            bgCardRef.current.style.transform = 'scale(0.95)';
+        }
+        if (nextStampRef.current) {
+            nextStampRef.current.style.transition = 'opacity 0.2s ease';
+            nextStampRef.current.style.opacity = '0';
+        }
+        if (backStampRef.current) {
+            backStampRef.current.style.transition = 'opacity 0.2s ease';
+            backStampRef.current.style.opacity = '0';
+        }
+    };
+
+    // --- Buttons Handlers ---
+    const handleBtnNext = () => {
+        if (isAnimating || currentIndex >= cards.length - 1) return;
+        finishSwipe('left');
+    };
+    const handleBtnPrev = () => {
+        if (isAnimating || currentIndex <= 0) return;
+        finishSwipe('right');
+    };
+
     const currentCardId = cards[currentIndex];
     const isFavorite = favorites.includes(currentCardId);
     const progress = ((currentIndex + 1) / cards.length) * 100;
 
-    // --- Dynamic Styles ---
-    const rotateDeg = (dragX / screenWidth) * 20; 
-    
-    // Style cho thẻ đang được kéo (Active)
-    const activeCardStyle = {
-        transform: `translateX(${dragX}px) rotate(${rotateDeg}deg)`,
-        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
-        zIndex: 10
-    };
-
-    // Style cho thẻ nền (Background - Next card preview)
-    const dragPercentage = Math.min(Math.abs(dragX) / screenWidth, 1);
-    // Scale từ 0.95 -> 1.0. 
-    // Opacity luôn là 1 (không mờ đi) để rõ ràng.
-    const backCardScale = 0.95 + (0.05 * dragPercentage); 
-
-    const backCardStyle = {
-        transform: `scale(${backCardScale})`,
-        opacity: 1, // Fix: Luôn hiển thị rõ ảnh sau
-        zIndex: 5,
-        transition: isDragging ? 'none' : 'all 0.3s ease-out'
-    };
-
-    // --- LOGIC NHÃN NEXT/BACK (STAMPS) ---
-    // Opacity của chữ stamp
-    const overlayOpacity = Math.min(Math.abs(dragX) / (threshold * 0.7), 1);
-    const showOverlay = overlayOpacity > 0.05; 
-    const isRightSwipe = dragX > 0; // Kéo phải -> BACK
-    const isLeftSwipe = dragX < 0;  // Kéo trái -> NEXT
-
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none">
+        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
             {/* Header */}
             <div className="px-4 py-3 flex items-center justify-between bg-black/20 shrink-0">
                 <div className="flex items-center gap-3">
@@ -425,59 +467,65 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             </div>
 
             {/* Card Container Area */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            <div 
+                className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden"
+                // Gắn sự kiện touch vào container bao quanh để vùng vuốt rộng hơn
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onMouseDown={handleTouchStart}
+                onMouseMove={handleTouchMove}
+                onMouseUp={handleTouchEnd}
+                onMouseLeave={handleTouchEnd}
+            >
                 <div className="relative w-full max-w-md aspect-[3/4] max-h-[70vh]">
                     
-                    {/* Background Card */}
+                    {/* Background Card (Next Card Preview) */}
                     {currentIndex < cards.length - 1 && (
                         <div 
+                            ref={bgCardRef}
                             className="absolute inset-0 bg-white rounded-3xl shadow-xl border border-white/10 overflow-hidden flex items-center justify-center"
-                            style={backCardStyle}
+                            style={{ transform: 'scale(0.95)', opacity: 1 }} // Luôn hiển thị rõ
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
                                 className="w-full h-full object-contain p-2"
+                                draggable={false}
                             />
                         </div>
                     )}
 
-                    {/* Active Card */}
+                    {/* Active Card (Draggable) */}
                     <div 
-                        className="absolute inset-0 bg-white rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing"
-                        style={activeCardStyle}
-                        onTouchStart={onTouchStart}
-                        onTouchMove={onTouchMove}
-                        onTouchEnd={onTouchEnd}
+                        ref={cardRef}
+                        className="absolute inset-0 bg-white rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col cursor-grab will-change-transform"
                     >
                         <div className="relative w-full h-full bg-gray-50 flex items-center justify-center">
                             
-                            {/* --- OVERLAY STAMPS (BACK) - TINH TẾ HƠN --- */}
-                            {showOverlay && isRightSwipe && (
-                                <div 
-                                    className="absolute top-6 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-3 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest"
-                                    style={{ opacity: overlayOpacity }}
-                                >
-                                    BACK
-                                </div>
-                            )}
+                            {/* --- TEM NHÃN NEXT/BACK --- */}
+                            <div 
+                                ref={backStampRef}
+                                className="absolute top-6 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                            >
+                                BACK
+                            </div>
 
-                            {/* --- OVERLAY STAMPS (NEXT) - TINH TẾ HƠN --- */}
-                            {showOverlay && isLeftSwipe && (
-                                <div 
-                                    className="absolute top-6 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-3 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest"
-                                    style={{ opacity: overlayOpacity }}
-                                >
-                                    NEXT
-                                </div>
-                            )}
+                            <div 
+                                ref={nextStampRef}
+                                className="absolute top-6 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                            >
+                                NEXT
+                            </div>
 
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
                                 className="w-full h-full object-contain p-2 pointer-events-none select-none" 
+                                draggable={false}
                             />
                             
+                            {/* Nút Favorite nằm trong Card nhưng ko bị xoay theo drag logic (vì nằm trong div cha) */}
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
@@ -489,7 +537,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 </div>
 
                 {/* Instructions */}
-                <div className="mt-6 text-white/40 text-sm font-medium animate-pulse">
+                <div className="mt-6 text-white/40 text-sm font-medium animate-pulse pointer-events-none">
                     Swipe left for next, right for previous
                 </div>
             </div>
@@ -497,8 +545,8 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             {/* Footer Controls */}
             <div className="p-6 pb-8 flex items-center justify-center gap-6 bg-black/20 shrink-0">
                 <button 
-                    onClick={handlePrev}
-                    disabled={currentIndex === 0 || !!exitDirection}
+                    onClick={handleBtnPrev}
+                    disabled={currentIndex === 0 || isAnimating}
                     className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${
                         currentIndex === 0 
                             ? 'border-white/10 text-white/10 cursor-not-allowed' 
@@ -514,7 +562,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 <button 
                     onClick={() => {
                         setCurrentIndex(0);
-                        setDragX(0);
                     }}
                     className="px-6 py-3 rounded-xl font-bold text-slate-900 bg-yellow-400 hover:bg-yellow-300 active:translate-y-1 transition-all shadow-lg shadow-yellow-400/20"
                 >
@@ -522,8 +569,8 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 </button>
 
                 <button 
-                    onClick={handleNext}
-                    disabled={currentIndex === cards.length - 1 || !!exitDirection}
+                    onClick={handleBtnNext}
+                    disabled={currentIndex === cards.length - 1 || isAnimating}
                     className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${
                         currentIndex === cards.length - 1
                             ? 'border-white/10 text-white/10 cursor-not-allowed' 
