@@ -259,7 +259,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (FIXED: EVENT HANDLERS & OPACITY) ---
+// --- FLASHCARD OVERLAY COMPONENT (FULL SIZE - NO BUTTONS) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -295,7 +295,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         }
         if (bgCardRef.current) {
             bgCardRef.current.style.transform = 'scale(0.95)';
-            // FIX: Reset opacity về 0.5 khi bắt đầu card mới
             bgCardRef.current.style.opacity = '0.5';
             bgCardRef.current.style.transition = 'all 0.3s ease'; 
         }
@@ -314,7 +313,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
     }, [currentIndex, cards]);
 
     // --- EVENT LISTENERS (GLOBAL) ---
-    // Sử dụng window/document listener để bắt sự kiện ngay cả khi chuột/tay lướt ra ngoài thẻ
     useEffect(() => {
         const handleMove = (e: MouseEvent | TouchEvent) => {
             if (!isDragging.current || isAnimating) return;
@@ -324,24 +322,19 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             currentX.current = deltaX;
 
             requestAnimationFrame(() => {
-                // --- FIX: QUAN TRỌNG ---
-                // Nếu người dùng đã thả tay ra, không cập nhật vị trí nữa
-                // để tránh conflict với resetCard
                 if (!isDragging.current) return;
-                // -----------------------
 
                 if (cardRef.current) {
                     const rotateDeg = (deltaX / screenWidth) * 20;
                     cardRef.current.style.transform = `translateX(${deltaX}px) rotate(${rotateDeg}deg)`;
                 }
 
-                // FIX: Tính toán background opacity từ 0.5 -> 1.0
                 if (bgCardRef.current) {
                     const percentage = Math.min(Math.abs(deltaX) / screenWidth, 1);
                     const scale = 0.95 + (0.05 * percentage);
-                    const opacity = 0.5 + (0.5 * percentage); // Mờ (0.5) -> Rõ (1.0)
+                    const opacity = 0.5 + (0.5 * percentage);
                     
-                    bgCardRef.current.style.transition = 'none'; // Tắt transition khi đang drag
+                    bgCardRef.current.style.transition = 'none';
                     bgCardRef.current.style.transform = `scale(${scale})`;
                     bgCardRef.current.style.opacity = opacity.toString();
                 }
@@ -376,7 +369,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 }
                 finishSwipe(direction);
             } else {
-                // FIX: Đảm bảo thẻ quay về vị trí cũ nếu kéo chưa đủ
                 resetCard();
             }
         };
@@ -427,12 +419,10 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     const resetCard = () => {
         if (cardRef.current) {
-            // FIX: Đặt transition và reset vị trí cụ thể hơn để tránh bị kẹt
             cardRef.current.style.transition = 'transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
-            cardRef.current.style.transform = 'translateX(0px) rotate(0deg)'; // FIX: Cụ thể 0px thay vì 'none'
+            cardRef.current.style.transform = 'translateX(0px) rotate(0deg)';
             cardRef.current.style.cursor = 'grab';
         }
-        // Reset background card về trạng thái mờ
         if (bgCardRef.current) {
             bgCardRef.current.style.transition = 'all 0.3s ease';
             bgCardRef.current.style.transform = 'scale(0.95)';
@@ -446,16 +436,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             backStampRef.current.style.transition = 'opacity 0.2s ease';
             backStampRef.current.style.opacity = '0';
         }
-    };
-
-    // --- Buttons Handlers ---
-    const handleBtnNext = () => {
-        if (isAnimating || currentIndex >= cards.length - 1) return;
-        finishSwipe('left');
-    };
-    const handleBtnPrev = () => {
-        if (isAnimating || currentIndex <= 0) return;
-        finishSwipe('right');
     };
 
     const currentCardId = cards[currentIndex];
@@ -486,10 +466,10 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 <div className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 transition-all duration-300" style={{ width: `${progress}%` }}></div>
             </div>
 
-            {/* Card Container Area */}
-            <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            {/* Card Container Area - FULL SIZE */}
+            <div className="flex-1 flex flex-col items-center justify-center p-2 relative overflow-hidden">
                 <div 
-                    className="relative w-full max-w-md aspect-[3/4] max-h-[70vh]"
+                    className="relative w-full h-full max-w-2xl"
                     onTouchStart={handleStart}
                     onMouseDown={handleStart}
                 >
@@ -498,13 +478,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {currentIndex < cards.length - 1 && (
                         <div 
                             ref={bgCardRef}
-                            className="absolute inset-0 bg-white rounded-3xl shadow-xl border border-white/10 overflow-hidden flex items-center justify-center"
-                            style={{ transform: 'scale(0.95)', opacity: 0.5 }} // Mặc định mờ 0.5
+                            className="absolute inset-0 flex items-center justify-center"
+                            style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
-                                className="w-full h-full object-contain p-2"
+                                className="w-full h-full object-contain"
                                 draggable={false}
                             />
                         </div>
@@ -513,21 +493,21 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {/* Active Card (Draggable) */}
                     <div 
                         ref={cardRef}
-                        className="absolute inset-0 bg-white rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col cursor-grab will-change-transform"
+                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
                     >
-                        <div className="relative w-full h-full bg-gray-50 flex items-center justify-center">
+                        <div className="relative w-full h-full flex items-center justify-center">
                             
                             {/* --- TEM NHÃN NEXT/BACK --- */}
                             <div 
                                 ref={backStampRef}
-                                className="absolute top-6 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                className="absolute top-10 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-black/20 backdrop-blur-sm"
                             >
                                 BACK
                             </div>
 
                             <div 
                                 ref={nextStampRef}
-                                className="absolute top-6 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                className="absolute top-10 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-black/20 backdrop-blur-sm"
                             >
                                 NEXT
                             </div>
@@ -535,7 +515,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain p-2 pointer-events-none select-none" 
+                                className="w-full h-full object-contain pointer-events-none select-none drop-shadow-2xl" 
                                 draggable={false}
                             />
                             
@@ -543,57 +523,11 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
                                 isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12"
+                                customClass="absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 rounded-full"
                             />
                         </div>
                     </div>
                 </div>
-
-                {/* Instructions */}
-                <div className="mt-6 text-white/40 text-sm font-medium animate-pulse pointer-events-none">
-                    Swipe left for next, right for previous
-                </div>
-            </div>
-
-            {/* Footer Controls */}
-            <div className="p-6 pb-8 flex items-center justify-center gap-6 bg-black/20 shrink-0">
-                <button 
-                    onClick={handleBtnPrev}
-                    disabled={currentIndex === 0 || isAnimating}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${
-                        currentIndex === 0 
-                            ? 'border-white/10 text-white/10 cursor-not-allowed' 
-                            : 'border-white/30 text-white bg-white/5 hover:bg-white/20 active:scale-95'
-                    }`}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-                    </svg>
-                </button>
-
-                {/* Restart Button */}
-                <button 
-                    onClick={() => {
-                        setCurrentIndex(0);
-                    }}
-                    className="px-6 py-3 rounded-xl font-bold text-slate-900 bg-yellow-400 hover:bg-yellow-300 active:translate-y-1 transition-all shadow-lg shadow-yellow-400/20"
-                >
-                    Restart
-                </button>
-
-                <button 
-                    onClick={handleBtnNext}
-                    disabled={currentIndex === cards.length - 1 || isAnimating}
-                    className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${
-                        currentIndex === cards.length - 1
-                            ? 'border-white/10 text-white/10 cursor-not-allowed' 
-                            : 'border-white/30 text-white bg-white/5 hover:bg-white/20 active:scale-95'
-                    }`}
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-                    </svg>
-                </button>
             </div>
         </div>
     );
