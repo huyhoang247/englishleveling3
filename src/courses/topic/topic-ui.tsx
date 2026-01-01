@@ -259,7 +259,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (FULL SIZE - NO BUTTONS) ---
+// --- FLASHCARD OVERLAY COMPONENT (UPDATED: Clean Design & Fixes) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -322,6 +322,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             currentX.current = deltaX;
 
             requestAnimationFrame(() => {
+                // Check if user released drag
                 if (!isDragging.current) return;
 
                 if (cardRef.current) {
@@ -332,7 +333,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 if (bgCardRef.current) {
                     const percentage = Math.min(Math.abs(deltaX) / screenWidth, 1);
                     const scale = 0.95 + (0.05 * percentage);
-                    const opacity = 0.5 + (0.5 * percentage);
+                    const opacity = 0.5 + (0.5 * percentage); 
                     
                     bgCardRef.current.style.transition = 'none';
                     bgCardRef.current.style.transform = `scale(${scale})`;
@@ -462,14 +463,14 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             </div>
 
             {/* Progress Bar */}
-            <div className="w-full h-1 bg-slate-800">
+            <div className="w-full h-1 bg-slate-800 shrink-0">
                 <div className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 transition-all duration-300" style={{ width: `${progress}%` }}></div>
             </div>
 
-            {/* Card Container Area - FULL SIZE */}
-            <div className="flex-1 flex flex-col items-center justify-center p-2 relative overflow-hidden">
+            {/* Card Container Area */}
+            <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
                 <div 
-                    className="relative w-full h-full max-w-2xl"
+                    className="relative w-full max-w-lg aspect-[3/4] max-h-[80vh]"
                     onTouchStart={handleStart}
                     onMouseDown={handleStart}
                 >
@@ -478,13 +479,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {currentIndex < cards.length - 1 && (
                         <div 
                             ref={bgCardRef}
-                            className="absolute inset-0 flex items-center justify-center"
+                            className="absolute inset-0 bg-white rounded-3xl shadow-xl overflow-hidden flex items-center justify-center"
                             style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
-                                className="w-full h-full object-contain"
+                                className="w-full h-full object-contain bg-white"
                                 draggable={false}
                             />
                         </div>
@@ -493,29 +494,30 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {/* Active Card (Draggable) */}
                     <div 
                         ref={cardRef}
-                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
+                        className="absolute inset-0 bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col cursor-grab will-change-transform"
                     >
-                        <div className="relative w-full h-full flex items-center justify-center">
+                        <div className="relative w-full h-full flex items-center justify-center bg-white">
                             
                             {/* --- TEM NHÃN NEXT/BACK --- */}
                             <div 
                                 ref={backStampRef}
-                                className="absolute top-10 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-black/20 backdrop-blur-sm"
+                                className="absolute top-6 left-6 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-white/80 backdrop-blur-sm"
                             >
                                 BACK
                             </div>
 
                             <div 
                                 ref={nextStampRef}
-                                className="absolute top-10 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-black/20 backdrop-blur-sm"
+                                className="absolute top-6 right-6 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-white/80 backdrop-blur-sm"
                             >
                                 NEXT
                             </div>
 
+                            {/* MAIN IMAGE - FULL SIZE */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain pointer-events-none select-none drop-shadow-2xl" 
+                                className="w-full h-full object-contain pointer-events-none select-none" 
                                 draggable={false}
                             />
                             
@@ -523,12 +525,14 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
                                 isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-6 right-6 bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 rounded-full"
+                                customClass="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12"
                             />
                         </div>
                     </div>
                 </div>
+                {/* REMOVED: Instructions & Footer Controls */}
             </div>
+            {/* Empty footer area spacer if needed, but not required with flex-1 center */}
         </div>
     );
 };
