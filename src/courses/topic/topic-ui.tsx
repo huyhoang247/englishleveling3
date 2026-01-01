@@ -261,7 +261,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (HIGH PERFORMANCE DOM MANIPULATION) ---
+// --- FLASHCARD OVERLAY COMPONENT (FIXED: EVENT HANDLERS & OPACITY) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -274,7 +274,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
 
-    // Refs cho Direct DOM manipulation (Không gây re-render)
+    // Refs cho Direct DOM manipulation
     const cardRef = useRef<HTMLDivElement>(null);
     const bgCardRef = useRef<HTMLDivElement>(null);
     const nextStampRef = useRef<HTMLDivElement>(null);
@@ -297,12 +297,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         }
         if (bgCardRef.current) {
             bgCardRef.current.style.transform = 'scale(0.95)';
-            bgCardRef.current.style.opacity = '1';
+            // FIX: Reset opacity về 0.5 khi bắt đầu card mới
+            bgCardRef.current.style.opacity = '0.5';
+            bgCardRef.current.style.transition = 'all 0.3s ease'; 
         }
         if (nextStampRef.current) nextStampRef.current.style.opacity = '0';
         if (backStampRef.current) backStampRef.current.style.opacity = '0';
         
-        // Reset variables
         currentX.current = 0;
     }, [currentIndex]);
 
@@ -314,77 +315,89 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         }
     }, [currentIndex, cards]);
 
-    const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    // --- EVENT LISTENERS (GLOBAL) ---
+    // Sử dụng window/document listener để bắt sự kiện ngay cả khi chuột/tay lướt ra ngoài thẻ
+    useEffect(() => {
+        const handleMove = (e: MouseEvent | TouchEvent) => {
+            if (!isDragging.current || isAnimating) return;
+            
+            const clientX = 'touches' in e ? e.touches[0].clientX : (e as MouseEvent).clientX;
+            const deltaX = clientX - startX.current;
+            currentX.current = deltaX;
+
+            requestAnimationFrame(() => {
+                if (cardRef.current) {
+                    const rotateDeg = (deltaX / screenWidth) * 20;
+                    cardRef.current.style.transform = `translateX(${deltaX}px) rotate(${rotateDeg}deg)`;
+                }
+
+                // FIX: Tính toán background opacity từ 0.5 -> 1.0
+                if (bgCardRef.current) {
+                    const percentage = Math.min(Math.abs(deltaX) / screenWidth, 1);
+                    const scale = 0.95 + (0.05 * percentage);
+                    const opacity = 0.5 + (0.5 * percentage); // Mờ (0.5) -> Rõ (1.0)
+                    
+                    bgCardRef.current.style.transition = 'none'; // Tắt transition khi đang drag
+                    bgCardRef.current.style.transform = `scale(${scale})`;
+                    bgCardRef.current.style.opacity = opacity.toString();
+                }
+
+                const opacity = Math.min(Math.abs(deltaX) / (threshold * 0.8), 1);
+                if (deltaX > 0) { // BACK
+                     if (backStampRef.current) backStampRef.current.style.opacity = opacity.toString();
+                     if (nextStampRef.current) nextStampRef.current.style.opacity = '0';
+                } else { // NEXT
+                     if (nextStampRef.current) nextStampRef.current.style.opacity = opacity.toString();
+                     if (backStampRef.current) backStampRef.current.style.opacity = '0';
+                }
+            });
+        };
+
+        const handleEnd = () => {
+            if (!isDragging.current) return;
+            isDragging.current = false;
+            
+            const deltaX = currentX.current;
+            const absDeltaX = Math.abs(deltaX);
+
+            if (absDeltaX > threshold) {
+                const direction = deltaX > 0 ? 'right' : 'left';
+                if (direction === 'left' && currentIndex >= cards.length - 1) {
+                    resetCard(); 
+                    return;
+                }
+                if (direction === 'right' && currentIndex <= 0) {
+                    resetCard(); 
+                    return;
+                }
+                finishSwipe(direction);
+            } else {
+                // FIX: Đảm bảo thẻ quay về vị trí cũ nếu kéo chưa đủ
+                resetCard();
+            }
+        };
+
+        document.addEventListener('mousemove', handleMove);
+        document.addEventListener('mouseup', handleEnd);
+        document.addEventListener('touchmove', handleMove);
+        document.addEventListener('touchend', handleEnd);
+
+        return () => {
+            document.removeEventListener('mousemove', handleMove);
+            document.removeEventListener('mouseup', handleEnd);
+            document.removeEventListener('touchmove', handleMove);
+            document.removeEventListener('touchend', handleEnd);
+        };
+    }, [currentIndex, isAnimating, cards.length, screenWidth, threshold]);
+
+    const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
         if (isAnimating) return;
         isDragging.current = true;
         startX.current = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
         
         if (cardRef.current) {
-            cardRef.current.style.transition = 'none'; // Tắt transition để kéo mượt tức thì
+            cardRef.current.style.transition = 'none';
             cardRef.current.style.cursor = 'grabbing';
-        }
-    };
-
-    const handleTouchMove = (e: React.TouchEvent | React.MouseEvent) => {
-        if (!isDragging.current) return;
-        
-        const clientX = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
-        const deltaX = clientX - startX.current;
-        currentX.current = deltaX;
-
-        // --- DIRECT DOM UPDATES (NO REACT RENDER) ---
-        requestAnimationFrame(() => {
-            if (cardRef.current) {
-                // Di chuyển và xoay
-                const rotateDeg = (deltaX / screenWidth) * 20;
-                cardRef.current.style.transform = `translateX(${deltaX}px) rotate(${rotateDeg}deg)`;
-            }
-
-            // Hiệu ứng background card (Zoom in nhẹ)
-            if (bgCardRef.current) {
-                const percentage = Math.min(Math.abs(deltaX) / screenWidth, 1);
-                const scale = 0.95 + (0.05 * percentage);
-                bgCardRef.current.style.transform = `scale(${scale})`;
-            }
-
-            // Hiệu ứng tem (Stamps)
-            const opacity = Math.min(Math.abs(deltaX) / (threshold * 0.8), 1);
-            if (deltaX > 0) { // BACK
-                 if (backStampRef.current) backStampRef.current.style.opacity = opacity.toString();
-                 if (nextStampRef.current) nextStampRef.current.style.opacity = '0';
-            } else { // NEXT
-                 if (nextStampRef.current) nextStampRef.current.style.opacity = opacity.toString();
-                 if (backStampRef.current) backStampRef.current.style.opacity = '0';
-            }
-        });
-    };
-
-    const handleTouchEnd = () => {
-        if (!isDragging.current) return;
-        isDragging.current = false;
-        
-        const deltaX = currentX.current;
-        const absDeltaX = Math.abs(deltaX);
-
-        if (absDeltaX > threshold) {
-            // SWIPE THÀNH CÔNG
-            const direction = deltaX > 0 ? 'right' : 'left';
-            
-            // Logic chặn nếu hết bài
-            if (direction === 'left' && currentIndex >= cards.length - 1) {
-                resetCard(); // Hết bài -> Trả về cũ
-                return;
-            }
-            if (direction === 'right' && currentIndex <= 0) {
-                resetCard(); // Đầu bài -> Trả về cũ
-                return;
-            }
-
-            finishSwipe(direction);
-
-        } else {
-            // SWIPE KHÔNG ĐẠT -> TRẢ VỀ CŨ
-            resetCard();
         }
     };
 
@@ -414,9 +427,11 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             cardRef.current.style.transform = 'none';
             cardRef.current.style.cursor = 'grab';
         }
+        // Reset background card về trạng thái mờ
         if (bgCardRef.current) {
             bgCardRef.current.style.transition = 'all 0.3s ease';
             bgCardRef.current.style.transform = 'scale(0.95)';
+            bgCardRef.current.style.opacity = '0.5';
         }
         if (nextStampRef.current) {
             nextStampRef.current.style.transition = 'opacity 0.2s ease';
@@ -467,25 +482,19 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             </div>
 
             {/* Card Container Area */}
-            <div 
-                className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden"
-                // Gắn sự kiện touch vào container bao quanh để vùng vuốt rộng hơn
-                onTouchStart={handleTouchStart}
-                onTouchMove={handleTouchMove}
-                onTouchEnd={handleTouchEnd}
-                onMouseDown={handleTouchStart}
-                onMouseMove={handleTouchMove}
-                onMouseUp={handleTouchEnd}
-                onMouseLeave={handleTouchEnd}
-            >
-                <div className="relative w-full max-w-md aspect-[3/4] max-h-[70vh]">
+            <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+                <div 
+                    className="relative w-full max-w-md aspect-[3/4] max-h-[70vh]"
+                    onTouchStart={handleStart}
+                    onMouseDown={handleStart}
+                >
                     
                     {/* Background Card (Next Card Preview) */}
                     {currentIndex < cards.length - 1 && (
                         <div 
                             ref={bgCardRef}
                             className="absolute inset-0 bg-white rounded-3xl shadow-xl border border-white/10 overflow-hidden flex items-center justify-center"
-                            style={{ transform: 'scale(0.95)', opacity: 1 }} // Luôn hiển thị rõ
+                            style={{ transform: 'scale(0.95)', opacity: 0.5 }} // Mặc định mờ 0.5
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
@@ -525,7 +534,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 draggable={false}
                             />
                             
-                            {/* Nút Favorite nằm trong Card nhưng ko bị xoay theo drag logic (vì nằm trong div cha) */}
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
