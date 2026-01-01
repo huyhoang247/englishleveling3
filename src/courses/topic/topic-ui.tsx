@@ -479,13 +479,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {currentIndex < cards.length - 1 && (
                         <div 
                             ref={bgCardRef}
-                            className="absolute inset-0 overflow-hidden flex items-center justify-center rounded-2xl"
+                            className="absolute inset-0 overflow-hidden flex items-center justify-center rounded-3xl"
                             style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
-                                className="w-full h-full object-contain rounded-2xl shadow-lg"
+                                className="w-full h-full object-contain rounded-3xl shadow-lg"
                                 draggable={false}
                             />
                         </div>
@@ -494,11 +494,11 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {/* Active Card (Draggable) */}
                     <div 
                         ref={cardRef}
-                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform rounded-2xl"
+                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform rounded-3xl"
                     >
                         <div className="relative w-full h-full flex items-center justify-center">
                             
-                            {/* --- TEM NHÃN NEXT/BACK (MOVED INWARDS + NO DROP SHADOW) --- */}
+                            {/* --- TEM NHÃN NEXT/BACK --- */}
                             <div 
                                 ref={backStampRef}
                                 className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
@@ -513,20 +513,20 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 NEXT
                             </div>
 
-                            {/* MAIN IMAGE - FULL SIZE & TRANSPARENT BG & NO SHADOW */}
+                            {/* MAIN IMAGE - FULL SIZE & ROUNDED 3XL */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain pointer-events-none select-none rounded-2xl" 
+                                className="w-full h-full object-contain pointer-events-none select-none rounded-3xl" 
                                 draggable={false}
                             />
                             
-                            {/* Favorite Button with 85% Opacity */}
+                            {/* Favorite Button with 85% Opacity, repositioned */}
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
                                 isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-4 right-4 bg-white opacity-85 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-opacity"
+                                customClass="absolute bottom-6 right-6 bg-white opacity-85 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-opacity rounded-full"
                             />
                         </div>
                     </div>
