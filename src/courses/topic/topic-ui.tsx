@@ -479,13 +479,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {currentIndex < cards.length - 1 && (
                         <div 
                             ref={bgCardRef}
-                            className="absolute inset-0 overflow-hidden flex items-center justify-center rounded-3xl"
+                            className="absolute inset-0 overflow-hidden flex items-center justify-center"
                             style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
-                                className="w-full h-full object-contain rounded-3xl"
+                                className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl"
                                 draggable={false}
                             />
                         </div>
@@ -513,11 +513,11 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 NEXT
                             </div>
 
-                            {/* MAIN IMAGE - rounded-3xl, NO bg-white, NO shadow */}
+                            {/* MAIN IMAGE - Đã sửa: w-auto h-auto max-w-full max-h-full để bo góc đúng */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain pointer-events-none select-none rounded-3xl" 
+                                className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl pointer-events-none select-none" 
                                 draggable={false}
                             />
                             
