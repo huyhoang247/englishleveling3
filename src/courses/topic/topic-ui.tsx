@@ -445,8 +445,8 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
-            {/* Header */}
-            <div className="px-4 py-3 flex items-center justify-between bg-black/20 shrink-0">
+            {/* Header (Updated: h-14, removed py-3) */}
+            <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0">
                 <div className="flex items-center gap-3">
                     <span className="text-white font-black text-lg">
                         {currentIndex + 1} <span className="text-white/50 text-sm">/ {cards.length}</span>
@@ -513,7 +513,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 NEXT
                             </div>
 
-                            {/* MAIN IMAGE - Đã sửa: w-auto h-auto max-w-full max-h-full để bo góc đúng */}
+                            {/* MAIN IMAGE - rounded-3xl, NO bg-white, NO shadow */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
