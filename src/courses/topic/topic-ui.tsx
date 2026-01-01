@@ -498,7 +498,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     >
                         <div className="relative w-full h-full flex items-center justify-center">
                             
-                            {/* --- TEM NHÃN NEXT/BACK (Removed bg-white/80) --- */}
+                            {/* --- TEM NHÃN NEXT/BACK --- */}
                             <div 
                                 ref={backStampRef}
                                 className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
@@ -513,7 +513,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 NEXT
                             </div>
 
-                            {/* MAIN IMAGE - Removed bg-white, but KEPT rounded-3xl */}
+                            {/* MAIN IMAGE - rounded-3xl, NO bg-white, NO shadow */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
@@ -521,7 +521,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                                 draggable={false}
                             />
                             
-                            {/* Favorite Button - Positioned at bottom-6 right-6 */}
+                            {/* Favorite Button */}
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
