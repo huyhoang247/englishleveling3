@@ -3,7 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
 import HomeButton from '../../ui/home-button.tsx'; 
-import BackButton from '../../ui/components/back-button.tsx';
+import BackButton from '../../ui/back-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 
