@@ -3,13 +3,12 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
 import HomeButton from '../../ui/home-button.tsx'; 
-// ADDED: Import BackButton
 import BackButton from '../../ui/back-button.tsx';
 
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 
-// --- NEW IMPORTS: Direct from Topic Service ---
+// --- Imports: Direct from Topic Service ---
 import { 
   listenToTopicData, 
   unlockTopicPageTransaction, 
@@ -61,7 +60,6 @@ const styles = `
     75% { transform: translateX(5px); }
   }
 
-  /* Hiệu ứng nhịp tim khi active */
   @keyframes heart-beat {
     0% { transform: scale(1); }
     25% { transform: scale(1.2); }
@@ -158,6 +156,18 @@ const calculatePageCost = (page: number): number => {
   const tierIndex = Math.floor((page - 1 - FREE_PAGES) / PAGES_PER_TIER);
   const cost = BASE_COST * Math.pow(COST_MULTIPLIER, tierIndex);
   return Math.floor(cost);
+};
+
+// ADDED: Hàm preload ảnh trả về Promise
+const preloadImages = (urls: string[]): Promise<void[]> => {
+    return Promise.all(urls.map(src => {
+        return new Promise<void>((resolve) => {
+            const img = new Image();
+            img.src = src;
+            img.onload = () => resolve();
+            img.onerror = () => resolve(); // Vẫn resolve dù lỗi để không bị treo
+        });
+    }));
 };
 
 // --- SUB-COMPONENTS ---
@@ -262,7 +272,38 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (UPDATED) ---
+// ADDED: Flashcard Skeleton Component
+const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
+    <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
+        {/* Header Skeleton */}
+        <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0 border-b border-white/5">
+            <BackButton onClick={onClose} label="Back" />
+            <div className="w-20 h-6 bg-slate-700/50 rounded animate-pulse"></div>
+        </div>
+
+        {/* Progress Bar Skeleton */}
+        <div className="w-full h-1 bg-slate-800 shrink-0">
+             <div className="w-0 h-full"></div>
+        </div>
+
+        {/* Card Area Skeleton */}
+        <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
+            <div className="relative w-full max-w-lg h-[75vh] bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50">
+                {/* Shimmer Effect */}
+                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-slate-700/30 to-transparent z-10"></div>
+                
+                <div className="w-full h-full flex items-center justify-center flex-col gap-4 opacity-50">
+                    <svg className="w-16 h-16 text-slate-600 animate-pulse" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                    </svg>
+                    <span className="text-slate-500 font-medium text-sm animate-pulse">Loading cards...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+);
+
+// --- FLASHCARD OVERLAY COMPONENT (UPDATED WITH PRELOAD) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -272,6 +313,9 @@ interface FlashcardOverlayProps {
 }
 
 const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglingIds }: FlashcardOverlayProps) => {
+    // --- STATE LOADING ---
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
+
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
 
@@ -289,8 +333,44 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     const threshold = screenWidth * 0.35; 
 
+    // --- PRELOAD LOGIC (NEW) ---
+    useEffect(() => {
+        const loadCards = async () => {
+            if (cards.length === 0) {
+                setIsInitialLoading(false);
+                return;
+            }
+
+            // 1. Lấy danh sách URL
+            const allUrls = cards.map(id => getTopicImageUrl(id));
+
+            // 2. Tách 6 ảnh đầu tiên
+            const priorityCount = 6;
+            const priorityUrls = allUrls.slice(0, priorityCount);
+            const remainingUrls = allUrls.slice(priorityCount);
+
+            // 3. Load 6 ảnh đầu -> Đợi xong mới tắt Skeleton
+            try {
+                await preloadImages(priorityUrls);
+            } catch (error) {
+                console.error("Error preloading initial batch", error);
+            } finally {
+                setIsInitialLoading(false);
+                
+                // 4. Load ngầm phần còn lại (Không await để không chặn UI)
+                if (remainingUrls.length > 0) {
+                    preloadImages(remainingUrls).catch(err => console.error("Background load error", err));
+                }
+            }
+        };
+
+        loadCards();
+    }, [cards]);
+
     // Reset styles khi chuyển card mới
     useEffect(() => {
+        if (isInitialLoading) return;
+
         if (cardRef.current) {
             cardRef.current.style.transform = 'none';
             cardRef.current.style.transition = 'none';
@@ -305,18 +385,12 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         if (backStampRef.current) backStampRef.current.style.opacity = '0';
         
         currentX.current = 0;
-    }, [currentIndex]);
-
-    // Preload image
-    useEffect(() => {
-        if (currentIndex < cards.length - 1) {
-            const img = new Image();
-            img.src = getTopicImageUrl(cards[currentIndex + 1]);
-        }
-    }, [currentIndex, cards]);
+    }, [currentIndex, isInitialLoading]);
 
     // --- EVENT LISTENERS (GLOBAL) ---
     useEffect(() => {
+        if (isInitialLoading) return;
+
         const handleMove = (e: MouseEvent | TouchEvent) => {
             if (!isDragging.current || isAnimating) return;
             
@@ -325,7 +399,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             currentX.current = deltaX;
 
             requestAnimationFrame(() => {
-                // Check if user released drag
                 if (!isDragging.current) return;
 
                 if (cardRef.current) {
@@ -388,7 +461,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             document.removeEventListener('touchmove', handleMove);
             document.removeEventListener('touchend', handleEnd);
         };
-    }, [currentIndex, isAnimating, cards.length, screenWidth, threshold]);
+    }, [currentIndex, isAnimating, cards.length, screenWidth, threshold, isInitialLoading]);
 
     const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
         if (isAnimating) return;
@@ -441,6 +514,11 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             backStampRef.current.style.opacity = '0';
         }
     };
+
+    // --- RENDER SKELETON NẾU ĐANG LOAD ---
+    if (isInitialLoading) {
+        return <FlashcardSkeleton onClose={onClose} />;
+    }
 
     const currentCardId = cards[currentIndex];
     const isFavorite = favorites.includes(currentCardId);
