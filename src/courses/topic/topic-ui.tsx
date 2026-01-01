@@ -3,9 +3,7 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
 import HomeButton from '../../ui/home-button.tsx'; 
-// ADDED: Import BackButton
-import BackButton from '../../ui/back-button.tsx';
-
+import BackButton from '../../ui/components/back-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 
@@ -61,7 +59,6 @@ const styles = `
     75% { transform: translateX(5px); }
   }
 
-  /* Hiệu ứng nhịp tim khi active */
   @keyframes heart-beat {
     0% { transform: scale(1); }
     25% { transform: scale(1.2); }
@@ -262,7 +259,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT (UPDATED) ---
+// --- UPDATED FLASHCARD OVERLAY WITH PRELOADING LOGIC ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -272,25 +269,70 @@ interface FlashcardOverlayProps {
 }
 
 const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglingIds }: FlashcardOverlayProps) => {
+    // --- STATE LOADING INITIAL ---
+    const [isInitialLoading, setIsInitialLoading] = useState(true);
     const [currentIndex, setCurrentIndex] = useState(0);
     const [isAnimating, setIsAnimating] = useState(false);
+    
+    // State loading cho từng ảnh (fallback nếu mạng chậm sau preload)
+    const [isImageLoading, setIsImageLoading] = useState(true);
 
-    // Refs cho Direct DOM manipulation
+    // Refs
     const cardRef = useRef<HTMLDivElement>(null);
     const bgCardRef = useRef<HTMLDivElement>(null);
     const nextStampRef = useRef<HTMLDivElement>(null);
     const backStampRef = useRef<HTMLDivElement>(null);
-    
-    // Mutable variables
     const startX = useRef(0);
     const currentX = useRef(0);
     const isDragging = useRef(false);
 
     const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
     const threshold = screenWidth * 0.35; 
+    
+    // --- PRELOAD LOGIC ---
+    useEffect(() => {
+        const PRELOAD_COUNT = 6;
+        let isMounted = true;
+
+        // 1. Tải 6 ảnh đầu tiên
+        const loadInitialBatch = async () => {
+            const firstBatch = cards.slice(0, PRELOAD_COUNT);
+            
+            const promises = firstBatch.map(id => {
+                return new Promise<void>((resolve) => {
+                    const img = new Image();
+                    img.src = getTopicImageUrl(id);
+                    img.onload = () => resolve();
+                    img.onerror = () => resolve(); // Vẫn tiếp tục nếu lỗi
+                });
+            });
+
+            await Promise.all(promises);
+
+            if (isMounted) {
+                setIsInitialLoading(false);
+                setIsImageLoading(false); // Ảnh đầu chắc chắn đã load xong
+
+                // 2. Tải ngầm các ảnh còn lại
+                const remainingCards = cards.slice(PRELOAD_COUNT);
+                remainingCards.forEach(id => {
+                    const img = new Image();
+                    img.src = getTopicImageUrl(id);
+                });
+            }
+        };
+
+        loadInitialBatch();
+
+        return () => { isMounted = false; };
+    }, [cards]);
 
     // Reset styles khi chuyển card mới
     useEffect(() => {
+        if (!isInitialLoading) {
+             setIsImageLoading(true); // Reset trạng thái để hiện skeleton nếu ảnh chưa cache kịp
+        }
+
         if (cardRef.current) {
             cardRef.current.style.transform = 'none';
             cardRef.current.style.transition = 'none';
@@ -305,18 +347,20 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
         if (backStampRef.current) backStampRef.current.style.opacity = '0';
         
         currentX.current = 0;
-    }, [currentIndex]);
+    }, [currentIndex, isInitialLoading]);
 
-    // Preload image
+    // Preload next image (Standard lazy load logic, adds to browser cache just in case)
     useEffect(() => {
-        if (currentIndex < cards.length - 1) {
+        if (!isInitialLoading && currentIndex < cards.length - 1) {
             const img = new Image();
             img.src = getTopicImageUrl(cards[currentIndex + 1]);
         }
-    }, [currentIndex, cards]);
+    }, [currentIndex, cards, isInitialLoading]);
 
-    // --- EVENT LISTENERS (GLOBAL) ---
+    // --- TOUCH EVENTS ---
     useEffect(() => {
+        if (isInitialLoading) return; // Không swipe khi đang loading
+
         const handleMove = (e: MouseEvent | TouchEvent) => {
             if (!isDragging.current || isAnimating) return;
             
@@ -325,7 +369,6 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             currentX.current = deltaX;
 
             requestAnimationFrame(() => {
-                // Check if user released drag
                 if (!isDragging.current) return;
 
                 if (cardRef.current) {
@@ -388,10 +431,10 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             document.removeEventListener('touchmove', handleMove);
             document.removeEventListener('touchend', handleEnd);
         };
-    }, [currentIndex, isAnimating, cards.length, screenWidth, threshold]);
+    }, [currentIndex, isAnimating, cards.length, screenWidth, threshold, isInitialLoading]);
 
     const handleStart = (e: React.MouseEvent | React.TouchEvent) => {
-        if (isAnimating) return;
+        if (isAnimating || isInitialLoading) return;
         isDragging.current = true;
         startX.current = 'touches' in e ? e.touches[0].clientX : (e as React.MouseEvent).clientX;
         
@@ -448,12 +491,9 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
-            {/* Header (UPDATED) */}
+            {/* Header */}
             <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0">
-                {/* Left: Back Button (replaced Close) */}
                 <BackButton onClick={onClose} label="Back" />
-
-                {/* Right: Counter (Moved from left) */}
                 <div className="flex items-center gap-3">
                     <span className="text-white font-black text-lg">
                         {currentIndex + 1} <span className="text-white/50 text-sm">/ {cards.length}</span>
@@ -473,62 +513,88 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     onTouchStart={handleStart}
                     onMouseDown={handleStart}
                 >
-                    
-                    {/* Background Card (Next Card Preview) */}
-                    {currentIndex < cards.length - 1 && (
-                        <div 
-                            ref={bgCardRef}
-                            className="absolute inset-0 overflow-hidden flex items-center justify-center"
-                            style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
-                        >
-                            <img 
-                                src={getTopicImageUrl(cards[currentIndex + 1])} 
-                                alt="Next" 
-                                className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl"
-                                draggable={false}
-                            />
+                    {/* --- CASE 1: INITIAL LOADING (GLOBAL SKELETON) --- */}
+                    {isInitialLoading ? (
+                        <div className="absolute inset-0 flex flex-col cursor-wait">
+                            <div className="relative w-full h-full flex items-center justify-center bg-gray-200 rounded-3xl shadow-xl overflow-hidden animate-pulse">
+                                {/* Shimmer Effect */}
+                                <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-20"></div>
+                                
+                                {/* Loading Content */}
+                                <div className="flex flex-col items-center gap-4 opacity-50 z-10">
+                                    <div className="bg-gray-300 p-6 rounded-full">
+                                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-16 h-16 text-gray-500 animate-bounce">
+                                            <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                        </svg>
+                                    </div>
+                                    <div className="text-gray-500 font-bold text-lg">Loading Flashcards...</div>
+                                </div>
+                            </div>
                         </div>
+                    ) : (
+                        /* --- CASE 2: MAIN GAME CONTENT --- */
+                        <>
+                            {/* Background Card (Next Card Preview) */}
+                            {currentIndex < cards.length - 1 && (
+                                <div 
+                                    ref={bgCardRef}
+                                    className="absolute inset-0 overflow-hidden flex items-center justify-center"
+                                    style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
+                                >
+                                    <img 
+                                        src={getTopicImageUrl(cards[currentIndex + 1])} 
+                                        alt="Next" 
+                                        className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl"
+                                        draggable={false}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Active Card (Draggable) */}
+                            <div 
+                                ref={cardRef}
+                                className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
+                            >
+                                <div className="relative w-full h-full flex items-center justify-center">
+                                    
+                                    {/* Stamps */}
+                                    <div ref={backStampRef} className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0">BACK</div>
+                                    <div ref={nextStampRef} className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0">NEXT</div>
+
+                                    {/* Small Skeleton for Individual Card Loading (Fallback) */}
+                                    {isImageLoading && (
+                                        <div className="absolute inset-0 z-10 flex items-center justify-center bg-gray-200 rounded-3xl shadow-xl animate-pulse">
+                                            <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-white/40 to-transparent z-20"></div>
+                                            <div className="bg-gray-300 p-4 rounded-full opacity-50">
+                                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-10 h-10 text-gray-500">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                                                </svg>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* MAIN IMAGE */}
+                                    <img 
+                                        src={getTopicImageUrl(currentCardId)} 
+                                        alt="Flashcard" 
+                                        onLoad={() => setIsImageLoading(false)}
+                                        className={`max-w-full max-h-full w-auto h-auto object-contain rounded-3xl pointer-events-none select-none transition-opacity duration-300 ${
+                                            isImageLoading ? 'opacity-0' : 'opacity-100'
+                                        }`}
+                                        draggable={false}
+                                    />
+                                    
+                                    {/* Favorite Button */}
+                                    <FavoriteButton 
+                                        isFavorite={isFavorite}
+                                        onToggle={() => onToggleFavorite(currentCardId)}
+                                        isToggling={togglingIds.has(currentCardId)}
+                                        customClass="absolute bottom-6 right-6 bg-white opacity-90 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-all"
+                                    />
+                                </div>
+                            </div>
+                        </>
                     )}
-
-                    {/* Active Card (Draggable) */}
-                    <div 
-                        ref={cardRef}
-                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
-                    >
-                        <div className="relative w-full h-full flex items-center justify-center">
-                            
-                            {/* --- TEM NHÃN NEXT/BACK --- */}
-                            <div 
-                                ref={backStampRef}
-                                className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
-                            >
-                                BACK
-                            </div>
-
-                            <div 
-                                ref={nextStampRef}
-                                className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
-                            >
-                                NEXT
-                            </div>
-
-                            {/* MAIN IMAGE - rounded-3xl, NO bg-white, NO shadow */}
-                            <img 
-                                src={getTopicImageUrl(currentCardId)} 
-                                alt="Flashcard" 
-                                className="max-w-full max-h-full w-auto h-auto object-contain rounded-3xl pointer-events-none select-none" 
-                                draggable={false}
-                            />
-                            
-                            {/* Favorite Button */}
-                            <FavoriteButton 
-                                isFavorite={isFavorite}
-                                onToggle={() => onToggleFavorite(currentCardId)}
-                                isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-6 right-6 bg-white opacity-90 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-all"
-                            />
-                        </div>
-                    </div>
                 </div>
             </div>
         </div>
