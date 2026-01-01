@@ -275,7 +275,8 @@ const TopicImageCard = React.memo(({
 // ADDED: Flashcard Skeleton Component
 // - Z-INDEX 200 to overlay real UI
 // - Removed SVG Icon
-// - Adjusted size (w-[90%] and h-[70vh]) to mimic real image size better
+// - Adjusted size (w-[90%] and h-[70vh])
+// - Added -translate-y-8 to move up slightly
 const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
     <div className="fixed inset-0 z-[200] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
         {/* Header Skeleton */}
@@ -291,8 +292,8 @@ const FlashcardSkeleton = ({ onClose }: { onClose: () => void }) => (
 
         {/* Card Area Skeleton */}
         <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
-            {/* Reduced size slightly to match 'object-contain' feel */}
-            <div className="relative w-[90%] max-w-md h-[70vh] bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50">
+            {/* Added -translate-y-8 to move up */}
+            <div className="relative w-[90%] max-w-md h-[70vh] -translate-y-8 bg-slate-800 rounded-3xl overflow-hidden shadow-2xl border border-slate-700/50">
                 {/* Shimmer Effect */}
                 <div className="absolute inset-0 -translate-x-full animate-shimmer bg-gradient-to-r from-transparent via-slate-700/30 to-transparent z-10"></div>
                 {/* No content/icon here */}
