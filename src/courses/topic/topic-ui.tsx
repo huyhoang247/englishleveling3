@@ -479,13 +479,13 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {currentIndex < cards.length - 1 && (
                         <div 
                             ref={bgCardRef}
-                            className="absolute inset-0 overflow-hidden flex items-center justify-center rounded-3xl"
+                            className="absolute inset-0 overflow-hidden flex items-center justify-center rounded-3xl bg-white/5"
                             style={{ transform: 'scale(0.95)', opacity: 0.5 }} 
                         >
                             <img 
                                 src={getTopicImageUrl(cards[currentIndex + 1])} 
                                 alt="Next" 
-                                className="w-full h-full object-contain rounded-3xl shadow-lg"
+                                className="w-full h-full object-contain rounded-3xl shadow-lg bg-white"
                                 draggable={false}
                             />
                         </div>
@@ -494,39 +494,39 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                     {/* Active Card (Draggable) */}
                     <div 
                         ref={cardRef}
-                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform rounded-3xl"
+                        className="absolute inset-0 flex flex-col cursor-grab will-change-transform"
                     >
                         <div className="relative w-full h-full flex items-center justify-center">
                             
                             {/* --- TEM NHÃN NEXT/BACK --- */}
                             <div 
                                 ref={backStampRef}
-                                className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                className="absolute top-10 left-10 z-20 border-4 border-green-500 text-green-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg -rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-white/80"
                             >
                                 BACK
                             </div>
 
                             <div 
                                 ref={nextStampRef}
-                                className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0"
+                                className="absolute top-10 right-10 z-20 border-4 border-red-500 text-red-500 font-bold text-2xl uppercase px-2 py-1 rounded-lg rotate-[15deg] pointer-events-none tracking-widest opacity-0 bg-white/80"
                             >
                                 NEXT
                             </div>
 
-                            {/* MAIN IMAGE - FULL SIZE & ROUNDED 3XL */}
+                            {/* MAIN IMAGE - Đã cập nhật style: rounded-3xl, bg-white */}
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain pointer-events-none select-none rounded-3xl" 
+                                className="w-full h-full object-contain pointer-events-none select-none rounded-3xl shadow-sm bg-white" 
                                 draggable={false}
                             />
                             
-                            {/* Favorite Button with 85% Opacity, repositioned */}
+                            {/* Favorite Button - Đã cập nhật vị trí: bottom-6 right-6 */}
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
                                 isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute bottom-6 right-6 bg-white opacity-85 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-opacity rounded-full"
+                                customClass="absolute bottom-6 right-6 bg-white opacity-90 hover:opacity-100 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12 transition-all"
                             />
                         </div>
                     </div>
