@@ -1152,13 +1152,13 @@ export default function TopicViewer({ onGoBack }: TopicViewerProps) {
                 {/* Mode Switcher - REPLACED WITH SINGLE ICON BUTTON */}
                 <button 
                     onClick={handleStartFlashcardMode}
-                    className="relative group transition-transform hover:scale-110 active:scale-95"
+                    className="relative group transition-transform hover:scale-110 active:scale-95 -translate-x-2"
                     title="Start Flashcard Mode"
                 >
                     <img 
                         src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/flashcard.webp" 
                         alt="Flashcard" 
-                        className="w-10 h-10 object-contain" 
+                        className="w-8 h-8 object-contain" 
                     />
                 </button>
             </div>
