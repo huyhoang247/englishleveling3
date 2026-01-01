@@ -90,26 +90,6 @@ const styles = `
   .animate-shake {
     animation: shake 0.3s ease-in-out;
   }
-
-  /* Flashcard Animations */
-  .card-stack-enter {
-    opacity: 0;
-    transform: scale(0.9) translateY(20px);
-  }
-  .card-stack-enter-active {
-    opacity: 1;
-    transform: scale(1) translateY(0);
-    transition: opacity 300ms, transform 300ms;
-  }
-  .card-stack-exit {
-    opacity: 1;
-    transform: scale(1);
-  }
-  .card-stack-exit-active {
-    opacity: 0;
-    transform: scale(1.1); /* Phóng to nhẹ khi biến mất */
-    transition: opacity 300ms, transform 300ms;
-  }
   
   .btn-game-green {
     background: linear-gradient(to bottom, #4ade80, #22c55e);
@@ -187,7 +167,7 @@ const TopicSkeleton = () => (
   </div>
 );
 
-// FavoriteButton giống hệt VerticalFlashcardGallery
+// FavoriteButton
 const FavoriteButton = ({ 
   isFavorite, 
   onToggle, 
@@ -281,7 +261,7 @@ const TopicImageCard = React.memo(({
   );
 });
 
-// --- FLASHCARD OVERLAY COMPONENT ---
+// --- FLASHCARD OVERLAY COMPONENT (UPDATED FOR PHYSICS DRAG) ---
 interface FlashcardOverlayProps {
     cards: number[];
     onClose: () => void;
@@ -292,50 +272,88 @@ interface FlashcardOverlayProps {
 
 const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglingIds }: FlashcardOverlayProps) => {
     const [currentIndex, setCurrentIndex] = useState(0);
-    const [direction, setDirection] = useState<'left' | 'right' | null>(null);
-    const [touchStart, setTouchStart] = useState<number | null>(null);
-    const [touchEnd, setTouchEnd] = useState<number | null>(null);
-    
-    // Swipe sensitivity
-    const minSwipeDistance = 50;
+    const [dragX, setDragX] = useState(0);
+    const [isDragging, setIsDragging] = useState(false);
+    const [exitDirection, setExitDirection] = useState<'left' | 'right' | null>(null);
 
+    const startXRef = useRef<number | null>(null);
+    const screenWidth = typeof window !== 'undefined' ? window.innerWidth : 375;
+    const threshold = screenWidth * 0.3; // Drag 30% to swipe
+
+    // Handle Touch Start
     const onTouchStart = (e: React.TouchEvent) => {
-        setTouchEnd(null);
-        setTouchStart(e.targetTouches[0].clientX);
+        if (exitDirection) return; // Prevent interaction during exit animation
+        startXRef.current = e.touches[0].clientX;
+        setIsDragging(true);
+        setExitDirection(null);
     };
 
+    // Handle Touch Move
     const onTouchMove = (e: React.TouchEvent) => {
-        setTouchEnd(e.targetTouches[0].clientX);
+        if (!isDragging || startXRef.current === null) return;
+        const currentX = e.touches[0].clientX;
+        const delta = currentX - startXRef.current;
+        setDragX(delta);
     };
 
+    // Handle Touch End
     const onTouchEnd = () => {
-        if (!touchStart || !touchEnd) return;
-        
-        const distance = touchStart - touchEnd;
-        const isLeftSwipe = distance > minSwipeDistance;
-        const isRightSwipe = distance < -minSwipeDistance;
+        if (!isDragging) return;
+        setIsDragging(false);
+        startXRef.current = null;
 
-        if (isLeftSwipe) {
-            handleNext();
-        } else if (isRightSwipe) {
-            handlePrev();
+        if (Math.abs(dragX) > threshold) {
+            // Swipe Success
+            const direction = dragX > 0 ? 'right' : 'left';
+            
+            if (direction === 'left' && currentIndex < cards.length - 1) {
+                // Next Card
+                setExitDirection('left');
+                setTimeout(() => {
+                    setCurrentIndex(prev => prev + 1);
+                    setDragX(0);
+                    setExitDirection(null);
+                }, 300); // Matches transition duration
+            } else if (direction === 'right' && currentIndex > 0) {
+                // Prev Card (Optional: usually Tinder style only goes forward, but here we allow back)
+                setExitDirection('right');
+                setTimeout(() => {
+                    setCurrentIndex(prev => prev - 1);
+                    setDragX(0);
+                    setExitDirection(null);
+                }, 300);
+            } else {
+                // Edge case: End of list or Start of list -> Snap back
+                setDragX(0);
+            }
+        } else {
+            // Swipe Cancel (Snap back)
+            setDragX(0);
         }
     };
 
+    // Button Controls
     const handleNext = () => {
         if (currentIndex < cards.length - 1) {
-            setDirection('left');
+            setExitDirection('left'); // Simulate swipe left
+            setDragX(-screenWidth);   // Move off screen
             setTimeout(() => {
                 setCurrentIndex(prev => prev + 1);
-                setDirection(null);
-            }, 200);
+                setDragX(0);
+                setExitDirection(null);
+            }, 300);
         }
     };
 
     const handlePrev = () => {
         if (currentIndex > 0) {
-            setDirection('right'); // Animation logic could be improved for "back", but keeping simple
-            setCurrentIndex(prev => prev - 1);
+            setExitDirection('right');
+            setDragX(screenWidth);
+            setTimeout(() => {
+                setCurrentIndex(prev => prev - 1);
+                setDragX(0);
+                setExitDirection(null);
+            }, 300);
         }
     };
 
@@ -349,12 +367,33 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     const currentCardId = cards[currentIndex];
     const isFavorite = favorites.includes(currentCardId);
-
-    // Tính toán tiến độ
     const progress = ((currentIndex + 1) / cards.length) * 100;
 
+    // --- Dynamic Styles ---
+    const rotateDeg = (dragX / screenWidth) * 20; // Max 20deg rotation
+    
+    // Style for the top card (active)
+    const activeCardStyle = {
+        transform: `translateX(${dragX}px) rotate(${rotateDeg}deg)`,
+        transition: isDragging ? 'none' : 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+        zIndex: 10
+    };
+
+    // Style for the background card (next card hint)
+    // As active card moves away (abs(dragX) increases), the next card scales up to 1
+    const dragPercentage = Math.min(Math.abs(dragX) / screenWidth, 1);
+    const backCardScale = 0.92 + (0.08 * dragPercentage); // From 0.92 to 1.0
+    const backCardOpacity = 0.6 + (0.4 * dragPercentage); // From 0.6 to 1.0
+
+    const backCardStyle = {
+        transform: `scale(${backCardScale})`,
+        opacity: backCardOpacity,
+        zIndex: 5,
+        transition: isDragging ? 'none' : 'all 0.3s ease-out'
+    };
+
     return (
-        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom">
+        <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none">
             {/* Header */}
             <div className="px-4 py-3 flex items-center justify-between bg-black/20 shrink-0">
                 <div className="flex items-center gap-3">
@@ -377,38 +416,56 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 <div className="h-full bg-gradient-to-r from-orange-400 to-yellow-400 transition-all duration-300" style={{ width: `${progress}%` }}></div>
             </div>
 
-            {/* Card Container */}
-            <div 
-                className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden"
-                onTouchStart={onTouchStart}
-                onTouchMove={onTouchMove}
-                onTouchEnd={onTouchEnd}
-            >
+            {/* Card Container Area */}
+            <div className="flex-1 flex flex-col items-center justify-center p-4 relative overflow-hidden">
                 <div className="relative w-full max-w-md aspect-[3/4] max-h-[70vh]">
-                    {/* Background Card (Next Card Hint) */}
-                    {currentIndex < cards.length - 1 && (
-                        <div className="absolute top-4 left-0 w-full h-full bg-white/5 rounded-3xl scale-95 origin-bottom opacity-50 translate-y-2 border border-white/10 shadow-xl"></div>
-                    )}
                     
-                    {/* Main Card */}
+                    {/* 1. Background Card (Next Card Preview) */}
+                    {currentIndex < cards.length - 1 && (
+                        <div 
+                            className="absolute inset-0 bg-white rounded-3xl shadow-xl border border-white/10 overflow-hidden flex items-center justify-center"
+                            style={backCardStyle}
+                        >
+                            <img 
+                                src={getTopicImageUrl(cards[currentIndex + 1])} 
+                                alt="Next" 
+                                className="w-full h-full object-contain p-2 opacity-80"
+                            />
+                        </div>
+                    )}
+
+                    {/* 2. Active Card (Draggable) */}
                     <div 
-                        className={`absolute inset-0 bg-white rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col transition-all duration-300 transform 
-                            ${direction === 'left' ? '-translate-x-full opacity-0 rotate-[-10deg]' : ''}
-                            ${direction === 'right' ? 'translate-x-full opacity-0 rotate-[10deg]' : ''}
-                        `}
+                        className="absolute inset-0 bg-white rounded-3xl shadow-2xl border border-white/20 overflow-hidden flex flex-col cursor-grab active:cursor-grabbing"
+                        style={activeCardStyle}
+                        onTouchStart={onTouchStart}
+                        onTouchMove={onTouchMove}
+                        onTouchEnd={onTouchEnd}
                     >
-                        <div className="relative w-full h-full bg-gray-100 flex items-center justify-center">
+                        <div className="relative w-full h-full bg-gray-50 flex items-center justify-center">
+                            {/* Overlay indications for Swipe */}
+                            {isDragging && dragX > 50 && (
+                                <div className="absolute top-4 left-4 z-20 border-4 border-green-500 text-green-500 font-black text-2xl uppercase px-2 rounded -rotate-12 opacity-80">
+                                    BACK
+                                </div>
+                            )}
+                            {isDragging && dragX < -50 && (
+                                <div className="absolute top-4 right-4 z-20 border-4 border-red-500 text-red-500 font-black text-2xl uppercase px-2 rounded rotate-12 opacity-80">
+                                    NEXT
+                                </div>
+                            )}
+
                             <img 
                                 src={getTopicImageUrl(currentCardId)} 
                                 alt="Flashcard" 
-                                className="w-full h-full object-contain p-2"
+                                className="w-full h-full object-contain p-2 pointer-events-none select-none" // prevent img drag default
                             />
                             
                             <FavoriteButton 
                                 isFavorite={isFavorite}
                                 onToggle={() => onToggleFavorite(currentCardId)}
                                 isToggling={togglingIds.has(currentCardId)}
-                                customClass="absolute top-4 right-4 bg-white/80 backdrop-blur-sm shadow-sm hover:scale-110 w-12 h-12"
+                                customClass="absolute bottom-4 right-4 bg-white/90 backdrop-blur-sm shadow-md hover:scale-110 w-12 h-12"
                             />
                         </div>
                     </div>
@@ -416,7 +473,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
                 {/* Instructions */}
                 <div className="mt-6 text-white/40 text-sm font-medium animate-pulse">
-                    Swipe or tap buttons to flip
+                    Swipe left for next, right for previous
                 </div>
             </div>
 
@@ -424,7 +481,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
             <div className="p-6 pb-8 flex items-center justify-center gap-6 bg-black/20 shrink-0">
                 <button 
                     onClick={handlePrev}
-                    disabled={currentIndex === 0}
+                    disabled={currentIndex === 0 || !!exitDirection}
                     className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${
                         currentIndex === 0 
                             ? 'border-white/10 text-white/10 cursor-not-allowed' 
@@ -440,6 +497,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
                 <button 
                     onClick={() => {
                         setCurrentIndex(0);
+                        setDragX(0);
                     }}
                     className="px-6 py-3 rounded-xl font-bold text-slate-900 bg-yellow-400 hover:bg-yellow-300 active:translate-y-1 transition-all shadow-lg shadow-yellow-400/20"
                 >
@@ -448,7 +506,7 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
                 <button 
                     onClick={handleNext}
-                    disabled={currentIndex === cards.length - 1}
+                    disabled={currentIndex === cards.length - 1 || !!exitDirection}
                     className={`w-14 h-14 rounded-full flex items-center justify-center border-2 transition-all ${
                         currentIndex === cards.length - 1
                             ? 'border-white/10 text-white/10 cursor-not-allowed' 
