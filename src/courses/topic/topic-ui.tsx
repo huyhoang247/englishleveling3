@@ -3,6 +3,9 @@ import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 // --- Imports từ các file khác ---
 import { useQuizApp } from '../course-context.tsx'; 
 import HomeButton from '../../ui/home-button.tsx'; 
+// ADDED: Import BackButton
+import BackButton from '../../ui/components/back-button.tsx';
+
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 
@@ -445,21 +448,17 @@ const FlashcardOverlay = ({ cards, onClose, onToggleFavorite, favorites, togglin
 
     return (
         <div className="fixed inset-0 z-[100] bg-slate-900/95 backdrop-blur-md flex flex-col h-full animate-popup-zoom touch-none select-none">
-            {/* Header (h-14, removed py-3) */}
+            {/* Header (UPDATED) */}
             <div className="h-14 px-4 flex items-center justify-between bg-black/20 shrink-0">
+                {/* Left: Back Button (replaced Close) */}
+                <BackButton onClick={onClose} label="Back" />
+
+                {/* Right: Counter (Moved from left) */}
                 <div className="flex items-center gap-3">
                     <span className="text-white font-black text-lg">
                         {currentIndex + 1} <span className="text-white/50 text-sm">/ {cards.length}</span>
                     </span>
                 </div>
-                <button 
-                    onClick={onClose}
-                    className="w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors text-white"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-6 h-6">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
             </div>
 
             {/* Progress Bar */}
