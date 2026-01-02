@@ -1,7 +1,13 @@
 import React, { useRef, useEffect, useState } from 'react';
+// 1. Import useGame
+import { useGame } from '../GameContext.tsx';
 
 const StickmanShadowFinal = () => {
   const canvasRef = useRef(null);
+  
+  // 2. Lấy stats từ Context
+  const { totalPlayerStats } = useGame(); 
+
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
   
@@ -35,7 +41,9 @@ const StickmanShadowFinal = () => {
   const p1 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
-    level: 1, currentExp: 0, maxExp: 100, damage: 12,
+    level: 1, currentExp: 0, maxExp: 100, 
+    damage: 12, // Sẽ được overwrite bởi ATK
+    defense: 0, // Thêm chỉ số DEF
     coins: 0, 
     state: 'IDLE', dir: 1,
     animTimer: 0, attackCooldown: 0,
@@ -46,9 +54,7 @@ const StickmanShadowFinal = () => {
     type: 'PLAYER'
   });
 
-  // DANH SÁCH KẺ THÙ (Thay vì chỉ p2)
   const enemies = useRef([]);
-
   const shadows = useRef([]);
   const souls = useRef([]);
   const particles = useRef([]);
@@ -80,18 +86,30 @@ const StickmanShadowFinal = () => {
     const { w, h } = handleResize(); 
     const floorY = h * 0.66;
 
+    // 3. APPLY STATS TỪ CONTEXT VÀO GAME
+    // Sử dụng giá trị mặc định nếu context chưa load hoặc bằng 0
+    const startHp = totalPlayerStats.hp > 0 ? totalPlayerStats.hp : 100;
+    const startAtk = totalPlayerStats.atk > 0 ? totalPlayerStats.atk : 12;
+    const startDef = totalPlayerStats.def || 0;
+
     p1.current = { 
         ...p1.current, 
         x: 0, y: floorY, vx: 0, vy: 0, 
-        hp: 100, maxHp: 100, 
-        level: 1, currentExp: 0, maxExp: 100, damage: 12,
+        hp: startHp, maxHp: startHp, 
+        damage: startAtk,
+        defense: startDef,
+        level: 1, currentExp: 0, maxExp: 100,
         coins: 0, 
         state: 'IDLE', dir: 1,
         isDead: false 
     };
     
-    enemies.current = []; // Reset kẻ thù
-    spawnWave(floorY, 1); // Gọi đợt quái đầu tiên
+    enemies.current = [];
+    
+    // Tăng độ khó quái vật dựa trên chỉ số người chơi để game cân bằng hơn (Optional)
+    // Nếu người chơi quá mạnh (ATK > 100), quái sẽ mạnh hơn chút
+    const enemyBaseLevel = Math.max(1, Math.floor(startAtk / 20)); 
+    spawnWave(floorY, enemyBaseLevel); 
     
     camera.current.x = -w/2;
     shadows.current = [];
@@ -115,14 +133,15 @@ const StickmanShadowFinal = () => {
     setGameState('PLAYING');
   };
 
-  // Hàm sinh 1 kẻ thù cụ thể và thêm vào mảng
+  // Hàm sinh 1 kẻ thù cụ thể
   const createEnemy = (x, y, level) => {
-      const hp = 100 + (level * 25);
+      // Cân bằng máu quái theo level (nếu người chơi stat cao, level truyền vào sẽ cao)
+      const hp = 100 + (level * 30); 
       const newEnemy = {
           x: x, y: y, vx: 0, vy: 0,
           maxHp: hp, hp: hp,
           level: level,
-          damage: 5 + (level * 3),
+          damage: 5 + (level * 4),
           state: 'IDLE', dir: -1, 
           animTimer: Math.random() * 100, 
           attackCooldown: 0, 
@@ -137,20 +156,17 @@ const StickmanShadowFinal = () => {
       createExplosion(x, y - 50, '#ff2a00');
   };
 
-  // Hàm sinh đợt quái (1 đến 5 con)
   const spawnWave = (floorY, baseLevel) => {
-      const count = Math.floor(rand(1, 6)); // Random từ 1 đến 5 (Math.random * (6-1) + 1)
+      const count = Math.floor(rand(1, 6)); 
       const playerX = p1.current.x;
       
       addFloatingText(playerX, floorY - 200, `WAVE INCOMING: ${count}`, '#ff0000', 30);
 
       for (let i = 0; i < count; i++) {
-          // Xuất hiện ngẫu nhiên bên trái hoặc phải người chơi, cách xa 1 đoạn
           const side = Math.random() > 0.5 ? 1 : -1;
           const dist = 300 + Math.random() * 500; 
           const spawnX = playerX + (side * dist);
           
-          // Mỗi con có thể chênh lệch level 1 chút
           const lvl = baseLevel + Math.floor(Math.random() * 2);
           createEnemy(spawnX, floorY, lvl);
       }
@@ -182,12 +198,14 @@ const StickmanShadowFinal = () => {
           if (shadows.current.length >= CFG.maxShadows) return;
 
           const s = souls.current[closestIndex];
-          const shadowHp = 80 + (s.level * 15);
+          // Shadow mạnh hơn chút so với quái gốc
+          const shadowHp = 80 + (s.level * 20);
           
           shadows.current.push({
               x: s.x, y: s.y, vx: 0, vy: 0,
               maxHp: shadowHp, hp: shadowHp,
-              level: s.level, damage: s.damage,
+              level: s.level, 
+              damage: s.damage, // Shadow giữ nguyên dmg của quái
               currentExp: 0, maxExp: 50 + (s.level * 10),
               state: 'IDLE', dir: p.dir,
               animTimer: 0, attackCooldown: 0,
@@ -203,35 +221,27 @@ const StickmanShadowFinal = () => {
       }
   };
 
+  // ... (Giữ nguyên updateShadows và Utils) ...
   const updateShadows = (floorY) => {
-      // Xóa shadow chết
       for (let i = shadows.current.length - 1; i >= 0; i--) {
           if (shadows.current[i].isDead) {
               createExplosion(shadows.current[i].x, shadows.current[i].y, '#555');
               shadows.current.splice(i, 1);
           }
       }
-
       shadows.current.forEach(s => {
-          // Tìm mục tiêu: Kẻ thù gần nhất
           let target = null;
           let minDst = 10000;
-
-          // Ưu tiên tìm trong list enemies
           enemies.current.forEach(e => {
               if(!e.isDead) {
                   const d = Math.abs(s.x - e.x);
                   if (d < minDst) { minDst = d; target = e; }
               }
           });
-
-          // Nếu không có kẻ thù, đi theo người chơi
           if (!target) {
               target = p1.current;
           }
-
           const dist = target.x - s.x;
-          // Khoảng cách dừng lại (xa hơn nếu là người chơi)
           const stopDist = (target.type === 'PLAYER') ? 100 + (Math.random() * 50) : 60;
 
           if (Math.abs(dist) > stopDist) {
@@ -242,14 +252,12 @@ const StickmanShadowFinal = () => {
               s.vx *= CFG.friction;
               if (s.state === 'RUN') s.state = 'IDLE';
               
-              // Nếu target là kẻ thù thì đánh
               if (target.type === 'ENEMY' && s.attackCooldown <= 0) {
                   s.state = 'ATTACK';
                   s.attackCooldown = 30; 
                   s.vx = s.dir * 15; 
               }
           }
-
           s.vy += CFG.gravity; s.x += s.vx; s.y += s.vy;
           if (s.y > floorY) { s.y = floorY; s.vy = 0; if (s.state === 'JUMP') s.state = 'IDLE'; }
           s.animTimer++;
@@ -260,7 +268,6 @@ const StickmanShadowFinal = () => {
       });
   };
 
-  // --- GENERAL UTILS ---
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   const createBlood = (x, y, color, amount = 10) => {
@@ -288,8 +295,8 @@ const StickmanShadowFinal = () => {
           x, y, text, color, size, life: 60, vy: -2
       });
   };
-
-  // --- LOOT ---
+  
+  // ... (Giữ nguyên Loot logic) ...
   const spawnLoot = (x, y, totalGold) => {
       const numCoins = 3 + Math.floor(Math.random() * 2); 
       const baseValue = Math.floor(totalGold / numCoins);
@@ -323,7 +330,8 @@ const StickmanShadowFinal = () => {
           }
       }
   };
-
+  
+  // ... (Giữ nguyên drawing logic và helper function) ...
   const drawCoins = (ctx) => {
       lootCoins.current.forEach(c => {
           ctx.save(); ctx.translate(c.x, c.y);
@@ -341,7 +349,11 @@ const StickmanShadowFinal = () => {
           entity.level++;
           entity.currentExp -= entity.maxExp;
           entity.maxExp = Math.floor(entity.maxExp * 1.2);
-          entity.damage += 5;
+          
+          // Khi lên cấp trong game, cộng thêm damage base (cộng dồn với stats gốc)
+          entity.damage += 5; 
+          
+          // Hồi máu
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
@@ -367,7 +379,6 @@ const StickmanShadowFinal = () => {
       }
   };
 
-  // --- HUD ---
   const drawHUD = (ctx) => {
       const p = p1.current;
       const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
@@ -392,24 +403,13 @@ const StickmanShadowFinal = () => {
       ctx.beginPath(); ctx.roundRect(sHudX, hudY, sHudW, hudH, 18); ctx.fill();
       
       ctx.strokeStyle = '#d8b4fe'; ctx.lineWidth = 1.5; ctx.stroke();
-
-      const sIconX = sHudX + 25;
-      const sIconY = hudY + 18;
-      ctx.fillStyle = '#fff';
-      ctx.beginPath(); ctx.arc(sIconX, sIconY - 2, 6, 0, Math.PI * 2); ctx.fill(); 
+      const sIconX = sHudX + 25; const sIconY = hudY + 18;
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sIconX, sIconY - 2, 6, 0, Math.PI * 2); ctx.fill(); 
       ctx.beginPath(); ctx.arc(sIconX, sIconY + 8, 8, Math.PI, 0); ctx.fill(); 
-
-      ctx.fillStyle = '#e9d5ff'; 
-      ctx.font = 'bold 12px Arial';
-      ctx.textAlign = 'left';
-      ctx.fillText('SHADOW', sIconX + 15, sIconY + 5);
-
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 18px Arial';
-      ctx.textAlign = 'right';
+      ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left'; ctx.fillText('SHADOW', sIconX + 15, sIconY + 5);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'right';
       if (shadows.current.length >= CFG.maxShadows) ctx.fillStyle = '#f87171';
       ctx.fillText(`${shadows.current.length} / ${CFG.maxShadows}`, sHudX + sHudW - 15, sIconY + 5);
-
       ctx.restore();
   };
 
@@ -444,6 +444,7 @@ const StickmanShadowFinal = () => {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.level, badgeX, badgeY + 1);
   };
 
+  // ... (Giữ nguyên drawStickman) ...
   const drawStickman = (ctx, p) => {
     if (p.isDead) return;
     const { x, y, dir, state, animTimer, color } = p;
@@ -467,13 +468,11 @@ const StickmanShadowFinal = () => {
     ctx.save();
     ctx.translate(x | 0, (y - 25 - bodyY) | 0); ctx.scale(dir, 1);
     
-    // --- SETUP OUTLINE COLOR ---
     let outlineColor = 'transparent';
-    if (p.type === 'PLAYER') outlineColor = '#00f2ff'; // Cyan
-    if (p.type === 'ENEMY') outlineColor = '#ff2a00';  // Red
-    if (p.type === 'ALLY') outlineColor = '#a855f7';   // Purple
+    if (p.type === 'PLAYER') outlineColor = '#00f2ff';
+    if (p.type === 'ENEMY') outlineColor = '#ff2a00'; 
+    if (p.type === 'ALLY') outlineColor = '#a855f7';   
 
-    // --- RENDER FUNCTION ---
     const renderBody = (strokeColor, lineWidth, isOutline) => {
         ctx.strokeStyle = strokeColor;
         ctx.lineWidth = lineWidth;
@@ -481,25 +480,16 @@ const StickmanShadowFinal = () => {
         ctx.lineJoin = 'round';
 
         const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
-        
-        // Body (Line)
         ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
         
-        // Head (Circle)
         if (isOutline) {
             ctx.fillStyle = strokeColor; 
-            ctx.beginPath(); 
-            ctx.arc(head.x, head.y, 7.5, 0, Math.PI * 2); 
-            ctx.fill();
+            ctx.beginPath(); ctx.arc(head.x, head.y, 7.5, 0, Math.PI * 2); ctx.fill();
         } else {
-            // Vẽ đầu đen chính
             ctx.fillStyle = '#000'; 
-            ctx.beginPath(); 
-            ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); 
-            ctx.fill(); 
+            ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill(); 
         }
 
-        // Helper vẽ chi
         const drawLimb = (startX, startY, angle, len) => {
             const mx = startX + Math.sin(angle) * len; const my = startY + Math.cos(angle) * len;
             ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(mx, my); ctx.stroke();
@@ -508,38 +498,25 @@ const StickmanShadowFinal = () => {
             return { x: fx, y: fy };
         };
 
-        // Legs
-        if (!isOutline) ctx.strokeStyle = '#222'; 
-        else ctx.strokeStyle = strokeColor;
+        if (!isOutline) ctx.strokeStyle = '#222'; else ctx.strokeStyle = strokeColor;
         drawLimb(hip.x, hip.y, legL_Angle, 12); 
 
-        if (!isOutline) ctx.strokeStyle = '#000'; 
-        else ctx.strokeStyle = strokeColor;
+        if (!isOutline) ctx.strokeStyle = '#000'; else ctx.strokeStyle = strokeColor;
         drawLimb(hip.x, hip.y, legR_Angle, 12);
 
-        // Arms
-        if (!isOutline) ctx.strokeStyle = '#222';
-        else ctx.strokeStyle = strokeColor;
+        if (!isOutline) ctx.strokeStyle = '#222'; else ctx.strokeStyle = strokeColor;
         drawLimb(shoulder.x, shoulder.y, armL_Angle, 12);
 
-        // Hand holding weapon
-        if (!isOutline) ctx.strokeStyle = '#000';
-        else ctx.strokeStyle = strokeColor;
+        if (!isOutline) ctx.strokeStyle = '#000'; else ctx.strokeStyle = strokeColor;
         return drawLimb(shoulder.x, shoulder.y, armR_Angle, 12);
     };
 
-    // 1. VẼ VIỀN MÀU (Nét to 6px cho tay chân)
     if (outlineColor !== 'transparent') {
-        ctx.save();
-        ctx.globalAlpha = 0.5;
+        ctx.save(); ctx.globalAlpha = 0.5;
         renderBody(outlineColor, 6, true);
         ctx.restore();
     }
-
-    // 2. VẼ THÂN ĐEN (Nét nhỏ 3px đè lên trên)
     const handPos = renderBody('#000', 3, false);
-
-    // --- VẼ VŨ KHÍ ---
     if (handPos) {
         ctx.strokeStyle = p.type === 'ALLY' ? '#a855f7' : p.weaponColor; 
         ctx.lineWidth = 2.5;
@@ -547,19 +524,14 @@ const StickmanShadowFinal = () => {
         const swordAngle = armR_Angle + 1.5; 
         const tipX = handPos.x + Math.sin(swordAngle) * 35; const tipY = handPos.y + Math.cos(swordAngle) * 35;
         ctx.moveTo(handPos.x, handPos.y); ctx.lineTo(tipX, tipY); ctx.stroke();
-        
         if (state === 'ATTACK' && p.attackCooldown > 5) {
             ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.4)'; 
-            ctx.beginPath();
-            ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
+            ctx.beginPath(); ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
     }
-    
-    // Mắt tím cho Shadow
     if (p.type === 'ALLY') {
          ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(0, -26, 2, 0, Math.PI * 2); ctx.fill(); 
     }
-
     ctx.restore();
     drawUnitUI(ctx, p, p.type);
   };
@@ -578,9 +550,19 @@ const StickmanShadowFinal = () => {
             if ((facing || overlapping) && hitDist < requiredDist && Math.abs(attacker.y - defender.y) < 50) {
                 defender.vx = attacker.dir * 10; defender.vy = -4; 
                 
-                const dmg = attacker.damage;
-                defender.hp -= dmg;
-                addFloatingText(defender.x, defender.y - 80, `-${dmg}`, '#ff0000'); 
+                // 4. TÍNH TOÁN DAMAGE (CÓ ÁP DỤNG DEFENSE)
+                let finalDamage = attacker.damage;
+                
+                // Nếu người chơi bị đánh, áp dụng DEF để giảm dmg
+                if (defender.type === 'PLAYER' && defender.defense > 0) {
+                    // Cơ chế giảm dmg đơn giản: DMG - DEF
+                    // Đảm bảo tối thiểu nhận 1 dmg
+                    const mitigation = defender.defense; 
+                    finalDamage = Math.max(1, finalDamage - mitigation);
+                }
+                
+                defender.hp -= finalDamage;
+                addFloatingText(defender.x, defender.y - 80, `-${Math.round(finalDamage)}`, '#ff0000'); 
                 
                 defender.state = 'HURT';
                 shakeRef.current = 4; 
@@ -615,6 +597,7 @@ const StickmanShadowFinal = () => {
         return false;
     };
 
+  // ... (Giữ nguyên phần update loop, draw loop và effects) ...
   const update = () => {
     if (gameState !== 'PLAYING') return;
     if (hitStopRef.current > 0) { hitStopRef.current--; return; }
@@ -642,34 +625,29 @@ const StickmanShadowFinal = () => {
         input.current.skill = false;
     }
     
-    // Áp dụng vật lý cho Player
     usr.vy += CFG.gravity; usr.x += usr.vx; usr.y += usr.vy;
     if (usr.y > floorY) { usr.y = floorY; usr.vy = 0; if (usr.state === 'JUMP') usr.state = 'IDLE'; }
     usr.animTimer++;
     if (usr.attackCooldown > 0) { usr.attackCooldown--; if (usr.attackCooldown === 0 && usr.state === 'ATTACK') usr.state = 'IDLE'; }
 
-    // Dọn dẹp kẻ thù đã chết
     for (let i = enemies.current.length - 1; i >= 0; i--) {
         if (enemies.current[i].isDead) {
             enemies.current.splice(i, 1);
         }
     }
 
-    // Logic sinh sản: Nếu hết kẻ thù thì đếm ngược và sinh wave mới
     if (enemies.current.length === 0) {
         respawnTimer.current++;
         if (respawnTimer.current > CFG.respawnTime) {
+            // Level quái dựa trên level người chơi trong game (hoặc stats nếu muốn)
             spawnWave(floorY, usr.level);
             respawnTimer.current = 0;
         }
     }
 
-    // Cập nhật từng kẻ thù
     enemies.current.forEach(ai => {
         let target = usr;
         let minDist = Math.abs(usr.x - ai.x);
-        
-        // Kẻ thù tìm mục tiêu gần nhất (Player hoặc Shadow)
         shadows.current.forEach(s => {
             if(!s.isDead) {
                 const d = Math.abs(s.x - ai.x);
@@ -680,7 +658,6 @@ const StickmanShadowFinal = () => {
         const dist = target.x - ai.x; 
         ai.aiTimer++;
         
-        // Di chuyển AI
         if (Math.abs(dist) > 50) {
             ai.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.45);
             ai.dir = dist > 0 ? 1 : -1;
@@ -694,7 +671,6 @@ const StickmanShadowFinal = () => {
             }
         }
         
-        // Vật lý AI
         ai.vy += CFG.gravity; ai.x += ai.vx; ai.y += ai.vy;
         if (ai.y > floorY) { ai.y = floorY; ai.vy = 0; if (ai.state === 'JUMP') ai.state = 'IDLE'; }
         ai.animTimer++;
@@ -724,27 +700,20 @@ const StickmanShadowFinal = () => {
     
     const isFull = shadows.current.length >= CFG.maxShadows;
     const showRise = hasSoul && !isFull; 
-
     if (showRise !== canRiseRef.current) {
         canRiseRef.current = showRise;
         setCanRise(showRise);
     }
 
-    // CHECK HIT LOOPS
     if(!p1.current.isDead) {
-        // Kẻ thù đánh người chơi
         enemies.current.forEach(e => checkHit(e, p1.current));
     }
-    
-    // Người chơi và Shadow đánh kẻ thù
     enemies.current.forEach(e => {
         if(!e.isDead) {
             checkHit(p1.current, e);
             shadows.current.forEach(s => checkHit(s, e));
         }
     });
-    
-    // Kẻ thù đánh Shadow
     shadows.current.forEach(s => {
         enemies.current.forEach(e => checkHit(e, s));
     });
@@ -787,10 +756,8 @@ const StickmanShadowFinal = () => {
             const bob = Math.sin(s.anim * 0.1) * 5;
             ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
             ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 15, 0, Math.PI * 2); ctx.fill();
-            
             ctx.fillStyle = '#fff';
             ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 5, 0, Math.PI * 2); ctx.fill();
-            
             ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillText('SOUL', s.x, s.y - 50 + bob);
         });
 
@@ -800,14 +767,10 @@ const StickmanShadowFinal = () => {
         
         drawCoins(ctx); 
         shadows.current.forEach(s => drawStickman(ctx, s));
-        
-        // VẼ DANH SÁCH KẺ THÙ
         enemies.current.forEach(e => drawStickman(ctx, e));
-        
         drawStickman(ctx, p1.current);
 
-        ctx.font = 'bold 20px Arial';
-        ctx.textAlign = 'center';
+        ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center';
         floatingTexts.current.forEach(t => {
             ctx.fillStyle = t.color;
             ctx.globalAlpha = t.life / 60;
@@ -841,6 +804,12 @@ const StickmanShadowFinal = () => {
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 italic mb-4 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">SHADOW FIGHT</h1>
            <p className="text-gray-400 mb-8 tracking-widest">MONARCH LEGENDS</p>
+           {/* Hiển thị stats hiện tại của người chơi */}
+           <div className='flex gap-4 mb-4 text-sm text-gray-500'>
+               <span>HP: {totalPlayerStats.hp || 100}</span>
+               <span>ATK: {totalPlayerStats.atk || 12}</span>
+               <span>DEF: {totalPlayerStats.def || 0}</span>
+           </div>
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-purple-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
