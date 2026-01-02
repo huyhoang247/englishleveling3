@@ -74,7 +74,6 @@ const StickmanShadowFinal = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
     
-    // Giới hạn DPR tối đa là 2
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     dprRef.current = dpr;
     
@@ -389,7 +388,6 @@ const StickmanShadowFinal = () => {
   const drawUnitUI = (ctx, p, type) => {
     if (p.isDead) return;
     const barWidth = 60; const barHeight = 6; const yOffset = 100;
-    // Làm tròn tọa độ
     const barX = (p.x - barWidth / 2) | 0; 
     const barY = (p.y - yOffset) | 0;
     const badgeX = barX - 14; const badgeY = barY + barHeight / 2;
@@ -441,53 +439,71 @@ const StickmanShadowFinal = () => {
     ctx.save();
     ctx.translate(x | 0, (y - 25 - bodyY) | 0); ctx.scale(dir, 1);
     
-    // --- PHẦN ĐÃ CẬP NHẬT: Vòng tròn phát sáng "Fake Glow" ---
-    let glowColor = '';
-    let glowSize = 35;
-    
-    if (p.type === 'ALLY') {
-        // Màu tím cho Shadow
-        glowColor = 'rgba(168, 85, 247, 0.25)'; 
-    } else if (p.type === 'PLAYER') {
-        // Màu Cyan cho Player, to hơn xíu
-        glowColor = 'rgba(0, 242, 255, 0.2)';
-        glowSize = 40;
-    } else if (p.type === 'ENEMY') {
-        // Màu Đỏ cho Kẻ địch (Quái vật)
-        glowColor = 'rgba(255, 42, 0, 0.2)';
-    }
+    // --- SETUP OUTLINE COLOR ---
+    let outlineColor = 'transparent';
+    if (p.type === 'PLAYER') outlineColor = '#00f2ff'; // Cyan
+    if (p.type === 'ENEMY') outlineColor = '#ff2a00';  // Red
+    if (p.type === 'ALLY') outlineColor = '#a855f7';   // Purple
 
-    if (glowColor) {
-        ctx.fillStyle = glowColor;
-        ctx.beginPath(); 
-        ctx.arc(0, -15, glowSize, 0, Math.PI * 2); // Canh chỉnh vị trí y một chút
-        ctx.fill();
-    }
-    // --------------------------------------------------------
+    // --- RENDER FUNCTION (Dùng để vẽ 2 lần: 1 lần viền, 1 lần thân đen) ---
+    const renderBody = (strokeColor, lineWidth, isOutline) => {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
 
-    ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+        const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
+        
+        // Body
+        ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
+        
+        // Head
+        if (isOutline) {
+            // Nếu là viền, vẽ stroke cho đầu
+            ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.stroke();
+        } else {
+            // Nếu là thân chính, vẽ fill đen
+            ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill(); 
+        }
 
-    const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
-    
-    const drawLimb = (startX, startY, angle, len) => {
-        const mx = startX + Math.sin(angle) * len; const my = startY + Math.cos(angle) * len;
-        ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(mx, my); ctx.stroke();
-        const fx = mx + Math.sin(angle * 0.8) * len; const fy = my + Math.cos(angle * 0.8) * len;
-        ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(fx, fy); ctx.stroke();
-        return { x: fx, y: fy };
+        // Limbs helper
+        const drawLimb = (startX, startY, angle, len) => {
+            const mx = startX + Math.sin(angle) * len; const my = startY + Math.cos(angle) * len;
+            ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(mx, my); ctx.stroke();
+            const fx = mx + Math.sin(angle * 0.8) * len; const fy = my + Math.cos(angle * 0.8) * len;
+            ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(fx, fy); ctx.stroke();
+            return { x: fx, y: fy };
+        };
+
+        // Legs
+        if (!isOutline) ctx.strokeStyle = '#222'; // Chân trái màu xám đậm khi vẽ body
+        else ctx.strokeStyle = strokeColor;
+        drawLimb(hip.x, hip.y, legL_Angle, 12); 
+
+        if (!isOutline) ctx.strokeStyle = '#000'; // Chân phải màu đen
+        else ctx.strokeStyle = strokeColor;
+        drawLimb(hip.x, hip.y, legR_Angle, 12);
+
+        // Arms
+        if (!isOutline) ctx.strokeStyle = '#222';
+        else ctx.strokeStyle = strokeColor;
+        drawLimb(shoulder.x, shoulder.y, armL_Angle, 12);
+
+        // Hand holding weapon
+        if (!isOutline) ctx.strokeStyle = '#000';
+        else ctx.strokeStyle = strokeColor;
+        return drawLimb(shoulder.x, shoulder.y, armR_Angle, 12);
     };
 
-    ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
-    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill(); 
-    if (p.type === 'ALLY') {
-        ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(head.x + 2, head.y - 1, 2, 0, Math.PI * 2); ctx.fill(); 
+    // 1. VẼ VIỀN MÀU (Nét to 6px)
+    if (outlineColor !== 'transparent') {
+        renderBody(outlineColor, 6, true);
     }
-    ctx.stroke();
-    
-    ctx.strokeStyle = '#222'; drawLimb(hip.x, hip.y, legL_Angle, 12); drawLimb(shoulder.x, shoulder.y, armL_Angle, 12);
-    ctx.strokeStyle = '#000'; drawLimb(hip.x, hip.y, legR_Angle, 12);
-    const handPos = drawLimb(shoulder.x, shoulder.y, armR_Angle, 12);
 
+    // 2. VẼ THÂN ĐEN (Nét nhỏ 3px đè lên trên)
+    const handPos = renderBody('#000', 3, false);
+
+    // --- VẼ VŨ KHÍ (Vẽ riêng để không bị viền đè lên xấu) ---
     if (handPos) {
         ctx.strokeStyle = p.type === 'ALLY' ? '#a855f7' : p.weaponColor; 
         ctx.lineWidth = 2.5;
@@ -495,12 +511,19 @@ const StickmanShadowFinal = () => {
         const swordAngle = armR_Angle + 1.5; 
         const tipX = handPos.x + Math.sin(swordAngle) * 35; const tipY = handPos.y + Math.cos(swordAngle) * 35;
         ctx.moveTo(handPos.x, handPos.y); ctx.lineTo(tipX, tipY); ctx.stroke();
+        
         if (state === 'ATTACK' && p.attackCooldown > 5) {
             ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.4)'; 
             ctx.beginPath();
             ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
     }
+    
+    // Mắt tím cho Shadow (Vẽ đè lên đầu đen)
+    if (p.type === 'ALLY') {
+         ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(0, -26, 2, 0, Math.PI * 2); ctx.fill(); 
+    }
+
     ctx.restore();
     drawUnitUI(ctx, p, p.type);
   };
