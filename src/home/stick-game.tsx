@@ -856,8 +856,9 @@ const StickmanShadowFinal = () => {
                  ctx.fillStyle = gradient;
                  ctx.lineJoin = 'round';
 
-                 // 1. Viền ngoài mờ (Thay thế cho Shadow) - Trắng pha xanh, opacity 30%
-                 ctx.strokeStyle = 'rgba(224, 242, 254, 0.3)'; // Sky-100 với 0.3 opacity
+                 // 1. Viền ngoài mờ (Thay thế cho Shadow) - Trắng pha xanh dương, opacity 70%
+                 // Màu mới: rgba(200, 235, 255, 0.7) - Ít xanh lá, nhiều xanh dương + trắng hơn
+                 ctx.strokeStyle = 'rgba(200, 235, 255, 0.7)'; 
                  ctx.lineWidth = 5; 
                  ctx.strokeText(t.text, t.x | 0, t.y | 0);
 
