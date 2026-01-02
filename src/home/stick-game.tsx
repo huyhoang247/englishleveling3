@@ -458,10 +458,7 @@ const StickmanShadowFinal = () => {
         ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
         
         // Head (Circle)
-        // FIX: Đã chỉnh lại logic vẽ đầu để viền mỏng đều như thân
         if (isOutline) {
-            // Vẽ nền màu (viền) bằng Fill thay vì Stroke
-            // Bán kính = 6 (gốc) + 1.5 (độ dày mong muốn bằng với thân) = 7.5
             ctx.fillStyle = strokeColor; 
             ctx.beginPath(); 
             ctx.arc(head.x, head.y, 7.5, 0, Math.PI * 2); 
@@ -503,9 +500,12 @@ const StickmanShadowFinal = () => {
         return drawLimb(shoulder.x, shoulder.y, armR_Angle, 12);
     };
 
-    // 1. VẼ VIỀN MÀU (Nét to 6px cho tay chân)
+    // 1. VẼ VIỀN MÀU (Nét to 6px cho tay chân) - ĐÃ CHỈNH SỬA: OPACITY 50%
     if (outlineColor !== 'transparent') {
+        ctx.save();            // <--- Lưu context
+        ctx.globalAlpha = 0.5; // <--- Chỉnh độ mờ 50%
         renderBody(outlineColor, 6, true);
+        ctx.restore();         // <--- Trả lại độ đậm 100%
     }
 
     // 2. VẼ THÂN ĐEN (Nét nhỏ 3px đè lên trên)
