@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-const StickmanHighControls = () => {
+const StickmanHighGround = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
@@ -11,7 +11,7 @@ const StickmanHighControls = () => {
   // --- CONFIGURATION ---
   const CFG = {
     gravity: 0.8,
-    groundY: 100,
+    // groundY không cố định nữa mà tính theo tỷ lệ màn hình
     speed: 7,
     jump: -16,
     friction: 0.85,
@@ -49,10 +49,15 @@ const StickmanHighControls = () => {
   const initGame = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    const floorY = h * 0.66; // Mặt đất nằm ở vị trí 2/3 màn hình
+
     healthP1.current = 100;
     healthP2.current = 100;
-    p1.current = { ...p1.current, x: 0, y: h - CFG.groundY, vx: 0, vy: 0, state: 'IDLE', dir: 1 };
-    p2.current = { ...p2.current, x: 400, y: h - CFG.groundY, vx: 0, vy: 0, state: 'IDLE', dir: -1 };
+    
+    // Đặt nhân vật đứng trên floorY
+    p1.current = { ...p1.current, x: 0, y: floorY, vx: 0, vy: 0, state: 'IDLE', dir: 1 };
+    p2.current = { ...p2.current, x: 400, y: floorY, vx: 0, vy: 0, state: 'IDLE', dir: -1 };
+    
     camera.current.x = -w/2;
     particles.current = [];
     
@@ -60,7 +65,7 @@ const StickmanHighControls = () => {
     for(let i = -20; i < 20; i++) {
         bgObjects.current.push({
             x: i * 800 + Math.random() * 200,
-            height: 100 + Math.random() * 200,
+            height: 100 + Math.random() * 200, // Cây/Cột cao hơn tí cho hợp map
             width: 40 + Math.random() * 40
         });
     }
@@ -178,19 +183,22 @@ const StickmanHighControls = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     
+    // --- GROUND CALCULATION ---
+    // Mặt đất tại vị trí 2/3 màn hình (tính từ trên xuống)
+    const floorY = canvas.height * 0.66;
+
     const targetCamX = p1.current.x - canvas.width / 2;
     camera.current.x += (targetCamX - camera.current.x) * 0.1;
 
     if (shakeRef.current > 0) shakeRef.current *= 0.9;
     if (shakeRef.current < 0.5) shakeRef.current = 0;
-    const floor = canvas.height - CFG.groundY;
 
     const usr = p1.current;
     if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
     else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
     else { usr.vx *= CFG.friction; if(usr.state === 'RUN') usr.state = 'IDLE'; }
 
-    if (input.current.jump && usr.y >= floor - 1) { usr.vy = CFG.jump; usr.state = 'JUMP'; }
+    if (input.current.jump && usr.y >= floorY - 1) { usr.vy = CFG.jump; usr.state = 'JUMP'; }
     
     if (input.current.attack && usr.attackCooldown <= 0) { 
         usr.state = 'ATTACK'; usr.attackCooldown = 25; usr.vx = usr.dir * 10; input.current.attack = false; 
@@ -215,7 +223,10 @@ const StickmanHighControls = () => {
     
     [usr, ai].forEach(p => {
         p.vy += CFG.gravity; p.x += p.vx; p.y += p.vy;
-        if (p.y > floor) { p.y = floor; p.vy = 0; if (p.state === 'JUMP') p.state = 'IDLE'; }
+        
+        // Cập nhật va chạm với mặt đất mới
+        if (p.y > floorY) { p.y = floorY; p.vy = 0; if (p.state === 'JUMP') p.state = 'IDLE'; }
+        
         p.animTimer++;
         if (p.attackCooldown > 0) { p.attackCooldown--; if (p.attackCooldown === 0 && p.state === 'ATTACK') p.state = 'IDLE'; }
     });
@@ -223,7 +234,8 @@ const StickmanHighControls = () => {
     for (let i = particles.current.length - 1; i >= 0; i--) {
         const p = particles.current[i];
         p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life--;
-        if (p.life <= 0 || p.y > floor) particles.current.splice(i, 1);
+        // Particle cũng phải dừng ở mặt đất mới
+        if (p.life <= 0 || p.y > floorY) particles.current.splice(i, 1);
     }
 
     const checkHit = (attacker, defender, defHealthRef) => {
@@ -258,17 +270,23 @@ const StickmanHighControls = () => {
     const shakeX = (Math.random() - 0.5) * shakeRef.current;
     const shakeY = (Math.random() - 0.5) * shakeRef.current;
     
+    // Bầu trời
     ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     ctx.save();
     ctx.translate(-camera.current.x + shakeX, shakeY);
 
+    // Mặt trăng (Trang trí)
     ctx.fillStyle = '#222'; 
     ctx.beginPath(); 
-    ctx.arc(camera.current.x + canvas.width/2, canvas.height/2, 200, 0, Math.PI*2); 
+    // Vẽ trăng cao hơn một chút vì mặt đất đã nâng lên
+    ctx.arc(camera.current.x + canvas.width/2, canvas.height/3, 150, 0, Math.PI*2); 
     ctx.fill();
 
-    const floorY = canvas.height - CFG.groundY;
+    // Vị trí mặt đất
+    const floorY = canvas.height * 0.66;
+
+    // Vẽ Cột nền (Background Objects)
     ctx.fillStyle = '#333';
     bgObjects.current.forEach(obj => {
         if (obj.x > camera.current.x - 200 && obj.x < camera.current.x + canvas.width + 200) {
@@ -276,10 +294,14 @@ const StickmanHighControls = () => {
         }
     });
 
+    // Vẽ Mặt đất (Ground) - Phần chiếm 1/3 dưới cùng
     const grad = ctx.createLinearGradient(0, floorY, 0, canvas.height);
     grad.addColorStop(0, '#000'); grad.addColorStop(1, '#333');
     ctx.fillStyle = grad; 
-    ctx.fillRect(camera.current.x - 100, floorY, canvas.width + 200, CFG.groundY);
+    // Lấp đầy từ floorY xuống hết màn hình
+    ctx.fillRect(camera.current.x - 100, floorY, canvas.width + 200, canvas.height - floorY);
+    
+    // Đường viền sáng của mặt đất
     ctx.strokeStyle = '#444'; 
     ctx.beginPath(); 
     ctx.moveTo(camera.current.x - 100, floorY); 
@@ -334,7 +356,7 @@ const StickmanHighControls = () => {
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 italic mb-4 drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]">SHADOW FIGHT</h1>
-           <p className="text-gray-400 mb-8 tracking-widest">HIGH CONTROLS</p>
+           <p className="text-gray-400 mb-8 tracking-widest">HIGH GROUND EDITION</p>
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-cyan-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
@@ -346,7 +368,7 @@ const StickmanHighControls = () => {
       )}
       {gameState === 'PLAYING' && (
         <>
-            {/* SUPER HIGH CONTROLS: bottom-24 (khoảng 96px từ đáy) */}
+            {/* CONTROLS (Giữ nguyên vị trí cao như bản trước) */}
             <div className="absolute bottom-24 left-8 flex gap-2 z-40">
                 <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur"
                     onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}>
@@ -358,7 +380,6 @@ const StickmanHighControls = () => {
                 </button>
             </div>
             
-            {/* SUPER HIGH CONTROLS: bottom-24 */}
             <div className="absolute bottom-24 right-8 flex flex-col gap-3 z-40 items-center">
                 <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center"
                     onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}>
@@ -375,4 +396,4 @@ const StickmanHighControls = () => {
   );
 };
 
-export default StickmanHighControls;
+export default StickmanHighGround;
