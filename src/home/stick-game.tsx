@@ -1,14 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-const StickmanArenaFinal = () => {
+const StickmanFinalUI = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
   
-  // Refs
-  const healthP1 = useRef(100);
-  const healthP2 = useRef(100);
-
   // --- CẤU HÌNH ---
   const CFG = {
     gravity: 0.8,
@@ -26,30 +22,32 @@ const StickmanArenaFinal = () => {
   const hitStopRef = useRef(0);
   const camera = useRef({ x: 0 });
   const respawnTimer = useRef(0);
+  const dprRef = useRef(1);
 
   const input = useRef({ left: false, right: false, jump: false, attack: false });
 
-  // --- PLAYER 1 (HERO) ---
+  // Player 1
   const p1 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
     level: 1, currentExp: 0, maxExp: 100, damage: 10,
+    coins: 0, 
     state: 'IDLE', dir: 1,
     animTimer: 0, attackCooldown: 0,
-    color: '#00f2ff', // Neon Cyan
+    color: '#00f2ff', 
     weaponColor: '#ffffff',
     name: 'KIỆN TƯỚNG',
     isDead: false
   });
 
-  // --- PLAYER 2 (ENEMY) ---
+  // Player 2
   const p2 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
     level: 1, damage: 8,
     state: 'IDLE', dir: -1,
     animTimer: 0, attackCooldown: 0, aiTimer: 0,
-    color: '#ff2a00', // Neon Red
+    color: '#ff2a00', 
     weaponColor: '#ff9900',
     name: 'QUÁI VẬT',
     isDead: false
@@ -58,32 +56,47 @@ const StickmanArenaFinal = () => {
   const particles = useRef([]);
   const bgObjects = useRef([]);
   const floatingTexts = useRef([]); 
+  const lootCoins = useRef([]); 
 
-  // --- INITIALIZATION ---
-  const initGame = () => {
+  // --- DPI SETUP ---
+  const handleResize = () => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
     const w = window.innerWidth;
     const h = window.innerHeight;
+    const dpr = window.devicePixelRatio || 1;
+    dprRef.current = dpr;
+    canvas.width = w * dpr;
+    canvas.height = h * dpr;
+    canvas.style.width = `${w}px`;
+    canvas.style.height = `${h}px`;
+    const ctx = canvas.getContext('2d');
+    ctx.scale(dpr, dpr);
+    return { w, h };
+  };
+
+  const initGame = () => {
+    const { w, h } = handleResize(); 
     const floorY = h * 0.66;
 
-    // Reset Player 1
     p1.current = { 
         ...p1.current, 
         x: 0, y: floorY, vx: 0, vy: 0, 
         hp: 100, maxHp: 100, 
         level: 1, currentExp: 0, maxExp: 100, damage: 10,
+        coins: 0, 
         state: 'IDLE', dir: 1,
         isDead: false 
     };
     
-    // Reset Enemy
     spawnEnemy(400, floorY, 1);
     
     camera.current.x = -w/2;
     particles.current = [];
     floatingTexts.current = [];
+    lootCoins.current = []; 
     respawnTimer.current = 0;
     
-    // Tạo lại background
     bgObjects.current = [];
     for(let i = -20; i < 20; i++) {
         bgObjects.current.push({
@@ -111,7 +124,6 @@ const StickmanArenaFinal = () => {
 
   const rand = (min, max) => Math.random() * (max - min) + min;
 
-  // --- EFFECTS SYSTEM ---
   const createBlood = (x, y, color, amount = 10) => {
     for (let i = 0; i < amount; i++) {
       particles.current.push({
@@ -136,10 +148,79 @@ const StickmanArenaFinal = () => {
       });
   };
 
-  const gainExp = (amount) => {
+  // --- LOOT SYSTEM ---
+  const spawnLoot = (x, y, totalGold) => {
+      const numCoins = Math.min(8, Math.floor(totalGold / 10)) || 1;
+      const valuePerCoin = Math.floor(totalGold / numCoins);
+
+      for (let i = 0; i < numCoins; i++) {
+          lootCoins.current.push({
+              x: x, y: y - 40, 
+              vx: rand(-5, 5), vy: rand(-10, -5), 
+              val: valuePerCoin,
+              state: 'DROP', 
+              timer: 80 + rand(0, 30), 
+          });
+      }
+  };
+
+  const updateLoot = (floorY, camX) => {
+      for (let i = lootCoins.current.length - 1; i >= 0; i--) {
+          const c = lootCoins.current[i];
+
+          if (c.state === 'DROP') {
+              c.vy += CFG.gravity; c.x += c.vx; c.y += c.vy;
+              if (c.y > floorY - 12) {
+                  c.y = floorY - 12; c.vy *= -0.5; c.vx *= 0.9;  
+              }
+              c.timer--;
+              if (c.timer <= 0) c.state = 'FLY';
+          } else if (c.state === 'FLY') {
+              const destX = camX + 80; 
+              const destY = 40;        
+              const diffX = destX - c.x;
+              const diffY = destY - c.y;
+              c.x += diffX * 0.08;
+              c.y += diffY * 0.08; 
+              if (Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {
+                  p1.current.coins += c.val;
+                  lootCoins.current.splice(i, 1);
+              }
+          }
+      }
+  };
+
+  const drawCoins = (ctx) => {
+      lootCoins.current.forEach(c => {
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          
+          // FLAT COIN
+          const r = 10;
+          ctx.fillStyle = '#FFD700'; 
+          ctx.beginPath();
+          ctx.arc(0, 0, r, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.strokeStyle = '#DAA520'; 
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+
+          ctx.fillStyle = '#B8860B'; 
+          ctx.font = 'bold 12px Arial'; 
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText('$', 0, 1);
+
+          ctx.restore();
+      });
+  };
+
+  const gainExp = (enemyLevel) => {
       const p = p1.current;
-      p.currentExp += amount;
-      addFloatingText(p.x, p.y - 80, `+${amount} EXP`, '#fbbf24', 16); 
+      const expAmount = 50 + (enemyLevel * 10);
+      p.currentExp += expAmount;
+      addFloatingText(p.x, p.y - 80, `+${expAmount} EXP`, '#3b82f6', 16); 
 
       if (p.currentExp >= p.maxExp) {
           p.level++;
@@ -148,57 +229,130 @@ const StickmanArenaFinal = () => {
           p.damage += 5; 
           p.hp = p.maxHp; 
           
-          addFloatingText(p.x, p.y - 120, "LEVEL UP!", '#00ff00', 30);
+          addFloatingText(p.x, p.y - 140, "LEVEL UP!", '#00ff00', 30);
           createExplosion(p.x, p.y - 50, '#00ff00');
       }
   };
 
-  // --- DRAWING ---
+  // --- DRAWING HUD ---
+  const drawHUD = (ctx) => {
+      const p = p1.current;
+      const hudX = 20;
+      const hudY = 20;
+      const hudW = 120; 
+      const hudH = 36;  
+
+      ctx.save();
+
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; 
+      ctx.beginPath();
+      ctx.roundRect(hudX, hudY, hudW, hudH, 18); 
+      ctx.fill();
+      
+      ctx.lineWidth = 1;
+      ctx.strokeStyle = '#FFD700'; 
+      ctx.stroke();
+
+      const iconX = hudX + 20;
+      const iconY = hudY + 18;
+      const r = 12;
+
+      ctx.fillStyle = '#FFD700'; 
+      ctx.beginPath();
+      ctx.arc(iconX, iconY, r, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.strokeStyle = '#B8860B';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.fillStyle = '#B8860B';
+      ctx.font = 'bold 14px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('$', iconX, iconY + 1);
+
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px Arial'; 
+      ctx.textAlign = 'left';
+      ctx.fillText(`${p.coins}`, hudX + 45, hudY + 19);
+
+      ctx.restore();
+  };
+
+  // --- UI CĂN CHỈNH LẠI (FIXED) ---
   const drawUnitUI = (ctx, p, isEnemy = false) => {
     if (p.isDead) return;
+    
+    // Kích thước UI
+    const barWidth = 60; 
+    const barHeight = 6; 
+    const yOffset = 100; // Khoảng cách từ chân nhân vật lên thanh máu
+    
+    // Tọa độ gốc của thanh máu (Top-Left của thanh máu)
+    const barX = p.x - barWidth / 2; 
+    const barY = p.y - yOffset;
 
-    const barWidth = 60;
-    const barHeight = 6;
-    const yOffset = 100;
-    const x = p.x - barWidth / 2;
-    const y = p.y - yOffset;
+    // --- CĂN CHỈNH BADGE LEVEL ---
+    // Badge nằm bên trái thanh máu một chút
+    const badgeSize = 10; // Bán kính
+    // X: Bên trái thanh máu (cách 1 chút) - bán kính badge
+    const badgeX = barX - badgeSize - 4; 
+    // Y: Căn giữa theo chiều dọc của thanh máu (barY + một nửa chiều cao thanh máu + thanh exp nếu có)
+    // Nhưng đơn giản nhất là căn giữa barHeight
+    const badgeY = barY + barHeight / 2;
 
-    const badgeSize = 10;
-    const badgeX = x - 8;
-    const badgeY = y + barHeight/2;
-
-    // Health Bar
+    // 1. Vẽ nền thanh máu
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.beginPath(); ctx.roundRect(x, y, barWidth, barHeight, 3); ctx.fill();
+    ctx.beginPath(); 
+    ctx.roundRect(barX, barY, barWidth, barHeight, 3); 
+    ctx.fill();
 
+    // 2. Vẽ máu hiện tại
     const hpPercent = Math.max(0, p.hp / p.maxHp);
     ctx.fillStyle = isEnemy ? '#ef4444' : '#22c55e'; 
     if (!isEnemy && p.hp < p.maxHp * 0.3) ctx.fillStyle = '#eab308'; 
-    
-    ctx.beginPath(); ctx.roundRect(x, y, barWidth * hpPercent, barHeight, 3); ctx.fill();
+    ctx.beginPath(); 
+    ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 3); 
+    ctx.fill();
 
-    // EXP Bar
+    // 3. Vẽ thanh EXP (chỉ cho người chơi)
     if (!isEnemy) {
-        const expHeight = 3;
-        const expY = y + barHeight + 2;
-        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(x, expY, barWidth, expHeight);
+        const expHeight = 3; 
+        const expY = barY + barHeight + 2; // Cách thanh máu 2px
+        
+        // Nền EXP
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; 
+        ctx.fillRect(barX, expY, barWidth, expHeight);
+        
+        // EXP hiện tại
         const expPercent = Math.min(1, p.currentExp / p.maxExp);
-        ctx.fillStyle = '#3b82f6'; ctx.fillRect(x, expY, barWidth * expPercent, expHeight);
+        ctx.fillStyle = '#3b82f6'; 
+        ctx.fillRect(barX, expY, barWidth * expPercent, expHeight);
     }
 
-    // Badge
-    ctx.beginPath(); ctx.arc(badgeX, badgeY, badgeSize, 0, Math.PI * 2);
-    ctx.fillStyle = '#1f2937'; ctx.fill();
-    ctx.lineWidth = 2; ctx.strokeStyle = '#eab308'; ctx.stroke();
-    // Level
-    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial';
-    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.level, badgeX, badgeY);
+    // 4. Vẽ Badge Level (Hình tròn)
+    ctx.beginPath(); 
+    ctx.arc(badgeX, badgeY, badgeSize, 0, Math.PI * 2);
+    ctx.fillStyle = '#1f2937'; 
+    ctx.fill();
+    
+    ctx.lineWidth = 1.5; 
+    ctx.strokeStyle = '#eab308'; // Viền vàng
+    ctx.stroke();
+
+    // 5. Số Level (Căn giữa Badge)
+    ctx.fillStyle = '#fff'; 
+    ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center'; 
+    ctx.textBaseline = 'middle'; // Quan trọng để số nằm giữa tâm Y
+    // +1 pixel Y để nhìn cân mắt hơn
+    ctx.fillText(p.level, badgeX, badgeY + 1);
   };
 
   const drawStickman = (ctx, p) => {
     if (p.isDead) return;
     const { x, y, dir, state, animTimer, color } = p;
-    
     const cycle = animTimer * 0.2; 
     let legL_Angle = 0, legR_Angle = 0, armL_Angle = 0, armR_Angle = 0, bodyY = 0;
 
@@ -218,10 +372,7 @@ const StickmanArenaFinal = () => {
 
     ctx.save();
     ctx.translate(x, y - 25 - bodyY); ctx.scale(dir, 1);
-    
-    // Glow Effect
-    ctx.shadowBlur = 10; 
-    ctx.shadowColor = color; 
+    ctx.shadowBlur = 10; ctx.shadowColor = color; 
     ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
@@ -250,23 +401,19 @@ const StickmanArenaFinal = () => {
             ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
     }
-    
     ctx.restore();
     drawUnitUI(ctx, p, p === p2.current);
   };
 
-  // --- LOGIC LOOP ---
   const update = () => {
-    // Nếu Game Over rồi thì không update logic game nữa
     if (gameState !== 'PLAYING') return;
-
     if (hitStopRef.current > 0) { hitStopRef.current--; return; }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
-    const floorY = canvas.height * 0.66;
+    const floorY = canvas.height / dprRef.current * 0.66; 
 
-    const targetCamX = p1.current.x - canvas.width / 2;
+    const targetCamX = p1.current.x - (canvas.width / dprRef.current) / 2;
     camera.current.x += (targetCamX - camera.current.x) * 0.1;
 
     if (shakeRef.current > 0) shakeRef.current *= 0.9;
@@ -320,6 +467,8 @@ const StickmanArenaFinal = () => {
         if (p.life <= 0 || p.y > floorY) particles.current.splice(i, 1);
     }
     
+    updateLoot(floorY, camera.current.x);
+
     for (let i = floatingTexts.current.length - 1; i >= 0; i--) {
         const t = floatingTexts.current[i];
         t.y += t.vy; t.life--;
@@ -351,11 +500,10 @@ const StickmanArenaFinal = () => {
                     createExplosion(defender.x, defender.y, defender.color);
                     
                     if (attacker === p1.current) {
-                        gainExp(50 + (defender.level * 10)); 
+                        gainExp(defender.level);
+                        spawnLoot(defender.x, defender.y, 20 + (defender.level * 10));
                     }
                     
-                    // --- SỬA LỖI: KIỂM TRA GAMEOVER TẠI ĐÂY ---
-                    // Nếu người bị đánh chết là Player 1
                     if (defender === p1.current) {
                         setWinner('BẠN ĐÃ TỬ TRẬN!');
                         setGameState('GAMEOVER');
@@ -369,11 +517,11 @@ const StickmanArenaFinal = () => {
 
     if(!p1.current.isDead) checkHit(p1.current, p2.current);
     if(!p2.current.isDead) checkHit(p2.current, p1.current);
-    
-    // Fallback: Check HP trong loop nếu miss hit check (hiếm)
-    if (p1.current.hp <= 0 && gameState === 'PLAYING') {
-         setWinner('BẠN ĐÃ TỬ TRẬN!');
-         setGameState('GAMEOVER');
+
+    if (p1.current.hp <= 0 && !p1.current.isDead) { 
+        p1.current.isDead = true;
+        setWinner('BẠN ĐÃ TỬ TRẬN!'); 
+        setGameState('GAMEOVER'); 
     }
   };
 
@@ -383,52 +531,63 @@ const StickmanArenaFinal = () => {
     const ctx = canvas.getContext('2d');
     const shakeX = (Math.random() - 0.5) * shakeRef.current;
     const shakeY = (Math.random() - 0.5) * shakeRef.current;
-    const floorY = canvas.height * 0.66;
+    const floorY = canvas.height / dprRef.current * 0.66;
     
-    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, canvas.width / dprRef.current, canvas.height / dprRef.current);
     
     ctx.save();
     ctx.translate(-camera.current.x + shakeX, shakeY);
 
-    ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(camera.current.x + canvas.width/2, canvas.height/3, 150, 0, Math.PI*2); ctx.fill();
+    ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(camera.current.x + (canvas.width/dprRef.current)/2, (canvas.height/dprRef.current)/3, 150, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#333';
     bgObjects.current.forEach(obj => {
-        if (obj.x > camera.current.x - 200 && obj.x < camera.current.x + canvas.width + 200) {
+        if (obj.x > camera.current.x - 200 && obj.x < camera.current.x + (canvas.width/dprRef.current) + 200) {
             ctx.fillRect(obj.x, floorY - obj.height, obj.width, obj.height);
         }
     });
 
-    const grad = ctx.createLinearGradient(0, floorY, 0, canvas.height);
+    const grad = ctx.createLinearGradient(0, floorY, 0, canvas.height / dprRef.current);
     grad.addColorStop(0, '#000'); grad.addColorStop(1, '#333');
-    ctx.fillStyle = grad; ctx.fillRect(camera.current.x - 100, floorY, canvas.width + 200, canvas.height - floorY);
-    ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(camera.current.x - 100, floorY); ctx.lineTo(camera.current.x + canvas.width + 100, floorY); ctx.stroke();
+    ctx.fillStyle = grad; ctx.fillRect(camera.current.x - 100, floorY, (canvas.width/dprRef.current) + 200, (canvas.height/dprRef.current) - floorY);
+    ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(camera.current.x - 100, floorY); ctx.lineTo(camera.current.x + (canvas.width/dprRef.current) + 100, floorY); ctx.stroke();
 
-    // Vẽ mọi thứ bất kể trạng thái game để làm nền cho menu
-    particles.current.forEach(p => {
-        ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
-    });
-    
-    drawStickman(ctx, p2.current); 
-    drawStickman(ctx, p1.current);
+    if (gameState !== 'MENU') { 
+        particles.current.forEach(p => {
+            ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+        });
+        
+        drawCoins(ctx); 
 
-    ctx.font = 'bold 20px Arial';
-    ctx.textAlign = 'center';
-    floatingTexts.current.forEach(t => {
-        ctx.fillStyle = t.color;
-        ctx.globalAlpha = t.life / 60;
-        ctx.fillText(t.text, t.x, t.y);
-    });
-    ctx.globalAlpha = 1;
-    
+        drawStickman(ctx, p2.current); 
+        drawStickman(ctx, p1.current);
+
+        ctx.font = 'bold 20px Arial';
+        ctx.textAlign = 'center';
+        floatingTexts.current.forEach(t => {
+            ctx.fillStyle = t.color;
+            ctx.globalAlpha = t.life / 60;
+            ctx.fillText(t.text, t.x, t.y);
+        });
+        ctx.globalAlpha = 1;
+    }
     ctx.restore();
+
+    if (gameState === 'PLAYING') {
+        drawHUD(ctx);
+    }
   };
 
   const loop = () => { update(); draw(); frameRef.current = requestAnimationFrame(loop); };
+  
   useEffect(() => {
-    const canvas = canvasRef.current; canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    handleResize(); 
+    window.addEventListener('resize', handleResize);
     frameRef.current = requestAnimationFrame(loop);
-    return () => cancelAnimationFrame(frameRef.current);
-  }, [gameState]); // Restart loop when gameState changes
+    return () => {
+        window.removeEventListener('resize', handleResize);
+        cancelAnimationFrame(frameRef.current);
+    };
+  }, [gameState]);
 
   const handleTouch = (key, val) => (e) => { 
       if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); 
@@ -450,16 +609,16 @@ const StickmanArenaFinal = () => {
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 italic mb-4 drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]">SHADOW FIGHT</h1>
-           <p className="text-gray-400 mb-8 tracking-widest">ARENA LEGENDS</p>
+           <p className="text-gray-400 mb-8 tracking-widest">FINAL UI</p>
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-cyan-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
 
-      {/* GAMEOVER OVERLAY - Z-INDEX CAO NHẤT */}
       {gameState === 'GAMEOVER' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-[100]">
            <h2 className="text-5xl font-bold text-red-500 mb-2 uppercase tracking-wider drop-shadow-[0_0_15px_rgba(255,0,0,0.8)] animate-pulse">{winner}</h2>
-           <p className="text-gray-300 mb-8 text-xl">Đã đạt cấp độ: <span className="text-yellow-400 font-bold">{p1.current.level}</span></p>
+           <p className="text-gray-300 mb-2 text-xl">Cấp độ: <span className="text-yellow-400 font-bold">{p1.current.level}</span></p>
+           <p className="text-gray-300 mb-8 text-xl">Vàng kiếm được: <span className="text-yellow-400 font-bold">{p1.current.coins}</span> $</p>
            
            <button 
              onClick={initGame} 
@@ -499,4 +658,4 @@ const StickmanArenaFinal = () => {
   );
 };
 
-export default StickmanArenaFinal;
+export default StickmanFinalUI;
