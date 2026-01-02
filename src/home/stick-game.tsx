@@ -1,9 +1,10 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-const StickmanFinalUpdate = () => {
+const StickmanShadowMonarch = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
+  const [shadowCount, setShadowCount] = useState(0); // Để hiển thị số lượng đệ tử
   
   // --- CẤU HÌNH ---
   const CFG = {
@@ -14,7 +15,8 @@ const StickmanFinalUpdate = () => {
     attackDist: 70, 
     hitStun: 20,
     camShake: 0,
-    respawnTime: 120, 
+    respawnTime: 120,
+    maxShadows: 2, // Giới hạn số lượng đệ
   };
 
   const frameRef = useRef(0);
@@ -24,41 +26,41 @@ const StickmanFinalUpdate = () => {
   const respawnTimer = useRef(0);
   const dprRef = useRef(1);
 
-  const input = useRef({ left: false, right: false, jump: false, attack: false });
+  const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
-  // Player 1
+  // --- ENTITIES ---
+  // Player 1 (Hero)
   const p1 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
-    level: 1, currentExp: 0, maxExp: 100, damage: 10,
+    level: 1, currentExp: 0, maxExp: 100, damage: 12,
     coins: 0, 
     state: 'IDLE', dir: 1,
     animTimer: 0, attackCooldown: 0,
-    color: '#00f2ff', 
-    weaponColor: '#ffffff',
-    name: 'KIỆN TƯỚNG',
-    isDead: false
+    color: '#00f2ff', weaponColor: '#ffffff',
+    name: 'MONARCH', isDead: false, type: 'PLAYER'
   });
 
-  // Player 2
+  // Player 2 (Enemy)
   const p2 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
     level: 1, damage: 8,
     state: 'IDLE', dir: -1,
     animTimer: 0, attackCooldown: 0, aiTimer: 0,
-    color: '#ff2a00', 
-    weaponColor: '#ff9900',
-    name: 'QUÁI VẬT',
-    isDead: false
+    color: '#ff2a00', weaponColor: '#ff9900',
+    name: 'QUÁI VẬT', isDead: false, type: 'ENEMY'
   });
 
+  // Arrays
+  const shadows = useRef([]); // Mảng chứa lính bóng tối
+  const souls = useRef([]);   // Mảng chứa linh hồn chờ trích xuất
   const particles = useRef([]);
   const bgObjects = useRef([]);
   const floatingTexts = useRef([]); 
   const lootCoins = useRef([]); 
 
-  // --- DPI SETUP ---
+  // --- INIT ---
   const handleResize = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -80,22 +82,21 @@ const StickmanFinalUpdate = () => {
     const floorY = h * 0.66;
 
     p1.current = { 
-        ...p1.current, 
-        x: 0, y: floorY, vx: 0, vy: 0, 
-        hp: 100, maxHp: 100, 
-        level: 1, currentExp: 0, maxExp: 100, damage: 10,
-        coins: 0, 
-        state: 'IDLE', dir: 1,
-        isDead: false 
+        ...p1.current, x: 0, y: floorY, vx: 0, vy: 0, 
+        hp: 100, maxHp: 100, level: 1, currentExp: 0, maxExp: 100, damage: 12,
+        coins: 0, state: 'IDLE', dir: 1, isDead: false 
     };
     
     spawnEnemy(400, floorY, 1);
     
     camera.current.x = -w/2;
+    shadows.current = [];
+    souls.current = [];
     particles.current = [];
     floatingTexts.current = [];
     lootCoins.current = []; 
     respawnTimer.current = 0;
+    setShadowCount(0);
     
     bgObjects.current = [];
     for(let i = -20; i < 20; i++) {
@@ -109,19 +110,119 @@ const StickmanFinalUpdate = () => {
   };
 
   const spawnEnemy = (x, y, level) => {
-      const hp = 100 + (level * 20);
+      const hp = 100 + (level * 25);
       p2.current = {
           ...p2.current,
           x: x, y: y, vx: 0, vy: 0,
           maxHp: hp, hp: hp,
           level: level,
-          damage: 5 + (level * 2),
-          state: 'IDLE', dir: -1, 
-          isDead: false
+          damage: 5 + (level * 3),
+          state: 'IDLE', dir: -1, isDead: false
       };
       createExplosion(x, y - 50, '#ff2a00');
   };
 
+  // --- SHADOW SYSTEM ---
+  const spawnSoul = (x, y, level, damage) => {
+      souls.current.push({
+          x, y, level, damage,
+          life: 300, // Tồn tại 5 giây
+          anim: 0
+      });
+  };
+
+  const extractShadow = () => {
+      // Tìm linh hồn gần nhất
+      const p = p1.current;
+      let closestIndex = -1;
+      let minDst = 100; // Phạm vi trích xuất
+
+      souls.current.forEach((s, i) => {
+          const dst = Math.abs(p.x - s.x);
+          if (dst < minDst) {
+              minDst = dst;
+              closestIndex = i;
+          }
+      });
+
+      if (closestIndex !== -1) {
+          if (shadows.current.length >= CFG.maxShadows) {
+              addFloatingText(p.x, p.y - 100, "MAX ARMY!", '#ff0000', 20);
+              return;
+          }
+
+          const s = souls.current[closestIndex];
+          // Tạo Lính Bóng Tối
+          const shadowHp = 80 + (s.level * 15);
+          shadows.current.push({
+              x: s.x, y: s.y, vx: 0, vy: 0,
+              maxHp: shadowHp, hp: shadowHp,
+              level: s.level, damage: s.damage, // Thừa hưởng damage của quái
+              currentExp: 0, maxExp: 50 + (s.level * 10),
+              state: 'IDLE', dir: p.dir,
+              animTimer: 0, attackCooldown: 0,
+              color: '#000000', // Đen
+              weaponColor: '#3b82f6', // Kiếm xanh
+              name: 'SHADOW', isDead: false, type: 'ALLY',
+              target: null
+          });
+          
+          createExplosion(s.x, s.y - 50, '#3b82f6'); // Nổ xanh
+          addFloatingText(s.x, s.y - 120, "ARISE!", '#3b82f6', 32);
+          
+          souls.current.splice(closestIndex, 1); // Xóa linh hồn
+          setShadowCount(prev => prev + 1);
+      }
+  };
+
+  const updateShadows = (floorY) => {
+      shadows.current.forEach(s => {
+          if (s.isDead) return;
+          
+          const enemy = p2.current;
+          let target = null;
+
+          // AI: Tìm địch
+          if (!enemy.isDead) {
+              target = enemy;
+          } else {
+              // Nếu không có địch, đi theo chủ (p1)
+              target = p1.current;
+          }
+
+          // Logic di chuyển
+          const dist = target.x - s.x;
+          // Nếu target là chủ thì đứng cách xa 1 chút, nếu là địch thì áp sát
+          const stopDist = (target === p1.current) ? 100 + (Math.random() * 50) : 60;
+
+          if (Math.abs(dist) > stopDist) {
+              s.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.85); // Bóng chạy nhanh
+              s.dir = dist > 0 ? 1 : -1;
+              if (s.state !== 'JUMP' && s.state !== 'ATTACK') s.state = 'RUN';
+          } else {
+              s.vx *= CFG.friction;
+              if (s.state === 'RUN') s.state = 'IDLE';
+              
+              // Nếu target là địch và đủ gần -> Đánh
+              if (target === enemy && s.attackCooldown <= 0) {
+                  s.state = 'ATTACK';
+                  s.attackCooldown = 30; // Tốc độ đánh
+                  s.vx = s.dir * 15; // Lướt tới chém
+              }
+          }
+
+          // Vật lý
+          s.vy += CFG.gravity; s.x += s.vx; s.y += s.vy;
+          if (s.y > floorY) { s.y = floorY; s.vy = 0; if (s.state === 'JUMP') s.state = 'IDLE'; }
+          s.animTimer++;
+          if (s.attackCooldown > 0) { 
+              s.attackCooldown--; 
+              if (s.attackCooldown === 0 && s.state === 'ATTACK') s.state = 'IDLE'; 
+          }
+      });
+  };
+
+  // --- LOOT & EXP SYSTEM ---
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   const createBlood = (x, y, color, amount = 10) => {
@@ -148,27 +249,19 @@ const StickmanFinalUpdate = () => {
       });
   };
 
-  // --- LOOT SYSTEM (FIXED QUANTITY) ---
   const spawnLoot = (x, y, totalGold) => {
-      // Cố định rơi 3 hoặc 4 đồng xu
       const numCoins = 3 + Math.floor(Math.random() * 2); 
-      
-      // Tính giá trị mỗi đồng xu
       const baseValue = Math.floor(totalGold / numCoins);
       const remainder = totalGold % numCoins;
 
       for (let i = 0; i < numCoins; i++) {
-          // Cộng phần dư vào đồng xu đầu tiên để tổng ko đổi
           let coinValue = baseValue;
           if (i === 0) coinValue += remainder;
-
           lootCoins.current.push({
               x: x, y: y - 40, 
-              vx: rand(-6, 6), // Văng rộng hơn xíu
-              vy: rand(-12, -6), 
+              vx: rand(-6, 6), vy: rand(-12, -6), 
               val: coinValue,
-              state: 'DROP', 
-              timer: 80 + rand(0, 30), 
+              state: 'DROP', timer: 80 + rand(0, 30), 
           });
       }
   };
@@ -176,182 +269,176 @@ const StickmanFinalUpdate = () => {
   const updateLoot = (floorY, camX) => {
       for (let i = lootCoins.current.length - 1; i >= 0; i--) {
           const c = lootCoins.current[i];
-
           if (c.state === 'DROP') {
               c.vy += CFG.gravity; c.x += c.vx; c.y += c.vy;
-              if (c.y > floorY - 12) {
-                  c.y = floorY - 12; c.vy *= -0.5; c.vx *= 0.9;  
-              }
-              c.timer--;
-              if (c.timer <= 0) c.state = 'FLY';
+              if (c.y > floorY - 12) { c.y = floorY - 12; c.vy *= -0.5; c.vx *= 0.9; }
+              c.timer--; if (c.timer <= 0) c.state = 'FLY';
           } else if (c.state === 'FLY') {
-              const destX = camX + 80; 
-              const destY = 40;        
-              const diffX = destX - c.x;
-              const diffY = destY - c.y;
-              c.x += diffX * 0.08;
-              c.y += diffY * 0.08; 
-              if (Math.abs(diffX) < 15 && Math.abs(diffY) < 15) {
-                  p1.current.coins += c.val;
-                  lootCoins.current.splice(i, 1);
+              const destX = camX + 90; const destY = 40;        
+              c.x += (destX - c.x) * 0.08; c.y += (destY - c.y) * 0.08; 
+              if (Math.abs(destX - c.x) < 15 && Math.abs(destY - c.y) < 15) {
+                  p1.current.coins += c.val; lootCoins.current.splice(i, 1);
               }
           }
       }
   };
 
+  // --- EXP LOGIC ---
+  const checkLevelUp = (entity, isPlayer) => {
+      if (entity.currentExp >= entity.maxExp) {
+          entity.level++;
+          entity.currentExp -= entity.maxExp;
+          entity.maxExp = Math.floor(entity.maxExp * 1.2);
+          entity.damage += 5;
+          entity.hp = entity.maxHp;
+          
+          const color = isPlayer ? '#00ff00' : '#3b82f6';
+          addFloatingText(entity.x, entity.y - 140, "LEVEL UP!", color, 24);
+          createExplosion(entity.x, entity.y - 50, color);
+      }
+  };
+
+  const distributeExp = (killer, deadEnemy) => {
+      const totalExp = 50 + (deadEnemy.level * 10);
+      
+      if (killer.type === 'PLAYER') {
+          // Người chơi giết: Hưởng 100%
+          p1.current.currentExp += totalExp;
+          addFloatingText(p1.current.x, p1.current.y - 80, `+${totalExp} EXP`, '#fbbf24', 16);
+          checkLevelUp(p1.current, true);
+      } else if (killer.type === 'ALLY') {
+          // Đệ tử giết: Đệ tử +100% EXP, Chủ +50% EXP
+          killer.currentExp += totalExp;
+          addFloatingText(killer.x, killer.y - 80, `+${totalExp} XP`, '#3b82f6', 14);
+          checkLevelUp(killer, false);
+
+          const shareExp = Math.floor(totalExp * 0.5);
+          p1.current.currentExp += shareExp;
+          addFloatingText(p1.current.x, p1.current.y - 80, `+${shareExp} Share XP`, '#fbbf24', 16);
+          checkLevelUp(p1.current, true);
+      }
+  };
+
+  // --- HIT CHECK ---
+  const checkHit = (attacker, defender) => {
+        if (defender.isDead || attacker.isDead) return false;
+        
+        if (attacker.state === 'ATTACK' && attacker.attackCooldown > 15 && attacker.attackCooldown < 23) {
+            const hitDist = Math.abs(attacker.x - defender.x);
+            // Shadow đánh rộng hơn chút vì AI hay đứng đè lên nhau
+            const requiredDist = attacker.type === 'ALLY' ? CFG.attackDist + 20 : CFG.attackDist;
+            
+            const facing = (attacker.dir === 1 && defender.x > attacker.x) || (attacker.dir === -1 && defender.x < attacker.x);
+            const overlapping = hitDist < 30; 
+
+            if ((facing || overlapping) && hitDist < requiredDist && Math.abs(attacker.y - defender.y) < 50) {
+                defender.vx = attacker.dir * 10; defender.vy = -4; 
+                
+                const dmg = attacker.damage;
+                defender.hp -= dmg;
+                addFloatingText(defender.x, defender.y - 80, `-${dmg}`, '#ff0000'); 
+                
+                defender.state = 'HURT';
+                shakeRef.current = 4; 
+                if(attacker.type === 'PLAYER') { hitStopRef.current = 4; shakeRef.current = 8; } // Hit stop chỉ cho player cảm giác lực
+
+                createBlood(defender.x, defender.y - 25, defender.color);
+                attacker.attackCooldown = 15; // Reset cooldown để tránh multi-hit trong 1 frame
+                
+                if (defender.hp <= 0) {
+                    defender.hp = 0;
+                    defender.isDead = true;
+                    createExplosion(defender.x, defender.y, defender.color);
+                    
+                    // Xử lý thưởng
+                    distributeExp(attacker, defender);
+                    if (attacker.type === 'PLAYER' || attacker.type === 'ALLY') {
+                        spawnLoot(defender.x, defender.y, 20 + (defender.level * 10));
+                    }
+
+                    // Nếu kẻ địch chết -> Rơi linh hồn
+                    if (defender.type === 'ENEMY') {
+                        spawnSoul(defender.x, defender.y, defender.level, defender.damage);
+                    }
+                    
+                    if (defender.type === 'PLAYER') {
+                        setWinner('BẠN ĐÃ TỬ TRẬN!');
+                        setGameState('GAMEOVER');
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    };
+
+  // --- DRAWING FUNCTIONS ---
   const drawCoins = (ctx) => {
       lootCoins.current.forEach(c => {
-          ctx.save();
-          ctx.translate(c.x, c.y);
-          
-          // FLAT COIN
+          ctx.save(); ctx.translate(c.x, c.y);
           const r = 10;
-          ctx.fillStyle = '#FFD700'; 
-          ctx.beginPath();
-          ctx.arc(0, 0, r, 0, Math.PI * 2);
-          ctx.fill();
-
-          ctx.strokeStyle = '#DAA520'; 
-          ctx.lineWidth = 1.5;
-          ctx.stroke();
-
-          ctx.fillStyle = '#B8860B'; 
-          ctx.font = 'bold 12px Arial'; 
-          ctx.textAlign = 'center';
-          ctx.textBaseline = 'middle';
-          ctx.fillText('$', 0, 1);
-
+          ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 1);
           ctx.restore();
       });
   };
 
-  const gainExp = (enemyLevel) => {
-      const p = p1.current;
-      const expAmount = 50 + (enemyLevel * 10);
-      p.currentExp += expAmount;
-      addFloatingText(p.x, p.y - 80, `+${expAmount} EXP`, '#3b82f6', 16); 
-
-      if (p.currentExp >= p.maxExp) {
-          p.level++;
-          p.currentExp -= p.maxExp;
-          p.maxExp = Math.floor(p.maxExp * 1.2); 
-          p.damage += 5; 
-          p.hp = p.maxHp; 
-          
-          addFloatingText(p.x, p.y - 140, "LEVEL UP!", '#00ff00', 30);
-          createExplosion(p.x, p.y - 50, '#00ff00');
-      }
-  };
-
-  // --- DRAWING HUD ---
   const drawHUD = (ctx) => {
       const p = p1.current;
-      const hudX = 20;
-      const hudY = 20;
-      const hudW = 120; 
-      const hudH = 36;  
-
+      const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
       ctx.save();
-
-      ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; 
-      ctx.beginPath();
-      ctx.roundRect(hudX, hudY, hudW, hudH, 18); 
-      ctx.fill();
+      // Coin HUD
+      ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; ctx.beginPath(); ctx.roundRect(hudX, hudY, hudW, hudH, 18); ctx.fill();
+      ctx.lineWidth = 1; ctx.strokeStyle = '#FFD700'; ctx.stroke();
+      const iconX = hudX + 20; const iconY = hudY + 18; const r = 12;
+      ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(iconX, iconY, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = '#B8860B'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', iconX, iconY + 1);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 19);
       
-      ctx.lineWidth = 1;
-      ctx.strokeStyle = '#FFD700'; 
-      ctx.stroke();
-
-      const iconX = hudX + 20;
-      const iconY = hudY + 18;
-      const r = 12;
-
-      ctx.fillStyle = '#FFD700'; 
-      ctx.beginPath();
-      ctx.arc(iconX, iconY, r, 0, Math.PI * 2);
-      ctx.fill();
-
-      ctx.strokeStyle = '#B8860B';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.fillStyle = '#B8860B';
-      ctx.font = 'bold 14px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText('$', iconX, iconY + 1);
-
-      ctx.fillStyle = '#fff';
-      ctx.font = 'bold 18px Arial'; 
-      ctx.textAlign = 'left';
-      ctx.fillText(`${p.coins}`, hudX + 45, hudY + 19);
+      // Shadow Count HUD (Góc phải trên)
+      const sHudX = canvasRef.current.width / dprRef.current - 140;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.beginPath(); ctx.roundRect(sHudX, hudY, 120, 36, 18); ctx.fill();
+      ctx.strokeStyle = '#3b82f6'; ctx.stroke();
+      ctx.fillStyle = '#3b82f6'; ctx.font = 'bold 16px Arial'; 
+      ctx.fillText(`ARMY: ${shadowCount}/${CFG.maxShadows}`, sHudX + 60, hudY + 19);
 
       ctx.restore();
   };
 
-  // --- UI CĂN CHỈNH LẠI ---
-  const drawUnitUI = (ctx, p, isEnemy = false) => {
+  const drawUnitUI = (ctx, p, type) => {
     if (p.isDead) return;
+    const barWidth = 60; const barHeight = 6; const yOffset = 100;
+    const barX = p.x - barWidth / 2; const barY = p.y - yOffset;
+    const badgeX = barX - 14; const badgeY = barY + barHeight / 2;
+
+    // Bar BG
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.beginPath(); ctx.roundRect(barX, barY, barWidth, barHeight, 3); ctx.fill();
     
-    // Kích thước UI
-    const barWidth = 60; 
-    const barHeight = 6; 
-    const yOffset = 100; // Khoảng cách từ chân nhân vật lên thanh máu
-    
-    // Tọa độ gốc của thanh máu (Top-Left của thanh máu)
-    const barX = p.x - barWidth / 2; 
-    const barY = p.y - yOffset;
-
-    // --- CĂN CHỈNH BADGE LEVEL ---
-    const badgeSize = 10; 
-    const badgeX = barX - badgeSize - 4; 
-    const badgeY = barY + barHeight / 2;
-
-    // 1. Vẽ nền thanh máu
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)';
-    ctx.beginPath(); 
-    ctx.roundRect(barX, barY, barWidth, barHeight, 3); 
-    ctx.fill();
-
-    // 2. Vẽ máu hiện tại
+    // HP
     const hpPercent = Math.max(0, p.hp / p.maxHp);
-    ctx.fillStyle = isEnemy ? '#ef4444' : '#22c55e'; 
-    if (!isEnemy && p.hp < p.maxHp * 0.3) ctx.fillStyle = '#eab308'; 
-    ctx.beginPath(); 
-    ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 3); 
-    ctx.fill();
+    if (type === 'ENEMY') ctx.fillStyle = '#ef4444';
+    else if (type === 'ALLY') ctx.fillStyle = '#3b82f6'; // Shadow máu xanh dương
+    else ctx.fillStyle = '#22c55e'; // Player xanh lá
+    
+    ctx.beginPath(); ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 3); ctx.fill();
 
-    // 3. Vẽ thanh EXP (chỉ cho người chơi)
-    if (!isEnemy) {
-        const expHeight = 3; 
-        const expY = barY + barHeight + 2; 
-        
-        // Nền EXP
-        ctx.fillStyle = 'rgba(0,0,0,0.5)'; 
-        ctx.fillRect(barX, expY, barWidth, expHeight);
-        
-        // EXP hiện tại
+    // EXP Bar (Player & Ally)
+    if (type !== 'ENEMY') {
+        const expHeight = 3; const expY = barY + barHeight + 2;
+        ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(barX, expY, barWidth, expHeight);
         const expPercent = Math.min(1, p.currentExp / p.maxExp);
-        ctx.fillStyle = '#3b82f6'; 
-        ctx.fillRect(barX, expY, barWidth * expPercent, expHeight);
+        ctx.fillStyle = '#eab308'; ctx.fillRect(barX, expY, barWidth * expPercent, expHeight);
     }
 
-    // 4. Vẽ Badge Level (Hình tròn)
-    ctx.beginPath(); 
-    ctx.arc(badgeX, badgeY, badgeSize, 0, Math.PI * 2);
-    ctx.fillStyle = '#1f2937'; 
-    ctx.fill();
-    
-    ctx.lineWidth = 1.5; 
-    ctx.strokeStyle = '#eab308'; // Viền vàng
-    ctx.stroke();
-
-    // 5. Số Level (Căn giữa Badge)
-    ctx.fillStyle = '#fff'; 
-    ctx.font = 'bold 10px Arial';
-    ctx.textAlign = 'center'; 
-    ctx.textBaseline = 'middle';
-    ctx.fillText(p.level, badgeX, badgeY + 1);
+    // Badge
+    ctx.beginPath(); ctx.arc(badgeX, badgeY, 10, 0, Math.PI * 2);
+    ctx.fillStyle = '#1f2937'; ctx.fill();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = '#eab308'; ctx.stroke();
+    ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.level, badgeX, badgeY + 1);
   };
 
   const drawStickman = (ctx, p) => {
@@ -376,7 +463,15 @@ const StickmanFinalUpdate = () => {
 
     ctx.save();
     ctx.translate(x, y - 25 - bodyY); ctx.scale(dir, 1);
-    ctx.shadowBlur = 10; ctx.shadowColor = color; 
+    
+    // Shadow Effect for Monarch vibe
+    if (p.type === 'ALLY') {
+        ctx.shadowBlur = 15; ctx.shadowColor = '#3b82f6'; // Bóng xanh cho đệ
+        ctx.globalAlpha = 0.9; // Hơi trong suốt
+    } else {
+        ctx.shadowBlur = 10; ctx.shadowColor = color; 
+    }
+    
     ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
@@ -389,7 +484,13 @@ const StickmanFinalUpdate = () => {
     };
 
     ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
-    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    // Đầu: Nếu là Shadow thì mắt xanh
+    ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill(); 
+    if (p.type === 'ALLY') {
+        ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(head.x + 2, head.y - 1, 2, 0, Math.PI * 2); ctx.fill(); // Mắt
+    }
+    ctx.stroke();
+    
     ctx.strokeStyle = '#222'; drawLimb(hip.x, hip.y, legL_Angle, 12); drawLimb(shoulder.x, shoulder.y, armL_Angle, 12);
     ctx.strokeStyle = '#000'; drawLimb(hip.x, hip.y, legR_Angle, 12);
     const handPos = drawLimb(shoulder.x, shoulder.y, armR_Angle, 12);
@@ -401,12 +502,13 @@ const StickmanFinalUpdate = () => {
         const tipX = handPos.x + Math.sin(swordAngle) * 35; const tipY = handPos.y + Math.cos(swordAngle) * 35;
         ctx.moveTo(handPos.x, handPos.y); ctx.lineTo(tipX, tipY); ctx.stroke();
         if (state === 'ATTACK' && p.attackCooldown > 5) {
-            ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'; ctx.shadowBlur = 0; ctx.beginPath();
+            ctx.fillStyle = p.type === 'ALLY' ? 'rgba(59, 130, 246, 0.6)' : 'rgba(255, 255, 255, 0.6)'; 
+            ctx.shadowBlur = 0; ctx.beginPath();
             ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
     }
     ctx.restore();
-    drawUnitUI(ctx, p, p === p2.current);
+    drawUnitUI(ctx, p, p.type);
   };
 
   const update = () => {
@@ -423,6 +525,7 @@ const StickmanFinalUpdate = () => {
     if (shakeRef.current > 0) shakeRef.current *= 0.9;
     if (shakeRef.current < 0.5) shakeRef.current = 0;
 
+    // --- PLAYER UPDATE ---
     const usr = p1.current;
     if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
     else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
@@ -431,7 +534,13 @@ const StickmanFinalUpdate = () => {
     if (input.current.attack && usr.attackCooldown <= 0) { 
         usr.state = 'ATTACK'; usr.attackCooldown = 25; usr.vx = usr.dir * 10; input.current.attack = false; 
     }
+    // Skill Trigger
+    if (input.current.skill) {
+        extractShadow();
+        input.current.skill = false; // Reset trigger
+    }
 
+    // --- ENEMY UPDATE ---
     const ai = p2.current;
     if (ai.isDead) {
         respawnTimer.current++;
@@ -441,7 +550,18 @@ const StickmanFinalUpdate = () => {
             respawnTimer.current = 0;
         }
     } else {
-        const dist = usr.x - ai.x; 
+        // AI Logic: Chọn mục tiêu gần nhất (Player hoặc Shadow)
+        let target = usr;
+        let minDist = Math.abs(usr.x - ai.x);
+        
+        shadows.current.forEach(s => {
+            if(!s.isDead) {
+                const d = Math.abs(s.x - ai.x);
+                if (d < minDist) { minDist = d; target = s; }
+            }
+        });
+
+        const dist = target.x - ai.x; 
         ai.aiTimer++;
         if (Math.abs(dist) > 50) {
             ai.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.45);
@@ -457,6 +577,7 @@ const StickmanFinalUpdate = () => {
         }
     }
     
+    // Update Entities
     [usr, ai].forEach(p => {
         if (p.isDead) return;
         p.vy += CFG.gravity; p.x += p.vx; p.y += p.vy;
@@ -465,64 +586,35 @@ const StickmanFinalUpdate = () => {
         if (p.attackCooldown > 0) { p.attackCooldown--; if (p.attackCooldown === 0 && p.state === 'ATTACK') p.state = 'IDLE'; }
     });
 
+    updateShadows(floorY);
+
+    // Particles & Loot
     for (let i = particles.current.length - 1; i >= 0; i--) {
         const p = particles.current[i];
         p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life--;
         if (p.life <= 0 || p.y > floorY) particles.current.splice(i, 1);
     }
-    
     updateLoot(floorY, camera.current.x);
-
     for (let i = floatingTexts.current.length - 1; i >= 0; i--) {
         const t = floatingTexts.current[i];
-        t.y += t.vy; t.life--;
-        if (t.life <= 0) floatingTexts.current.splice(i, 1);
+        t.y += t.vy; t.life--; if (t.life <= 0) floatingTexts.current.splice(i, 1);
+    }
+    // Update Souls
+    for (let i = souls.current.length - 1; i >= 0; i--) {
+        const s = souls.current[i];
+        s.life--; s.anim++;
+        if (s.life <= 0) souls.current.splice(i, 1);
     }
 
-    const checkHit = (attacker, defender) => {
-        if (defender.isDead) return false;
-        if (attacker.state === 'ATTACK' && attacker.attackCooldown > 15 && attacker.attackCooldown < 23) {
-            const hitDist = Math.abs(attacker.x - defender.x);
-            const facing = (attacker.dir === 1 && defender.x > attacker.x) || (attacker.dir === -1 && defender.x < attacker.x);
-            const overlapping = hitDist < 20; 
-
-            if ((facing || overlapping) && hitDist < CFG.attackDist && Math.abs(attacker.y - defender.y) < 35) {
-                defender.vx = attacker.dir * 12; defender.vy = -5; 
-                
-                const dmg = attacker.damage;
-                defender.hp -= dmg;
-                addFloatingText(defender.x, defender.y - 80, `-${dmg}`, '#ff0000'); 
-                
-                defender.state = 'HURT';
-                shakeRef.current = 6; hitStopRef.current = 4; 
-                createBlood(defender.x, defender.y - 25, defender.color);
-                attacker.attackCooldown = 15; 
-                
-                if (defender.hp <= 0) {
-                    defender.hp = 0;
-                    defender.isDead = true;
-                    createExplosion(defender.x, defender.y, defender.color);
-                    
-                    if (attacker === p1.current) {
-                        gainExp(defender.level);
-                        // Rơi tiền dựa trên level quái
-                        spawnLoot(defender.x, defender.y, 20 + (defender.level * 10));
-                    }
-                    
-                    if (defender === p1.current) {
-                        setWinner('BẠN ĐÃ TỬ TRẬN!');
-                        setGameState('GAMEOVER');
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    };
-
+    // HIT CHECK LOOP
     if(!p1.current.isDead) checkHit(p1.current, p2.current);
-    if(!p2.current.isDead) checkHit(p2.current, p1.current);
+    if(!p2.current.isDead) {
+        checkHit(p2.current, p1.current);
+        shadows.current.forEach(s => checkHit(p2.current, s)); // Địch đánh đệ
+    }
+    shadows.current.forEach(s => checkHit(s, p2.current)); // Đệ đánh địch
 
+    // Game Over
     if (p1.current.hp <= 0 && !p1.current.isDead) { 
         p1.current.isDead = true;
         setWinner('BẠN ĐÃ TỬ TRẬN!'); 
@@ -543,6 +635,7 @@ const StickmanFinalUpdate = () => {
     ctx.save();
     ctx.translate(-camera.current.x + shakeX, shakeY);
 
+    // Background
     ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(camera.current.x + (canvas.width/dprRef.current)/2, (canvas.height/dprRef.current)/3, 150, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#333';
     bgObjects.current.forEach(obj => {
@@ -557,11 +650,24 @@ const StickmanFinalUpdate = () => {
     ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(camera.current.x - 100, floorY); ctx.lineTo(camera.current.x + (canvas.width/dprRef.current) + 100, floorY); ctx.stroke();
 
     if (gameState !== 'MENU') { 
+        // Draw Souls (Linh hồn bay lơ lửng)
+        souls.current.forEach(s => {
+            const bob = Math.sin(s.anim * 0.1) * 5;
+            ctx.shadowBlur = 15; ctx.shadowColor = '#3b82f6';
+            ctx.fillStyle = '#3b82f6'; 
+            ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 8, 0, Math.PI * 2); ctx.fill();
+            ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText('SOUL', s.x, s.y - 45 + bob);
+            ctx.shadowBlur = 0;
+        });
+
         particles.current.forEach(p => {
             ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
         });
         
         drawCoins(ctx); 
+        
+        // Draw Shadows
+        shadows.current.forEach(s => drawStickman(ctx, s));
 
         drawStickman(ctx, p2.current); 
         drawStickman(ctx, p1.current);
@@ -583,24 +689,11 @@ const StickmanFinalUpdate = () => {
   };
 
   const loop = () => { update(); draw(); frameRef.current = requestAnimationFrame(loop); };
-  
-  useEffect(() => {
-    handleResize(); 
-    window.addEventListener('resize', handleResize);
-    frameRef.current = requestAnimationFrame(loop);
-    return () => {
-        window.removeEventListener('resize', handleResize);
-        cancelAnimationFrame(frameRef.current);
-    };
-  }, [gameState]);
+  useEffect(() => { handleResize(); window.addEventListener('resize', handleResize); frameRef.current = requestAnimationFrame(loop); return () => { window.removeEventListener('resize', handleResize); cancelAnimationFrame(frameRef.current); }; }, [gameState]);
 
-  const handleTouch = (key, val) => (e) => { 
-      if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); 
-      input.current[key] = val; 
-  };
-  
+  const handleTouch = (key, val) => (e) => { if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); input.current[key] = val; };
   useEffect(() => {
-    const keyMap = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'jump', ' ': 'attack', 'c': 'jump', 'x': 'attack' };
+    const keyMap = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'jump', ' ': 'attack', 'c': 'jump', 'x': 'attack', 'z': 'skill' };
     const down = (e) => { if(keyMap[e.key]) input.current[keyMap[e.key]] = true; };
     const up = (e) => { if(keyMap[e.key]) input.current[keyMap[e.key]] = false; };
     window.addEventListener('keydown', down); window.addEventListener('keyup', up);
@@ -610,52 +703,36 @@ const StickmanFinalUpdate = () => {
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
       <canvas ref={canvasRef} className="block w-full h-full" />
-      
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 italic mb-4 drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]">SHADOW FIGHT</h1>
-           <p className="text-gray-400 mb-8 tracking-widest">FINAL UPDATE</p>
+           <p className="text-gray-400 mb-8 tracking-widest">SHADOW MONARCH</p>
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-cyan-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
-
       {gameState === 'GAMEOVER' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-[100]">
-           <h2 className="text-5xl font-bold text-red-500 mb-2 uppercase tracking-wider drop-shadow-[0_0_15px_rgba(255,0,0,0.8)] animate-pulse">{winner}</h2>
-           <p className="text-gray-300 mb-2 text-xl">Cấp độ: <span className="text-yellow-400 font-bold">{p1.current.level}</span></p>
-           <p className="text-gray-300 mb-8 text-xl">Vàng kiếm được: <span className="text-yellow-400 font-bold">{p1.current.coins}</span> $</p>
-           
-           <button 
-             onClick={initGame} 
-             className="px-12 py-4 bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-2xl rounded-full hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,69,0,0.6)] border-4 border-white/10"
-           >
-             HỒI SINH
-           </button>
+           <h2 className="text-5xl font-bold text-red-500 mb-2 uppercase tracking-wider animate-pulse">{winner}</h2>
+           <p className="text-gray-300 mb-2 text-xl">Level: <span className="text-yellow-400">{p1.current.level}</span></p>
+           <button onClick={initGame} className="px-12 py-4 bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-2xl rounded-full hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,69,0,0.6)] border-4 border-white/10">HỒI SINH</button>
         </div>
       )}
-
       {gameState === 'PLAYING' && (
         <>
             <div className="absolute bottom-24 left-8 flex gap-2 z-40">
-                <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur"
-                    onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}>
-                    <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
-                </button>
-                <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur"
-                    onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}>
-                    <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg>
-                </button>
+                <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+                <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
             </div>
-            
-            <div className="absolute bottom-24 right-8 flex flex-col gap-3 z-40 items-center">
-                <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center"
-                    onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}>
-                    <span className="font-black text-red-500 text-base tracking-tighter">ATK</span>
-                </button>
-                 <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center"
-                    onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}>
-                    <span className="font-bold text-blue-400 text-xs">JUMP</span>
-                </button>
+            <div className="absolute bottom-24 right-8 flex flex-col gap-4 z-40 items-center">
+                {/* SKILL BUTTON: RISE */}
+                {souls.current.length > 0 && (
+                    <button className="w-16 h-16 bg-purple-600/80 border-2 border-purple-400 rounded-full active:scale-95 shadow-[0_0_15px_rgba(147,51,234,0.5)] flex items-center justify-center animate-bounce"
+                        onTouchStart={handleTouch('skill', true)} onTouchEnd={handleTouch('skill', false)}>
+                        <span className="font-black text-white text-xs">RISE</span>
+                    </button>
+                )}
+                <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center" onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}><span className="font-black text-red-500 text-base tracking-tighter">ATK</span></button>
+                <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}><span className="font-bold text-blue-400 text-xs">JUMP</span></button>
             </div>
         </>
       )}
@@ -663,4 +740,4 @@ const StickmanFinalUpdate = () => {
   );
 };
 
-export default StickmanFinalUpdate;
+export default StickmanShadowMonarch;
