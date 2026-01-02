@@ -106,9 +106,10 @@ const StickmanShadowFinal = () => {
     
     enemies.current = [];
     
-    // Tăng độ khó quái vật dựa trên chỉ số người chơi để game cân bằng hơn (Optional)
-    // Nếu người chơi quá mạnh (ATK > 100), quái sẽ mạnh hơn chút
-    const enemyBaseLevel = Math.max(1, Math.floor(startAtk / 20)); 
+    // --- KHẮC PHỤC LỖI LEVEL CAO ---
+    // Trước đây: Level dựa vào ATK (startAtk / 20) khiến quái quá mạnh.
+    // Bây giờ: Luôn bắt đầu Wave 1 với quái Level 1.
+    const enemyBaseLevel = 1; 
     spawnWave(floorY, enemyBaseLevel); 
     
     camera.current.x = -w/2;
@@ -135,7 +136,7 @@ const StickmanShadowFinal = () => {
 
   // Hàm sinh 1 kẻ thù cụ thể
   const createEnemy = (x, y, level) => {
-      // Cân bằng máu quái theo level (nếu người chơi stat cao, level truyền vào sẽ cao)
+      // Cân bằng máu quái theo level
       const hp = 100 + (level * 30); 
       const newEnemy = {
           x: x, y: y, vx: 0, vy: 0,
@@ -221,7 +222,6 @@ const StickmanShadowFinal = () => {
       }
   };
 
-  // ... (Giữ nguyên updateShadows và Utils) ...
   const updateShadows = (floorY) => {
       for (let i = shadows.current.length - 1; i >= 0; i--) {
           if (shadows.current[i].isDead) {
@@ -296,7 +296,6 @@ const StickmanShadowFinal = () => {
       });
   };
   
-  // ... (Giữ nguyên Loot logic) ...
   const spawnLoot = (x, y, totalGold) => {
       const numCoins = 3 + Math.floor(Math.random() * 2); 
       const baseValue = Math.floor(totalGold / numCoins);
@@ -331,7 +330,6 @@ const StickmanShadowFinal = () => {
       }
   };
   
-  // ... (Giữ nguyên drawing logic và helper function) ...
   const drawCoins = (ctx) => {
       lootCoins.current.forEach(c => {
           ctx.save(); ctx.translate(c.x, c.y);
@@ -444,7 +442,6 @@ const StickmanShadowFinal = () => {
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.level, badgeX, badgeY + 1);
   };
 
-  // ... (Giữ nguyên drawStickman) ...
   const drawStickman = (ctx, p) => {
     if (p.isDead) return;
     const { x, y, dir, state, animTimer, color } = p;
@@ -597,7 +594,6 @@ const StickmanShadowFinal = () => {
         return false;
     };
 
-  // ... (Giữ nguyên phần update loop, draw loop và effects) ...
   const update = () => {
     if (gameState !== 'PLAYING') return;
     if (hitStopRef.current > 0) { hitStopRef.current--; return; }
@@ -639,7 +635,7 @@ const StickmanShadowFinal = () => {
     if (enemies.current.length === 0) {
         respawnTimer.current++;
         if (respawnTimer.current > CFG.respawnTime) {
-            // Level quái dựa trên level người chơi trong game (hoặc stats nếu muốn)
+            // Level quái dựa trên level người chơi trong game (user.level bắt đầu từ 1)
             spawnWave(floorY, usr.level);
             respawnTimer.current = 0;
         }
