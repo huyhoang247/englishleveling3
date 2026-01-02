@@ -10,7 +10,11 @@ const StickmanShadowFinal = () => {
 
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
-  const [showStats, setShowStats] = useState(false); // State hiển thị bảng stats
+  const [showStats, setShowStats] = useState(false); 
+  
+  // --- AUTO MODE STATE ---
+  const [isAuto, setIsAuto] = useState(false);
+  const isAutoRef = useRef(false); // Ref để dùng trong vòng lặp game loop
   
   // State UI
   const [canRise, setCanRise] = useState(false);
@@ -38,7 +42,7 @@ const StickmanShadowFinal = () => {
 
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
-  // Player 1 (Người chơi)
+  // Player 1
   const p1 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
@@ -87,7 +91,6 @@ const StickmanShadowFinal = () => {
     const { w, h } = handleResize(); 
     const floorY = h * 0.66;
 
-    // 3. APPLY STATS TỪ CONTEXT VÀO GAME
     const startHp = totalPlayerStats.hp > 0 ? totalPlayerStats.hp : 100;
     const startAtk = totalPlayerStats.atk > 0 ? totalPlayerStats.atk : 12;
     const startDef = totalPlayerStats.def || 0;
@@ -121,6 +124,10 @@ const StickmanShadowFinal = () => {
     canRiseRef.current = false;
     setShowStats(false);
     
+    // Reset Auto Mode khi bắt đầu game mới (hoặc giữ nguyên tùy ý, ở đây mình reset)
+    setIsAuto(false);
+    isAutoRef.current = false;
+    
     bgObjects.current = [];
     for(let i = -15; i < 15; i++) {
         bgObjects.current.push({
@@ -132,7 +139,6 @@ const StickmanShadowFinal = () => {
     setGameState('PLAYING');
   };
 
-  // Hàm sinh 1 kẻ thù cụ thể
   const createEnemy = (x, y, level) => {
       const hp = 100 + (level * 30); 
       const newEnemy = {
@@ -184,6 +190,7 @@ const StickmanShadowFinal = () => {
       let closestIndex = -1;
       let minDst = 150;
 
+      // Tìm soul gần nhất
       souls.current.forEach((s, i) => {
           const dst = Math.abs(p.x - s.x);
           if (dst < minDst) {
@@ -191,6 +198,12 @@ const StickmanShadowFinal = () => {
               closestIndex = i;
           }
       });
+      
+      // Auto Mode: Nếu không tìm thấy soul gần, nhưng có soul trên bản đồ và đang Auto, 
+      // cho phép triệu hồi soul bất kỳ để không bị kẹt.
+      if (closestIndex === -1 && isAutoRef.current && souls.current.length > 0) {
+          closestIndex = 0; // Lấy cái đầu tiên
+      }
 
       if (closestIndex !== -1) {
           if (shadows.current.length >= CFG.maxShadows) return;
@@ -526,7 +539,6 @@ const StickmanShadowFinal = () => {
     drawUnitUI(ctx, p, p.type);
   };
 
-  // --- HIT CHECK ---
   const checkHit = (attacker, defender) => {
         if (defender.isDead || attacker.isDead) return false;
         
@@ -583,7 +595,6 @@ const StickmanShadowFinal = () => {
     };
 
   const update = () => {
-    // Thêm điều kiện showStats để pause game logic
     if (gameState !== 'PLAYING' || showStats) return;
     if (hitStopRef.current > 0) { hitStopRef.current--; return; }
 
@@ -598,16 +609,74 @@ const StickmanShadowFinal = () => {
     if (shakeRef.current < 0.5) shakeRef.current = 0;
 
     const usr = p1.current;
-    if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
-    else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
-    else { usr.vx *= CFG.friction; if(usr.state === 'RUN') usr.state = 'IDLE'; }
-    if (input.current.jump && usr.y >= floorY - 1) { usr.vy = CFG.jump; usr.state = 'JUMP'; }
-    if (input.current.attack && usr.attackCooldown <= 0) { 
-        usr.state = 'ATTACK'; usr.attackCooldown = 25; usr.vx = usr.dir * 10; input.current.attack = false; 
-    }
-    if (input.current.skill) {
-        extractShadow();
-        input.current.skill = false;
+    
+    // ============================================
+    // LOGIC ĐIỀU KHIỂN: AUTO MODE vs MANUAL MODE
+    // ============================================
+    if (isAutoRef.current) {
+        // --- AUTO MODE ---
+        
+        // 1. Tự động dùng Skill Rise nếu có Soul (và chưa full slot)
+        const canUseSkill = canRiseRef.current || (souls.current.length > 0 && shadows.current.length < CFG.maxShadows);
+        if (canUseSkill) {
+            extractShadow();
+            // Reset nhẹ flag để tránh spam nếu logic hơi lệch, 
+            // nhưng extractShadow đã handle việc remove soul
+        }
+
+        // 2. Tìm mục tiêu (Kẻ địch gần nhất)
+        let target = null;
+        let minDst = 10000;
+        enemies.current.forEach(e => {
+            if (!e.isDead) {
+                const d = Math.abs(e.x - usr.x);
+                if (d < minDst) { minDst = d; target = e; }
+            }
+        });
+
+        if (target) {
+            const dist = target.x - usr.x;
+            const attackRange = CFG.attackDist - 10; // Đánh gần hơn chút cho chắc
+
+            // Hướng mặt về phía địch
+            if (usr.state !== 'ATTACK') {
+                usr.dir = dist > 0 ? 1 : -1;
+            }
+
+            if (Math.abs(dist) > attackRange) {
+                // Di chuyển đến địch
+                usr.vx = usr.dir * CFG.speed;
+                if (usr.state !== 'JUMP' && usr.state !== 'ATTACK' && usr.state !== 'HURT') usr.state = 'RUN';
+            } else {
+                // Đủ gần -> Dừng lại và Đánh
+                usr.vx = 0;
+                if (usr.attackCooldown <= 0) {
+                    usr.state = 'ATTACK';
+                    usr.attackCooldown = 25;
+                    usr.vx = usr.dir * 10; // Lao tới chém
+                } else {
+                    if (usr.state === 'RUN') usr.state = 'IDLE';
+                }
+            }
+        } else {
+            // Không có địch -> Đứng im (hoặc có thể đi loanh quanh nhặt tiền - tính năng nâng cao sau này)
+            usr.vx *= CFG.friction;
+            if (usr.state === 'RUN') usr.state = 'IDLE';
+        }
+
+    } else {
+        // --- MANUAL MODE (Điều khiển tay) ---
+        if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
+        else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
+        else { usr.vx *= CFG.friction; if(usr.state === 'RUN') usr.state = 'IDLE'; }
+        if (input.current.jump && usr.y >= floorY - 1) { usr.vy = CFG.jump; usr.state = 'JUMP'; }
+        if (input.current.attack && usr.attackCooldown <= 0) { 
+            usr.state = 'ATTACK'; usr.attackCooldown = 25; usr.vx = usr.dir * 10; input.current.attack = false; 
+        }
+        if (input.current.skill) {
+            extractShadow();
+            input.current.skill = false;
+        }
     }
     
     usr.vy += CFG.gravity; usr.x += usr.vx; usr.y += usr.vy;
@@ -764,7 +833,7 @@ const StickmanShadowFinal = () => {
     }
     ctx.restore();
 
-    if (gameState === 'PLAYING' && !showStats) { // Ẩn HUD khi bật stats overlay để đỡ rối
+    if (gameState === 'PLAYING' && !showStats) { 
         drawHUD(ctx);
     }
   };
@@ -781,7 +850,6 @@ const StickmanShadowFinal = () => {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
   }, []);
 
-  // Helper tính trung bình chỉ số quái hiện tại
   const getEnemyWaveStats = () => {
     const activeEnemies = enemies.current.filter(e => !e.isDead);
     if (activeEnemies.length === 0) return null;
@@ -799,20 +867,24 @@ const StickmanShadowFinal = () => {
         avgLevel: Math.round(total.level / activeEnemies.length)
     };
   };
-
   const enemyStats = showStats ? getEnemyWaveStats() : null;
+
+  // Toggle Auto Mode
+  const toggleAuto = () => {
+      const newVal = !isAuto;
+      setIsAuto(newVal);
+      isAutoRef.current = newVal;
+  };
 
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
       <canvas ref={canvasRef} className="block w-full h-full" />
       
-      {/* STATS OVERLAY (Không dùng backdrop-blur, dùng solid dark bg) */}
       {showStats && (
         <div className="absolute inset-x-4 top-16 bottom-24 bg-zinc-900 border-2 border-white/30 rounded-lg p-4 z-50 flex flex-col items-center justify-center shadow-2xl">
             <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-[0.2em] border-b border-white/20 pb-2">Battle Statistics</h2>
             
             <div className="flex w-full justify-between gap-4">
-                {/* PLAYER STATS */}
                 <div className="flex-1 bg-blue-900/20 p-4 rounded border border-blue-500/30 flex flex-col gap-2">
                      <h3 className="text-blue-400 font-bold text-lg mb-2 text-center">PLAYER</h3>
                      <div className="flex justify-between text-gray-300 text-sm"><span>LEVEL</span><span className="text-white font-bold">{p1.current.level}</span></div>
@@ -822,7 +894,6 @@ const StickmanShadowFinal = () => {
                      <div className="flex justify-between text-gray-300 text-sm"><span>EXP</span><span className="text-purple-400 font-bold">{p1.current.currentExp} / {p1.current.maxExp}</span></div>
                 </div>
 
-                {/* ENEMY STATS */}
                 <div className="flex-1 bg-red-900/20 p-4 rounded border border-red-500/30 flex flex-col gap-2">
                      <h3 className="text-red-500 font-bold text-lg mb-2 text-center">WAVE INFO</h3>
                      {enemyStats ? (
@@ -867,26 +938,51 @@ const StickmanShadowFinal = () => {
       )}
       {gameState === 'PLAYING' && !showStats && (
         <>
-            <div className="absolute bottom-24 left-8 flex gap-2 z-40">
-                <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
-                <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
-            </div>
+            {/* Nếu NOT Auto thì hiển thị nút di chuyển */}
+            {!isAuto && (
+                <div className="absolute bottom-24 left-8 flex gap-2 z-40">
+                    <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+                    <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+                </div>
+            )}
+            
             <div className="absolute bottom-24 right-8 flex flex-col gap-4 z-40 items-center">
-                {canRise && (
-                    <button className="w-16 h-16 bg-purple-600/90 border-2 border-purple-400 rounded-full active:scale-95 shadow-[0_0_20px_rgba(147,51,234,0.8)] flex items-center justify-center animate-bounce"
-                        onTouchStart={handleTouch('skill', true)} onTouchEnd={handleTouch('skill', false)}>
-                        <span className="font-black text-white text-xs">RISE</span>
-                    </button>
-                )}
                 
-                {/* NÚT STATS MỚI (Dưới nút Rise) */}
+                {/* AUTO BUTTON */}
+                <button onClick={toggleAuto} className={`w-10 h-10 border border-gray-500 rounded-full flex items-center justify-center active:scale-95 shadow-lg ${isAuto ? 'bg-green-600 animate-pulse border-green-400' : 'bg-gray-800/80'}`}>
+                     {isAuto ? 
+                        <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> 
+                        : 
+                        <span className="font-bold text-white text-[10px]">AUTO</span>
+                     }
+                </button>
+                
+                {/* INFO BUTTON */}
                 <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-gray-800/80 border border-gray-500 rounded-full flex items-center justify-center active:scale-95 shadow-lg">
                      <span className="font-bold text-white text-[10px]">INFO</span>
                 </button>
 
-                <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center" onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}><span className="font-black text-red-500 text-base tracking-tighter">ATK</span></button>
-                <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}><span className="font-bold text-blue-400 text-xs">JUMP</span></button>
+                {/* Các nút hành động: Chỉ hiển thị khi NOT Auto */}
+                {!isAuto && (
+                    <>
+                        {canRise && (
+                            <button className="w-16 h-16 bg-purple-600/90 border-2 border-purple-400 rounded-full active:scale-95 shadow-[0_0_20px_rgba(147,51,234,0.8)] flex items-center justify-center animate-bounce"
+                                onTouchStart={handleTouch('skill', true)} onTouchEnd={handleTouch('skill', false)}>
+                                <span className="font-black text-white text-xs">RISE</span>
+                            </button>
+                        )}
+                        <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center" onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}><span className="font-black text-red-500 text-base tracking-tighter">ATK</span></button>
+                        <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}><span className="font-bold text-blue-400 text-xs">JUMP</span></button>
+                    </>
+                )}
             </div>
+            
+            {/* Hiển thị thông báo khi đang Auto cho rõ ràng */}
+            {isAuto && (
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-green-900/50 border border-green-500/50 px-4 py-1 rounded-full pointer-events-none">
+                    <span className="text-green-400 text-xs font-bold tracking-widest animate-pulse">AUTO BATTLE ENGAGED</span>
+                </div>
+            )}
         </>
       )}
     </div>
