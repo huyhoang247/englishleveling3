@@ -380,7 +380,6 @@ const StickmanShadowFinal = () => {
       const totalExp = 50 + (deadEnemy.level * 10);
       if (killer.type === 'PLAYER') {
           p1.current.currentExp += totalExp;
-          // Màu sắc ở đây không quan trọng vì draw() sẽ override nếu thấy text chứa "EXP"
           addFloatingText(p1.current.x, p1.current.y - 80, `+${totalExp} EXP`, '#fff', 16);
           checkLevelUp(p1.current, true);
       } else if (killer.type === 'ALLY') {
@@ -847,23 +846,27 @@ const StickmanShadowFinal = () => {
 
             // Kiểm tra xem text có phải là EXP không để áp dụng style "xanh pha trắng"
             if (t.text.includes('EXP') || t.text.includes('XP')) {
-                 ctx.font = 'italic 900 13px "Segoe UI", Arial, sans-serif'; // Nhỏ gọn, đậm, nghiêng
+                 ctx.font = 'italic 900 13px "Segoe UI", Arial, sans-serif'; 
 
-                 // Gradient: Trắng -> Xanh trời -> Xanh biển đậm
                  const gradient = ctx.createLinearGradient(t.x, t.y - 10, t.x, t.y + 5);
-                 gradient.addColorStop(0, '#FFFFFF');      // Đỉnh trắng
-                 gradient.addColorStop(0.4, '#38BDF8');    // Giữa xanh da trời
-                 gradient.addColorStop(1, '#0369A1');      // Đáy xanh biển
+                 gradient.addColorStop(0, '#FFFFFF');      
+                 gradient.addColorStop(0.4, '#38BDF8');    
+                 gradient.addColorStop(1, '#0369A1');      
 
                  ctx.fillStyle = gradient;
-                 ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
-                 ctx.shadowBlur = 4;
-                 
-                 // Viền chữ để nổi bật
-                 ctx.strokeStyle = '#082f49'; // Màu xanh rất tối
-                 ctx.lineWidth = 2.5;
                  ctx.lineJoin = 'round';
+
+                 // 1. Viền ngoài mờ (Thay thế cho Shadow) - Trắng pha xanh, opacity 30%
+                 ctx.strokeStyle = 'rgba(224, 242, 254, 0.3)'; // Sky-100 với 0.3 opacity
+                 ctx.lineWidth = 5; 
                  ctx.strokeText(t.text, t.x | 0, t.y | 0);
+
+                 // 2. Viền trong đậm (Để chữ nổi bật trên nền)
+                 ctx.strokeStyle = '#082f49'; 
+                 ctx.lineWidth = 2.5;
+                 ctx.strokeText(t.text, t.x | 0, t.y | 0);
+
+                 // 3. Chữ chính
                  ctx.fillText(t.text, t.x | 0, t.y | 0);
             } else {
                 // Style mặc định cho sát thương (đỏ) hoặc thông báo khác
