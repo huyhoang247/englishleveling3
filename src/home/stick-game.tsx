@@ -19,7 +19,7 @@ const StickmanShadowFinal = () => {
     hitStun: 20,
     camShake: 0,
     respawnTime: 120,
-    maxShadows: 3, // Max 3 lính
+    maxShadows: 3, 
   };
 
   const frameRef = useRef(0);
@@ -73,14 +73,19 @@ const StickmanShadowFinal = () => {
     if (!canvas) return;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    const dpr = window.devicePixelRatio || 1;
+    
+    // TỐI ƯU 1: Giới hạn DPR tối đa là 2 để tránh lag trên màn hình 4K/Retina
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
     dprRef.current = dpr;
+    
     canvas.width = w * dpr;
     canvas.height = h * dpr;
     canvas.style.width = `${w}px`;
     canvas.style.height = `${h}px`;
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
+    // Tắt image smoothing để tăng hiệu năng vẽ pixel art/nét vẽ cứng
+    ctx.imageSmoothingEnabled = false; 
     return { w, h };
   };
 
@@ -112,7 +117,8 @@ const StickmanShadowFinal = () => {
     canRiseRef.current = false;
     
     bgObjects.current = [];
-    for(let i = -20; i < 20; i++) {
+    // Giảm số lượng background object một chút
+    for(let i = -15; i < 15; i++) {
         bgObjects.current.push({
             x: i * 800 + Math.random() * 200,
             height: 100 + Math.random() * 200,
@@ -159,10 +165,7 @@ const StickmanShadowFinal = () => {
       });
 
       if (closestIndex !== -1) {
-          // Double check (dù nút đã ẩn nhưng vẫn check cho an toàn)
-          if (shadows.current.length >= CFG.maxShadows) {
-              return;
-          }
+          if (shadows.current.length >= CFG.maxShadows) return;
 
           const s = souls.current[closestIndex];
           const shadowHp = 80 + (s.level * 15);
@@ -236,6 +239,8 @@ const StickmanShadowFinal = () => {
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   const createBlood = (x, y, color, amount = 10) => {
+    // Giới hạn số lượng particle tối đa để giảm lag
+    if (particles.current.length > 100) return;
     for (let i = 0; i < amount; i++) {
       particles.current.push({
         x, y, vx: rand(-5, 5), vy: rand(-8, -2),
@@ -245,6 +250,7 @@ const StickmanShadowFinal = () => {
   };
 
   const createExplosion = (x, y, color) => {
+    if (particles.current.length > 100) return;
     for (let i = 0; i < 15; i++) {
         particles.current.push({
           x, y, vx: rand(-8, 8), vy: rand(-8, 8),
@@ -298,8 +304,9 @@ const StickmanShadowFinal = () => {
       lootCoins.current.forEach(c => {
           ctx.save(); ctx.translate(c.x, c.y);
           const r = 10;
+          // Tối ưu: Bỏ shadowBlur, dùng stroke đơn giản
           ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 2; ctx.stroke();
           ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
           ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 1);
           ctx.restore();
@@ -343,15 +350,12 @@ const StickmanShadowFinal = () => {
       const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
       
       ctx.save();
-
       // 1. COIN HUD
       ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; ctx.beginPath(); ctx.roundRect(hudX, hudY, hudW, hudH, 18); ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = '#FFD700'; ctx.stroke();
       const iconX = hudX + 20; const iconY = hudY + 18; const r = 12;
       ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(iconX, iconY, r, 0, Math.PI * 2); ctx.fill();
-      ctx.strokeStyle = '#B8860B'; ctx.lineWidth = 1; ctx.stroke();
-      ctx.fillStyle = '#B8860B'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', iconX, iconY + 1);
-      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 19);
+      ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 25);
       
       // 2. SHADOW HUD
       const sHudW = 150;
@@ -364,28 +368,23 @@ const StickmanShadowFinal = () => {
       ctx.fillStyle = grad; 
       ctx.beginPath(); ctx.roundRect(sHudX, hudY, sHudW, hudH, 18); ctx.fill();
       
-      ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 8;
+      // TỐI ƯU 2: Bỏ shadowBlur nặng nề
       ctx.strokeStyle = '#d8b4fe'; ctx.lineWidth = 1.5; ctx.stroke();
-      ctx.shadowBlur = 0; 
 
-      // Icon đầu lâu / bóng
       const sIconX = sHudX + 25;
       const sIconY = hudY + 18;
       ctx.fillStyle = '#fff';
       ctx.beginPath(); ctx.arc(sIconX, sIconY - 2, 6, 0, Math.PI * 2); ctx.fill(); 
       ctx.beginPath(); ctx.arc(sIconX, sIconY + 8, 8, Math.PI, 0); ctx.fill(); 
 
-      // Text "SHADOW"
       ctx.fillStyle = '#e9d5ff'; 
       ctx.font = 'bold 12px Arial';
       ctx.textAlign = 'left';
       ctx.fillText('SHADOW', sIconX + 15, sIconY + 5);
 
-      // Count
       ctx.fillStyle = '#fff';
       ctx.font = 'bold 18px Arial';
       ctx.textAlign = 'right';
-      // Hiển thị số lượng màu đỏ nếu full
       if (shadows.current.length >= CFG.maxShadows) ctx.fillStyle = '#f87171';
       ctx.fillText(`${shadows.current.length} / ${CFG.maxShadows}`, sHudX + sHudW - 15, sIconY + 5);
 
@@ -395,17 +394,19 @@ const StickmanShadowFinal = () => {
   const drawUnitUI = (ctx, p, type) => {
     if (p.isDead) return;
     const barWidth = 60; const barHeight = 6; const yOffset = 100;
-    const barX = p.x - barWidth / 2; const barY = p.y - yOffset;
+    // Làm tròn tọa độ để vẽ sắc nét hơn
+    const barX = (p.x - barWidth / 2) | 0; 
+    const barY = (p.y - yOffset) | 0;
     const badgeX = barX - 14; const badgeY = barY + barHeight / 2;
 
-    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.beginPath(); ctx.roundRect(barX, barY, barWidth, barHeight, 3); ctx.fill();
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.fillRect(barX, barY, barWidth, barHeight);
     const hpPercent = Math.max(0, p.hp / p.maxHp);
     
     if (type === 'ENEMY') ctx.fillStyle = '#ef4444';
     else if (type === 'ALLY') ctx.fillStyle = '#a855f7'; 
     else ctx.fillStyle = '#22c55e'; 
     
-    ctx.beginPath(); ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 3); ctx.fill();
+    ctx.fillRect(barX, barY, barWidth * hpPercent, barHeight);
 
     if (type !== 'ENEMY') {
         const expHeight = 3; const expY = barY + barHeight + 2;
@@ -443,18 +444,22 @@ const StickmanShadowFinal = () => {
     }
 
     ctx.save();
-    ctx.translate(x, y - 25 - bodyY); ctx.scale(dir, 1);
+    ctx.translate(x | 0, (y - 25 - bodyY) | 0); ctx.scale(dir, 1);
     
+    // TỐI ƯU 3: Thay shadowBlur (gây lag kinh hoàng) bằng hình tròn alpha (cực nhẹ)
     if (p.type === 'ALLY') {
-        ctx.shadowBlur = 15; ctx.shadowColor = '#a855f7'; 
-        ctx.globalAlpha = 0.9; 
-    } else {
-        ctx.shadowBlur = 10; ctx.shadowColor = color; 
+        ctx.fillStyle = 'rgba(168, 85, 247, 0.2)'; 
+        ctx.beginPath(); ctx.arc(0, -10, 35, 0, Math.PI * 2); ctx.fill();
+    } else if (p.type === 'PLAYER') {
+        ctx.fillStyle = 'rgba(0, 242, 255, 0.15)';
+        ctx.beginPath(); ctx.arc(0, -10, 40, 0, Math.PI * 2); ctx.fill();
     }
     
     ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
+    
+    // Hàm vẽ chi - tối ưu không tạo object thừa nếu không cần
     const drawLimb = (startX, startY, angle, len) => {
         const mx = startX + Math.sin(angle) * len; const my = startY + Math.cos(angle) * len;
         ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(mx, my); ctx.stroke();
@@ -482,8 +487,9 @@ const StickmanShadowFinal = () => {
         const tipX = handPos.x + Math.sin(swordAngle) * 35; const tipY = handPos.y + Math.cos(swordAngle) * 35;
         ctx.moveTo(handPos.x, handPos.y); ctx.lineTo(tipX, tipY); ctx.stroke();
         if (state === 'ATTACK' && p.attackCooldown > 5) {
-            ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168, 85, 247, 0.6)' : 'rgba(255, 255, 255, 0.6)'; 
-            ctx.shadowBlur = 0; ctx.beginPath();
+            ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.4)'; 
+            // Bỏ shadowBlur ở hiệu ứng chém
+            ctx.beginPath();
             ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
     }
@@ -632,9 +638,8 @@ const StickmanShadowFinal = () => {
         else hasSoul = true;
     }
     
-    // --- UI Logic: Ẩn nút RISE khi FULL SHADOWS ---
     const isFull = shadows.current.length >= CFG.maxShadows;
-    const showRise = hasSoul && !isFull; // Chỉ hiện khi có soul VÀ chưa full lính
+    const showRise = hasSoul && !isFull; 
 
     if (showRise !== canRiseRef.current) {
         canRiseRef.current = showRise;
@@ -666,13 +671,13 @@ const StickmanShadowFinal = () => {
     ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, canvas.width / dprRef.current, canvas.height / dprRef.current);
     
     ctx.save();
-    ctx.translate(-camera.current.x + shakeX, shakeY);
+    ctx.translate((-camera.current.x + shakeX) | 0, shakeY | 0); // Làm tròn tọa độ camera
 
     ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(camera.current.x + (canvas.width/dprRef.current)/2, (canvas.height/dprRef.current)/3, 150, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#333';
     bgObjects.current.forEach(obj => {
         if (obj.x > camera.current.x - 200 && obj.x < camera.current.x + (canvas.width/dprRef.current) + 200) {
-            ctx.fillRect(obj.x, floorY - obj.height, obj.width, obj.height);
+            ctx.fillRect(obj.x | 0, (floorY - obj.height) | 0, obj.width, obj.height);
         }
     });
 
@@ -684,15 +689,18 @@ const StickmanShadowFinal = () => {
     if (gameState !== 'MENU') { 
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            ctx.shadowBlur = 15; ctx.shadowColor = '#a855f7';
-            ctx.fillStyle = '#a855f7'; 
-            ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 8, 0, Math.PI * 2); ctx.fill();
-            ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText('SOUL', s.x, s.y - 45 + bob);
-            ctx.shadowBlur = 0;
+            // Tối ưu: Dùng alpha thay vì shadowBlur
+            ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
+            ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 15, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 5, 0, Math.PI * 2); ctx.fill();
+            
+            ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillText('SOUL', s.x, s.y - 50 + bob);
         });
 
         particles.current.forEach(p => {
-            ctx.fillStyle = p.color; ctx.fillRect(p.x, p.y, p.size, p.size);
+            ctx.fillStyle = p.color; ctx.fillRect(p.x | 0, p.y | 0, p.size, p.size);
         });
         
         drawCoins(ctx); 
@@ -705,7 +713,7 @@ const StickmanShadowFinal = () => {
         floatingTexts.current.forEach(t => {
             ctx.fillStyle = t.color;
             ctx.globalAlpha = t.life / 60;
-            ctx.fillText(t.text, t.x, t.y);
+            ctx.fillText(t.text, t.x | 0, t.y | 0);
         });
         ctx.globalAlpha = 1;
     }
