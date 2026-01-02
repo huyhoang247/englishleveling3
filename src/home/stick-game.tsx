@@ -1,11 +1,14 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-const StickmanShadowMonarch = () => {
+const StickmanShadowFinal = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
-  const [shadowCount, setShadowCount] = useState(0); // Để hiển thị số lượng đệ tử
   
+  // State UI
+  const [canRise, setCanRise] = useState(false);
+  const canRiseRef = useRef(false);
+
   // --- CẤU HÌNH ---
   const CFG = {
     gravity: 0.8,
@@ -16,7 +19,7 @@ const StickmanShadowMonarch = () => {
     hitStun: 20,
     camShake: 0,
     respawnTime: 120,
-    maxShadows: 2, // Giới hạn số lượng đệ
+    maxShadows: 3, // Max 3 lính
   };
 
   const frameRef = useRef(0);
@@ -28,8 +31,7 @@ const StickmanShadowMonarch = () => {
 
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
-  // --- ENTITIES ---
-  // Player 1 (Hero)
+  // Player 1
   const p1 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
@@ -37,24 +39,29 @@ const StickmanShadowMonarch = () => {
     coins: 0, 
     state: 'IDLE', dir: 1,
     animTimer: 0, attackCooldown: 0,
-    color: '#00f2ff', weaponColor: '#ffffff',
-    name: 'MONARCH', isDead: false, type: 'PLAYER'
+    color: '#00f2ff', 
+    weaponColor: '#ffffff',
+    name: 'MONARCH',
+    isDead: false,
+    type: 'PLAYER'
   });
 
-  // Player 2 (Enemy)
+  // Player 2
   const p2 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
     level: 1, damage: 8,
     state: 'IDLE', dir: -1,
     animTimer: 0, attackCooldown: 0, aiTimer: 0,
-    color: '#ff2a00', weaponColor: '#ff9900',
-    name: 'QUÁI VẬT', isDead: false, type: 'ENEMY'
+    color: '#ff2a00', 
+    weaponColor: '#ff9900',
+    name: 'QUÁI VẬT',
+    isDead: false,
+    type: 'ENEMY'
   });
 
-  // Arrays
-  const shadows = useRef([]); // Mảng chứa lính bóng tối
-  const souls = useRef([]);   // Mảng chứa linh hồn chờ trích xuất
+  const shadows = useRef([]);
+  const souls = useRef([]);
   const particles = useRef([]);
   const bgObjects = useRef([]);
   const floatingTexts = useRef([]); 
@@ -82,9 +89,13 @@ const StickmanShadowMonarch = () => {
     const floorY = h * 0.66;
 
     p1.current = { 
-        ...p1.current, x: 0, y: floorY, vx: 0, vy: 0, 
-        hp: 100, maxHp: 100, level: 1, currentExp: 0, maxExp: 100, damage: 12,
-        coins: 0, state: 'IDLE', dir: 1, isDead: false 
+        ...p1.current, 
+        x: 0, y: floorY, vx: 0, vy: 0, 
+        hp: 100, maxHp: 100, 
+        level: 1, currentExp: 0, maxExp: 100, damage: 12,
+        coins: 0, 
+        state: 'IDLE', dir: 1,
+        isDead: false 
     };
     
     spawnEnemy(400, floorY, 1);
@@ -96,7 +107,9 @@ const StickmanShadowMonarch = () => {
     floatingTexts.current = [];
     lootCoins.current = []; 
     respawnTimer.current = 0;
-    setShadowCount(0);
+    
+    setCanRise(false);
+    canRiseRef.current = false;
     
     bgObjects.current = [];
     for(let i = -20; i < 20; i++) {
@@ -117,25 +130,25 @@ const StickmanShadowMonarch = () => {
           maxHp: hp, hp: hp,
           level: level,
           damage: 5 + (level * 3),
-          state: 'IDLE', dir: -1, isDead: false
+          state: 'IDLE', dir: -1, 
+          isDead: false
       };
       createExplosion(x, y - 50, '#ff2a00');
   };
 
-  // --- SHADOW SYSTEM ---
+  // --- SHADOW LOGIC ---
   const spawnSoul = (x, y, level, damage) => {
       souls.current.push({
           x, y, level, damage,
-          life: 300, // Tồn tại 5 giây
+          life: 600, 
           anim: 0
       });
   };
 
   const extractShadow = () => {
-      // Tìm linh hồn gần nhất
       const p = p1.current;
       let closestIndex = -1;
-      let minDst = 100; // Phạm vi trích xuất
+      let minDst = 150;
 
       souls.current.forEach((s, i) => {
           const dst = Math.abs(p.x - s.x);
@@ -146,72 +159,69 @@ const StickmanShadowMonarch = () => {
       });
 
       if (closestIndex !== -1) {
+          // Double check (dù nút đã ẩn nhưng vẫn check cho an toàn)
           if (shadows.current.length >= CFG.maxShadows) {
-              addFloatingText(p.x, p.y - 100, "MAX ARMY!", '#ff0000', 20);
               return;
           }
 
           const s = souls.current[closestIndex];
-          // Tạo Lính Bóng Tối
           const shadowHp = 80 + (s.level * 15);
+          
           shadows.current.push({
               x: s.x, y: s.y, vx: 0, vy: 0,
               maxHp: shadowHp, hp: shadowHp,
-              level: s.level, damage: s.damage, // Thừa hưởng damage của quái
+              level: s.level, damage: s.damage,
               currentExp: 0, maxExp: 50 + (s.level * 10),
               state: 'IDLE', dir: p.dir,
               animTimer: 0, attackCooldown: 0,
-              color: '#000000', // Đen
-              weaponColor: '#3b82f6', // Kiếm xanh
-              name: 'SHADOW', isDead: false, type: 'ALLY',
-              target: null
+              color: '#000000', 
+              weaponColor: '#3b82f6', 
+              name: 'SHADOW', isDead: false, type: 'ALLY'
           });
           
-          createExplosion(s.x, s.y - 50, '#3b82f6'); // Nổ xanh
-          addFloatingText(s.x, s.y - 120, "ARISE!", '#3b82f6', 32);
+          createExplosion(s.x, s.y - 50, '#9333ea');
+          addFloatingText(s.x, s.y - 120, "ARISE!", '#9333ea', 32);
           
-          souls.current.splice(closestIndex, 1); // Xóa linh hồn
-          setShadowCount(prev => prev + 1);
+          souls.current.splice(closestIndex, 1);
       }
   };
 
   const updateShadows = (floorY) => {
+      for (let i = shadows.current.length - 1; i >= 0; i--) {
+          if (shadows.current[i].isDead) {
+              createExplosion(shadows.current[i].x, shadows.current[i].y, '#555');
+              shadows.current.splice(i, 1);
+          }
+      }
+
       shadows.current.forEach(s => {
-          if (s.isDead) return;
-          
           const enemy = p2.current;
           let target = null;
 
-          // AI: Tìm địch
           if (!enemy.isDead) {
               target = enemy;
           } else {
-              // Nếu không có địch, đi theo chủ (p1)
               target = p1.current;
           }
 
-          // Logic di chuyển
           const dist = target.x - s.x;
-          // Nếu target là chủ thì đứng cách xa 1 chút, nếu là địch thì áp sát
           const stopDist = (target === p1.current) ? 100 + (Math.random() * 50) : 60;
 
           if (Math.abs(dist) > stopDist) {
-              s.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.85); // Bóng chạy nhanh
+              s.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.85);
               s.dir = dist > 0 ? 1 : -1;
               if (s.state !== 'JUMP' && s.state !== 'ATTACK') s.state = 'RUN';
           } else {
               s.vx *= CFG.friction;
               if (s.state === 'RUN') s.state = 'IDLE';
               
-              // Nếu target là địch và đủ gần -> Đánh
               if (target === enemy && s.attackCooldown <= 0) {
                   s.state = 'ATTACK';
-                  s.attackCooldown = 30; // Tốc độ đánh
-                  s.vx = s.dir * 15; // Lướt tới chém
+                  s.attackCooldown = 30; 
+                  s.vx = s.dir * 15; 
               }
           }
 
-          // Vật lý
           s.vy += CFG.gravity; s.x += s.vx; s.y += s.vy;
           if (s.y > floorY) { s.y = floorY; s.vy = 0; if (s.state === 'JUMP') s.state = 'IDLE'; }
           s.animTimer++;
@@ -222,7 +232,7 @@ const StickmanShadowMonarch = () => {
       });
   };
 
-  // --- LOOT & EXP SYSTEM ---
+  // --- GENERAL UTILS ---
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   const createBlood = (x, y, color, amount = 10) => {
@@ -249,6 +259,7 @@ const StickmanShadowMonarch = () => {
       });
   };
 
+  // --- LOOT ---
   const spawnLoot = (x, y, totalGold) => {
       const numCoins = 3 + Math.floor(Math.random() * 2); 
       const baseValue = Math.floor(totalGold / numCoins);
@@ -274,7 +285,7 @@ const StickmanShadowMonarch = () => {
               if (c.y > floorY - 12) { c.y = floorY - 12; c.vy *= -0.5; c.vx *= 0.9; }
               c.timer--; if (c.timer <= 0) c.state = 'FLY';
           } else if (c.state === 'FLY') {
-              const destX = camX + 90; const destY = 40;        
+              const destX = camX + 80; const destY = 40;        
               c.x += (destX - c.x) * 0.08; c.y += (destY - c.y) * 0.08; 
               if (Math.abs(destX - c.x) < 15 && Math.abs(destY - c.y) < 15) {
                   p1.current.coins += c.val; lootCoins.current.splice(i, 1);
@@ -283,7 +294,18 @@ const StickmanShadowMonarch = () => {
       }
   };
 
-  // --- EXP LOGIC ---
+  const drawCoins = (ctx) => {
+      lootCoins.current.forEach(c => {
+          ctx.save(); ctx.translate(c.x, c.y);
+          const r = 10;
+          ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+          ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1.5; ctx.stroke();
+          ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 1);
+          ctx.restore();
+      });
+  };
+
   const checkLevelUp = (entity, isPlayer) => {
       if (entity.currentExp >= entity.maxExp) {
           entity.level++;
@@ -300,18 +322,14 @@ const StickmanShadowMonarch = () => {
 
   const distributeExp = (killer, deadEnemy) => {
       const totalExp = 50 + (deadEnemy.level * 10);
-      
       if (killer.type === 'PLAYER') {
-          // Người chơi giết: Hưởng 100%
           p1.current.currentExp += totalExp;
           addFloatingText(p1.current.x, p1.current.y - 80, `+${totalExp} EXP`, '#fbbf24', 16);
           checkLevelUp(p1.current, true);
       } else if (killer.type === 'ALLY') {
-          // Đệ tử giết: Đệ tử +100% EXP, Chủ +50% EXP
           killer.currentExp += totalExp;
           addFloatingText(killer.x, killer.y - 80, `+${totalExp} XP`, '#3b82f6', 14);
           checkLevelUp(killer, false);
-
           const shareExp = Math.floor(totalExp * 0.5);
           p1.current.currentExp += shareExp;
           addFloatingText(p1.current.x, p1.current.y - 80, `+${shareExp} Share XP`, '#fbbf24', 16);
@@ -319,77 +337,14 @@ const StickmanShadowMonarch = () => {
       }
   };
 
-  // --- HIT CHECK ---
-  const checkHit = (attacker, defender) => {
-        if (defender.isDead || attacker.isDead) return false;
-        
-        if (attacker.state === 'ATTACK' && attacker.attackCooldown > 15 && attacker.attackCooldown < 23) {
-            const hitDist = Math.abs(attacker.x - defender.x);
-            // Shadow đánh rộng hơn chút vì AI hay đứng đè lên nhau
-            const requiredDist = attacker.type === 'ALLY' ? CFG.attackDist + 20 : CFG.attackDist;
-            
-            const facing = (attacker.dir === 1 && defender.x > attacker.x) || (attacker.dir === -1 && defender.x < attacker.x);
-            const overlapping = hitDist < 30; 
-
-            if ((facing || overlapping) && hitDist < requiredDist && Math.abs(attacker.y - defender.y) < 50) {
-                defender.vx = attacker.dir * 10; defender.vy = -4; 
-                
-                const dmg = attacker.damage;
-                defender.hp -= dmg;
-                addFloatingText(defender.x, defender.y - 80, `-${dmg}`, '#ff0000'); 
-                
-                defender.state = 'HURT';
-                shakeRef.current = 4; 
-                if(attacker.type === 'PLAYER') { hitStopRef.current = 4; shakeRef.current = 8; } // Hit stop chỉ cho player cảm giác lực
-
-                createBlood(defender.x, defender.y - 25, defender.color);
-                attacker.attackCooldown = 15; // Reset cooldown để tránh multi-hit trong 1 frame
-                
-                if (defender.hp <= 0) {
-                    defender.hp = 0;
-                    defender.isDead = true;
-                    createExplosion(defender.x, defender.y, defender.color);
-                    
-                    // Xử lý thưởng
-                    distributeExp(attacker, defender);
-                    if (attacker.type === 'PLAYER' || attacker.type === 'ALLY') {
-                        spawnLoot(defender.x, defender.y, 20 + (defender.level * 10));
-                    }
-
-                    // Nếu kẻ địch chết -> Rơi linh hồn
-                    if (defender.type === 'ENEMY') {
-                        spawnSoul(defender.x, defender.y, defender.level, defender.damage);
-                    }
-                    
-                    if (defender.type === 'PLAYER') {
-                        setWinner('BẠN ĐÃ TỬ TRẬN!');
-                        setGameState('GAMEOVER');
-                    }
-                }
-                return true;
-            }
-        }
-        return false;
-    };
-
-  // --- DRAWING FUNCTIONS ---
-  const drawCoins = (ctx) => {
-      lootCoins.current.forEach(c => {
-          ctx.save(); ctx.translate(c.x, c.y);
-          const r = 10;
-          ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 1.5; ctx.stroke();
-          ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 1);
-          ctx.restore();
-      });
-  };
-
+  // --- HUD ---
   const drawHUD = (ctx) => {
       const p = p1.current;
       const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
+      
       ctx.save();
-      // Coin HUD
+
+      // 1. COIN HUD
       ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; ctx.beginPath(); ctx.roundRect(hudX, hudY, hudW, hudH, 18); ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = '#FFD700'; ctx.stroke();
       const iconX = hudX + 20; const iconY = hudY + 18; const r = 12;
@@ -398,12 +353,41 @@ const StickmanShadowMonarch = () => {
       ctx.fillStyle = '#B8860B'; ctx.font = 'bold 14px Arial'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', iconX, iconY + 1);
       ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 19);
       
-      // Shadow Count HUD (Góc phải trên)
-      const sHudX = canvasRef.current.width / dprRef.current - 140;
-      ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.beginPath(); ctx.roundRect(sHudX, hudY, 120, 36, 18); ctx.fill();
-      ctx.strokeStyle = '#3b82f6'; ctx.stroke();
-      ctx.fillStyle = '#3b82f6'; ctx.font = 'bold 16px Arial'; 
-      ctx.fillText(`ARMY: ${shadowCount}/${CFG.maxShadows}`, sHudX + 60, hudY + 19);
+      // 2. SHADOW HUD
+      const sHudW = 150;
+      const sHudX = (canvasRef.current.width / dprRef.current) - sHudW - 20;
+      
+      const grad = ctx.createLinearGradient(sHudX, hudY, sHudX + sHudW, hudY + hudH);
+      grad.addColorStop(0, '#3b0764'); 
+      grad.addColorStop(1, '#6b21a8'); 
+      
+      ctx.fillStyle = grad; 
+      ctx.beginPath(); ctx.roundRect(sHudX, hudY, sHudW, hudH, 18); ctx.fill();
+      
+      ctx.shadowColor = '#a855f7'; ctx.shadowBlur = 8;
+      ctx.strokeStyle = '#d8b4fe'; ctx.lineWidth = 1.5; ctx.stroke();
+      ctx.shadowBlur = 0; 
+
+      // Icon đầu lâu / bóng
+      const sIconX = sHudX + 25;
+      const sIconY = hudY + 18;
+      ctx.fillStyle = '#fff';
+      ctx.beginPath(); ctx.arc(sIconX, sIconY - 2, 6, 0, Math.PI * 2); ctx.fill(); 
+      ctx.beginPath(); ctx.arc(sIconX, sIconY + 8, 8, Math.PI, 0); ctx.fill(); 
+
+      // Text "SHADOW"
+      ctx.fillStyle = '#e9d5ff'; 
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText('SHADOW', sIconX + 15, sIconY + 5);
+
+      // Count
+      ctx.fillStyle = '#fff';
+      ctx.font = 'bold 18px Arial';
+      ctx.textAlign = 'right';
+      // Hiển thị số lượng màu đỏ nếu full
+      if (shadows.current.length >= CFG.maxShadows) ctx.fillStyle = '#f87171';
+      ctx.fillText(`${shadows.current.length} / ${CFG.maxShadows}`, sHudX + sHudW - 15, sIconY + 5);
 
       ctx.restore();
   };
@@ -414,29 +398,26 @@ const StickmanShadowMonarch = () => {
     const barX = p.x - barWidth / 2; const barY = p.y - yOffset;
     const badgeX = barX - 14; const badgeY = barY + barHeight / 2;
 
-    // Bar BG
     ctx.fillStyle = 'rgba(0, 0, 0, 0.6)'; ctx.beginPath(); ctx.roundRect(barX, barY, barWidth, barHeight, 3); ctx.fill();
-    
-    // HP
     const hpPercent = Math.max(0, p.hp / p.maxHp);
+    
     if (type === 'ENEMY') ctx.fillStyle = '#ef4444';
-    else if (type === 'ALLY') ctx.fillStyle = '#3b82f6'; // Shadow máu xanh dương
-    else ctx.fillStyle = '#22c55e'; // Player xanh lá
+    else if (type === 'ALLY') ctx.fillStyle = '#a855f7'; 
+    else ctx.fillStyle = '#22c55e'; 
     
     ctx.beginPath(); ctx.roundRect(barX, barY, barWidth * hpPercent, barHeight, 3); ctx.fill();
 
-    // EXP Bar (Player & Ally)
     if (type !== 'ENEMY') {
         const expHeight = 3; const expY = barY + barHeight + 2;
         ctx.fillStyle = 'rgba(0,0,0,0.5)'; ctx.fillRect(barX, expY, barWidth, expHeight);
         const expPercent = Math.min(1, p.currentExp / p.maxExp);
-        ctx.fillStyle = '#eab308'; ctx.fillRect(barX, expY, barWidth * expPercent, expHeight);
+        ctx.fillStyle = type === 'ALLY' ? '#d8b4fe' : '#eab308'; 
+        ctx.fillRect(barX, expY, barWidth * expPercent, expHeight);
     }
 
-    // Badge
     ctx.beginPath(); ctx.arc(badgeX, badgeY, 10, 0, Math.PI * 2);
     ctx.fillStyle = '#1f2937'; ctx.fill();
-    ctx.lineWidth = 1.5; ctx.strokeStyle = '#eab308'; ctx.stroke();
+    ctx.lineWidth = 1.5; ctx.strokeStyle = type === 'ALLY' ? '#a855f7' : '#eab308'; ctx.stroke();
     ctx.fillStyle = '#fff'; ctx.font = 'bold 10px Arial';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.level, badgeX, badgeY + 1);
   };
@@ -464,10 +445,9 @@ const StickmanShadowMonarch = () => {
     ctx.save();
     ctx.translate(x, y - 25 - bodyY); ctx.scale(dir, 1);
     
-    // Shadow Effect for Monarch vibe
     if (p.type === 'ALLY') {
-        ctx.shadowBlur = 15; ctx.shadowColor = '#3b82f6'; // Bóng xanh cho đệ
-        ctx.globalAlpha = 0.9; // Hơi trong suốt
+        ctx.shadowBlur = 15; ctx.shadowColor = '#a855f7'; 
+        ctx.globalAlpha = 0.9; 
     } else {
         ctx.shadowBlur = 10; ctx.shadowColor = color; 
     }
@@ -484,10 +464,9 @@ const StickmanShadowMonarch = () => {
     };
 
     ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
-    // Đầu: Nếu là Shadow thì mắt xanh
     ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill(); 
     if (p.type === 'ALLY') {
-        ctx.fillStyle = '#3b82f6'; ctx.beginPath(); ctx.arc(head.x + 2, head.y - 1, 2, 0, Math.PI * 2); ctx.fill(); // Mắt
+        ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(head.x + 2, head.y - 1, 2, 0, Math.PI * 2); ctx.fill(); 
     }
     ctx.stroke();
     
@@ -496,13 +475,14 @@ const StickmanShadowMonarch = () => {
     const handPos = drawLimb(shoulder.x, shoulder.y, armR_Angle, 12);
 
     if (handPos) {
-        ctx.strokeStyle = p.weaponColor; ctx.lineWidth = 2.5;
+        ctx.strokeStyle = p.type === 'ALLY' ? '#a855f7' : p.weaponColor; 
+        ctx.lineWidth = 2.5;
         ctx.beginPath();
         const swordAngle = armR_Angle + 1.5; 
         const tipX = handPos.x + Math.sin(swordAngle) * 35; const tipY = handPos.y + Math.cos(swordAngle) * 35;
         ctx.moveTo(handPos.x, handPos.y); ctx.lineTo(tipX, tipY); ctx.stroke();
         if (state === 'ATTACK' && p.attackCooldown > 5) {
-            ctx.fillStyle = p.type === 'ALLY' ? 'rgba(59, 130, 246, 0.6)' : 'rgba(255, 255, 255, 0.6)'; 
+            ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168, 85, 247, 0.6)' : 'rgba(255, 255, 255, 0.6)'; 
             ctx.shadowBlur = 0; ctx.beginPath();
             ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
@@ -510,6 +490,57 @@ const StickmanShadowMonarch = () => {
     ctx.restore();
     drawUnitUI(ctx, p, p.type);
   };
+
+  // --- HIT CHECK ---
+  const checkHit = (attacker, defender) => {
+        if (defender.isDead || attacker.isDead) return false;
+        
+        if (attacker.state === 'ATTACK' && attacker.attackCooldown > 15 && attacker.attackCooldown < 23) {
+            const hitDist = Math.abs(attacker.x - defender.x);
+            const requiredDist = attacker.type === 'ALLY' ? CFG.attackDist + 20 : CFG.attackDist;
+            
+            const facing = (attacker.dir === 1 && defender.x > attacker.x) || (attacker.dir === -1 && defender.x < attacker.x);
+            const overlapping = hitDist < 30; 
+
+            if ((facing || overlapping) && hitDist < requiredDist && Math.abs(attacker.y - defender.y) < 50) {
+                defender.vx = attacker.dir * 10; defender.vy = -4; 
+                
+                const dmg = attacker.damage;
+                defender.hp -= dmg;
+                addFloatingText(defender.x, defender.y - 80, `-${dmg}`, '#ff0000'); 
+                
+                defender.state = 'HURT';
+                shakeRef.current = 4; 
+                if(attacker.type === 'PLAYER') { hitStopRef.current = 4; shakeRef.current = 8; } 
+
+                createBlood(defender.x, defender.y - 25, defender.color);
+                attacker.attackCooldown = 15; 
+                
+                if (defender.hp <= 0) {
+                    defender.hp = 0;
+                    defender.isDead = true;
+                    createExplosion(defender.x, defender.y, defender.color);
+                    
+                    distributeExp(attacker, defender);
+                    
+                    if (attacker.type === 'PLAYER' || attacker.type === 'ALLY') {
+                        spawnLoot(defender.x, defender.y, 20 + (defender.level * 10));
+                    }
+
+                    if (defender.type === 'ENEMY') {
+                        spawnSoul(defender.x, defender.y, defender.level, defender.damage);
+                    }
+                    
+                    if (defender.type === 'PLAYER') {
+                        setWinner('BẠN ĐÃ TỬ TRẬN!');
+                        setGameState('GAMEOVER');
+                    }
+                }
+                return true;
+            }
+        }
+        return false;
+    };
 
   const update = () => {
     if (gameState !== 'PLAYING') return;
@@ -525,7 +556,6 @@ const StickmanShadowMonarch = () => {
     if (shakeRef.current > 0) shakeRef.current *= 0.9;
     if (shakeRef.current < 0.5) shakeRef.current = 0;
 
-    // --- PLAYER UPDATE ---
     const usr = p1.current;
     if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
     else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
@@ -534,13 +564,11 @@ const StickmanShadowMonarch = () => {
     if (input.current.attack && usr.attackCooldown <= 0) { 
         usr.state = 'ATTACK'; usr.attackCooldown = 25; usr.vx = usr.dir * 10; input.current.attack = false; 
     }
-    // Skill Trigger
     if (input.current.skill) {
         extractShadow();
-        input.current.skill = false; // Reset trigger
+        input.current.skill = false;
     }
 
-    // --- ENEMY UPDATE ---
     const ai = p2.current;
     if (ai.isDead) {
         respawnTimer.current++;
@@ -550,10 +578,8 @@ const StickmanShadowMonarch = () => {
             respawnTimer.current = 0;
         }
     } else {
-        // AI Logic: Chọn mục tiêu gần nhất (Player hoặc Shadow)
         let target = usr;
         let minDist = Math.abs(usr.x - ai.x);
-        
         shadows.current.forEach(s => {
             if(!s.isDead) {
                 const d = Math.abs(s.x - ai.x);
@@ -577,7 +603,6 @@ const StickmanShadowMonarch = () => {
         }
     }
     
-    // Update Entities
     [usr, ai].forEach(p => {
         if (p.isDead) return;
         p.vy += CFG.gravity; p.x += p.vx; p.y += p.vy;
@@ -588,7 +613,6 @@ const StickmanShadowMonarch = () => {
 
     updateShadows(floorY);
 
-    // Particles & Loot
     for (let i = particles.current.length - 1; i >= 0; i--) {
         const p = particles.current[i];
         p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life--;
@@ -599,22 +623,31 @@ const StickmanShadowMonarch = () => {
         const t = floatingTexts.current[i];
         t.y += t.vy; t.life--; if (t.life <= 0) floatingTexts.current.splice(i, 1);
     }
-    // Update Souls
+    
+    let hasSoul = false;
     for (let i = souls.current.length - 1; i >= 0; i--) {
         const s = souls.current[i];
         s.life--; s.anim++;
         if (s.life <= 0) souls.current.splice(i, 1);
+        else hasSoul = true;
+    }
+    
+    // --- UI Logic: Ẩn nút RISE khi FULL SHADOWS ---
+    const isFull = shadows.current.length >= CFG.maxShadows;
+    const showRise = hasSoul && !isFull; // Chỉ hiện khi có soul VÀ chưa full lính
+
+    if (showRise !== canRiseRef.current) {
+        canRiseRef.current = showRise;
+        setCanRise(showRise);
     }
 
-    // HIT CHECK LOOP
     if(!p1.current.isDead) checkHit(p1.current, p2.current);
     if(!p2.current.isDead) {
         checkHit(p2.current, p1.current);
-        shadows.current.forEach(s => checkHit(p2.current, s)); // Địch đánh đệ
+        shadows.current.forEach(s => checkHit(p2.current, s));
     }
-    shadows.current.forEach(s => checkHit(s, p2.current)); // Đệ đánh địch
+    shadows.current.forEach(s => checkHit(s, p2.current));
 
-    // Game Over
     if (p1.current.hp <= 0 && !p1.current.isDead) { 
         p1.current.isDead = true;
         setWinner('BẠN ĐÃ TỬ TRẬN!'); 
@@ -635,7 +668,6 @@ const StickmanShadowMonarch = () => {
     ctx.save();
     ctx.translate(-camera.current.x + shakeX, shakeY);
 
-    // Background
     ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(camera.current.x + (canvas.width/dprRef.current)/2, (canvas.height/dprRef.current)/3, 150, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#333';
     bgObjects.current.forEach(obj => {
@@ -650,11 +682,10 @@ const StickmanShadowMonarch = () => {
     ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(camera.current.x - 100, floorY); ctx.lineTo(camera.current.x + (canvas.width/dprRef.current) + 100, floorY); ctx.stroke();
 
     if (gameState !== 'MENU') { 
-        // Draw Souls (Linh hồn bay lơ lửng)
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            ctx.shadowBlur = 15; ctx.shadowColor = '#3b82f6';
-            ctx.fillStyle = '#3b82f6'; 
+            ctx.shadowBlur = 15; ctx.shadowColor = '#a855f7';
+            ctx.fillStyle = '#a855f7'; 
             ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 8, 0, Math.PI * 2); ctx.fill();
             ctx.font = '12px Arial'; ctx.textAlign = 'center'; ctx.fillText('SOUL', s.x, s.y - 45 + bob);
             ctx.shadowBlur = 0;
@@ -665,10 +696,7 @@ const StickmanShadowMonarch = () => {
         });
         
         drawCoins(ctx); 
-        
-        // Draw Shadows
         shadows.current.forEach(s => drawStickman(ctx, s));
-
         drawStickman(ctx, p2.current); 
         drawStickman(ctx, p1.current);
 
@@ -705,9 +733,9 @@ const StickmanShadowMonarch = () => {
       <canvas ref={canvasRef} className="block w-full h-full" />
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
-           <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 italic mb-4 drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]">SHADOW FIGHT</h1>
-           <p className="text-gray-400 mb-8 tracking-widest">SHADOW MONARCH</p>
-           <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-cyan-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
+           <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 italic mb-4 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">SHADOW FIGHT</h1>
+           <p className="text-gray-400 mb-8 tracking-widest">MONARCH LEGENDS</p>
+           <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-purple-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
       {gameState === 'GAMEOVER' && (
@@ -724,9 +752,8 @@ const StickmanShadowMonarch = () => {
                 <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
             </div>
             <div className="absolute bottom-24 right-8 flex flex-col gap-4 z-40 items-center">
-                {/* SKILL BUTTON: RISE */}
-                {souls.current.length > 0 && (
-                    <button className="w-16 h-16 bg-purple-600/80 border-2 border-purple-400 rounded-full active:scale-95 shadow-[0_0_15px_rgba(147,51,234,0.5)] flex items-center justify-center animate-bounce"
+                {canRise && (
+                    <button className="w-16 h-16 bg-purple-600/90 border-2 border-purple-400 rounded-full active:scale-95 shadow-[0_0_20px_rgba(147,51,234,0.8)] flex items-center justify-center animate-bounce"
                         onTouchStart={handleTouch('skill', true)} onTouchEnd={handleTouch('skill', false)}>
                         <span className="font-black text-white text-xs">RISE</span>
                     </button>
@@ -740,4 +767,4 @@ const StickmanShadowMonarch = () => {
   );
 };
 
-export default StickmanShadowMonarch;
+export default StickmanShadowFinal;
