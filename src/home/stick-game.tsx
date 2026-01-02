@@ -74,7 +74,7 @@ const StickmanShadowFinal = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
     
-    // TỐI ƯU 1: Giới hạn DPR tối đa là 2 để tránh lag trên màn hình 4K/Retina
+    // Giới hạn DPR tối đa là 2
     const dpr = Math.min(window.devicePixelRatio || 1, 2);
     dprRef.current = dpr;
     
@@ -84,7 +84,6 @@ const StickmanShadowFinal = () => {
     canvas.style.height = `${h}px`;
     const ctx = canvas.getContext('2d');
     ctx.scale(dpr, dpr);
-    // Tắt image smoothing để tăng hiệu năng vẽ pixel art/nét vẽ cứng
     ctx.imageSmoothingEnabled = false; 
     return { w, h };
   };
@@ -117,7 +116,6 @@ const StickmanShadowFinal = () => {
     canRiseRef.current = false;
     
     bgObjects.current = [];
-    // Giảm số lượng background object một chút
     for(let i = -15; i < 15; i++) {
         bgObjects.current.push({
             x: i * 800 + Math.random() * 200,
@@ -239,7 +237,6 @@ const StickmanShadowFinal = () => {
   const rand = (min, max) => Math.random() * (max - min) + min;
 
   const createBlood = (x, y, color, amount = 10) => {
-    // Giới hạn số lượng particle tối đa để giảm lag
     if (particles.current.length > 100) return;
     for (let i = 0; i < amount; i++) {
       particles.current.push({
@@ -304,7 +301,6 @@ const StickmanShadowFinal = () => {
       lootCoins.current.forEach(c => {
           ctx.save(); ctx.translate(c.x, c.y);
           const r = 10;
-          // Tối ưu: Bỏ shadowBlur, dùng stroke đơn giản
           ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
           ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 2; ctx.stroke();
           ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
@@ -368,7 +364,6 @@ const StickmanShadowFinal = () => {
       ctx.fillStyle = grad; 
       ctx.beginPath(); ctx.roundRect(sHudX, hudY, sHudW, hudH, 18); ctx.fill();
       
-      // TỐI ƯU 2: Bỏ shadowBlur nặng nề
       ctx.strokeStyle = '#d8b4fe'; ctx.lineWidth = 1.5; ctx.stroke();
 
       const sIconX = sHudX + 25;
@@ -394,7 +389,7 @@ const StickmanShadowFinal = () => {
   const drawUnitUI = (ctx, p, type) => {
     if (p.isDead) return;
     const barWidth = 60; const barHeight = 6; const yOffset = 100;
-    // Làm tròn tọa độ để vẽ sắc nét hơn
+    // Làm tròn tọa độ
     const barX = (p.x - barWidth / 2) | 0; 
     const barY = (p.y - yOffset) | 0;
     const badgeX = barX - 14; const badgeY = barY + barHeight / 2;
@@ -446,20 +441,34 @@ const StickmanShadowFinal = () => {
     ctx.save();
     ctx.translate(x | 0, (y - 25 - bodyY) | 0); ctx.scale(dir, 1);
     
-    // TỐI ƯU 3: Thay shadowBlur (gây lag kinh hoàng) bằng hình tròn alpha (cực nhẹ)
-    if (p.type === 'ALLY') {
-        ctx.fillStyle = 'rgba(168, 85, 247, 0.2)'; 
-        ctx.beginPath(); ctx.arc(0, -10, 35, 0, Math.PI * 2); ctx.fill();
-    } else if (p.type === 'PLAYER') {
-        ctx.fillStyle = 'rgba(0, 242, 255, 0.15)';
-        ctx.beginPath(); ctx.arc(0, -10, 40, 0, Math.PI * 2); ctx.fill();
-    }
+    // --- PHẦN ĐÃ CẬP NHẬT: Vòng tròn phát sáng "Fake Glow" ---
+    let glowColor = '';
+    let glowSize = 35;
     
+    if (p.type === 'ALLY') {
+        // Màu tím cho Shadow
+        glowColor = 'rgba(168, 85, 247, 0.25)'; 
+    } else if (p.type === 'PLAYER') {
+        // Màu Cyan cho Player, to hơn xíu
+        glowColor = 'rgba(0, 242, 255, 0.2)';
+        glowSize = 40;
+    } else if (p.type === 'ENEMY') {
+        // Màu Đỏ cho Kẻ địch (Quái vật)
+        glowColor = 'rgba(255, 42, 0, 0.2)';
+    }
+
+    if (glowColor) {
+        ctx.fillStyle = glowColor;
+        ctx.beginPath(); 
+        ctx.arc(0, -15, glowSize, 0, Math.PI * 2); // Canh chỉnh vị trí y một chút
+        ctx.fill();
+    }
+    // --------------------------------------------------------
+
     ctx.strokeStyle = '#000'; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
     const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
     
-    // Hàm vẽ chi - tối ưu không tạo object thừa nếu không cần
     const drawLimb = (startX, startY, angle, len) => {
         const mx = startX + Math.sin(angle) * len; const my = startY + Math.cos(angle) * len;
         ctx.beginPath(); ctx.moveTo(startX, startY); ctx.lineTo(mx, my); ctx.stroke();
@@ -488,7 +497,6 @@ const StickmanShadowFinal = () => {
         ctx.moveTo(handPos.x, handPos.y); ctx.lineTo(tipX, tipY); ctx.stroke();
         if (state === 'ATTACK' && p.attackCooldown > 5) {
             ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.4)'; 
-            // Bỏ shadowBlur ở hiệu ứng chém
             ctx.beginPath();
             ctx.arc(0, -15, 50, swordAngle - 0.5, swordAngle + 0.5); ctx.fill();
         }
@@ -671,7 +679,7 @@ const StickmanShadowFinal = () => {
     ctx.fillStyle = '#1a1a1a'; ctx.fillRect(0, 0, canvas.width / dprRef.current, canvas.height / dprRef.current);
     
     ctx.save();
-    ctx.translate((-camera.current.x + shakeX) | 0, shakeY | 0); // Làm tròn tọa độ camera
+    ctx.translate((-camera.current.x + shakeX) | 0, shakeY | 0); 
 
     ctx.fillStyle = '#222'; ctx.beginPath(); ctx.arc(camera.current.x + (canvas.width/dprRef.current)/2, (canvas.height/dprRef.current)/3, 150, 0, Math.PI*2); ctx.fill();
     ctx.fillStyle = '#333';
@@ -689,7 +697,6 @@ const StickmanShadowFinal = () => {
     if (gameState !== 'MENU') { 
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            // Tối ưu: Dùng alpha thay vì shadowBlur
             ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
             ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 15, 0, Math.PI * 2); ctx.fill();
             
