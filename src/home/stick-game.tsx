@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-const StickmanFinalUI = () => {
+const StickmanFinalUpdate = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
@@ -148,16 +148,25 @@ const StickmanFinalUI = () => {
       });
   };
 
-  // --- LOOT SYSTEM ---
+  // --- LOOT SYSTEM (FIXED QUANTITY) ---
   const spawnLoot = (x, y, totalGold) => {
-      const numCoins = Math.min(8, Math.floor(totalGold / 10)) || 1;
-      const valuePerCoin = Math.floor(totalGold / numCoins);
+      // Cố định rơi 3 hoặc 4 đồng xu
+      const numCoins = 3 + Math.floor(Math.random() * 2); 
+      
+      // Tính giá trị mỗi đồng xu
+      const baseValue = Math.floor(totalGold / numCoins);
+      const remainder = totalGold % numCoins;
 
       for (let i = 0; i < numCoins; i++) {
+          // Cộng phần dư vào đồng xu đầu tiên để tổng ko đổi
+          let coinValue = baseValue;
+          if (i === 0) coinValue += remainder;
+
           lootCoins.current.push({
               x: x, y: y - 40, 
-              vx: rand(-5, 5), vy: rand(-10, -5), 
-              val: valuePerCoin,
+              vx: rand(-6, 6), // Văng rộng hơn xíu
+              vy: rand(-12, -6), 
+              val: coinValue,
               state: 'DROP', 
               timer: 80 + rand(0, 30), 
           });
@@ -280,7 +289,7 @@ const StickmanFinalUI = () => {
       ctx.restore();
   };
 
-  // --- UI CĂN CHỈNH LẠI (FIXED) ---
+  // --- UI CĂN CHỈNH LẠI ---
   const drawUnitUI = (ctx, p, isEnemy = false) => {
     if (p.isDead) return;
     
@@ -294,12 +303,8 @@ const StickmanFinalUI = () => {
     const barY = p.y - yOffset;
 
     // --- CĂN CHỈNH BADGE LEVEL ---
-    // Badge nằm bên trái thanh máu một chút
-    const badgeSize = 10; // Bán kính
-    // X: Bên trái thanh máu (cách 1 chút) - bán kính badge
+    const badgeSize = 10; 
     const badgeX = barX - badgeSize - 4; 
-    // Y: Căn giữa theo chiều dọc của thanh máu (barY + một nửa chiều cao thanh máu + thanh exp nếu có)
-    // Nhưng đơn giản nhất là căn giữa barHeight
     const badgeY = barY + barHeight / 2;
 
     // 1. Vẽ nền thanh máu
@@ -319,7 +324,7 @@ const StickmanFinalUI = () => {
     // 3. Vẽ thanh EXP (chỉ cho người chơi)
     if (!isEnemy) {
         const expHeight = 3; 
-        const expY = barY + barHeight + 2; // Cách thanh máu 2px
+        const expY = barY + barHeight + 2; 
         
         // Nền EXP
         ctx.fillStyle = 'rgba(0,0,0,0.5)'; 
@@ -345,8 +350,7 @@ const StickmanFinalUI = () => {
     ctx.fillStyle = '#fff'; 
     ctx.font = 'bold 10px Arial';
     ctx.textAlign = 'center'; 
-    ctx.textBaseline = 'middle'; // Quan trọng để số nằm giữa tâm Y
-    // +1 pixel Y để nhìn cân mắt hơn
+    ctx.textBaseline = 'middle';
     ctx.fillText(p.level, badgeX, badgeY + 1);
   };
 
@@ -501,6 +505,7 @@ const StickmanFinalUI = () => {
                     
                     if (attacker === p1.current) {
                         gainExp(defender.level);
+                        // Rơi tiền dựa trên level quái
                         spawnLoot(defender.x, defender.y, 20 + (defender.level * 10));
                     }
                     
@@ -609,7 +614,7 @@ const StickmanFinalUI = () => {
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 italic mb-4 drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]">SHADOW FIGHT</h1>
-           <p className="text-gray-400 mb-8 tracking-widest">FINAL UI</p>
+           <p className="text-gray-400 mb-8 tracking-widest">FINAL UPDATE</p>
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-cyan-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
@@ -658,4 +663,4 @@ const StickmanFinalUI = () => {
   );
 };
 
-export default StickmanFinalUI;
+export default StickmanFinalUpdate;
