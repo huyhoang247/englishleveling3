@@ -380,15 +380,17 @@ const StickmanShadowFinal = () => {
       const totalExp = 50 + (deadEnemy.level * 10);
       if (killer.type === 'PLAYER') {
           p1.current.currentExp += totalExp;
-          addFloatingText(p1.current.x, p1.current.y - 80, `+${totalExp} EXP`, '#fbbf24', 16);
+          // Màu sắc ở đây không quan trọng vì draw() sẽ override nếu thấy text chứa "EXP"
+          addFloatingText(p1.current.x, p1.current.y - 80, `+${totalExp} EXP`, '#fff', 16);
           checkLevelUp(p1.current, true);
       } else if (killer.type === 'ALLY') {
           killer.currentExp += totalExp;
-          addFloatingText(killer.x, killer.y - 80, `+${totalExp} XP`, '#3b82f6', 14);
+          addFloatingText(killer.x, killer.y - 80, `+${totalExp} XP`, '#fff', 14);
           checkLevelUp(killer, false);
+          
           const shareExp = Math.floor(totalExp * 0.5);
           p1.current.currentExp += shareExp;
-          addFloatingText(p1.current.x, p1.current.y - 80, `+${shareExp} Share XP`, '#fbbf24', 16);
+          addFloatingText(p1.current.x, p1.current.y - 80, `+${shareExp} XP`, '#fff', 16);
           checkLevelUp(p1.current, true);
       }
   };
@@ -818,13 +820,11 @@ const StickmanShadowFinal = () => {
         // --- DRAW SOUL ---
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            
             // Nếu ảnh đã tải xong, vẽ ảnh
             if (soulImageRef.current && soulImageRef.current.complete) {
-                const size = 32; // Kích thước icon
+                const size = 32; 
                 ctx.drawImage(soulImageRef.current, s.x - size/2, s.y - 45 + bob, size, size);
             } else {
-                // Fallback nếu ảnh chưa tải (giữ logic cũ tạm thời hoặc để trống)
                 ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
                 ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 15, 0, Math.PI * 2); ctx.fill();
             }
@@ -839,11 +839,39 @@ const StickmanShadowFinal = () => {
         enemies.current.forEach(e => drawStickman(ctx, e));
         drawStickman(ctx, p1.current);
 
-        ctx.font = 'bold 20px Arial'; ctx.textAlign = 'center';
+        // --- DRAW FLOATING TEXT ---
+        ctx.textAlign = 'center';
         floatingTexts.current.forEach(t => {
-            ctx.fillStyle = t.color;
-            ctx.globalAlpha = t.life / 60;
-            ctx.fillText(t.text, t.x | 0, t.y | 0);
+            ctx.save();
+            ctx.globalAlpha = Math.max(0, t.life / 60);
+
+            // Kiểm tra xem text có phải là EXP không để áp dụng style "xanh pha trắng"
+            if (t.text.includes('EXP') || t.text.includes('XP')) {
+                 ctx.font = 'italic 900 13px "Segoe UI", Arial, sans-serif'; // Nhỏ gọn, đậm, nghiêng
+
+                 // Gradient: Trắng -> Xanh trời -> Xanh biển đậm
+                 const gradient = ctx.createLinearGradient(t.x, t.y - 10, t.x, t.y + 5);
+                 gradient.addColorStop(0, '#FFFFFF');      // Đỉnh trắng
+                 gradient.addColorStop(0.4, '#38BDF8');    // Giữa xanh da trời
+                 gradient.addColorStop(1, '#0369A1');      // Đáy xanh biển
+
+                 ctx.fillStyle = gradient;
+                 ctx.shadowColor = 'rgba(56, 189, 248, 0.5)';
+                 ctx.shadowBlur = 4;
+                 
+                 // Viền chữ để nổi bật
+                 ctx.strokeStyle = '#082f49'; // Màu xanh rất tối
+                 ctx.lineWidth = 2.5;
+                 ctx.lineJoin = 'round';
+                 ctx.strokeText(t.text, t.x | 0, t.y | 0);
+                 ctx.fillText(t.text, t.x | 0, t.y | 0);
+            } else {
+                // Style mặc định cho sát thương (đỏ) hoặc thông báo khác
+                ctx.font = 'bold 20px Arial';
+                ctx.fillStyle = t.color;
+                ctx.fillText(t.text, t.x | 0, t.y | 0);
+            }
+            ctx.restore();
         });
         ctx.globalAlpha = 1;
     }
