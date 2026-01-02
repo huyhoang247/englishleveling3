@@ -40,6 +40,9 @@ const StickmanShadowFinal = () => {
   const respawnTimer = useRef(0);
   const dprRef = useRef(1);
 
+  // Ref hình ảnh Soul
+  const soulImageRef = useRef(null);
+
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
   // Player 1
@@ -87,6 +90,13 @@ const StickmanShadowFinal = () => {
     return { w, h };
   };
 
+  // Load ảnh khi component mount
+  useEffect(() => {
+    const img = new Image();
+    img.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/soul.webp";
+    soulImageRef.current = img;
+  }, []);
+
   const initGame = () => {
     const { w, h } = handleResize(); 
     const floorY = h * 0.66;
@@ -124,7 +134,7 @@ const StickmanShadowFinal = () => {
     canRiseRef.current = false;
     setShowStats(false);
     
-    // Reset Auto Mode khi bắt đầu game mới (hoặc giữ nguyên tùy ý, ở đây mình reset)
+    // Reset Auto Mode khi bắt đầu game mới
     setIsAuto(false);
     isAutoRef.current = false;
     
@@ -805,13 +815,19 @@ const StickmanShadowFinal = () => {
     ctx.strokeStyle = '#444'; ctx.beginPath(); ctx.moveTo(camera.current.x - 100, floorY); ctx.lineTo(camera.current.x + (canvas.width/dprRef.current) + 100, floorY); ctx.stroke();
 
     if (gameState !== 'MENU') { 
+        // --- DRAW SOUL ---
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
-            ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 15, 0, Math.PI * 2); ctx.fill();
-            ctx.fillStyle = '#fff';
-            ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 5, 0, Math.PI * 2); ctx.fill();
-            ctx.font = '10px Arial'; ctx.textAlign = 'center'; ctx.fillText('SOUL', s.x, s.y - 50 + bob);
+            
+            // Nếu ảnh đã tải xong, vẽ ảnh
+            if (soulImageRef.current && soulImageRef.current.complete) {
+                const size = 32; // Kích thước icon
+                ctx.drawImage(soulImageRef.current, s.x - size/2, s.y - 45 + bob, size, size);
+            } else {
+                // Fallback nếu ảnh chưa tải (giữ logic cũ tạm thời hoặc để trống)
+                ctx.fillStyle = 'rgba(168, 85, 247, 0.5)';
+                ctx.beginPath(); ctx.arc(s.x, s.y - 30 + bob, 15, 0, Math.PI * 2); ctx.fill();
+            }
         });
 
         particles.current.forEach(p => {
