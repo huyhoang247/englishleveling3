@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useState } from 'react';
 
-const StickmanSafeZone = () => {
+const StickmanHighControls = () => {
   const canvasRef = useRef(null);
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
@@ -334,7 +334,7 @@ const StickmanSafeZone = () => {
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-600 italic mb-4 drop-shadow-[0_0_10px_rgba(0,200,255,0.5)]">SHADOW FIGHT</h1>
-           <p className="text-gray-400 mb-8 tracking-widest">SAFE ZONE EDITION</p>
+           <p className="text-gray-400 mb-8 tracking-widest">HIGH CONTROLS</p>
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-cyan-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
@@ -346,8 +346,8 @@ const StickmanSafeZone = () => {
       )}
       {gameState === 'PLAYING' && (
         <>
-            {/* SAFE ZONE LEFT CONTROLS - Nâng lên bottom-12 (48px) */}
-            <div className="absolute bottom-12 left-6 flex gap-2 z-40">
+            {/* SUPER HIGH CONTROLS: bottom-24 (khoảng 96px từ đáy) */}
+            <div className="absolute bottom-24 left-8 flex gap-2 z-40">
                 <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur"
                     onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}>
                     <svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg>
@@ -358,8 +358,8 @@ const StickmanSafeZone = () => {
                 </button>
             </div>
             
-            {/* SAFE ZONE RIGHT CONTROLS - Nâng lên bottom-12 */}
-            <div className="absolute bottom-12 right-6 flex flex-col gap-3 z-40 items-center">
+            {/* SUPER HIGH CONTROLS: bottom-24 */}
+            <div className="absolute bottom-24 right-8 flex flex-col gap-3 z-40 items-center">
                 <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center"
                     onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}>
                     <span className="font-black text-red-500 text-base tracking-tighter">ATK</span>
@@ -375,4 +375,4 @@ const StickmanSafeZone = () => {
   );
 };
 
-export default StickmanSafeZone;
+export default StickmanHighControls;
