@@ -10,6 +10,7 @@ const StickmanShadowFinal = () => {
 
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
+  const [showStats, setShowStats] = useState(false); // State hiển thị bảng stats
   
   // State UI
   const [canRise, setCanRise] = useState(false);
@@ -42,8 +43,8 @@ const StickmanShadowFinal = () => {
     x: 0, y: 0, vx: 0, vy: 0,
     maxHp: 100, hp: 100,
     level: 1, currentExp: 0, maxExp: 100, 
-    damage: 12, // Sẽ được overwrite bởi ATK
-    defense: 0, // Thêm chỉ số DEF
+    damage: 12, 
+    defense: 0, 
     coins: 0, 
     state: 'IDLE', dir: 1,
     animTimer: 0, attackCooldown: 0,
@@ -87,7 +88,6 @@ const StickmanShadowFinal = () => {
     const floorY = h * 0.66;
 
     // 3. APPLY STATS TỪ CONTEXT VÀO GAME
-    // Sử dụng giá trị mặc định nếu context chưa load hoặc bằng 0
     const startHp = totalPlayerStats.hp > 0 ? totalPlayerStats.hp : 100;
     const startAtk = totalPlayerStats.atk > 0 ? totalPlayerStats.atk : 12;
     const startDef = totalPlayerStats.def || 0;
@@ -106,9 +106,6 @@ const StickmanShadowFinal = () => {
     
     enemies.current = [];
     
-    // --- KHẮC PHỤC LỖI LEVEL CAO ---
-    // Trước đây: Level dựa vào ATK (startAtk / 20) khiến quái quá mạnh.
-    // Bây giờ: Luôn bắt đầu Wave 1 với quái Level 1.
     const enemyBaseLevel = 1; 
     spawnWave(floorY, enemyBaseLevel); 
     
@@ -122,6 +119,7 @@ const StickmanShadowFinal = () => {
     
     setCanRise(false);
     canRiseRef.current = false;
+    setShowStats(false);
     
     bgObjects.current = [];
     for(let i = -15; i < 15; i++) {
@@ -136,7 +134,6 @@ const StickmanShadowFinal = () => {
 
   // Hàm sinh 1 kẻ thù cụ thể
   const createEnemy = (x, y, level) => {
-      // Cân bằng máu quái theo level
       const hp = 100 + (level * 30); 
       const newEnemy = {
           x: x, y: y, vx: 0, vy: 0,
@@ -199,14 +196,13 @@ const StickmanShadowFinal = () => {
           if (shadows.current.length >= CFG.maxShadows) return;
 
           const s = souls.current[closestIndex];
-          // Shadow mạnh hơn chút so với quái gốc
           const shadowHp = 80 + (s.level * 20);
           
           shadows.current.push({
               x: s.x, y: s.y, vx: 0, vy: 0,
               maxHp: shadowHp, hp: shadowHp,
               level: s.level, 
-              damage: s.damage, // Shadow giữ nguyên dmg của quái
+              damage: s.damage, 
               currentExp: 0, maxExp: 50 + (s.level * 10),
               state: 'IDLE', dir: p.dir,
               animTimer: 0, attackCooldown: 0,
@@ -348,10 +344,7 @@ const StickmanShadowFinal = () => {
           entity.currentExp -= entity.maxExp;
           entity.maxExp = Math.floor(entity.maxExp * 1.2);
           
-          // Khi lên cấp trong game, cộng thêm damage base (cộng dồn với stats gốc)
           entity.damage += 5; 
-          
-          // Hồi máu
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
@@ -547,13 +540,8 @@ const StickmanShadowFinal = () => {
             if ((facing || overlapping) && hitDist < requiredDist && Math.abs(attacker.y - defender.y) < 50) {
                 defender.vx = attacker.dir * 10; defender.vy = -4; 
                 
-                // 4. TÍNH TOÁN DAMAGE (CÓ ÁP DỤNG DEFENSE)
                 let finalDamage = attacker.damage;
-                
-                // Nếu người chơi bị đánh, áp dụng DEF để giảm dmg
                 if (defender.type === 'PLAYER' && defender.defense > 0) {
-                    // Cơ chế giảm dmg đơn giản: DMG - DEF
-                    // Đảm bảo tối thiểu nhận 1 dmg
                     const mitigation = defender.defense; 
                     finalDamage = Math.max(1, finalDamage - mitigation);
                 }
@@ -595,7 +583,8 @@ const StickmanShadowFinal = () => {
     };
 
   const update = () => {
-    if (gameState !== 'PLAYING') return;
+    // Thêm điều kiện showStats để pause game logic
+    if (gameState !== 'PLAYING' || showStats) return;
     if (hitStopRef.current > 0) { hitStopRef.current--; return; }
 
     const canvas = canvasRef.current;
@@ -635,7 +624,6 @@ const StickmanShadowFinal = () => {
     if (enemies.current.length === 0) {
         respawnTimer.current++;
         if (respawnTimer.current > CFG.respawnTime) {
-            // Level quái dựa trên level người chơi trong game (user.level bắt đầu từ 1)
             spawnWave(floorY, usr.level);
             respawnTimer.current = 0;
         }
@@ -776,13 +764,13 @@ const StickmanShadowFinal = () => {
     }
     ctx.restore();
 
-    if (gameState === 'PLAYING') {
+    if (gameState === 'PLAYING' && !showStats) { // Ẩn HUD khi bật stats overlay để đỡ rối
         drawHUD(ctx);
     }
   };
 
   const loop = () => { update(); draw(); frameRef.current = requestAnimationFrame(loop); };
-  useEffect(() => { handleResize(); window.addEventListener('resize', handleResize); frameRef.current = requestAnimationFrame(loop); return () => { window.removeEventListener('resize', handleResize); cancelAnimationFrame(frameRef.current); }; }, [gameState]);
+  useEffect(() => { handleResize(); window.addEventListener('resize', handleResize); frameRef.current = requestAnimationFrame(loop); return () => { window.removeEventListener('resize', handleResize); cancelAnimationFrame(frameRef.current); }; }, [gameState, showStats]);
 
   const handleTouch = (key, val) => (e) => { if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); input.current[key] = val; };
   useEffect(() => {
@@ -793,14 +781,75 @@ const StickmanShadowFinal = () => {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
   }, []);
 
+  // Helper tính trung bình chỉ số quái hiện tại
+  const getEnemyWaveStats = () => {
+    const activeEnemies = enemies.current.filter(e => !e.isDead);
+    if (activeEnemies.length === 0) return null;
+    
+    const total = activeEnemies.reduce((acc, curr) => ({
+        hp: acc.hp + curr.hp,
+        dmg: acc.dmg + curr.damage,
+        level: acc.level + curr.level
+    }), { hp: 0, dmg: 0, level: 0 });
+
+    return {
+        count: activeEnemies.length,
+        avgHp: Math.round(total.hp / activeEnemies.length),
+        avgDmg: Math.round(total.dmg / activeEnemies.length),
+        avgLevel: Math.round(total.level / activeEnemies.length)
+    };
+  };
+
+  const enemyStats = showStats ? getEnemyWaveStats() : null;
+
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
       <canvas ref={canvasRef} className="block w-full h-full" />
+      
+      {/* STATS OVERLAY (Không dùng backdrop-blur, dùng solid dark bg) */}
+      {showStats && (
+        <div className="absolute inset-x-4 top-16 bottom-24 bg-zinc-900 border-2 border-white/30 rounded-lg p-4 z-50 flex flex-col items-center justify-center shadow-2xl">
+            <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-[0.2em] border-b border-white/20 pb-2">Battle Statistics</h2>
+            
+            <div className="flex w-full justify-between gap-4">
+                {/* PLAYER STATS */}
+                <div className="flex-1 bg-blue-900/20 p-4 rounded border border-blue-500/30 flex flex-col gap-2">
+                     <h3 className="text-blue-400 font-bold text-lg mb-2 text-center">PLAYER</h3>
+                     <div className="flex justify-between text-gray-300 text-sm"><span>LEVEL</span><span className="text-white font-bold">{p1.current.level}</span></div>
+                     <div className="flex justify-between text-gray-300 text-sm"><span>HP</span><span className="text-green-400 font-bold">{Math.round(p1.current.hp)} / {p1.current.maxHp}</span></div>
+                     <div className="flex justify-between text-gray-300 text-sm"><span>ATK</span><span className="text-red-400 font-bold">{p1.current.damage}</span></div>
+                     <div className="flex justify-between text-gray-300 text-sm"><span>DEF</span><span className="text-yellow-400 font-bold">{p1.current.defense}</span></div>
+                     <div className="flex justify-between text-gray-300 text-sm"><span>EXP</span><span className="text-purple-400 font-bold">{p1.current.currentExp} / {p1.current.maxExp}</span></div>
+                </div>
+
+                {/* ENEMY STATS */}
+                <div className="flex-1 bg-red-900/20 p-4 rounded border border-red-500/30 flex flex-col gap-2">
+                     <h3 className="text-red-500 font-bold text-lg mb-2 text-center">WAVE INFO</h3>
+                     {enemyStats ? (
+                        <>
+                            <div className="flex justify-between text-gray-300 text-sm"><span>ALIVE</span><span className="text-white font-bold">{enemyStats.count}</span></div>
+                            <div className="flex justify-between text-gray-300 text-sm"><span>AVG LVL</span><span className="text-white font-bold">{enemyStats.avgLevel}</span></div>
+                            <div className="flex justify-between text-gray-300 text-sm"><span>AVG HP</span><span className="text-green-400 font-bold">{enemyStats.avgHp}</span></div>
+                            <div className="flex justify-between text-gray-300 text-sm"><span>AVG DMG</span><span className="text-red-400 font-bold">{enemyStats.avgDmg}</span></div>
+                        </>
+                     ) : (
+                         <div className="h-full flex items-center justify-center text-gray-500 italic text-sm text-center">
+                             No Enemies Alive<br/>Waiting for Wave...
+                         </div>
+                     )}
+                </div>
+            </div>
+            
+            <button onClick={() => setShowStats(false)} className="mt-8 px-8 py-3 bg-white text-black font-bold text-lg hover:bg-gray-200 transition-colors">
+                RESUME
+            </button>
+        </div>
+      )}
+
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 italic mb-4 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">SHADOW FIGHT</h1>
            <p className="text-gray-400 mb-8 tracking-widest">MONARCH LEGENDS</p>
-           {/* Hiển thị stats hiện tại của người chơi */}
            <div className='flex gap-4 mb-4 text-sm text-gray-500'>
                <span>HP: {totalPlayerStats.hp || 100}</span>
                <span>ATK: {totalPlayerStats.atk || 12}</span>
@@ -816,7 +865,7 @@ const StickmanShadowFinal = () => {
            <button onClick={initGame} className="px-12 py-4 bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-2xl rounded-full hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,69,0,0.6)] border-4 border-white/10">HỒI SINH</button>
         </div>
       )}
-      {gameState === 'PLAYING' && (
+      {gameState === 'PLAYING' && !showStats && (
         <>
             <div className="absolute bottom-24 left-8 flex gap-2 z-40">
                 <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
@@ -829,6 +878,12 @@ const StickmanShadowFinal = () => {
                         <span className="font-black text-white text-xs">RISE</span>
                     </button>
                 )}
+                
+                {/* NÚT STATS MỚI (Dưới nút Rise) */}
+                <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-gray-800/80 border border-gray-500 rounded-full flex items-center justify-center active:scale-95 shadow-lg">
+                     <span className="font-bold text-white text-[10px]">INFO</span>
+                </button>
+
                 <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center" onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}><span className="font-black text-red-500 text-base tracking-tighter">ATK</span></button>
                 <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}><span className="font-bold text-blue-400 text-xs">JUMP</span></button>
             </div>
