@@ -1,4 +1,3 @@
-
 import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame
 import { useGame } from '../GameContext.tsx';
@@ -44,6 +43,7 @@ const StickmanShadowFinal = () => {
   // Ref hình ảnh
   const soulImageRef = useRef(null);
   const expImageRef = useRef(null); // Ref ảnh EXP
+  const levelUpImageRef = useRef(null); // Ref ảnh Level Up
 
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
@@ -103,6 +103,11 @@ const StickmanShadowFinal = () => {
     const eImg = new Image();
     eImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exp.webp";
     expImageRef.current = eImg;
+
+    // Load Level Up Image
+    const luImg = new Image();
+    luImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/level-up.webp";
+    levelUpImageRef.current = luImg;
   }, []);
 
   const initGame = () => {
@@ -380,7 +385,10 @@ const StickmanShadowFinal = () => {
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
-          addFloatingText(entity.x, entity.y - 140, "LEVEL UP!", color, 24);
+          
+          // Thay text bằng type 'LEVEL_UP'
+          // Đặt vị trí Y cao hơn (-180) để nằm trên EXP (-120)
+          addFloatingText(entity.x, entity.y - 180, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
   };
@@ -849,27 +857,35 @@ const StickmanShadowFinal = () => {
         drawStickman(ctx, p1.current);
 
         // --- DRAW FLOATING TEXT ---
-        // Lưu ý: textAlign 'center' có thể ảnh hưởng đến EXP nếu không set lại,
-        // nhưng bên dưới ta sẽ set 'left' cho EXP.
         ctx.textAlign = 'center'; 
         
         floatingTexts.current.forEach(t => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, t.life / 60);
 
-            // Kiểm tra loại text để vẽ Icon EXP
-            if (t.type === 'EXP') {
-                 // Vẽ icon EXP nhỏ gọn
+            // --- 1. XỬ LÝ VẼ ICON LEVEL UP ---
+            if (t.type === 'LEVEL_UP') {
+                if (levelUpImageRef.current && levelUpImageRef.current.complete) {
+                    const imgW = 120; 
+                    const imgH = 40; 
+                    
+                    // Hiệu ứng nảy nhẹ
+                    const scale = t.life > 50 ? 1 + (t.life - 50) * 0.05 : 1;
+                    
+                    ctx.translate(t.x, t.y);
+                    ctx.scale(scale, scale);
+                    ctx.drawImage(levelUpImageRef.current, -imgW / 2, -imgH / 2, imgW, imgH);
+                }
+            } 
+            // --- 2. XỬ LÝ VẼ EXP ---
+            else if (t.type === 'EXP') {
                  if (expImageRef.current && expImageRef.current.complete) {
                     const iconSize = 20; 
                     
-                    // Thiết lập font & baseline để căn chỉnh
                     ctx.font = 'italic 900 16px "Segoe UI", Arial, sans-serif'; 
-                    ctx.textBaseline = 'middle'; // Căn giữa theo chiều dọc
-                    ctx.textAlign = 'left';      // Vẽ từ trái qua
+                    ctx.textBaseline = 'middle'; 
+                    ctx.textAlign = 'left';      
                     
-                    // Vẽ Icon nằm bên trái text
-                    // t.y là tâm chiều dọc
                     ctx.drawImage(expImageRef.current, t.x - 22, t.y - 10, iconSize, iconSize);
                     
                     const gradient = ctx.createLinearGradient(t.x, t.y - 10, t.x, t.y + 5);
@@ -880,22 +896,19 @@ const StickmanShadowFinal = () => {
                     ctx.fillStyle = gradient;
                     ctx.lineJoin = 'round';
                     
-                    // Stroke
                     ctx.strokeStyle = '#082f49'; 
                     ctx.lineWidth = 2.5;
                     ctx.strokeText(t.text, t.x, t.y);
-
-                    // Fill
                     ctx.fillText(t.text, t.x, t.y);
                  } else {
-                     // Fallback nếu ảnh lỗi
                      ctx.fillStyle = '#38BDF8';
                      ctx.font = 'bold 14px Arial';
                      ctx.fillText(t.text + " XP", t.x, t.y);
                  }
-            } else {
-                // Style mặc định cho sát thương (đỏ) hoặc thông báo khác
-                ctx.textAlign = 'center'; // Đảm bảo text thường vẫn center
+            } 
+            // --- 3. CÁC TEXT KHÁC ---
+            else {
+                ctx.textAlign = 'center'; 
                 ctx.font = 'bold 20px Arial';
                 ctx.fillStyle = t.color;
                 ctx.fillText(t.text, t.x | 0, t.y | 0);
