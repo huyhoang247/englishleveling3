@@ -387,8 +387,8 @@ const StickmanShadowFinal = () => {
           const color = isPlayer ? '#00ff00' : '#3b82f6';
           
           // Thay text bằng type 'LEVEL_UP'
-          // Đặt vị trí Y cao hơn (-160) để nằm trên EXP, nhưng thấp hơn trước
-          addFloatingText(entity.x, entity.y - 160, "", null, 0, 'LEVEL_UP');
+          // Đặt vị trí Y cao hơn (-210) để nằm trên EXP (cao hơn 160)
+          addFloatingText(entity.x, entity.y - 210, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
   };
@@ -873,8 +873,8 @@ const StickmanShadowFinal = () => {
                     
                     const ratio = originalH / originalW;
                     
-                    // GIẢM XUỐNG CÒN 90 (thay vì 140)
-                    const targetW = 90; 
+                    // GIẢM XUỐNG CÒN 60
+                    const targetW = 60; 
                     const targetH = targetW * ratio;
                     
                     // Hiệu ứng nảy nhẹ
