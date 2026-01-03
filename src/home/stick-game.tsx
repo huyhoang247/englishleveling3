@@ -14,7 +14,7 @@ const StickmanShadowFinal = () => {
   
   // --- AUTO MODE STATE ---
   const [isAuto, setIsAuto] = useState(false);
-  const isAutoRef = useRef(false); // Ref để dùng trong vòng lặp game loop
+  const isAutoRef = useRef(false); 
   
   // State UI
   const [canRise, setCanRise] = useState(false);
@@ -29,25 +29,28 @@ const StickmanShadowFinal = () => {
     attackDist: 70, 
     hitStun: 20,
     camShake: 0,
-    respawnTime: 120, // (Không còn dùng để chờ giữa các wave nữa, nhưng giữ lại biến)
+    respawnTime: 120, 
     maxShadows: 3, 
   };
 
   const frameRef = useRef(0);
+  // --- FIX TỐC ĐỘ: Thêm biến lưu thời gian frame trước ---
+  const lastTimeRef = useRef(0);
+
   const shakeRef = useRef(0);
   const hitStopRef = useRef(0);
   const camera = useRef({ x: 0 });
   const dprRef = useRef(1);
 
-  // --- NEW: Refs quản lý Wave liên tục ---
-  const waveQueue = useRef(0);      // Số lượng quái còn lại chưa xuất hiện trong đợt này
-  const waveSpawnTimer = useRef(0); // Thời gian đếm ngược để ra con quái tiếp theo trong đợt
-  const currentWaveLevel = useRef(1); // Lưu level của đợt hiện tại để spawn đúng level
+  // --- Refs quản lý Wave ---
+  const waveQueue = useRef(0);      
+  const waveSpawnTimer = useRef(0); 
+  const currentWaveLevel = useRef(1); 
 
   // Ref hình ảnh
   const soulImageRef = useRef(null);
-  const expImageRef = useRef(null); // Ref ảnh EXP
-  const levelUpImageRef = useRef(null); // Ref ảnh Level Up
+  const expImageRef = useRef(null); 
+  const levelUpImageRef = useRef(null); 
 
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
@@ -98,17 +101,14 @@ const StickmanShadowFinal = () => {
 
   // Load ảnh khi component mount
   useEffect(() => {
-    // Load Soul Image
     const sImg = new Image();
     sImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/soul.webp";
     soulImageRef.current = sImg;
 
-    // Load EXP Image
     const eImg = new Image();
     eImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exp.webp";
     expImageRef.current = eImg;
 
-    // Load Level Up Image
     const luImg = new Image();
     luImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/level-up.webp";
     levelUpImageRef.current = luImg;
@@ -136,12 +136,11 @@ const StickmanShadowFinal = () => {
     
     enemies.current = [];
     
-    // Reset queue spawn
     waveQueue.current = 0;
     waveSpawnTimer.current = 0;
 
     const enemyBaseLevel = 1; 
-    spawnWave(enemyBaseLevel); // Gọi spawn wave (sẽ set queue)
+    spawnWave(enemyBaseLevel); 
     
     camera.current.x = -w/2;
     shadows.current = [];
@@ -154,7 +153,6 @@ const StickmanShadowFinal = () => {
     canRiseRef.current = false;
     setShowStats(false);
     
-    // Reset Auto Mode khi bắt đầu game mới
     setIsAuto(false);
     isAutoRef.current = false;
     
@@ -190,18 +188,14 @@ const StickmanShadowFinal = () => {
       createExplosion(x, y - 50, '#ff2a00');
   };
 
-  // --- SỬA ĐỔI: SPAWN WAVE LOGIC ---
-  // Thay vì sinh ngay lập tức, hàm này chỉ setup số lượng vào hàng chờ (Queue)
   const spawnWave = (baseLevel) => {
-      // Random từ 2 đến 5 kẻ địch (Math.floor(rand(2, 6)))
       const count = Math.floor(rand(2, 6)); 
       
       waveQueue.current = count;
       currentWaveLevel.current = baseLevel;
-      waveSpawnTimer.current = 0; // Set về 0 để con đầu tiên ra ngay lập tức
+      waveSpawnTimer.current = 0; 
       
       const playerX = p1.current.x;
-      // Lấy floorY tạm thời từ player (vì hàm này ko có tham số floorY, ta lấy trong update sau cũng được, nhưng lấy vị trí Y text)
       addFloatingText(playerX, p1.current.y - 200, `WAVE INCOMING: ${count}`, '#ff0000', 30);
   };
 
@@ -219,7 +213,6 @@ const StickmanShadowFinal = () => {
       let closestIndex = -1;
       let minDst = 150;
 
-      // Tìm soul gần nhất
       souls.current.forEach((s, i) => {
           const dst = Math.abs(p.x - s.x);
           if (dst < minDst) {
@@ -228,7 +221,6 @@ const StickmanShadowFinal = () => {
           }
       });
       
-      // Auto Mode
       if (closestIndex === -1 && isAutoRef.current && souls.current.length > 0) {
           closestIndex = 0; 
       }
@@ -704,36 +696,28 @@ const StickmanShadowFinal = () => {
     usr.animTimer++;
     if (usr.attackCooldown > 0) { usr.attackCooldown--; if (usr.attackCooldown === 0 && usr.state === 'ATTACK') usr.state = 'IDLE'; }
 
-    // --- SỬA ĐỔI: LOGIC SPAWN KẺ ĐỊCH TỪNG CON MỘT ---
     if (waveQueue.current > 0) {
         waveSpawnTimer.current--;
         if (waveSpawnTimer.current <= 0) {
-            // Logic tạo vị trí spawn
             const side = Math.random() > 0.5 ? 1 : -1;
             const dist = 300 + Math.random() * 500; 
             const spawnX = p1.current.x + (side * dist);
             
-            // Random level
             const lvl = currentWaveLevel.current + Math.floor(Math.random() * 2);
             createEnemy(spawnX, floorY, lvl);
             
             waveQueue.current--;
-            // Hẹn giờ cho con tiếp theo: random từ 2-4 giây (120-240 frames)
             waveSpawnTimer.current = 120 + Math.floor(Math.random() * 120);
         }
     }
 
-    // Dọn dẹp xác chết
     for (let i = enemies.current.length - 1; i >= 0; i--) {
         if (enemies.current[i].isDead) {
             enemies.current.splice(i, 1);
         }
     }
 
-    // --- SỬA ĐỔI: LOGIC GỌI WAVE MỚI (LIÊN TỤC) ---
-    // Điều kiện: Không còn kẻ địch nào sống VÀ Không còn kẻ địch nào trong hàng đợi
     if (enemies.current.length === 0 && waveQueue.current === 0) {
-        // Gọi spawnWave ngay lập tức, không chờ đợi
         spawnWave(usr.level);
     }
 
@@ -847,7 +831,6 @@ const StickmanShadowFinal = () => {
         // --- DRAW SOUL ---
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            // Nếu ảnh đã tải xong, vẽ ảnh
             if (soulImageRef.current && soulImageRef.current.complete) {
                 const size = 32; 
                 ctx.drawImage(soulImageRef.current, s.x - size/2, s.y - 45 + bob, size, size);
@@ -873,7 +856,6 @@ const StickmanShadowFinal = () => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, t.life / 60);
 
-            // --- 1. XỬ LÝ VẼ ICON LEVEL UP (GIẢM SIZE) ---
             if (t.type === 'LEVEL_UP') {
                 const img = levelUpImageRef.current;
                 
@@ -882,12 +864,9 @@ const StickmanShadowFinal = () => {
                     const originalH = img.naturalHeight;
                     
                     const ratio = originalH / originalW;
-                    
-                    // GIẢM XUỐNG CÒN 60
                     const targetW = 60; 
                     const targetH = targetW * ratio;
                     
-                    // Hiệu ứng nảy nhẹ
                     const scale = t.life > 50 ? 1 + (t.life - 50) * 0.05 : 1;
                     
                     ctx.translate(t.x, t.y);
@@ -896,12 +875,10 @@ const StickmanShadowFinal = () => {
                     ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
                 }
             } 
-            // --- 2. XỬ LÝ VẼ EXP (FONT LILITA, NHỎ, KHÔNG VIỀN) ---
             else if (t.type === 'EXP') {
                  if (expImageRef.current && expImageRef.current.complete) {
                     const iconSize = 20; 
                     
-                    // Font nhỏ hơn (15px) và không stroke
                     ctx.font = '15px "Lilita One", cursive'; 
                     ctx.textBaseline = 'middle'; 
                     ctx.textAlign = 'left';      
@@ -914,7 +891,6 @@ const StickmanShadowFinal = () => {
                     gradient.addColorStop(1, '#0369A1');      
 
                     ctx.fillStyle = gradient;
-                    // Bỏ stroke text ở đây
                     ctx.fillText(t.text, t.x, t.y);
                  } else {
                      ctx.fillStyle = '#38BDF8';
@@ -922,10 +898,8 @@ const StickmanShadowFinal = () => {
                      ctx.fillText(t.text + " XP", t.x, t.y);
                  }
             } 
-            // --- 3. CÁC TEXT KHÁC (DAMAGE, HP) (FONT LILITA, NHỎ, KHÔNG VIỀN) ---
             else {
                 ctx.textAlign = 'center'; 
-                // Font nhỏ hơn (20px) và không stroke
                 ctx.font = '20px "Lilita One", cursive';
                 ctx.fillStyle = t.color;
                 ctx.fillText(t.text, t.x | 0, t.y | 0);
@@ -941,8 +915,37 @@ const StickmanShadowFinal = () => {
     }
   };
 
-  const loop = () => { update(); draw(); frameRef.current = requestAnimationFrame(loop); };
-  useEffect(() => { handleResize(); window.addEventListener('resize', handleResize); frameRef.current = requestAnimationFrame(loop); return () => { window.removeEventListener('resize', handleResize); cancelAnimationFrame(frameRef.current); }; }, [gameState, showStats]);
+  // --- SỬA ĐỔI QUAN TRỌNG: LOOP CÓ GIỚI HẠN FPS (60FPS) ---
+  const loop = (timestamp) => { 
+    if (!lastTimeRef.current) lastTimeRef.current = timestamp;
+    
+    // Tính delta time (ms)
+    const deltaTime = timestamp - lastTimeRef.current;
+    
+    // Chỉ cập nhật nếu đã qua 16.67ms (tương đương 60FPS)
+    if (deltaTime >= 16.67) {
+        update(); 
+        draw(); 
+        // Trừ đi phần dư để giữ đồng bộ
+        lastTimeRef.current = timestamp - (deltaTime % 16.67);
+    }
+    
+    frameRef.current = requestAnimationFrame(loop); 
+  };
+  
+  useEffect(() => { 
+      handleResize(); 
+      window.addEventListener('resize', handleResize); 
+      
+      // Reset thời gian khi effect chạy lại
+      lastTimeRef.current = 0;
+      frameRef.current = requestAnimationFrame(loop); 
+      
+      return () => { 
+          window.removeEventListener('resize', handleResize); 
+          cancelAnimationFrame(frameRef.current); 
+      }; 
+  }, [gameState, showStats]);
 
   const handleTouch = (key, val) => (e) => { if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); input.current[key] = val; };
   useEffect(() => {
@@ -955,7 +958,6 @@ const StickmanShadowFinal = () => {
 
   const getEnemyWaveStats = () => {
     const activeEnemies = enemies.current.filter(e => !e.isDead);
-    // Nếu không còn quái active nhưng vẫn còn trong hàng chờ
     if (activeEnemies.length === 0 && waveQueue.current > 0) {
          return {
              count: waveQueue.current,
@@ -981,7 +983,6 @@ const StickmanShadowFinal = () => {
   };
   const enemyStats = showStats ? getEnemyWaveStats() : null;
 
-  // Toggle Auto Mode
   const toggleAuto = () => {
       const newVal = !isAuto;
       setIsAuto(newVal);
@@ -990,7 +991,6 @@ const StickmanShadowFinal = () => {
 
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
-      {/* Nạp font Lilita One */}
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
       `}</style>
@@ -1054,7 +1054,6 @@ const StickmanShadowFinal = () => {
       )}
       {gameState === 'PLAYING' && !showStats && (
         <>
-            {/* Nếu NOT Auto thì hiển thị nút di chuyển */}
             {!isAuto && (
                 <div className="absolute bottom-24 left-8 flex gap-2 z-40">
                     <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
@@ -1064,7 +1063,6 @@ const StickmanShadowFinal = () => {
             
             <div className="absolute bottom-24 right-8 flex flex-col gap-4 z-40 items-center">
                 
-                {/* AUTO BUTTON */}
                 <button onClick={toggleAuto} className={`w-10 h-10 border border-gray-500 rounded-full flex items-center justify-center active:scale-95 shadow-lg ${isAuto ? 'bg-green-600 animate-pulse border-green-400' : 'bg-gray-800/80'}`}>
                      {isAuto ? 
                         <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> 
@@ -1073,12 +1071,10 @@ const StickmanShadowFinal = () => {
                      }
                 </button>
                 
-                {/* INFO BUTTON */}
                 <button onClick={() => setShowStats(true)} className="w-10 h-10 bg-gray-800/80 border border-gray-500 rounded-full flex items-center justify-center active:scale-95 shadow-lg">
                      <span className="font-bold text-white text-[10px]">INFO</span>
                 </button>
 
-                {/* Các nút hành động: Chỉ hiển thị khi NOT Auto */}
                 {!isAuto && (
                     <>
                         {canRise && (
@@ -1093,7 +1089,6 @@ const StickmanShadowFinal = () => {
                 )}
             </div>
             
-            {/* Hiển thị thông báo khi đang Auto cho rõ ràng */}
             {isAuto && (
                 <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-green-900/50 border border-green-500/50 px-4 py-1 rounded-full pointer-events-none">
                     <span className="text-green-400 text-xs font-bold tracking-widest animate-pulse">AUTO BATTLE ENGAGED</span>
