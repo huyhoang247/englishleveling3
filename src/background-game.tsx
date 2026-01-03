@@ -8,7 +8,8 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-import PvpArena from './home/stick-game.tsx';
+// [UPDATE] Rename import to StickGame for clarity and usage
+import StickGame from './home/stick-game.tsx';
 import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
@@ -160,10 +161,11 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         {/* --- Overlays / Modals --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary>{isRankOpen && currentUser && <EnhancedLeaderboard onClose={toggleRank} currentUserId={currentUser.uid} />}</ErrorBoundary> </div>
         
+        {/* [UPDATE] Replace PvpArena logic with StickGame and pass onClose prop */}
         <div className="fixed inset-0 z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isPvpArenaOpen && currentUser && (
-                    <PvpArena onClose={togglePvpArena} /> 
+                    <StickGame onClose={togglePvpArena} /> 
                 )}
             </ErrorBoundary>
         </div>
