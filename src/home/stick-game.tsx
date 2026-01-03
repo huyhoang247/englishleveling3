@@ -42,7 +42,7 @@ const StickmanShadowFinal = () => {
   const dprRef = useRef(1); 
   const floorTransitioning = useRef(false);
 
-  // Ref lưu chỉ số Skill thụ động của người chơi (tránh tính toán lại trong loop)
+  // Ref lưu chỉ số Skill thụ động của người chơi
   const playerSkillsRef = useRef({
       lifeSteal: 0,       // % hút máu
       thorns: 0,          // % phản đòn
@@ -64,7 +64,6 @@ const StickmanShadowFinal = () => {
   const soulImageRef = useRef(null);
   const expImageRef = useRef(null);
   const levelUpImageRef = useRef(null);
-  const plusHpImageRef = useRef(null); 
 
   // Input controller
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
@@ -127,10 +126,6 @@ const StickmanShadowFinal = () => {
     const luImg = new Image();
     luImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/level-up.webp";
     levelUpImageRef.current = luImg;
-
-    const hpImg = new Image();
-    hpImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-hp.webp";
-    plusHpImageRef.current = hpImg;
   }, []);
 
   const rand = (min, max) => Math.random() * (max - min) + min;
@@ -141,8 +136,6 @@ const StickmanShadowFinal = () => {
       const stats = { lifeSteal: 0, thorns: 0, damageBoost: 0, armorPenetration: 0 };
       
       equipped.forEach(skill => {
-          // Công thức dựa trên skill-data.tsx: base + (level - 1) * perLevel
-          // Base cho 4 skill này là 5, tăng 1 mỗi cấp
           const val = (skill.baseEffectValue || 5) + ((skill.level - 1) * (skill.effectValuePerLevel || 1));
           
           if (skill.id === 'life_steal') stats.lifeSteal += val;
@@ -152,7 +145,6 @@ const StickmanShadowFinal = () => {
       });
       
       playerSkillsRef.current = stats;
-      console.log("Player Skills Loaded:", stats);
   };
 
   // --- LOGIC FLOOR SYSTEM ---
@@ -224,7 +216,8 @@ const StickmanShadowFinal = () => {
       const healAmount = Math.floor(p1.current.maxHp * (healPercent / 100));
       p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + healAmount);
       
-      addFloatingText(p1.current.x, p1.current.y - 120, `+${healAmount}`, '#4ade80', 20, 'HEAL');
+      // [FIX] Hồi máu qua màn: Hiển thị ở tầng cao (-150) để né EXP/Damage
+      addFloatingText(p1.current.x, p1.current.y - 150, `+${healAmount}`, '#4ade80', 20, 'TEXT');
       
       enemies.current = [];
       souls.current = [];
@@ -234,8 +227,6 @@ const StickmanShadowFinal = () => {
 
   const createEnemy = (x, y, level) => {
       const hp = 100 + (level * 30); 
-      // Tính DEF cho quái vật: Tăng dần theo level
-      // Ví dụ: Level 1 = 2 Def, Level 10 = 20 Def
       const def = Math.floor(level * 2); 
 
       const newEnemy = {
@@ -243,7 +234,7 @@ const StickmanShadowFinal = () => {
           maxHp: hp, hp: hp,
           level: level,
           damage: 5 + (level * 4),
-          defense: def, // Thêm chỉ số DEF
+          defense: def,
           state: 'IDLE', dir: -1, 
           animTimer: Math.random() * 100, 
           attackCooldown: 0, 
@@ -258,10 +249,8 @@ const StickmanShadowFinal = () => {
       createExplosion(x, y - 50, '#ff2a00');
   };
 
-  // --- SPAWN WAVE ---
   const spawnWave = () => {
       const count = Math.floor(rand(2, 7)); 
-      
       waveQueue.current = count;
       waveSpawnTimer.current = 0; 
   };
@@ -274,7 +263,6 @@ const StickmanShadowFinal = () => {
       return Math.floor(rand(minLv, maxLv + 1));
   };
   
-  // --- SHADOW & SOUL ---
   const spawnSoul = (x, y, level, damage) => {
       souls.current.push({
           x, y, level, damage,
@@ -311,7 +299,7 @@ const StickmanShadowFinal = () => {
               maxHp: shadowHp, hp: shadowHp,
               level: s.level, 
               damage: s.damage, 
-              defense: Math.floor(s.level * 1.5), // Shadow thừa hưởng 1 ít Def
+              defense: Math.floor(s.level * 1.5),
               currentExp: 0, maxExp: 50 + (s.level * 10),
               state: 'IDLE', dir: p.dir,
               animTimer: 0, attackCooldown: 0,
@@ -461,7 +449,8 @@ const StickmanShadowFinal = () => {
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
-          addFloatingText(entity.x, entity.y - 170, "", null, 0, 'LEVEL_UP');
+          // [FIX] Level Up: Đẩy lên -190 (Tầng cao nhất) để không đụng Hồi máu (-150)
+          addFloatingText(entity.x, entity.y - 190, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
   };
@@ -470,16 +459,17 @@ const StickmanShadowFinal = () => {
       const totalExp = 50 + (deadEnemy.level * 10);
       if (killer.type === 'PLAYER') {
           p1.current.currentExp += totalExp;
-          addFloatingText(p1.current.x, p1.current.y - 120, `${totalExp}`, '#fff', 16, 'EXP');
+          // [FIX] EXP: Đặt ở -110 (Tầng giữa)
+          addFloatingText(p1.current.x, p1.current.y - 110, `${totalExp}`, '#fff', 16, 'EXP');
           checkLevelUp(p1.current, true);
       } else if (killer.type === 'ALLY') {
           killer.currentExp += totalExp;
-          addFloatingText(killer.x, killer.y - 120, `${totalExp}`, '#fff', 14, 'EXP');
+          addFloatingText(killer.x, killer.y - 110, `${totalExp}`, '#fff', 14, 'EXP');
           checkLevelUp(killer, false);
           
           const shareExp = Math.floor(totalExp * 0.5);
           p1.current.currentExp += shareExp;
-          addFloatingText(p1.current.x, p1.current.y - 120, `${shareExp}`, '#fff', 16, 'EXP');
+          addFloatingText(p1.current.x, p1.current.y - 110, `${shareExp}`, '#fff', 16, 'EXP');
           checkLevelUp(p1.current, true);
       }
   };
@@ -490,14 +480,12 @@ const StickmanShadowFinal = () => {
       const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
       
       ctx.save();
-      // 1. COIN HUD
       ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; ctx.beginPath(); ctx.roundRect(hudX, hudY, hudW, hudH, 18); ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = '#FFD700'; ctx.stroke();
       const iconX = hudX + 20; const iconY = hudY + 18; const r = 12;
       ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(iconX, iconY, r, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 25);
       
-      // 2. SHADOW HUD
       const sHudW = 150;
       const sHudX = (canvasRef.current.width / dprRef.current) - sHudW - 20;
       
@@ -517,12 +505,11 @@ const StickmanShadowFinal = () => {
       if (shadows.current.length >= CFG.maxShadows) ctx.fillStyle = '#f87171';
       ctx.fillText(`${shadows.current.length} / ${CFG.maxShadows}`, sHudX + sHudW - 15, sIconY + 5);
 
-      // 3. FLOOR & WAVE INFO (CENTER TOP)
       const centerX = (canvasRef.current.width / dprRef.current) / 2;
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
       ctx.beginPath(); ctx.roundRect(centerX - 80, 10, 160, 50, 8); ctx.fill();
       
-      ctx.fillStyle = '#fbbf24'; // Amber Color
+      ctx.fillStyle = '#fbbf24'; 
       ctx.font = 'bold 18px "Lilita One", cursive';
       ctx.textAlign = 'center';
       ctx.fillText(`FLOOR ${floorRef.current}`, centerX, 32);
@@ -674,40 +661,37 @@ const StickmanShadowFinal = () => {
                 let defenderDef = defender.defense || 0;
                 const pSkills = playerSkillsRef.current;
 
-                // 1. Nếu Attacker là Player: Áp dụng Skill Tăng Sát Thương & Xuyên Giáp
                 if (attacker.type === 'PLAYER') {
                     if (pSkills.damageBoost > 0) {
                         rawDamage *= (1 + pSkills.damageBoost / 100);
                     }
                     if (pSkills.armorPenetration > 0) {
-                         // Giảm thủ của quái dựa trên % xuyên giáp
                          const pen = Math.min(1, pSkills.armorPenetration / 100);
                          defenderDef *= (1 - pen);
                     }
                 }
 
-                // 2. Tính toán Damage cuối (có trừ Defense)
                 let finalDamage = Math.max(1, rawDamage - defenderDef);
                 
-                // 3. Trừ HP
                 defender.hp -= finalDamage;
+                
+                // [TẦNG 1] Sát thương: y - 80
                 addFloatingText(defender.x, defender.y - 80, `-${Math.round(finalDamage)}`, '#ff0000'); 
                 
-                // 4. Nếu Attacker là Player: Áp dụng Life Steal
+                // [TẦNG 3] Hồi máu (Life Steal): y - 150 (Cao hơn hẳn EXP ở tầng 2: -110)
                 if (attacker.type === 'PLAYER' && pSkills.lifeSteal > 0) {
                     const healAmt = finalDamage * (pSkills.lifeSteal / 100);
                     if (healAmt >= 1) {
                          attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
-                         addFloatingText(attacker.x, attacker.y - 80, `+${Math.round(healAmt)}`, '#00ff00', 16, 'TEXT');
+                         addFloatingText(attacker.x, attacker.y - 150, `+${Math.round(healAmt)}`, '#4ade80', 20, 'TEXT');
                     }
                 }
 
-                // 5. Nếu Defender là Player: Áp dụng Thorns (Phản đòn)
                 if (defender.type === 'PLAYER' && pSkills.thorns > 0) {
                     const thornDmg = finalDamage * (pSkills.thorns / 100);
                     if (thornDmg >= 1) {
                         attacker.hp -= thornDmg;
-                         addFloatingText(attacker.x, attacker.y - 60, `-${Math.round(thornDmg)}`, '#a855f7', 16, 'TEXT'); // Màu tím cho phản đòn
+                         addFloatingText(attacker.x, attacker.y - 60, `-${Math.round(thornDmg)}`, '#a855f7', 16, 'TEXT'); 
                         createBlood(attacker.x, attacker.y - 25, '#a855f7', 5);
                     }
                 }
@@ -891,10 +875,8 @@ const StickmanShadowFinal = () => {
              if (!floorTransitioning.current) {
                  floorTransitioning.current = true;
                  
-                 // Show Green "FLOOR CLEARED" text
-                 // y-170 nằm trên hàng icon level up
-                 // size 20 (bằng kích cỡ -HP)
-                 addFloatingText(p1.current.x, p1.current.y - 170, "FLOOR CLEARED", '#4ade80', 20, 'TEXT');
+                 // [FIX] Floor Cleared: Đẩy lên -190 (Tầng cao nhất)
+                 addFloatingText(p1.current.x, p1.current.y - 190, "FLOOR CLEARED", '#4ade80', 20, 'TEXT');
                  
                  // Tự động qua màn sau 3 giây
                  setTimeout(() => {
@@ -1067,26 +1049,6 @@ const StickmanShadowFinal = () => {
                      ctx.fillText(t.text + " XP", t.x, t.y);
                  }
             } 
-            else if (t.type === 'HEAL') {
-                // Logic vẽ HP với Icon, không Gradient, font giống Damage
-                if (plusHpImageRef.current && plusHpImageRef.current.complete) {
-                   const iconSize = 20; 
-                   // Sử dụng font giống Damage text (Lilita One 20px)
-                   ctx.font = '20px "Lilita One", cursive'; 
-                   ctx.textBaseline = 'middle'; 
-                   ctx.textAlign = 'left';      
-                   
-                   ctx.drawImage(plusHpImageRef.current, t.x - 25, t.y - 10, iconSize, iconSize);
-                   
-                   // Solid Green Color
-                   ctx.fillStyle = '#4ade80';
-                   ctx.fillText(t.text, t.x, t.y);
-                } else {
-                    ctx.fillStyle = '#4ade80';
-                    ctx.font = '20px "Lilita One", cursive';
-                    ctx.fillText(t.text, t.x, t.y);
-                }
-           }
             else {
                 ctx.textAlign = 'center'; 
                 // Sử dụng size được truyền vào
