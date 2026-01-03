@@ -29,7 +29,7 @@ const StickmanShadowFinal = () => {
     attackDist: 70, 
     hitStun: 20,
     camShake: 0,
-    respawnTime: 120,
+    respawnTime: 120, // (Không còn dùng để chờ giữa các wave nữa, nhưng giữ lại biến)
     maxShadows: 3, 
   };
 
@@ -37,11 +37,12 @@ const StickmanShadowFinal = () => {
   const shakeRef = useRef(0);
   const hitStopRef = useRef(0);
   const camera = useRef({ x: 0 });
-  const respawnTimer = useRef(0);
   const dprRef = useRef(1);
-  
-  // Ref quản lý việc đi tuần tra khi không có quái (Auto Mode)
-  const patrolTimer = useRef(0);
+
+  // --- NEW: Refs quản lý Wave liên tục ---
+  const waveQueue = useRef(0);      // Số lượng quái còn lại chưa xuất hiện trong đợt này
+  const waveSpawnTimer = useRef(0); // Thời gian đếm ngược để ra con quái tiếp theo trong đợt
+  const currentWaveLevel = useRef(1); // Lưu level của đợt hiện tại để spawn đúng level
 
   // Ref hình ảnh
   const soulImageRef = useRef(null);
@@ -135,8 +136,12 @@ const StickmanShadowFinal = () => {
     
     enemies.current = [];
     
+    // Reset queue spawn
+    waveQueue.current = 0;
+    waveSpawnTimer.current = 0;
+
     const enemyBaseLevel = 1; 
-    spawnWave(floorY, enemyBaseLevel); 
+    spawnWave(enemyBaseLevel); // Gọi spawn wave (sẽ set queue)
     
     camera.current.x = -w/2;
     shadows.current = [];
@@ -144,8 +149,6 @@ const StickmanShadowFinal = () => {
     particles.current = [];
     floatingTexts.current = [];
     lootCoins.current = []; 
-    respawnTimer.current = 0;
-    patrolTimer.current = 0;
     
     setCanRise(false);
     canRiseRef.current = false;
@@ -187,20 +190,19 @@ const StickmanShadowFinal = () => {
       createExplosion(x, y - 50, '#ff2a00');
   };
 
-  const spawnWave = (floorY, baseLevel) => {
-      const count = Math.floor(rand(1, 6)); 
-      const playerX = p1.current.x;
+  // --- SỬA ĐỔI: SPAWN WAVE LOGIC ---
+  // Thay vì sinh ngay lập tức, hàm này chỉ setup số lượng vào hàng chờ (Queue)
+  const spawnWave = (baseLevel) => {
+      // Random từ 2 đến 5 kẻ địch (Math.floor(rand(2, 6)))
+      const count = Math.floor(rand(2, 6)); 
       
-      addFloatingText(playerX, floorY - 200, `WAVE INCOMING: ${count}`, '#ff0000', 30);
-
-      for (let i = 0; i < count; i++) {
-          const side = Math.random() > 0.5 ? 1 : -1;
-          const dist = 300 + Math.random() * 500; 
-          const spawnX = playerX + (side * dist);
-          
-          const lvl = baseLevel + Math.floor(Math.random() * 2);
-          createEnemy(spawnX, floorY, lvl);
-      }
+      waveQueue.current = count;
+      currentWaveLevel.current = baseLevel;
+      waveSpawnTimer.current = 0; // Set về 0 để con đầu tiên ra ngay lập tức
+      
+      const playerX = p1.current.x;
+      // Lấy floorY tạm thời từ player (vì hàm này ko có tham số floorY, ta lấy trong update sau cũng được, nhưng lấy vị trí Y text)
+      addFloatingText(playerX, p1.current.y - 200, `WAVE INCOMING: ${count}`, '#ff0000', 30);
   };
 
   // --- SHADOW LOGIC ---
@@ -226,10 +228,9 @@ const StickmanShadowFinal = () => {
           }
       });
       
-      // Auto Mode: Nếu không tìm thấy soul gần, nhưng có soul trên bản đồ và đang Auto, 
-      // cho phép triệu hồi soul bất kỳ để không bị kẹt.
+      // Auto Mode
       if (closestIndex === -1 && isAutoRef.current && souls.current.length > 0) {
-          closestIndex = 0; // Lấy cái đầu tiên
+          closestIndex = 0; 
       }
 
       if (closestIndex !== -1) {
@@ -388,7 +389,6 @@ const StickmanShadowFinal = () => {
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
-          
           addFloatingText(entity.x, entity.y - 170, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
@@ -644,14 +644,11 @@ const StickmanShadowFinal = () => {
     // ============================================
     if (isAutoRef.current) {
         // --- AUTO MODE ---
-        
-        // 1. Tự động dùng Skill Rise nếu có Soul (và chưa full slot)
         const canUseSkill = canRiseRef.current || (souls.current.length > 0 && shadows.current.length < CFG.maxShadows);
         if (canUseSkill) {
             extractShadow();
         }
 
-        // 2. Tìm mục tiêu (Kẻ địch gần nhất)
         let target = null;
         let minDst = 10000;
         enemies.current.forEach(e => {
@@ -662,25 +659,17 @@ const StickmanShadowFinal = () => {
         });
 
         if (target) {
-            // --- CÓ KẺ ĐỊCH ---
-            // Reset timer tuần tra
-            patrolTimer.current = 0;
-
             const dist = target.x - usr.x;
             const attackRange = CFG.attackDist - 10; 
 
-            // Hướng mặt về phía địch
             if (usr.state !== 'ATTACK') {
                 usr.dir = dist > 0 ? 1 : -1;
             }
 
             if (Math.abs(dist) > attackRange) {
-                // Di chuyển đến địch (TỐC ĐỘ CHẬM HƠN KHI AUTO - 0.65)
-                const autoSpeed = CFG.speed * 0.65;
-                usr.vx = usr.dir * autoSpeed;
+                usr.vx = usr.dir * CFG.speed;
                 if (usr.state !== 'JUMP' && usr.state !== 'ATTACK' && usr.state !== 'HURT') usr.state = 'RUN';
             } else {
-                // Đủ gần -> Dừng lại và Đánh
                 usr.vx = 0;
                 if (usr.attackCooldown <= 0) {
                     usr.state = 'ATTACK';
@@ -691,38 +680,12 @@ const StickmanShadowFinal = () => {
                 }
             }
         } else {
-            // --- KHÔNG CÓ KẺ ĐỊCH (PATROL) ---
-            // Thay vì đứng im, nhân vật sẽ đi qua đi lại nhẹ nhàng
-            patrolTimer.current++;
-            const t = patrolTimer.current;
-            const patrolSpeed = CFG.speed * 0.35; // Đi bộ rất chậm
-
-            if (t < 100) {
-                // Đi phải
-                usr.dir = 1;
-                usr.vx = patrolSpeed;
-                if (usr.state !== 'ATTACK') usr.state = 'RUN';
-            } else if (t < 160) {
-                // Đứng nghỉ
-                usr.vx *= CFG.friction;
-                if (Math.abs(usr.vx) < 0.1 && usr.state === 'RUN') usr.state = 'IDLE';
-            } else if (t < 260) {
-                // Đi trái
-                usr.dir = -1;
-                usr.vx = -patrolSpeed;
-                if (usr.state !== 'ATTACK') usr.state = 'RUN';
-            } else if (t < 320) {
-                // Đứng nghỉ
-                usr.vx *= CFG.friction;
-                if (Math.abs(usr.vx) < 0.1 && usr.state === 'RUN') usr.state = 'IDLE';
-            } else {
-                // Reset vòng lặp
-                patrolTimer.current = 0;
-            }
+            usr.vx *= CFG.friction;
+            if (usr.state === 'RUN') usr.state = 'IDLE';
         }
 
     } else {
-        // --- MANUAL MODE (Điều khiển tay) ---
+        // --- MANUAL MODE ---
         if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
         else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
         else { usr.vx *= CFG.friction; if(usr.state === 'RUN') usr.state = 'IDLE'; }
@@ -741,18 +704,37 @@ const StickmanShadowFinal = () => {
     usr.animTimer++;
     if (usr.attackCooldown > 0) { usr.attackCooldown--; if (usr.attackCooldown === 0 && usr.state === 'ATTACK') usr.state = 'IDLE'; }
 
+    // --- SỬA ĐỔI: LOGIC SPAWN KẺ ĐỊCH TỪNG CON MỘT ---
+    if (waveQueue.current > 0) {
+        waveSpawnTimer.current--;
+        if (waveSpawnTimer.current <= 0) {
+            // Logic tạo vị trí spawn
+            const side = Math.random() > 0.5 ? 1 : -1;
+            const dist = 300 + Math.random() * 500; 
+            const spawnX = p1.current.x + (side * dist);
+            
+            // Random level
+            const lvl = currentWaveLevel.current + Math.floor(Math.random() * 2);
+            createEnemy(spawnX, floorY, lvl);
+            
+            waveQueue.current--;
+            // Hẹn giờ cho con tiếp theo: random từ 2-4 giây (120-240 frames)
+            waveSpawnTimer.current = 120 + Math.floor(Math.random() * 120);
+        }
+    }
+
+    // Dọn dẹp xác chết
     for (let i = enemies.current.length - 1; i >= 0; i--) {
         if (enemies.current[i].isDead) {
             enemies.current.splice(i, 1);
         }
     }
 
-    if (enemies.current.length === 0) {
-        respawnTimer.current++;
-        if (respawnTimer.current > CFG.respawnTime) {
-            spawnWave(floorY, usr.level);
-            respawnTimer.current = 0;
-        }
+    // --- SỬA ĐỔI: LOGIC GỌI WAVE MỚI (LIÊN TỤC) ---
+    // Điều kiện: Không còn kẻ địch nào sống VÀ Không còn kẻ địch nào trong hàng đợi
+    if (enemies.current.length === 0 && waveQueue.current === 0) {
+        // Gọi spawnWave ngay lập tức, không chờ đợi
+        spawnWave(usr.level);
     }
 
     enemies.current.forEach(ai => {
@@ -973,6 +955,15 @@ const StickmanShadowFinal = () => {
 
   const getEnemyWaveStats = () => {
     const activeEnemies = enemies.current.filter(e => !e.isDead);
+    // Nếu không còn quái active nhưng vẫn còn trong hàng chờ
+    if (activeEnemies.length === 0 && waveQueue.current > 0) {
+         return {
+             count: waveQueue.current,
+             avgHp: "???",
+             avgDmg: "???",
+             avgLevel: "???"
+         }
+    }
     if (activeEnemies.length === 0) return null;
     
     const total = activeEnemies.reduce((acc, curr) => ({
@@ -982,7 +973,7 @@ const StickmanShadowFinal = () => {
     }), { hp: 0, dmg: 0, level: 0 });
 
     return {
-        count: activeEnemies.length,
+        count: activeEnemies.length + waveQueue.current,
         avgHp: Math.round(total.hp / activeEnemies.length),
         avgDmg: Math.round(total.dmg / activeEnemies.length),
         avgLevel: Math.round(total.level / activeEnemies.length)
