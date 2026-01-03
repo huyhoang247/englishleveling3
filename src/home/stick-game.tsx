@@ -2,6 +2,19 @@ import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật và skills
 import { useGame } from '../GameContext.tsx';
 
+// Helper để lấy tỉ lệ kích hoạt (Copy từ skill-data để đảm bảo chạy độc lập nếu file kia chưa load kịp)
+const getActivationChanceLocal = (rarity) => {
+    switch (rarity) {
+        case 'E': return 5; 
+        case 'D': return 10; 
+        case 'B': return 15; 
+        case 'A': return 20; 
+        case 'S': return 25; 
+        case 'SR': return 30; 
+        default: return 5;
+    }
+};
+
 const StickmanShadowFinal = () => {
   const canvasRef = useRef(null);
   
@@ -42,12 +55,12 @@ const StickmanShadowFinal = () => {
   const dprRef = useRef(1); 
   const floorTransitioning = useRef(false);
 
-  // Ref lưu chỉ số Skill thụ động của người chơi
+  // Ref lưu chỉ số Skill thụ động (Value + Chance)
   const playerSkillsRef = useRef({
-      lifeSteal: 0,       // % hút máu
-      thorns: 0,          // % phản đòn
-      damageBoost: 0,     // % tăng damage
-      armorPenetration: 0 // % xuyên giáp
+      lifeSteal: { val: 0, chance: 0 },       
+      thorns: { val: 0, chance: 0 },          
+      damageBoost: { val: 0, chance: 0 },     
+      armorPenetration: { val: 0, chance: 0 } 
   });
 
   // --- REFS QUẢN LÝ FLOOR & WAVE ---
@@ -133,18 +146,30 @@ const StickmanShadowFinal = () => {
   // --- SKILL CALCULATION ---
   const calculatePlayerSkills = () => {
       const equipped = getEquippedSkillsDetails();
-      const stats = { lifeSteal: 0, thorns: 0, damageBoost: 0, armorPenetration: 0 };
+      
+      // Reset stats
+      const stats = { 
+          lifeSteal: { val: 0, chance: 0 }, 
+          thorns: { val: 0, chance: 0 }, 
+          damageBoost: { val: 0, chance: 0 }, 
+          armorPenetration: { val: 0, chance: 0 } 
+      };
       
       equipped.forEach(skill => {
+          // 1. Tính độ mạnh của skill (Value)
           const val = (skill.baseEffectValue || 5) + ((skill.level - 1) * (skill.effectValuePerLevel || 1));
           
-          if (skill.id === 'life_steal') stats.lifeSteal += val;
-          if (skill.id === 'thorns') stats.thorns += val;
-          if (skill.id === 'damage_boost') stats.damageBoost += val;
-          if (skill.id === 'armor_penetration') stats.armorPenetration += val;
+          // 2. Tính tỉ lệ kích hoạt dựa trên Rarity (Chance)
+          const chance = getActivationChanceLocal(skill.rarity);
+
+          if (skill.id === 'life_steal') { stats.lifeSteal.val += val; stats.lifeSteal.chance = chance; }
+          if (skill.id === 'thorns') { stats.thorns.val += val; stats.thorns.chance = chance; }
+          if (skill.id === 'damage_boost') { stats.damageBoost.val += val; stats.damageBoost.chance = chance; }
+          if (skill.id === 'armor_penetration') { stats.armorPenetration.val += val; stats.armorPenetration.chance = chance; }
       });
       
       playerSkillsRef.current = stats;
+      // console.log("Player Skills (With Chance):", stats);
   };
 
   // --- LOGIC FLOOR SYSTEM ---
@@ -216,7 +241,7 @@ const StickmanShadowFinal = () => {
       const healAmount = Math.floor(p1.current.maxHp * (healPercent / 100));
       p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + healAmount);
       
-      // [FIX] Hồi máu qua màn: Hiển thị ở tầng cao (-150) để né EXP/Damage
+      // Hồi máu qua màn: Tầng cao (-150)
       addFloatingText(p1.current.x, p1.current.y - 150, `+${healAmount}`, '#4ade80', 20, 'TEXT');
       
       enemies.current = [];
@@ -449,7 +474,7 @@ const StickmanShadowFinal = () => {
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
-          // [FIX] Level Up: Đẩy lên -190 (Tầng cao nhất) để không đụng Hồi máu (-150)
+          // [TẦNG 4] Level Up: -190 (Cao nhất)
           addFloatingText(entity.x, entity.y - 190, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
@@ -459,7 +484,7 @@ const StickmanShadowFinal = () => {
       const totalExp = 50 + (deadEnemy.level * 10);
       if (killer.type === 'PLAYER') {
           p1.current.currentExp += totalExp;
-          // [FIX] EXP: Đặt ở -110 (Tầng giữa)
+          // [TẦNG 2] EXP: -110 (Giữa)
           addFloatingText(p1.current.x, p1.current.y - 110, `${totalExp}`, '#fff', 16, 'EXP');
           checkLevelUp(p1.current, true);
       } else if (killer.type === 'ALLY') {
@@ -662,12 +687,24 @@ const StickmanShadowFinal = () => {
                 const pSkills = playerSkillsRef.current;
 
                 if (attacker.type === 'PLAYER') {
-                    if (pSkills.damageBoost > 0) {
-                        rawDamage *= (1 + pSkills.damageBoost / 100);
+                    // Skill: Damage Boost (Có tỉ lệ)
+                    if (pSkills.damageBoost.val > 0) {
+                        // Check tỉ lệ kích hoạt
+                        if (Math.random() * 100 < pSkills.damageBoost.chance) {
+                            rawDamage *= (1 + pSkills.damageBoost.val / 100);
+                            // Hiển thị CRIT text
+                            addFloatingText(defender.x, defender.y - 60, "CRIT!", '#ffcc00', 14, 'TEXT');
+                        }
                     }
-                    if (pSkills.armorPenetration > 0) {
-                         const pen = Math.min(1, pSkills.armorPenetration / 100);
-                         defenderDef *= (1 - pen);
+                    // Skill: Armor Penetration (Có tỉ lệ)
+                    if (pSkills.armorPenetration.val > 0) {
+                        // Check tỉ lệ kích hoạt
+                        if (Math.random() * 100 < pSkills.armorPenetration.chance) {
+                             const pen = Math.min(1, pSkills.armorPenetration.val / 100);
+                             defenderDef *= (1 - pen);
+                             // Hiển thị PIERCE text
+                             addFloatingText(defender.x, defender.y - 60, "PIERCE!", '#3b82f6', 14, 'TEXT');
+                        }
                     }
                 }
 
@@ -679,20 +716,26 @@ const StickmanShadowFinal = () => {
                 addFloatingText(defender.x, defender.y - 80, `-${Math.round(finalDamage)}`, '#ff0000'); 
                 
                 // [TẦNG 3] Hồi máu (Life Steal): y - 150 (Cao hơn hẳn EXP ở tầng 2: -110)
-                if (attacker.type === 'PLAYER' && pSkills.lifeSteal > 0) {
-                    const healAmt = finalDamage * (pSkills.lifeSteal / 100);
-                    if (healAmt >= 1) {
-                         attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
-                         addFloatingText(attacker.x, attacker.y - 150, `+${Math.round(healAmt)}`, '#4ade80', 20, 'TEXT');
+                if (attacker.type === 'PLAYER' && pSkills.lifeSteal.val > 0) {
+                    // Check tỉ lệ kích hoạt
+                    if (Math.random() * 100 < pSkills.lifeSteal.chance) {
+                        const healAmt = finalDamage * (pSkills.lifeSteal.val / 100);
+                        if (healAmt >= 1) {
+                             attacker.hp = Math.min(attacker.maxHp, attacker.hp + healAmt);
+                             addFloatingText(attacker.x, attacker.y - 150, `+${Math.round(healAmt)}`, '#4ade80', 20, 'TEXT');
+                        }
                     }
                 }
 
-                if (defender.type === 'PLAYER' && pSkills.thorns > 0) {
-                    const thornDmg = finalDamage * (pSkills.thorns / 100);
-                    if (thornDmg >= 1) {
-                        attacker.hp -= thornDmg;
-                         addFloatingText(attacker.x, attacker.y - 60, `-${Math.round(thornDmg)}`, '#a855f7', 16, 'TEXT'); 
-                        createBlood(attacker.x, attacker.y - 25, '#a855f7', 5);
+                if (defender.type === 'PLAYER' && pSkills.thorns.val > 0) {
+                     // Check tỉ lệ kích hoạt
+                    if (Math.random() * 100 < pSkills.thorns.chance) {
+                        const thornDmg = finalDamage * (pSkills.thorns.val / 100);
+                        if (thornDmg >= 1) {
+                            attacker.hp -= thornDmg;
+                             addFloatingText(attacker.x, attacker.y - 60, `-${Math.round(thornDmg)}`, '#a855f7', 16, 'TEXT'); 
+                            createBlood(attacker.x, attacker.y - 25, '#a855f7', 5);
+                        }
                     }
                 }
                 // --- DAMAGE CALCULATION END ---
