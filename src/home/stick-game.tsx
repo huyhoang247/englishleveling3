@@ -863,18 +863,31 @@ const StickmanShadowFinal = () => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, t.life / 60);
 
-            // --- 1. XỬ LÝ VẼ ICON LEVEL UP ---
+            // --- 1. XỬ LÝ VẼ ICON LEVEL UP (FIX MÉO ẢNH) ---
             if (t.type === 'LEVEL_UP') {
-                if (levelUpImageRef.current && levelUpImageRef.current.complete) {
-                    const imgW = 120; 
-                    const imgH = 40; 
+                const img = levelUpImageRef.current;
+                
+                // Kiểm tra ảnh đã tải và có kích thước
+                if (img && img.complete && img.naturalWidth > 0) {
+                    const originalW = img.naturalWidth;
+                    const originalH = img.naturalHeight;
+                    
+                    // Tính tỷ lệ
+                    const ratio = originalH / originalW;
+                    
+                    // Set chiều rộng mong muốn (140px)
+                    const targetW = 140; 
+                    // Tính chiều cao tương ứng để không méo
+                    const targetH = targetW * ratio;
                     
                     // Hiệu ứng nảy nhẹ
                     const scale = t.life > 50 ? 1 + (t.life - 50) * 0.05 : 1;
                     
                     ctx.translate(t.x, t.y);
                     ctx.scale(scale, scale);
-                    ctx.drawImage(levelUpImageRef.current, -imgW / 2, -imgH / 2, imgW, imgH);
+                    
+                    // Vẽ ảnh căn giữa với kích thước đã tính toán
+                    ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
                 }
             } 
             // --- 2. XỬ LÝ VẼ EXP ---
