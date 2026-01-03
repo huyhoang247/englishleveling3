@@ -1,6 +1,8 @@
 import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật và skills
 import { useGame } from '../GameContext.tsx';
+// 2. Import component hiển thị coin
+import CoinDisplay from './coin-display.tsx';
 
 // Helper để lấy tỉ lệ kích hoạt (Copy từ skill-data)
 const getActivationChanceLocal = (rarity) => {
@@ -15,17 +17,13 @@ const getActivationChanceLocal = (rarity) => {
     }
 };
 
+// URL ảnh Coin dùng cho Canvas vẽ loot
+const COIN_IMG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp";
+
 // --- ICON COMPONENTS (Inline để đảm bảo hoạt động độc lập) ---
 const HomeIcon = ({ className = '' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
-    </svg>
-);
-
-const CoinIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-         <circle cx="12" cy="12" r="10" fill="#EAB308" stroke="#A16207" strokeWidth="2"/>
-         <path d="M12 6V18M8 12H16" stroke="#FEF08A" strokeWidth="2" strokeLinecap="round"/>
     </svg>
 );
 
@@ -37,7 +35,7 @@ const GemIcon = () => (
 );
 
 // --- COMPONENT HEADER UI ---
-// [UPDATE] Đã loại bỏ backdrop-blur-sm, tăng opacity nền lên slate-900/90 để dễ đọc hơn
+// [UPDATE] Sử dụng CoinDisplay thay cho icon cũ
 const GameHeader = ({ onHome, stats }) => {
     return (
         <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/90 border-b border-white/10 z-[60]">
@@ -59,11 +57,11 @@ const GameHeader = ({ onHome, stats }) => {
                     <span className="text-blue-100 font-bold text-sm">{stats.gems || 0}</span>
                 </div>
 
-                {/* Coins Display */}
-                <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-yellow-500/30">
-                    <CoinIcon />
-                    <span className="text-yellow-100 font-bold text-sm">{stats.atk ? (stats.atk * 100) : 0}</span> {/* Giả lập hiển thị coin từ stats hoặc prop */}
-                </div>
+                {/* Coins Display (Component mới) */}
+                <CoinDisplay 
+                    displayedCoins={stats.atk ? (stats.atk * 100) : 0} 
+                    isStatsFullscreen={false} 
+                />
             </div>
         </header>
     );
@@ -77,7 +75,6 @@ const StickmanShadowFinal = ({ onClose }) => {
   const { totalPlayerStats, getEquippedSkillsDetails } = useGame(); 
 
   // --- STATE QUẢN LÝ GAME ---
-  // [UPDATE] Init state là INIT thay vì MENU để tránh hiện menu
   const [gameState, setGameState] = useState('INIT'); 
   const [winner, setWinner] = useState(null);
   const [showStats, setShowStats] = useState(false); 
@@ -134,6 +131,7 @@ const StickmanShadowFinal = ({ onClose }) => {
   const soulImageRef = useRef(null);
   const expImageRef = useRef(null);
   const levelUpImageRef = useRef(null);
+  const coinImageRef = useRef(null); // Ref cho ảnh coin vẽ trong Canvas
 
   // Input controller
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
@@ -196,6 +194,11 @@ const StickmanShadowFinal = ({ onClose }) => {
     const luImg = new Image();
     luImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/level-up.webp";
     levelUpImageRef.current = luImg;
+
+    // Load ảnh coin
+    const cImg = new Image();
+    cImg.src = COIN_IMG_URL;
+    coinImageRef.current = cImg;
   }, []);
 
   const rand = (min, max) => Math.random() * (max - min) + min;
@@ -510,14 +513,21 @@ const StickmanShadowFinal = ({ onClose }) => {
       }
   };
   
+  // [UPDATE] Vẽ Loot Coin bằng hình ảnh
   const drawCoins = (ctx) => {
       lootCoins.current.forEach(c => {
           ctx.save(); ctx.translate(c.x, c.y);
-          const r = 10;
-          ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
-          ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 2; ctx.stroke();
-          ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
-          ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 1);
+          if (coinImageRef.current && coinImageRef.current.complete && coinImageRef.current.naturalWidth > 0) {
+              const size = 20; // Kích thước coin rơi
+              ctx.drawImage(coinImageRef.current, -size/2, -size/2, size, size);
+          } else {
+              // Fallback nếu ảnh lỗi
+              const r = 10;
+              ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+              ctx.strokeStyle = '#DAA520'; ctx.lineWidth = 2; ctx.stroke();
+              ctx.fillStyle = '#B8860B'; ctx.font = 'bold 12px Arial'; 
+              ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('$', 0, 1);
+          }
           ctx.restore();
       });
   };
@@ -568,8 +578,17 @@ const StickmanShadowFinal = ({ onClose }) => {
       // Vẽ hiển thị Coins kiếm được trong Session (Canvas UI)
       ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; ctx.beginPath(); ctx.roundRect(hudX, hudY, hudW, hudH, 18); ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = '#FFD700'; ctx.stroke();
-      const iconX = hudX + 20; const iconY = hudY + 18; const r = 12;
-      ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(iconX, iconY, r, 0, Math.PI * 2); ctx.fill();
+      
+      // [UPDATE] Vẽ Icon coin trong HUD bằng ảnh
+      const iconX = hudX + 20; const iconY = hudY + 18;
+      if (coinImageRef.current && coinImageRef.current.complete) {
+          const size = 20;
+          ctx.drawImage(coinImageRef.current, iconX - size/2, iconY - size/2, size, size);
+      } else {
+          const r = 12;
+          ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(iconX, iconY, r, 0, Math.PI * 2); ctx.fill();
+      }
+
       ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 25);
       
       // Vẽ Shadow UI (Bên phải)
