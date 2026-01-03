@@ -1,4 +1,3 @@
---- START OF FILE stick-game.tsx (16).txt ---
 
 import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật từ bên ngoài
