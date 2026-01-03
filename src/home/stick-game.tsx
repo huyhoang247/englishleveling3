@@ -39,6 +39,9 @@ const StickmanShadowFinal = () => {
   const camera = useRef({ x: 0 });
   const respawnTimer = useRef(0);
   const dprRef = useRef(1);
+  
+  // Ref quản lý việc đi tuần tra khi không có quái (Auto Mode)
+  const patrolTimer = useRef(0);
 
   // Ref hình ảnh
   const soulImageRef = useRef(null);
@@ -57,7 +60,6 @@ const StickmanShadowFinal = () => {
     coins: 0, 
     state: 'IDLE', dir: 1,
     animTimer: 0, attackCooldown: 0,
-    autoDelay: 0, // Thêm biến delay cho Auto mode
     color: '#00f2ff', 
     weaponColor: '#ffffff',
     name: 'MONARCH',
@@ -128,7 +130,6 @@ const StickmanShadowFinal = () => {
         level: 1, currentExp: 0, maxExp: 100,
         coins: 0, 
         state: 'IDLE', dir: 1,
-        autoDelay: 0,
         isDead: false 
     };
     
@@ -144,6 +145,7 @@ const StickmanShadowFinal = () => {
     floatingTexts.current = [];
     lootCoins.current = []; 
     respawnTimer.current = 0;
+    patrolTimer.current = 0;
     
     setCanRise(false);
     canRiseRef.current = false;
@@ -324,7 +326,6 @@ const StickmanShadowFinal = () => {
       }
   };
 
-  // Thêm tham số `type` để phân biệt EXP
   const addFloatingText = (x, y, text, color, size = 20, type = 'TEXT') => {
       floatingTexts.current.push({
           x, y, text, color, size, life: 60, vy: -2, type
@@ -388,8 +389,6 @@ const StickmanShadowFinal = () => {
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
           
-          // Thay text bằng type 'LEVEL_UP'
-          // Đặt vị trí Y cao hơn (-170) để nằm trên EXP
           addFloatingText(entity.x, entity.y - 170, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
@@ -397,7 +396,6 @@ const StickmanShadowFinal = () => {
 
   const distributeExp = (killer, deadEnemy) => {
       const totalExp = 50 + (deadEnemy.level * 10);
-      // Dịch Y từ -80 lên -120 để tránh che dòng máu
       if (killer.type === 'PLAYER') {
           p1.current.currentExp += totalExp;
           addFloatingText(p1.current.x, p1.current.y - 120, `${totalExp}`, '#fff', 16, 'EXP');
@@ -645,9 +643,9 @@ const StickmanShadowFinal = () => {
     // LOGIC ĐIỀU KHIỂN: AUTO MODE vs MANUAL MODE
     // ============================================
     if (isAutoRef.current) {
-        // --- AUTO MODE (CINEMATIC & SLOW) ---
+        // --- AUTO MODE ---
         
-        // 1. Tự động dùng Skill Rise
+        // 1. Tự động dùng Skill Rise nếu có Soul (và chưa full slot)
         const canUseSkill = canRiseRef.current || (souls.current.length > 0 && shadows.current.length < CFG.maxShadows);
         if (canUseSkill) {
             extractShadow();
@@ -662,62 +660,64 @@ const StickmanShadowFinal = () => {
                 if (d < minDst) { minDst = d; target = e; }
             }
         });
-        
-        // Khởi tạo biến delay nếu chưa có (lưu vào usr để dùng qua các frame)
-        if (typeof usr.autoDelay === 'undefined') usr.autoDelay = 0;
 
         if (target) {
+            // --- CÓ KẺ ĐỊCH ---
+            // Reset timer tuần tra
+            patrolTimer.current = 0;
+
             const dist = target.x - usr.x;
-            const absDist = Math.abs(dist);
-            // Tầm đánh rộng hơn chút để dừng lại sớm hơn tạo dáng
-            const attackRange = CFG.attackDist - 5; 
+            const attackRange = CFG.attackDist - 10; 
 
             // Hướng mặt về phía địch
-            if (usr.state !== 'ATTACK' && usr.state !== 'HURT') {
+            if (usr.state !== 'ATTACK') {
                 usr.dir = dist > 0 ? 1 : -1;
             }
 
-            if (absDist > attackRange) {
-                // --- DI CHUYỂN CHẬM (WALK) ---
-                // Giảm tốc độ xuống còn 45% để trông ngầu hơn
-                // Nếu địch quá xa (>400) thì mới chạy nhanh
-                const moveSpeed = absDist > 400 ? CFG.speed : CFG.speed * 0.45;
-                
-                usr.vx = usr.dir * moveSpeed;
+            if (Math.abs(dist) > attackRange) {
+                // Di chuyển đến địch (TỐC ĐỘ CHẬM HƠN KHI AUTO - 0.65)
+                const autoSpeed = CFG.speed * 0.65;
+                usr.vx = usr.dir * autoSpeed;
                 if (usr.state !== 'JUMP' && usr.state !== 'ATTACK' && usr.state !== 'HURT') usr.state = 'RUN';
             } else {
-                // --- TẤN CÔNG CÓ NHỊP ĐIỆU ---
-                usr.vx *= 0.8; // Trượt nhẹ khi dừng
-                
-                if (usr.autoDelay > 0) {
-                    usr.autoDelay--; 
-                    if (usr.state === 'RUN') usr.state = 'IDLE';
-                } else if (usr.attackCooldown <= 0) {
-                    // Tấn công!
+                // Đủ gần -> Dừng lại và Đánh
+                usr.vx = 0;
+                if (usr.attackCooldown <= 0) {
                     usr.state = 'ATTACK';
-                    // Tăng cooldown lên (ví dụ 40 thay vì 25) để đánh chậm hơn
-                    usr.attackCooldown = 40; 
-                    // Lao tới nhẹ nhàng hơn
-                    usr.vx = usr.dir * 6; 
-                    
-                    // Sau khi đánh xong, random thời gian nghỉ (30-60 frame)
-                    usr.autoDelay = 30 + Math.random() * 30; 
+                    usr.attackCooldown = 25;
+                    usr.vx = usr.dir * 10; 
+                } else {
+                    if (usr.state === 'RUN') usr.state = 'IDLE';
                 }
             }
         } else {
-            // --- KHÔNG CÓ ĐỊCH (PATROL) ---
-            // Thay vì đứng im, hãy đi bộ chậm về phía trung tâm camera
-            const centerX = camera.current.x + (canvas.width / dprRef.current) / 2;
-            const distToCenter = centerX - usr.x;
-            
-            // Nếu cách tâm quá xa thì đi về tâm
-            if (Math.abs(distToCenter) > 100) {
-                usr.dir = distToCenter > 0 ? 1 : -1;
-                usr.vx = usr.dir * (CFG.speed * 0.3); // Đi bộ rất chậm
-                if (usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN';
-            } else {
+            // --- KHÔNG CÓ KẺ ĐỊCH (PATROL) ---
+            // Thay vì đứng im, nhân vật sẽ đi qua đi lại nhẹ nhàng
+            patrolTimer.current++;
+            const t = patrolTimer.current;
+            const patrolSpeed = CFG.speed * 0.35; // Đi bộ rất chậm
+
+            if (t < 100) {
+                // Đi phải
+                usr.dir = 1;
+                usr.vx = patrolSpeed;
+                if (usr.state !== 'ATTACK') usr.state = 'RUN';
+            } else if (t < 160) {
+                // Đứng nghỉ
                 usr.vx *= CFG.friction;
-                if (usr.state === 'RUN') usr.state = 'IDLE';
+                if (Math.abs(usr.vx) < 0.1 && usr.state === 'RUN') usr.state = 'IDLE';
+            } else if (t < 260) {
+                // Đi trái
+                usr.dir = -1;
+                usr.vx = -patrolSpeed;
+                if (usr.state !== 'ATTACK') usr.state = 'RUN';
+            } else if (t < 320) {
+                // Đứng nghỉ
+                usr.vx *= CFG.friction;
+                if (Math.abs(usr.vx) < 0.1 && usr.state === 'RUN') usr.state = 'IDLE';
+            } else {
+                // Reset vòng lặp
+                patrolTimer.current = 0;
             }
         }
 
