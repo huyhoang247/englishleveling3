@@ -1,3 +1,5 @@
+--- START OF FILE stick-game.tsx (16).txt ---
+
 import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật từ bên ngoài
 import { useGame } from '../GameContext.tsx';
@@ -40,6 +42,8 @@ const StickmanShadowFinal = () => {
   const hitStopRef = useRef(0);
   const camera = useRef({ x: 0 });
   const dprRef = useRef(1); 
+  // New Ref for transition
+  const floorTransitioning = useRef(false);
 
   // --- REFS QUẢN LÝ FLOOR & WAVE ---
   const floorRef = useRef(1);           // Tầng hiện tại
@@ -167,6 +171,7 @@ const StickmanShadowFinal = () => {
     
     setIsAuto(false);
     isAutoRef.current = false;
+    floorTransitioning.current = false;
     
     bgObjects.current = [];
     for(let i = -15; i < 15; i++) {
@@ -180,18 +185,23 @@ const StickmanShadowFinal = () => {
   };
 
   const nextFloor = () => {
+      floorTransitioning.current = false; // Reset transition flag
       const nextF = floorRef.current + 1;
       initFloor(nextF);
       
-      const heal = Math.floor(p1.current.maxHp * 0.2);
-      p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + heal);
-      addFloatingText(p1.current.x, p1.current.y - 150, `+${heal} HP`, '#00ff00', 25);
+      // --- LOGIC HEALING MỚI: 10% -> 100% HP ---
+      const healPercent = Math.floor(rand(10, 101)); // Random 10 to 100
+      const healAmount = Math.floor(p1.current.maxHp * (healPercent / 100));
+      p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + healAmount);
+      
+      // Floating text hiển thị heal
+      addFloatingText(p1.current.x, p1.current.y - 150, `+${healAmount} HP`, '#22c55e', 30);
       
       enemies.current = [];
       souls.current = [];
       
       spawnWave(); 
-      setGameState('PLAYING');
+      // Không cần setGameState('PLAYING') vì nó đã là PLAYING
   };
 
   const createEnemy = (x, y, level) => {
@@ -230,28 +240,12 @@ const StickmanShadowFinal = () => {
   // --- CẬP NHẬT LOGIC: TÍNH LEVEL QUÁI THEO NHÓM 5 TẦNG ---
   const getEnemyLevelForCurrentFloor = () => {
       const floor = floorRef.current;
-      
-      // Công thức tính Tier (nhóm):
-      // Floor 1-5  -> Tier 0 -> Lv 1-15
-      // Floor 6-10 -> Tier 1 -> Lv 16-30
-      // Floor 11-15 -> Tier 2 -> Lv 31-45
       const tier = Math.floor((floor - 1) / 5);
-      
       const minLv = tier * 15 + 1;
       const maxLv = (tier + 1) * 15;
-      
       return Math.floor(rand(minLv, maxLv + 1));
   };
   
-  // Hàm helper để hiển thị info ở màn hình kết thúc floor
-  const getNextFloorRangeInfo = () => {
-      const nextFloorNum = floorRef.current + 1;
-      const tier = Math.floor((nextFloorNum - 1) / 5);
-      const minLv = tier * 15 + 1;
-      const maxLv = (tier + 1) * 15;
-      return `${minLv} - ${maxLv}`;
-  }
-
   // --- SHADOW & SOUL ---
   const spawnSoul = (x, y, level, damage) => {
       souls.current.push({
@@ -693,16 +687,34 @@ const StickmanShadowFinal = () => {
     // Chỉ update khi đang PLAYING và không xem stats
     if (gameState !== 'PLAYING' || showStats) return;
     
-    // Hit Stop Effect
-    if (hitStopRef.current > 0) { hitStopRef.current--; return; }
-
     const canvas = canvasRef.current;
     if (!canvas) return;
     const floorY = canvas.height / dprRef.current * 0.66; 
 
-    // Camera follow player
+    // --- ALWAYS UPDATE VISUALS (Even during transition) ---
+    // Camera follow player (smoothly)
     const targetCamX = p1.current.x - (canvas.width / dprRef.current) / 2;
     camera.current.x += (targetCamX - camera.current.x) * 0.1;
+    
+    // Particles, Texts, Loot updates
+    for (let i = particles.current.length - 1; i >= 0; i--) {
+        const p = particles.current[i];
+        p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life--;
+        if (p.life <= 0 || p.y > floorY) particles.current.splice(i, 1);
+    }
+    updateLoot(floorY, camera.current.x);
+    for (let i = floatingTexts.current.length - 1; i >= 0; i--) {
+        const t = floatingTexts.current[i];
+        t.y += t.vy; t.life--; if (t.life <= 0) floatingTexts.current.splice(i, 1);
+    }
+    
+    // --- IF TRANSITIONING, SKIP GAME LOGIC ---
+    if (floorTransitioning.current) {
+        return;
+    }
+
+    // Hit Stop Effect
+    if (hitStopRef.current > 0) { hitStopRef.current--; return; }
 
     // Shake dampening
     if (shakeRef.current > 0) shakeRef.current *= 0.9;
@@ -810,8 +822,20 @@ const StickmanShadowFinal = () => {
              floorWavesRef.current.current++;
              spawnWave();
         } else {
-             // Đã hết wave trong Floor -> FLOOR COMPLETE
-             setGameState('FLOOR_COMPLETE');
+             // Đã hết wave trong Floor -> FLOOR COMPLETE (AUTO TRANSITION)
+             // Kiểm tra để không gọi nhiều lần
+             if (!floorTransitioning.current) {
+                 floorTransitioning.current = true;
+                 
+                 // Show Green "FLOOR CLEARED" text
+                 // y - 220 để nằm trên level up icon (thường ở y - 170)
+                 addFloatingText(p1.current.x, p1.current.y - 250, "FLOOR CLEARED", '#4ade80', 40, 'TEXT');
+                 
+                 // Tự động qua màn sau 3 giây
+                 setTimeout(() => {
+                     nextFloor();
+                 }, 3000);
+             }
         }
     }
 
@@ -850,17 +874,6 @@ const StickmanShadowFinal = () => {
 
     updateShadows(floorY);
 
-    for (let i = particles.current.length - 1; i >= 0; i--) {
-        const p = particles.current[i];
-        p.x += p.vx; p.y += p.vy; p.vy += 0.5; p.life--;
-        if (p.life <= 0 || p.y > floorY) particles.current.splice(i, 1);
-    }
-    updateLoot(floorY, camera.current.x);
-    for (let i = floatingTexts.current.length - 1; i >= 0; i--) {
-        const t = floatingTexts.current[i];
-        t.y += t.vy; t.life--; if (t.life <= 0) floatingTexts.current.splice(i, 1);
-    }
-    
     let hasSoul = false;
     for (let i = souls.current.length - 1; i >= 0; i--) {
         const s = souls.current[i];
@@ -991,8 +1004,16 @@ const StickmanShadowFinal = () => {
             } 
             else {
                 ctx.textAlign = 'center'; 
-                ctx.font = '20px "Lilita One", cursive';
+                // Sử dụng size được truyền vào
+                ctx.font = `${t.size}px "Lilita One", cursive`;
                 ctx.fillStyle = t.color;
+                
+                // Nếu là chữ Floor Cleared, thêm chút effect
+                if (t.text === "FLOOR CLEARED") {
+                     ctx.shadowColor = 'rgba(74, 222, 128, 0.6)';
+                     ctx.shadowBlur = 10;
+                }
+                
                 ctx.fillText(t.text, t.x | 0, t.y | 0);
             }
             ctx.restore();
@@ -1001,7 +1022,7 @@ const StickmanShadowFinal = () => {
     }
     ctx.restore();
 
-    if ((gameState === 'PLAYING' || gameState === 'FLOOR_COMPLETE') && !showStats) { 
+    if ((gameState === 'PLAYING') && !showStats) { 
         drawHUD(ctx);
     }
   };
@@ -1149,26 +1170,11 @@ const StickmanShadowFinal = () => {
         </div>
       )}
 
-      {/* --- FLOOR COMPLETE MODAL --- */}
-      {gameState === 'FLOOR_COMPLETE' && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-[100] backdrop-blur-sm">
-           <h2 className="text-5xl font-black text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-bounce">FLOOR CLEARED!</h2>
-           <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 mb-8 text-center min-w-[300px]">
-               <p className="text-gray-400 mb-2">Completed Floor</p>
-               <p className="text-4xl font-bold text-white mb-4">{floorRef.current}</p>
-               <div className="h-[1px] w-full bg-gray-600 mb-4"></div>
-               <p className="text-green-400 text-sm animate-pulse">+ Hồi phục 20% HP</p>
-               <p className="text-red-400 text-sm mt-1">Kẻ địch kế tiếp: Lv {getNextFloorRangeInfo()}</p>
-           </div>
-           <button onClick={nextFloor} className="px-12 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-black text-2xl rounded-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(6,182,212,0.6)] border-2 border-white/20">NEXT FLOOR</button>
-        </div>
-      )}
-
       {/* --- IN-GAME CONTROLS --- */}
-      {(gameState === 'PLAYING' || gameState === 'FLOOR_COMPLETE') && !showStats && (
+      {(gameState === 'PLAYING') && !showStats && (
         <>
             {/* Nếu NOT Auto thì hiển thị nút di chuyển */}
-            {!isAuto && (
+            {!isAuto && !floorTransitioning.current && (
                 <div className="absolute bottom-24 left-8 flex gap-2 z-40">
                     <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
                     <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
@@ -1192,7 +1198,7 @@ const StickmanShadowFinal = () => {
                 </button>
 
                 {/* Các nút hành động: Chỉ hiển thị khi NOT Auto */}
-                {!isAuto && (
+                {!isAuto && !floorTransitioning.current && (
                     <>
                         {canRise && (
                             <button className="w-16 h-16 bg-purple-600/90 border-2 border-purple-400 rounded-full active:scale-95 shadow-[0_0_20px_rgba(147,51,234,0.8)] flex items-center justify-center animate-bounce"
