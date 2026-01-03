@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật và skills
 import { useGame } from '../GameContext.tsx';
 // 2. Import component hiển thị coin
-import CoinDisplay from './coin-display.tsx';
+import CoinDisplay from '../ui/display/coin-display.tsx';
 
 // Helper để lấy tỉ lệ kích hoạt (Copy từ skill-data)
 const getActivationChanceLocal = (rarity) => {
