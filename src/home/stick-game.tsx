@@ -1,3 +1,4 @@
+--- START OF FILE stick-game.tsx (16).txt ---
 
 import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật từ bên ngoài
@@ -184,23 +185,22 @@ const StickmanShadowFinal = () => {
   };
 
   const nextFloor = () => {
-      floorTransitioning.current = false; // Reset transition flag
+      floorTransitioning.current = false; 
       const nextF = floorRef.current + 1;
       initFloor(nextF);
       
-      // --- LOGIC HEALING MỚI: 10% -> 100% HP ---
-      const healPercent = Math.floor(rand(10, 101)); // Random 10 to 100
+      // Healing: 10% -> 100% HP
+      const healPercent = Math.floor(rand(10, 101)); 
       const healAmount = Math.floor(p1.current.maxHp * (healPercent / 100));
       p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + healAmount);
       
-      // Floating text hiển thị heal
-      addFloatingText(p1.current.x, p1.current.y - 150, `+${healAmount} HP`, '#22c55e', 30);
+      // Hiển thị +HP: Cùng hàng với EXP (y-120), kích thước nhỏ (25)
+      addFloatingText(p1.current.x, p1.current.y - 120, `+${healAmount}`, '#22c55e', 25);
       
       enemies.current = [];
       souls.current = [];
       
       spawnWave(); 
-      // Không cần setGameState('PLAYING') vì nó đã là PLAYING
   };
 
   const createEnemy = (x, y, level) => {
@@ -231,9 +231,10 @@ const StickmanShadowFinal = () => {
       waveQueue.current = count;
       waveSpawnTimer.current = 0; 
       
-      const playerX = p1.current.x;
-      const waveText = `WAVE ${floorWavesRef.current.current}/${floorWavesRef.current.total}`;
-      addFloatingText(playerX, p1.current.y - 250, waveText, '#ff0000', 35);
+      // ĐÃ LOẠI BỎ: Không còn hiển thị chữ WAVE đỏ giữa màn hình
+      // const playerX = p1.current.x;
+      // const waveText = `WAVE ${floorWavesRef.current.current}/${floorWavesRef.current.total}`;
+      // addFloatingText(playerX, p1.current.y - 250, waveText, '#ff0000', 35);
   };
 
   // --- CẬP NHẬT LOGIC: TÍNH LEVEL QUÁI THEO NHÓM 5 TẦNG ---
@@ -827,8 +828,9 @@ const StickmanShadowFinal = () => {
                  floorTransitioning.current = true;
                  
                  // Show Green "FLOOR CLEARED" text
-                 // y - 220 để nằm trên level up icon (thường ở y - 170)
-                 addFloatingText(p1.current.x, p1.current.y - 250, "FLOOR CLEARED", '#4ade80', 40, 'TEXT');
+                 // y-170 nằm trên hàng icon level up
+                 // size 25 (nhỏ, bằng kích cỡ -HP)
+                 addFloatingText(p1.current.x, p1.current.y - 170, "FLOOR CLEARED", '#4ade80', 25, 'TEXT');
                  
                  // Tự động qua màn sau 3 giây
                  setTimeout(() => {
