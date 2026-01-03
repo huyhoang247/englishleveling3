@@ -1,56 +1,69 @@
 import React, { useRef, useEffect, useState } from 'react';
-// 1. Import useGame
+// 1. Import useGame để lấy chỉ số nhân vật từ bên ngoài
 import { useGame } from '../GameContext.tsx';
 
 const StickmanShadowFinal = () => {
   const canvasRef = useRef(null);
   
-  // 2. Lấy stats từ Context
+  // 2. Lấy stats từ Context (HP, ATK, DEF gốc của người chơi)
   const { totalPlayerStats } = useGame(); 
 
+  // --- STATE QUẢN LÝ GAME ---
+  // MENU: Màn hình chính
+  // PLAYING: Đang chơi
+  // GAMEOVER: Thua cuộc
+  // FLOOR_COMPLETE: Hoàn thành tầng (thắng 1 floor)
   const [gameState, setGameState] = useState('MENU'); 
   const [winner, setWinner] = useState(null);
   const [showStats, setShowStats] = useState(false); 
   
   // --- AUTO MODE STATE ---
   const [isAuto, setIsAuto] = useState(false);
-  const isAutoRef = useRef(false); // Ref để dùng trong vòng lặp game loop
+  const isAutoRef = useRef(false); // Ref dùng trong game loop để tránh re-render
   
-  // State UI
+  // State UI hiển thị nút kỹ năng
   const [canRise, setCanRise] = useState(false);
   const canRiseRef = useRef(false);
 
-  // --- CẤU HÌNH ---
+  // --- CẤU HÌNH GAME (CONFIG) ---
   const CFG = {
-    gravity: 0.8,
-    speed: 7,
-    jump: -16,
-    friction: 0.85,
-    attackDist: 70, 
-    hitStun: 20,
-    camShake: 0,
-    respawnTime: 120, 
-    maxShadows: 3, 
+    gravity: 0.8,       // Trọng lực
+    speed: 7,           // Tốc độ di chuyển
+    jump: -16,          // Lực nhảy
+    friction: 0.85,     // Ma sát (để dừng lại khi không bấm nút)
+    attackDist: 70,     // Tầm đánh
+    hitStun: 20,        // Thời gian bị khựng khi trúng đòn
+    camShake: 0,        // Rung camera
+    respawnTime: 120,   // Thời gian hồi sinh (không dùng cho mode này nhưng giữ lại)
+    maxShadows: 3,      // Số lượng lính tối đa
   };
 
+  // --- REFS QUẢN LÝ LOGIC ---
   const frameRef = useRef(0);
   const shakeRef = useRef(0);
   const hitStopRef = useRef(0);
   const camera = useRef({ x: 0 });
-  const dprRef = useRef(1);
+  const dprRef = useRef(1); // Device Pixel Ratio
 
-  // --- NEW: Refs quản lý Wave liên tục ---
-  const waveQueue = useRef(0);      // Số lượng quái còn lại chưa xuất hiện trong đợt này
-  const waveSpawnTimer = useRef(0); // Thời gian đếm ngược để ra con quái tiếp theo trong đợt
-  const currentWaveLevel = useRef(1); // Lưu level của đợt hiện tại để spawn đúng level
-
-  // Ref hình ảnh
+  // --- NEW: REFS QUẢN LÝ FLOOR & WAVE ---
+  const floorRef = useRef(1);           // Tầng hiện tại
+  const floorWavesRef = useRef({        // Quản lý số wave trong tầng
+      current: 0, 
+      total: 0 
+  });
+  
+  const waveQueue = useRef(0);      // Số lượng quái còn lại chưa xuất hiện trong wave này
+  const waveSpawnTimer = useRef(0); // Bộ đếm thời gian để spawn con quái tiếp theo
+  
+  // Ref hình ảnh (Assets)
   const soulImageRef = useRef(null);
-  const expImageRef = useRef(null); // Ref ảnh EXP
-  const levelUpImageRef = useRef(null); // Ref ảnh Level Up
+  const expImageRef = useRef(null);
+  const levelUpImageRef = useRef(null);
 
+  // Input controller
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
+  // --- ENTITIES (THỰC THỂ) ---
   // Player 1
   const p1 = useRef({
     x: 0, y: 0, vx: 0, vy: 0,
@@ -68,15 +81,15 @@ const StickmanShadowFinal = () => {
     type: 'PLAYER'
   });
 
-  const enemies = useRef([]);
-  const shadows = useRef([]);
-  const souls = useRef([]);
-  const particles = useRef([]);
-  const bgObjects = useRef([]);
-  const floatingTexts = useRef([]); 
-  const lootCoins = useRef([]); 
+  const enemies = useRef([]);       // Mảng kẻ địch
+  const shadows = useRef([]);       // Mảng lính bóng tối (đồng minh)
+  const souls = useRef([]);         // Mảng linh hồn rơi ra
+  const particles = useRef([]);     // Hiệu ứng hạt (máu, nổ)
+  const bgObjects = useRef([]);     // Cây cối/cột ở background
+  const floatingTexts = useRef([]); // Số damage bay lên
+  const lootCoins = useRef([]);     // Vàng rơi ra
 
-  // --- INIT ---
+  // --- INIT & SETUP ---
   const handleResize = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -98,26 +111,38 @@ const StickmanShadowFinal = () => {
 
   // Load ảnh khi component mount
   useEffect(() => {
-    // Load Soul Image
     const sImg = new Image();
     sImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/soul.webp";
     soulImageRef.current = sImg;
 
-    // Load EXP Image
     const eImg = new Image();
     eImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exp.webp";
     expImageRef.current = eImg;
 
-    // Load Level Up Image
     const luImg = new Image();
     luImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/level-up.webp";
     levelUpImageRef.current = luImg;
   }, []);
 
+  // Helper Random
+  const rand = (min, max) => Math.random() * (max - min) + min;
+
+  // --- LOGIC FLOOR SYSTEM ---
+  
+  // Khởi tạo thông số cho Floor mới
+  const initFloor = (floorNumber) => {
+      floorRef.current = floorNumber;
+      // Random số lượng wave từ 3 đến 15
+      const totalWaves = Math.floor(rand(3, 16)); 
+      floorWavesRef.current = { current: 1, total: totalWaves };
+  };
+
+  // Khởi tạo Game mới (Reset toàn bộ)
   const initGame = () => {
     const { w, h } = handleResize(); 
     const floorY = h * 0.66;
 
+    // Lấy chỉ số từ Context hoặc dùng mặc định
     const startHp = totalPlayerStats.hp > 0 ? totalPlayerStats.hp : 100;
     const startAtk = totalPlayerStats.atk > 0 ? totalPlayerStats.atk : 12;
     const startDef = totalPlayerStats.def || 0;
@@ -134,30 +159,30 @@ const StickmanShadowFinal = () => {
         isDead: false 
     };
     
+    // Reset các mảng dữ liệu
     enemies.current = [];
-    
-    // Reset queue spawn
-    waveQueue.current = 0;
-    waveSpawnTimer.current = 0;
-
-    const enemyBaseLevel = 1; 
-    spawnWave(enemyBaseLevel); // Gọi spawn wave (sẽ set queue)
-    
-    camera.current.x = -w/2;
     shadows.current = [];
     souls.current = [];
     particles.current = [];
     floatingTexts.current = [];
     lootCoins.current = []; 
     
+    // Reset Floor về 1
+    initFloor(1);
+    
+    // Spawn wave đầu tiên của Floor 1
+    spawnWave(); 
+    
+    camera.current.x = -w/2;
     setCanRise(false);
     canRiseRef.current = false;
     setShowStats(false);
     
-    // Reset Auto Mode khi bắt đầu game mới
+    // Reset Auto Mode
     setIsAuto(false);
     isAutoRef.current = false;
     
+    // Tạo background ngẫu nhiên
     bgObjects.current = [];
     for(let i = -15; i < 15; i++) {
         bgObjects.current.push({
@@ -169,6 +194,25 @@ const StickmanShadowFinal = () => {
     setGameState('PLAYING');
   };
 
+  // Chuyển sang Floor tiếp theo
+  const nextFloor = () => {
+      const nextF = floorRef.current + 1;
+      initFloor(nextF);
+      
+      // Hồi phục 20% máu khi qua màn
+      const heal = Math.floor(p1.current.maxHp * 0.2);
+      p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + heal);
+      addFloatingText(p1.current.x, p1.current.y - 150, `+${heal} HP`, '#00ff00', 25);
+      
+      // Dọn sạch xác chết/souls cũ
+      enemies.current = [];
+      souls.current = [];
+      
+      spawnWave(); // Bắt đầu wave 1 của floor mới
+      setGameState('PLAYING');
+  };
+
+  // Tạo một kẻ địch cụ thể
   const createEnemy = (x, y, level) => {
       const hp = 100 + (level * 30); 
       const newEnemy = {
@@ -190,28 +234,43 @@ const StickmanShadowFinal = () => {
       createExplosion(x, y - 50, '#ff2a00');
   };
 
-  // --- SỬA ĐỔI: SPAWN WAVE LOGIC ---
-  const spawnWave = (baseLevel) => {
-      // Random từ 2 đến 5 kẻ địch (Math.floor(rand(2, 6)))
-      const count = Math.floor(rand(2, 6)); 
+  // --- LOGIC SPAWN WAVE ---
+  const spawnWave = () => {
+      // Random số lượng quái trong đợt: từ 2 đến 6 con
+      const count = Math.floor(rand(2, 7)); 
       
       waveQueue.current = count;
-      currentWaveLevel.current = baseLevel;
-      waveSpawnTimer.current = 0; // Set về 0 để con đầu tiên ra ngay lập tức
+      waveSpawnTimer.current = 0; // Spawn con đầu tiên ngay lập tức
       
       const playerX = p1.current.x;
-      addFloatingText(playerX, p1.current.y - 200, `WAVE INCOMING: ${count}`, '#ff0000', 30);
+      
+      // Hiển thị text thông báo Wave
+      const waveText = `WAVE ${floorWavesRef.current.current}/${floorWavesRef.current.total}`;
+      addFloatingText(playerX, p1.current.y - 250, waveText, '#ff0000', 35);
   };
 
-  // --- SHADOW LOGIC ---
+  // Tính Level kẻ địch dựa trên Floor hiện tại
+  const getEnemyLevelForCurrentFloor = () => {
+      const floor = floorRef.current;
+      // Công thức:
+      // Floor 1: Lv 1 - 15
+      // Floor 2: Lv 16 - 30
+      // Floor 3: Lv 31 - 45
+      const minLv = (floor - 1) * 15 + 1;
+      const maxLv = floor * 15;
+      return Math.floor(rand(minLv, maxLv + 1));
+  };
+
+  // --- SHADOW & SOUL LOGIC ---
   const spawnSoul = (x, y, level, damage) => {
       souls.current.push({
           x, y, level, damage,
-          life: 600, 
+          life: 600, // Tồn tại 10 giây (60fps)
           anim: 0
       });
   };
 
+  // Kỹ năng "Arise" - Triệu hồi lính
   const extractShadow = () => {
       const p = p1.current;
       let closestIndex = -1;
@@ -226,7 +285,7 @@ const StickmanShadowFinal = () => {
           }
       });
       
-      // Auto Mode
+      // Auto Mode ưu tiên lấy soul đầu tiên nếu có
       if (closestIndex === -1 && isAutoRef.current && souls.current.length > 0) {
           closestIndex = 0; 
       }
@@ -257,6 +316,7 @@ const StickmanShadowFinal = () => {
       }
   };
 
+  // Cập nhật AI cho lính bóng tối
   const updateShadows = (floorY) => {
       for (let i = shadows.current.length - 1; i >= 0; i--) {
           if (shadows.current[i].isDead) {
@@ -267,15 +327,20 @@ const StickmanShadowFinal = () => {
       shadows.current.forEach(s => {
           let target = null;
           let minDst = 10000;
+          
+          // Tìm kẻ địch gần nhất
           enemies.current.forEach(e => {
               if(!e.isDead) {
                   const d = Math.abs(s.x - e.x);
                   if (d < minDst) { minDst = d; target = e; }
               }
           });
+          
+          // Nếu không có địch, đi theo chủ nhân
           if (!target) {
               target = p1.current;
           }
+          
           const dist = target.x - s.x;
           const stopDist = (target.type === 'PLAYER') ? 100 + (Math.random() * 50) : 60;
 
@@ -303,8 +368,7 @@ const StickmanShadowFinal = () => {
       });
   };
 
-  const rand = (min, max) => Math.random() * (max - min) + min;
-
+  // --- VISUAL EFFECTS (HIỆU ỨNG) ---
   const createBlood = (x, y, color, amount = 10) => {
     if (particles.current.length > 100) return;
     for (let i = 0; i < amount; i++) {
@@ -331,6 +395,7 @@ const StickmanShadowFinal = () => {
       });
   };
   
+  // --- LOOT SYSTEM (VÀNG RƠI) ---
   const spawnLoot = (x, y, totalGold) => {
       const numCoins = 3 + Math.floor(Math.random() * 2); 
       const baseValue = Math.floor(totalGold / numCoins);
@@ -377,6 +442,7 @@ const StickmanShadowFinal = () => {
       });
   };
 
+  // --- LEVELING SYSTEM ---
   const checkLevelUp = (entity, isPlayer) => {
       if (entity.currentExp >= entity.maxExp) {
           entity.level++;
@@ -410,6 +476,7 @@ const StickmanShadowFinal = () => {
       }
   };
 
+  // --- DRAWING FUNCTIONS ---
   const drawHUD = (ctx) => {
       const p = p1.current;
       const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
@@ -441,6 +508,21 @@ const StickmanShadowFinal = () => {
       ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'right';
       if (shadows.current.length >= CFG.maxShadows) ctx.fillStyle = '#f87171';
       ctx.fillText(`${shadows.current.length} / ${CFG.maxShadows}`, sHudX + sHudW - 15, sIconY + 5);
+
+      // 3. FLOOR & WAVE INFO (CENTER TOP)
+      const centerX = (canvasRef.current.width / dprRef.current) / 2;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
+      ctx.beginPath(); ctx.roundRect(centerX - 80, 10, 160, 50, 8); ctx.fill();
+      
+      ctx.fillStyle = '#fbbf24'; // Amber Color
+      ctx.font = 'bold 18px "Lilita One", cursive';
+      ctx.textAlign = 'center';
+      ctx.fillText(`FLOOR ${floorRef.current}`, centerX, 32);
+      
+      ctx.fillStyle = '#fff';
+      ctx.font = '14px Arial';
+      ctx.fillText(`WAVE: ${floorWavesRef.current.current} / ${floorWavesRef.current.total}`, centerX, 52);
+
       ctx.restore();
   };
 
@@ -621,17 +703,23 @@ const StickmanShadowFinal = () => {
         return false;
     };
 
+  // --- GAME LOOP ---
   const update = () => {
+    // Chỉ update khi đang PLAYING và không xem stats
     if (gameState !== 'PLAYING' || showStats) return;
+    
+    // Hit Stop Effect
     if (hitStopRef.current > 0) { hitStopRef.current--; return; }
 
     const canvas = canvasRef.current;
     if (!canvas) return;
     const floorY = canvas.height / dprRef.current * 0.66; 
 
+    // Camera follow player
     const targetCamX = p1.current.x - (canvas.width / dprRef.current) / 2;
     camera.current.x += (targetCamX - camera.current.x) * 0.1;
 
+    // Shake dampening
     if (shakeRef.current > 0) shakeRef.current *= 0.9;
     if (shakeRef.current < 0.5) shakeRef.current = 0;
 
@@ -697,12 +785,14 @@ const StickmanShadowFinal = () => {
         }
     }
     
+    // Physics Player
     usr.vy += CFG.gravity; usr.x += usr.vx; usr.y += usr.vy;
     if (usr.y > floorY) { usr.y = floorY; usr.vy = 0; if (usr.state === 'JUMP') usr.state = 'IDLE'; }
     usr.animTimer++;
     if (usr.attackCooldown > 0) { usr.attackCooldown--; if (usr.attackCooldown === 0 && usr.state === 'ATTACK') usr.state = 'IDLE'; }
 
-    // --- SỬA ĐỔI: LOGIC SPAWN KẺ ĐỊCH TỪNG CON MỘT ---
+    // --- ENEMY SPAWN QUEUE LOGIC ---
+    // Spawn quái theo hàng đợi của Wave hiện tại
     if (waveQueue.current > 0) {
         waveSpawnTimer.current--;
         if (waveSpawnTimer.current <= 0) {
@@ -711,12 +801,12 @@ const StickmanShadowFinal = () => {
             const dist = 300 + Math.random() * 500; 
             const spawnX = p1.current.x + (side * dist);
             
-            // Random level
-            const lvl = currentWaveLevel.current + Math.floor(Math.random() * 2);
+            // Random level dựa trên Floor hiện tại
+            const lvl = getEnemyLevelForCurrentFloor();
             createEnemy(spawnX, floorY, lvl);
             
             waveQueue.current--;
-            // Hẹn giờ cho con tiếp theo: random từ 2-4 giây (120-240 frames)
+            // Hẹn giờ cho con tiếp theo: random từ 2-4 giây
             waveSpawnTimer.current = 120 + Math.floor(Math.random() * 120);
         }
     }
@@ -728,13 +818,21 @@ const StickmanShadowFinal = () => {
         }
     }
 
-    // --- SỬA ĐỔI: LOGIC GỌI WAVE MỚI (LIÊN TỤC) ---
-    // Điều kiện: Không còn kẻ địch nào sống VÀ Không còn kẻ địch nào trong hàng đợi
+    // --- LOGIC KẾT THÚC WAVE / FLOOR ---
     if (enemies.current.length === 0 && waveQueue.current === 0) {
-        // Gọi spawnWave ngay lập tức, không chờ đợi
-        spawnWave(usr.level);
+        // Đã hết quái trong đợt này
+        
+        if (floorWavesRef.current.current < floorWavesRef.current.total) {
+             // Còn wave tiếp theo trong Floor
+             floorWavesRef.current.current++;
+             spawnWave();
+        } else {
+             // Đã hết wave trong Floor -> FLOOR COMPLETE
+             setGameState('FLOOR_COMPLETE');
+        }
     }
 
+    // AI Control
     enemies.current.forEach(ai => {
         let target = usr;
         let minDist = Math.abs(usr.x - ai.x);
@@ -845,7 +943,6 @@ const StickmanShadowFinal = () => {
         // --- DRAW SOUL ---
         souls.current.forEach(s => {
             const bob = Math.sin(s.anim * 0.1) * 5;
-            // Nếu ảnh đã tải xong, vẽ ảnh
             if (soulImageRef.current && soulImageRef.current.complete) {
                 const size = 32; 
                 ctx.drawImage(soulImageRef.current, s.x - size/2, s.y - 45 + bob, size, size);
@@ -871,35 +968,25 @@ const StickmanShadowFinal = () => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, t.life / 60);
 
-            // --- 1. XỬ LÝ VẼ ICON LEVEL UP (GIẢM SIZE) ---
             if (t.type === 'LEVEL_UP') {
                 const img = levelUpImageRef.current;
                 
                 if (img && img.complete && img.naturalWidth > 0) {
                     const originalW = img.naturalWidth;
                     const originalH = img.naturalHeight;
-                    
                     const ratio = originalH / originalW;
-                    
-                    // GIẢM XUỐNG CÒN 60
                     const targetW = 60; 
                     const targetH = targetW * ratio;
-                    
-                    // Hiệu ứng nảy nhẹ
                     const scale = t.life > 50 ? 1 + (t.life - 50) * 0.05 : 1;
                     
                     ctx.translate(t.x, t.y);
                     ctx.scale(scale, scale);
-                    
                     ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
                 }
             } 
-            // --- 2. XỬ LÝ VẼ EXP (FONT LILITA, NHỎ, KHÔNG VIỀN) ---
             else if (t.type === 'EXP') {
                  if (expImageRef.current && expImageRef.current.complete) {
                     const iconSize = 20; 
-                    
-                    // Font nhỏ hơn (15px) và không stroke
                     ctx.font = '15px "Lilita One", cursive'; 
                     ctx.textBaseline = 'middle'; 
                     ctx.textAlign = 'left';      
@@ -912,7 +999,6 @@ const StickmanShadowFinal = () => {
                     gradient.addColorStop(1, '#0369A1');      
 
                     ctx.fillStyle = gradient;
-                    // Bỏ stroke text ở đây
                     ctx.fillText(t.text, t.x, t.y);
                  } else {
                      ctx.fillStyle = '#38BDF8';
@@ -920,10 +1006,8 @@ const StickmanShadowFinal = () => {
                      ctx.fillText(t.text + " XP", t.x, t.y);
                  }
             } 
-            // --- 3. CÁC TEXT KHÁC (DAMAGE, HP) (FONT LILITA, NHỎ, KHÔNG VIỀN) ---
             else {
                 ctx.textAlign = 'center'; 
-                // Font nhỏ hơn (20px) và không stroke
                 ctx.font = '20px "Lilita One", cursive';
                 ctx.fillStyle = t.color;
                 ctx.fillText(t.text, t.x | 0, t.y | 0);
@@ -934,12 +1018,12 @@ const StickmanShadowFinal = () => {
     }
     ctx.restore();
 
-    if (gameState === 'PLAYING' && !showStats) { 
+    if ((gameState === 'PLAYING' || gameState === 'FLOOR_COMPLETE') && !showStats) { 
         drawHUD(ctx);
     }
   };
 
-  // --- FIX: GIỚI HẠN FPS (60FPS) ĐỂ TRÁNH LỖI NHANH/CHẬM ---
+  // --- LOOP SETUP (60 FPS) ---
   useEffect(() => {
     handleResize();
     window.addEventListener('resize', handleResize);
@@ -955,24 +1039,21 @@ const StickmanShadowFinal = () => {
         delta = now - then;
 
         if (delta > interval) {
-            // Điều chỉnh then để trừ đi thời gian đã trôi qua, giữ nhịp đều
             then = now - (delta % interval);
-
-            // Chỉ chạy logic game và vẽ khi đủ thời gian (1/60s)
             update();
             draw();
         }
     };
 
-    // Bắt đầu loop
     frameRef.current = requestAnimationFrame(loop);
 
     return () => {
         window.removeEventListener('resize', handleResize);
         cancelAnimationFrame(frameRef.current);
     };
-  }, [gameState, showStats]); // Giữ nguyên dependency
+  }, [gameState, showStats]); // Dependency quan trọng
 
+  // --- INPUT LISTENERS ---
   const handleTouch = (key, val) => (e) => { if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); input.current[key] = val; };
   useEffect(() => {
     const keyMap = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'jump', ' ': 'attack', 'c': 'jump', 'x': 'attack', 'z': 'skill' };
@@ -982,9 +1063,9 @@ const StickmanShadowFinal = () => {
     return () => { window.removeEventListener('keydown', down); window.removeEventListener('keyup', up); };
   }, []);
 
+  // --- STATS HELPER ---
   const getEnemyWaveStats = () => {
     const activeEnemies = enemies.current.filter(e => !e.isDead);
-    // Nếu không còn quái active nhưng vẫn còn trong hàng chờ
     if (activeEnemies.length === 0 && waveQueue.current > 0) {
          return {
              count: waveQueue.current,
@@ -1019,7 +1100,6 @@ const StickmanShadowFinal = () => {
 
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
-      {/* Nạp font Lilita One */}
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
       `}</style>
@@ -1062,6 +1142,7 @@ const StickmanShadowFinal = () => {
         </div>
       )}
 
+      {/* --- MENU MODAL --- */}
       {gameState === 'MENU' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-50">
            <h1 className="text-6xl md:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-600 italic mb-4 drop-shadow-[0_0_10px_rgba(168,85,247,0.5)]">SHADOW FIGHT</h1>
@@ -1074,14 +1155,34 @@ const StickmanShadowFinal = () => {
            <button onClick={initGame} className="px-10 py-4 bg-white text-black font-black text-2xl skew-x-[-10deg] hover:bg-purple-400 transition-colors shadow-[5px_5px_0px_#000000] border-2 border-white">FIGHT NOW</button>
         </div>
       )}
+
+      {/* --- GAMEOVER MODAL --- */}
       {gameState === 'GAMEOVER' && (
         <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90 z-[100]">
            <h2 className="text-5xl font-bold text-red-500 mb-2 uppercase tracking-wider animate-pulse">{winner}</h2>
+           <p className="text-gray-300 mb-2 text-xl">Floor Reached: <span className="text-yellow-400">{floorRef.current}</span></p>
            <p className="text-gray-300 mb-2 text-xl">Level: <span className="text-yellow-400">{p1.current.level}</span></p>
            <button onClick={initGame} className="px-12 py-4 bg-gradient-to-r from-red-600 to-orange-500 text-white font-black text-2xl rounded-full hover:scale-110 active:scale-95 transition-all shadow-[0_0_20px_rgba(255,69,0,0.6)] border-4 border-white/10">HỒI SINH</button>
         </div>
       )}
-      {gameState === 'PLAYING' && !showStats && (
+
+      {/* --- FLOOR COMPLETE MODAL --- */}
+      {gameState === 'FLOOR_COMPLETE' && (
+        <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 z-[100] backdrop-blur-sm">
+           <h2 className="text-5xl font-black text-yellow-400 mb-4 drop-shadow-[0_0_15px_rgba(250,204,21,0.6)] animate-bounce">FLOOR CLEARED!</h2>
+           <div className="bg-gray-800 p-6 rounded-xl border border-gray-600 mb-8 text-center min-w-[300px]">
+               <p className="text-gray-400 mb-2">Completed Floor</p>
+               <p className="text-4xl font-bold text-white mb-4">{floorRef.current}</p>
+               <div className="h-[1px] w-full bg-gray-600 mb-4"></div>
+               <p className="text-green-400 text-sm animate-pulse">+ Hồi phục 20% HP</p>
+               <p className="text-red-400 text-sm mt-1">Kẻ địch kế tiếp: Lv {(floorRef.current) * 15 + 1} - {(floorRef.current + 1) * 15}</p>
+           </div>
+           <button onClick={nextFloor} className="px-12 py-4 bg-gradient-to-r from-blue-600 to-cyan-500 text-white font-black text-2xl rounded-lg hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(6,182,212,0.6)] border-2 border-white/20">NEXT FLOOR</button>
+        </div>
+      )}
+
+      {/* --- IN-GAME CONTROLS --- */}
+      {(gameState === 'PLAYING' || gameState === 'FLOOR_COMPLETE') && !showStats && (
         <>
             {/* Nếu NOT Auto thì hiển thị nút di chuyển */}
             {!isAuto && (
