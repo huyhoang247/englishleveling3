@@ -387,8 +387,8 @@ const StickmanShadowFinal = () => {
           const color = isPlayer ? '#00ff00' : '#3b82f6';
           
           // Thay text bằng type 'LEVEL_UP'
-          // Đặt vị trí Y cao hơn (-180) để nằm trên EXP (-120)
-          addFloatingText(entity.x, entity.y - 180, "", null, 0, 'LEVEL_UP');
+          // Đặt vị trí Y cao hơn (-160) để nằm trên EXP, nhưng thấp hơn trước
+          addFloatingText(entity.x, entity.y - 160, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
   };
@@ -863,21 +863,18 @@ const StickmanShadowFinal = () => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, t.life / 60);
 
-            // --- 1. XỬ LÝ VẼ ICON LEVEL UP (FIX MÉO ẢNH) ---
+            // --- 1. XỬ LÝ VẼ ICON LEVEL UP (GIẢM SIZE) ---
             if (t.type === 'LEVEL_UP') {
                 const img = levelUpImageRef.current;
                 
-                // Kiểm tra ảnh đã tải và có kích thước
                 if (img && img.complete && img.naturalWidth > 0) {
                     const originalW = img.naturalWidth;
                     const originalH = img.naturalHeight;
                     
-                    // Tính tỷ lệ
                     const ratio = originalH / originalW;
                     
-                    // Set chiều rộng mong muốn (140px)
-                    const targetW = 140; 
-                    // Tính chiều cao tương ứng để không méo
+                    // GIẢM XUỐNG CÒN 90 (thay vì 140)
+                    const targetW = 90; 
                     const targetH = targetW * ratio;
                     
                     // Hiệu ứng nảy nhẹ
@@ -886,7 +883,6 @@ const StickmanShadowFinal = () => {
                     ctx.translate(t.x, t.y);
                     ctx.scale(scale, scale);
                     
-                    // Vẽ ảnh căn giữa với kích thước đã tính toán
                     ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
                 }
             } 
