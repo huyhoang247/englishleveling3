@@ -23,8 +23,7 @@ const StickmanShadowFinal = () => {
   // --- CẤU HÌNH ---
   const CFG = {
     gravity: 0.8,
-    speed: 3.5, // Tốc độ đi bộ
-    runSpeed: 7.0, // UPDATE: Tốc độ chạy
+    speed: 7,
     jump: -16,
     friction: 0.85,
     attackDist: 70, 
@@ -50,8 +49,7 @@ const StickmanShadowFinal = () => {
   const expImageRef = useRef(null); // Ref ảnh EXP
   const levelUpImageRef = useRef(null); // Ref ảnh Level Up
 
-  // UPDATE: Thêm input run
-  const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false, run: false });
+  const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
 
   // Player 1
   const p1 = useRef({
@@ -143,7 +141,7 @@ const StickmanShadowFinal = () => {
     waveSpawnTimer.current = 0;
 
     const enemyBaseLevel = 1; 
-    spawnWave(enemyBaseLevel); 
+    spawnWave(enemyBaseLevel); // Gọi spawn wave (sẽ set queue)
     
     camera.current.x = -w/2;
     shadows.current = [];
@@ -192,12 +190,14 @@ const StickmanShadowFinal = () => {
       createExplosion(x, y - 50, '#ff2a00');
   };
 
+  // --- SỬA ĐỔI: SPAWN WAVE LOGIC ---
   const spawnWave = (baseLevel) => {
+      // Random từ 2 đến 5 kẻ địch (Math.floor(rand(2, 6)))
       const count = Math.floor(rand(2, 6)); 
       
       waveQueue.current = count;
       currentWaveLevel.current = baseLevel;
-      waveSpawnTimer.current = 0; 
+      waveSpawnTimer.current = 0; // Set về 0 để con đầu tiên ra ngay lập tức
       
       const playerX = p1.current.x;
       addFloatingText(playerX, p1.current.y - 200, `WAVE INCOMING: ${count}`, '#ff0000', 30);
@@ -217,6 +217,7 @@ const StickmanShadowFinal = () => {
       let closestIndex = -1;
       let minDst = 150;
 
+      // Tìm soul gần nhất
       souls.current.forEach((s, i) => {
           const dst = Math.abs(p.x - s.x);
           if (dst < minDst) {
@@ -225,6 +226,7 @@ const StickmanShadowFinal = () => {
           }
       });
       
+      // Auto Mode
       if (closestIndex === -1 && isAutoRef.current && souls.current.length > 0) {
           closestIndex = 0; 
       }
@@ -278,7 +280,7 @@ const StickmanShadowFinal = () => {
           const stopDist = (target.type === 'PLAYER') ? 100 + (Math.random() * 50) : 60;
 
           if (Math.abs(dist) > stopDist) {
-              s.vx = (dist > 0 ? 1 : -1) * CFG.speed;
+              s.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.85);
               s.dir = dist > 0 ? 1 : -1;
               if (s.state !== 'JUMP' && s.state !== 'ATTACK') s.state = 'RUN';
           } else {
@@ -663,8 +665,7 @@ const StickmanShadowFinal = () => {
             }
 
             if (Math.abs(dist) > attackRange) {
-                // Auto mode luôn chạy nhanh
-                usr.vx = usr.dir * CFG.runSpeed;
+                usr.vx = usr.dir * CFG.speed;
                 if (usr.state !== 'JUMP' && usr.state !== 'ATTACK' && usr.state !== 'HURT') usr.state = 'RUN';
             } else {
                 usr.vx = 0;
@@ -683,24 +684,9 @@ const StickmanShadowFinal = () => {
 
     } else {
         // --- MANUAL MODE ---
-        // Xác định tốc độ dựa trên trạng thái Run
-        const currentSpeed = input.current.run ? CFG.runSpeed : CFG.speed;
-
-        if (input.current.left) { 
-            usr.vx = -currentSpeed; 
-            usr.dir = -1; 
-            if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; 
-        }
-        else if (input.current.right) { 
-            usr.vx = currentSpeed; 
-            usr.dir = 1; 
-            if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; 
-        }
-        else { 
-            usr.vx *= CFG.friction; 
-            if(usr.state === 'RUN') usr.state = 'IDLE'; 
-        }
-
+        if (input.current.left) { usr.vx = -CFG.speed; usr.dir = -1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
+        else if (input.current.right) { usr.vx = CFG.speed; usr.dir = 1; if(usr.state !== 'JUMP' && usr.state !== 'ATTACK') usr.state = 'RUN'; }
+        else { usr.vx *= CFG.friction; if(usr.state === 'RUN') usr.state = 'IDLE'; }
         if (input.current.jump && usr.y >= floorY - 1) { usr.vy = CFG.jump; usr.state = 'JUMP'; }
         if (input.current.attack && usr.attackCooldown <= 0) { 
             usr.state = 'ATTACK'; usr.attackCooldown = 25; usr.vx = usr.dir * 10; input.current.attack = false; 
@@ -713,34 +699,39 @@ const StickmanShadowFinal = () => {
     
     usr.vy += CFG.gravity; usr.x += usr.vx; usr.y += usr.vy;
     if (usr.y > floorY) { usr.y = floorY; usr.vy = 0; if (usr.state === 'JUMP') usr.state = 'IDLE'; }
-    
-    // UPDATE: Nếu đang chạy thì tăng animTimer nhanh hơn để chân guồng nhanh hơn
-    const isRunning = (Math.abs(usr.vx) > CFG.speed + 1);
-    usr.animTimer += isRunning ? 2 : 1;
-
+    usr.animTimer++;
     if (usr.attackCooldown > 0) { usr.attackCooldown--; if (usr.attackCooldown === 0 && usr.state === 'ATTACK') usr.state = 'IDLE'; }
 
-    // --- SPAWN KẺ ĐỊCH ---
+    // --- SỬA ĐỔI: LOGIC SPAWN KẺ ĐỊCH TỪNG CON MỘT ---
     if (waveQueue.current > 0) {
         waveSpawnTimer.current--;
         if (waveSpawnTimer.current <= 0) {
+            // Logic tạo vị trí spawn
             const side = Math.random() > 0.5 ? 1 : -1;
             const dist = 300 + Math.random() * 500; 
             const spawnX = p1.current.x + (side * dist);
+            
+            // Random level
             const lvl = currentWaveLevel.current + Math.floor(Math.random() * 2);
             createEnemy(spawnX, floorY, lvl);
+            
             waveQueue.current--;
+            // Hẹn giờ cho con tiếp theo: random từ 2-4 giây (120-240 frames)
             waveSpawnTimer.current = 120 + Math.floor(Math.random() * 120);
         }
     }
 
+    // Dọn dẹp xác chết
     for (let i = enemies.current.length - 1; i >= 0; i--) {
         if (enemies.current[i].isDead) {
             enemies.current.splice(i, 1);
         }
     }
 
+    // --- SỬA ĐỔI: LOGIC GỌI WAVE MỚI (LIÊN TỤC) ---
+    // Điều kiện: Không còn kẻ địch nào sống VÀ Không còn kẻ địch nào trong hàng đợi
     if (enemies.current.length === 0 && waveQueue.current === 0) {
+        // Gọi spawnWave ngay lập tức, không chờ đợi
         spawnWave(usr.level);
     }
 
@@ -758,7 +749,7 @@ const StickmanShadowFinal = () => {
         ai.aiTimer++;
         
         if (Math.abs(dist) > 50) {
-            ai.vx = (dist > 0 ? 1 : -1) * CFG.speed;
+            ai.vx = (dist > 0 ? 1 : -1) * (CFG.speed * 0.45);
             ai.dir = dist > 0 ? 1 : -1;
             if (ai.state !== 'JUMP' && ai.state !== 'ATTACK') ai.state = 'RUN';
         } else {
@@ -948,13 +939,43 @@ const StickmanShadowFinal = () => {
     }
   };
 
-  const loop = () => { update(); draw(); frameRef.current = requestAnimationFrame(loop); };
-  useEffect(() => { handleResize(); window.addEventListener('resize', handleResize); frameRef.current = requestAnimationFrame(loop); return () => { window.removeEventListener('resize', handleResize); cancelAnimationFrame(frameRef.current); }; }, [gameState, showStats]);
+  // --- FIX: GIỚI HẠN FPS (60FPS) ĐỂ TRÁNH LỖI NHANH/CHẬM ---
+  useEffect(() => {
+    handleResize();
+    window.addEventListener('resize', handleResize);
+
+    const fps = 60;
+    const interval = 1000 / fps;
+    let then = performance.now();
+    let delta = 0;
+
+    const loop = (now) => {
+        frameRef.current = requestAnimationFrame(loop);
+
+        delta = now - then;
+
+        if (delta > interval) {
+            // Điều chỉnh then để trừ đi thời gian đã trôi qua, giữ nhịp đều
+            then = now - (delta % interval);
+
+            // Chỉ chạy logic game và vẽ khi đủ thời gian (1/60s)
+            update();
+            draw();
+        }
+    };
+
+    // Bắt đầu loop
+    frameRef.current = requestAnimationFrame(loop);
+
+    return () => {
+        window.removeEventListener('resize', handleResize);
+        cancelAnimationFrame(frameRef.current);
+    };
+  }, [gameState, showStats]); // Giữ nguyên dependency
 
   const handleTouch = (key, val) => (e) => { if(e.type !== 'touchstart' && e.cancelable) e.preventDefault(); input.current[key] = val; };
-  // UPDATE: Thêm phím Shift cho PC để chạy
   useEffect(() => {
-    const keyMap = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'jump', ' ': 'attack', 'c': 'jump', 'x': 'attack', 'z': 'skill', 'Shift': 'run' };
+    const keyMap = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'jump', ' ': 'attack', 'c': 'jump', 'x': 'attack', 'z': 'skill' };
     const down = (e) => { if(keyMap[e.key]) input.current[keyMap[e.key]] = true; };
     const up = (e) => { if(keyMap[e.key]) input.current[keyMap[e.key]] = false; };
     window.addEventListener('keydown', down); window.addEventListener('keyup', up);
@@ -963,6 +984,7 @@ const StickmanShadowFinal = () => {
 
   const getEnemyWaveStats = () => {
     const activeEnemies = enemies.current.filter(e => !e.isDead);
+    // Nếu không còn quái active nhưng vẫn còn trong hàng chờ
     if (activeEnemies.length === 0 && waveQueue.current > 0) {
          return {
              count: waveQueue.current,
@@ -997,6 +1019,7 @@ const StickmanShadowFinal = () => {
 
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
+      {/* Nạp font Lilita One */}
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
       `}</style>
@@ -1094,12 +1117,7 @@ const StickmanShadowFinal = () => {
                             </button>
                         )}
                         <button className="w-16 h-16 bg-red-500/20 border-2 border-red-500 rounded-full active:bg-red-500 active:scale-95 transition-all shadow-[0_0_10px_rgba(255,0,0,0.3)] flex items-center justify-center" onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}><span className="font-black text-red-500 text-base tracking-tighter">ATK</span></button>
-                        
-                        {/* UPDATE: Nút RUN bên cạnh nút Jump */}
-                        <div className="flex gap-2">
-                             <button className="w-14 h-14 bg-yellow-500/20 border-2 border-yellow-500 rounded-full active:bg-yellow-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('run', true)} onTouchEnd={handleTouch('run', false)}><span className="font-bold text-yellow-400 text-xs">RUN</span></button>
-                             <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}><span className="font-bold text-blue-400 text-xs">JUMP</span></button>
-                        </div>
+                        <button className="w-14 h-14 bg-blue-500/20 border-2 border-blue-500 rounded-full active:bg-blue-500 active:scale-95 transition-all flex items-center justify-center" onTouchStart={handleTouch('jump', true)} onTouchEnd={handleTouch('jump', false)}><span className="font-bold text-blue-400 text-xs">JUMP</span></button>
                     </>
                 )}
             </div>
