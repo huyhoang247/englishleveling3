@@ -1,4 +1,4 @@
-// --- START OF FILE skill-data.tsx ---
+// --- START OF FILE src/home/skill-game/skill-data.tsx ---
 
 import React from 'react';
 import { skillAssets } from '../../game-assets.ts'; // Import tài nguyên tập trung
@@ -9,6 +9,13 @@ export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( <
 export const ThornsIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.thorns} alt="Damage Reflection" className={className} /> );
 export const DamageBoostIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.damageBoost} alt="Damage Boost" className={className} /> );
 export const ArmorPenetrationIcon = ({ className = '' }: { className?: string }) => ( <img src={skillAssets.armorPenetration} alt="Armor Penetration" className={className} /> );
+
+// --- NEW: Healing Icon (Sử dụng SVG biểu tượng trị liệu) ---
+export const HealingIcon = ({ className = '' }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}>
+        <path d="M18.06 2.37a.75.75 0 0 0-.96.22l-1.9 2.92a20.89 20.89 0 0 1-5.63-1.6.75.75 0 0 0-.6.04 20.94 20.94 0 0 1-5.65 1.57l-1.93-2.92a.75.75 0 0 0-1.25.83l2.67 4.05a20.48 20.48 0 0 1 .42 5.09l-2.95 3.3a.75.75 0 1 0 1.12 1l2.5-2.8a20.25 20.25 0 0 1 7.26 2.05.75.75 0 0 0 .76 0 20.25 20.25 0 0 1 7.26-2.05l2.5 2.8a.75.75 0 0 0 1.12-1l-2.95-3.3a20.48 20.48 0 0 1 .42-5.09l2.67-4.05a.75.75 0 0 0-.3-1.07ZM12 15.75a3.75 3.75 0 1 1 0-7.5 3.75 3.75 0 0 1 0 7.5Z" />
+    </svg>
+);
 // --- END: CÁC ICON CHO KỸ NĂNG ---
 
 
@@ -119,6 +126,17 @@ export const ALL_SKILLS: SkillBlueprint[] = [
     icon: ArmorPenetrationIcon,
     baseEffectValue: 5,
     effectValuePerLevel: 1,
+    upgradeCost: 200,
+  },
+  // --- NEW SKILL: Healing ---
+  {
+    id: 'healing',
+    name: 'Healing',
+    // Cập nhật mô tả dễ hiểu hơn
+    description: (level) => `Hồi phục ${0.5 + (level - 1) * 0.5}% Máu tối đa của bản thân.`,
+    icon: HealingIcon,
+    baseEffectValue: 0.5,
+    effectValuePerLevel: 0.5,
     upgradeCost: 200,
   },
 ];
