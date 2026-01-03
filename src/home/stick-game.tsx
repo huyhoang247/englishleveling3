@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame để lấy chỉ số nhân vật và skills
 import { useGame } from '../GameContext.tsx';
 
-// Helper để lấy tỉ lệ kích hoạt (Copy từ skill-data để đảm bảo chạy độc lập nếu file kia chưa load kịp)
+// Helper để lấy tỉ lệ kích hoạt (Copy từ skill-data)
 const getActivationChanceLocal = (rarity) => {
     switch (rarity) {
         case 'E': return 5; 
@@ -13,6 +13,60 @@ const getActivationChanceLocal = (rarity) => {
         case 'SR': return 30; 
         default: return 5;
     }
+};
+
+// --- ICON COMPONENTS (Inline để đảm bảo hoạt động độc lập) ---
+const HomeIcon = ({ className = '' }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
+    </svg>
+);
+
+const CoinIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+         <circle cx="12" cy="12" r="10" fill="#EAB308" stroke="#A16207" strokeWidth="2"/>
+         <path d="M12 6V18M8 12H16" stroke="#FEF08A" strokeWidth="2" strokeLinecap="round"/>
+    </svg>
+);
+
+const GemIcon = () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L3 9L12 22L21 9L12 2Z" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" strokeLinejoin="round"/>
+        <path d="M12 2L12 22M3 9L21 9" stroke="#93C5FD" strokeWidth="1" strokeLinecap="round"/>
+    </svg>
+);
+
+// --- COMPONENT HEADER UI ---
+// [UPDATE] Đã loại bỏ backdrop-blur-sm, tăng opacity nền lên slate-900/90 để dễ đọc hơn
+const GameHeader = ({ onHome, stats }) => {
+    return (
+        <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/90 border-b border-white/10 z-[60]">
+            {/* Nút Home */}
+            <button 
+                onClick={onHome} 
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 border border-slate-700 text-slate-300 hover:bg-slate-700 transition-colors"
+                title="Quay lại Menu"
+            >
+                <HomeIcon className="w-5 h-5" />
+                <span className="text-sm font-semibold hidden sm:inline">Trang Chính</span>
+            </button>
+
+            {/* Thông tin tài nguyên Global */}
+            <div className="flex items-center gap-3">
+                {/* Gems Display */}
+                <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-blue-500/30">
+                    <GemIcon />
+                    <span className="text-blue-100 font-bold text-sm">{stats.gems || 0}</span>
+                </div>
+
+                {/* Coins Display */}
+                <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-yellow-500/30">
+                    <CoinIcon />
+                    <span className="text-yellow-100 font-bold text-sm">{stats.atk ? (stats.atk * 100) : 0}</span> {/* Giả lập hiển thị coin từ stats hoặc prop */}
+                </div>
+            </div>
+        </header>
+    );
 };
 
 const StickmanShadowFinal = () => {
@@ -45,6 +99,7 @@ const StickmanShadowFinal = () => {
     camShake: 0,        // Rung camera
     respawnTime: 120,   
     maxShadows: 3,      // Số lượng lính tối đa
+    headerHeight: 53,   // Chiều cao header để tính offset HUD
   };
 
   // --- REFS QUẢN LÝ LOGIC ---
@@ -147,7 +202,6 @@ const StickmanShadowFinal = () => {
   const calculatePlayerSkills = () => {
       const equipped = getEquippedSkillsDetails();
       
-      // Reset stats
       const stats = { 
           lifeSteal: { val: 0, chance: 0 }, 
           thorns: { val: 0, chance: 0 }, 
@@ -156,10 +210,7 @@ const StickmanShadowFinal = () => {
       };
       
       equipped.forEach(skill => {
-          // 1. Tính độ mạnh của skill (Value)
           const val = (skill.baseEffectValue || 5) + ((skill.level - 1) * (skill.effectValuePerLevel || 1));
-          
-          // 2. Tính tỉ lệ kích hoạt dựa trên Rarity (Chance)
           const chance = getActivationChanceLocal(skill.rarity);
 
           if (skill.id === 'life_steal') { stats.lifeSteal.val += val; stats.lifeSteal.chance = chance; }
@@ -169,7 +220,6 @@ const StickmanShadowFinal = () => {
       });
       
       playerSkillsRef.current = stats;
-      // console.log("Player Skills (With Chance):", stats);
   };
 
   // --- LOGIC FLOOR SYSTEM ---
@@ -187,7 +237,6 @@ const StickmanShadowFinal = () => {
     const startAtk = totalPlayerStats.atk > 0 ? totalPlayerStats.atk : 12;
     const startDef = totalPlayerStats.def || 0;
 
-    // Load skills
     calculatePlayerSkills();
 
     p1.current = { 
@@ -241,7 +290,6 @@ const StickmanShadowFinal = () => {
       const healAmount = Math.floor(p1.current.maxHp * (healPercent / 100));
       p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + healAmount);
       
-      // Hồi máu qua màn: Tầng cao (-150)
       addFloatingText(p1.current.x, p1.current.y - 150, `+${healAmount}`, '#4ade80', 20, 'TEXT');
       
       enemies.current = [];
@@ -442,7 +490,8 @@ const StickmanShadowFinal = () => {
               if (c.y > floorY - 12) { c.y = floorY - 12; c.vy *= -0.5; c.vx *= 0.9; }
               c.timer--; if (c.timer <= 0) c.state = 'FLY';
           } else if (c.state === 'FLY') {
-              const destX = camX + 80; const destY = 40;        
+              // Bay về phía góc trái nơi hiển thị session coins
+              const destX = camX + 80; const destY = 90; // Y = 90 để khớp với HUD mới (dưới Header)      
               c.x += (destX - c.x) * 0.08; c.y += (destY - c.y) * 0.08; 
               if (Math.abs(destX - c.x) < 15 && Math.abs(destY - c.y) < 15) {
                   p1.current.coins += c.val; lootCoins.current.splice(i, 1);
@@ -474,7 +523,6 @@ const StickmanShadowFinal = () => {
           entity.hp = entity.maxHp;
           
           const color = isPlayer ? '#00ff00' : '#3b82f6';
-          // [TẦNG 4] Level Up: -190 (Cao nhất)
           addFloatingText(entity.x, entity.y - 190, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
@@ -484,7 +532,6 @@ const StickmanShadowFinal = () => {
       const totalExp = 50 + (deadEnemy.level * 10);
       if (killer.type === 'PLAYER') {
           p1.current.currentExp += totalExp;
-          // [TẦNG 2] EXP: -110 (Giữa)
           addFloatingText(p1.current.x, p1.current.y - 110, `${totalExp}`, '#fff', 16, 'EXP');
           checkLevelUp(p1.current, true);
       } else if (killer.type === 'ALLY') {
@@ -502,15 +549,20 @@ const StickmanShadowFinal = () => {
   // --- DRAWING FUNCTIONS ---
   const drawHUD = (ctx) => {
       const p = p1.current;
-      const hudX = 20; const hudY = 20; const hudW = 120; const hudH = 36;  
+      // OFFSET Y để tránh Header (53px + padding)
+      const topOffset = 70; 
+      
+      const hudX = 20; const hudY = topOffset; const hudW = 120; const hudH = 36;  
       
       ctx.save();
+      // Vẽ hiển thị Coins kiếm được trong Session (Canvas UI)
       ctx.fillStyle = 'rgba(20, 20, 20, 0.6)'; ctx.beginPath(); ctx.roundRect(hudX, hudY, hudW, hudH, 18); ctx.fill();
       ctx.lineWidth = 1; ctx.strokeStyle = '#FFD700'; ctx.stroke();
       const iconX = hudX + 20; const iconY = hudY + 18; const r = 12;
       ctx.fillStyle = '#FFD700'; ctx.beginPath(); ctx.arc(iconX, iconY, r, 0, Math.PI * 2); ctx.fill();
       ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 25);
       
+      // Vẽ Shadow UI (Bên phải)
       const sHudW = 150;
       const sHudX = (canvasRef.current.width / dprRef.current) - sHudW - 20;
       
@@ -530,18 +582,20 @@ const StickmanShadowFinal = () => {
       if (shadows.current.length >= CFG.maxShadows) ctx.fillStyle = '#f87171';
       ctx.fillText(`${shadows.current.length} / ${CFG.maxShadows}`, sHudX + sHudW - 15, sIconY + 5);
 
+      // Vẽ Floor / Wave info (Ở giữa, dưới Header)
       const centerX = (canvasRef.current.width / dprRef.current) / 2;
+      const floorInfoY = topOffset - 10; 
       ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-      ctx.beginPath(); ctx.roundRect(centerX - 80, 10, 160, 50, 8); ctx.fill();
+      ctx.beginPath(); ctx.roundRect(centerX - 80, floorInfoY, 160, 50, 8); ctx.fill();
       
       ctx.fillStyle = '#fbbf24'; 
       ctx.font = 'bold 18px "Lilita One", cursive';
       ctx.textAlign = 'center';
-      ctx.fillText(`FLOOR ${floorRef.current}`, centerX, 32);
+      ctx.fillText(`FLOOR ${floorRef.current}`, centerX, floorInfoY + 22);
       
       ctx.fillStyle = '#fff';
       ctx.font = '14px Arial';
-      ctx.fillText(`WAVE: ${floorWavesRef.current.current} / ${floorWavesRef.current.total}`, centerX, 52);
+      ctx.fillText(`WAVE: ${floorWavesRef.current.current} / ${floorWavesRef.current.total}`, centerX, floorInfoY + 42);
 
       ctx.restore();
   };
@@ -687,22 +741,16 @@ const StickmanShadowFinal = () => {
                 const pSkills = playerSkillsRef.current;
 
                 if (attacker.type === 'PLAYER') {
-                    // Skill: Damage Boost (Có tỉ lệ)
                     if (pSkills.damageBoost.val > 0) {
-                        // Check tỉ lệ kích hoạt
                         if (Math.random() * 100 < pSkills.damageBoost.chance) {
                             rawDamage *= (1 + pSkills.damageBoost.val / 100);
-                            // Hiển thị CRIT text
                             addFloatingText(defender.x, defender.y - 60, "CRIT!", '#ffcc00', 14, 'TEXT');
                         }
                     }
-                    // Skill: Armor Penetration (Có tỉ lệ)
                     if (pSkills.armorPenetration.val > 0) {
-                        // Check tỉ lệ kích hoạt
                         if (Math.random() * 100 < pSkills.armorPenetration.chance) {
                              const pen = Math.min(1, pSkills.armorPenetration.val / 100);
                              defenderDef *= (1 - pen);
-                             // Hiển thị PIERCE text
                              addFloatingText(defender.x, defender.y - 60, "PIERCE!", '#3b82f6', 14, 'TEXT');
                         }
                     }
@@ -712,12 +760,9 @@ const StickmanShadowFinal = () => {
                 
                 defender.hp -= finalDamage;
                 
-                // [TẦNG 1] Sát thương: y - 80
                 addFloatingText(defender.x, defender.y - 80, `-${Math.round(finalDamage)}`, '#ff0000'); 
                 
-                // [TẦNG 3] Hồi máu (Life Steal): y - 150 (Cao hơn hẳn EXP ở tầng 2: -110)
                 if (attacker.type === 'PLAYER' && pSkills.lifeSteal.val > 0) {
-                    // Check tỉ lệ kích hoạt
                     if (Math.random() * 100 < pSkills.lifeSteal.chance) {
                         const healAmt = finalDamage * (pSkills.lifeSteal.val / 100);
                         if (healAmt >= 1) {
@@ -728,7 +773,6 @@ const StickmanShadowFinal = () => {
                 }
 
                 if (defender.type === 'PLAYER' && pSkills.thorns.val > 0) {
-                     // Check tỉ lệ kích hoạt
                     if (Math.random() * 100 < pSkills.thorns.chance) {
                         const thornDmg = finalDamage * (pSkills.thorns.val / 100);
                         if (thornDmg >= 1) {
@@ -887,12 +931,10 @@ const StickmanShadowFinal = () => {
             const dist = 300 + Math.random() * 500; 
             const spawnX = p1.current.x + (side * dist);
             
-            // Random level dựa trên Floor hiện tại
             const lvl = getEnemyLevelForCurrentFloor();
             createEnemy(spawnX, floorY, lvl);
             
             waveQueue.current--;
-            // Hẹn giờ cho con tiếp theo: random từ 2-4 giây
             waveSpawnTimer.current = 120 + Math.floor(Math.random() * 120);
         }
     }
@@ -906,22 +948,13 @@ const StickmanShadowFinal = () => {
 
     // --- LOGIC KẾT THÚC WAVE / FLOOR ---
     if (enemies.current.length === 0 && waveQueue.current === 0) {
-        // Đã hết quái trong đợt này
-        
         if (floorWavesRef.current.current < floorWavesRef.current.total) {
-             // Còn wave tiếp theo trong Floor
              floorWavesRef.current.current++;
              spawnWave();
         } else {
-             // Đã hết wave trong Floor -> FLOOR COMPLETE (AUTO TRANSITION)
-             // Kiểm tra để không gọi nhiều lần
              if (!floorTransitioning.current) {
                  floorTransitioning.current = true;
-                 
-                 // [FIX] Floor Cleared: Đẩy lên -190 (Tầng cao nhất)
                  addFloatingText(p1.current.x, p1.current.y - 190, "FLOOR CLEARED", '#4ade80', 20, 'TEXT');
-                 
-                 // Tự động qua màn sau 3 giây
                  setTimeout(() => {
                      nextFloor();
                  }, 3000);
@@ -1094,11 +1127,9 @@ const StickmanShadowFinal = () => {
             } 
             else {
                 ctx.textAlign = 'center'; 
-                // Sử dụng size được truyền vào
                 ctx.font = `${t.size}px "Lilita One", cursive`;
                 ctx.fillStyle = t.color;
                 
-                // Nếu là chữ Floor Cleared, thêm chút effect
                 if (t.text === "FLOOR CLEARED") {
                      ctx.shadowColor = 'rgba(74, 222, 128, 0.6)';
                      ctx.shadowBlur = 10;
@@ -1197,10 +1228,15 @@ const StickmanShadowFinal = () => {
       <style>{`
           @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
       `}</style>
-      <canvas ref={canvasRef} className="block w-full h-full" />
+      
+      {/* --- ADDED HEADER --- */}
+      <GameHeader onHome={() => setGameState('MENU')} stats={totalPlayerStats} />
+      
+      {/* Game Canvas */}
+      <canvas ref={canvasRef} className="block w-full h-full absolute top-0 left-0" />
       
       {showStats && (
-        <div className="absolute inset-x-4 top-16 bottom-24 bg-zinc-900 border-2 border-white/30 rounded-lg p-4 z-50 flex flex-col items-center justify-center shadow-2xl">
+        <div className="absolute inset-x-4 top-20 bottom-24 bg-zinc-900 border-2 border-white/30 rounded-lg p-4 z-50 flex flex-col items-center justify-center shadow-2xl">
             <h2 className="text-2xl font-black text-white mb-6 uppercase tracking-[0.2em] border-b border-white/20 pb-2">Battle Statistics</h2>
             
             <div className="flex w-full justify-between gap-4">
@@ -1263,11 +1299,11 @@ const StickmanShadowFinal = () => {
       {/* --- IN-GAME CONTROLS --- */}
       {(gameState === 'PLAYING') && !showStats && (
         <>
-            {/* Nếu NOT Auto thì hiển thị nút di chuyển */}
+            {/* [UPDATE] Loại bỏ backdrop-blur */}
             {!isAuto && !floorTransitioning.current && (
                 <div className="absolute bottom-24 left-8 flex gap-2 z-40">
-                    <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
-                    <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center backdrop-blur" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
+                    <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center" onTouchStart={handleTouch('left', true)} onTouchEnd={handleTouch('left', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/></svg></button>
+                    <button className="w-14 h-14 bg-white/10 border-2 border-white/20 rounded-full active:bg-cyan-500/50 flex items-center justify-center" onTouchStart={handleTouch('right', true)} onTouchEnd={handleTouch('right', false)}><svg className="w-6 h-6 text-white fill-current" viewBox="0 0 24 24"><path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/></svg></button>
                 </div>
             )}
             
@@ -1304,7 +1340,7 @@ const StickmanShadowFinal = () => {
             
             {/* Hiển thị thông báo khi đang Auto cho rõ ràng */}
             {isAuto && (
-                <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-green-900/50 border border-green-500/50 px-4 py-1 rounded-full pointer-events-none">
+                <div className="absolute top-20 left-1/2 -translate-x-1/2 bg-green-900/50 border border-green-500/50 px-4 py-1 rounded-full pointer-events-none z-40">
                     <span className="text-green-400 text-xs font-bold tracking-widest animate-pulse">AUTO BATTLE ENGAGED</span>
                 </div>
             )}
