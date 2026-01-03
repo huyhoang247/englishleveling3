@@ -1,5 +1,3 @@
---- START OF FILE stick-game.tsx (13).txt ---
-
 import React, { useRef, useEffect, useState } from 'react';
 // 1. Import useGame
 import { useGame } from '../GameContext.tsx';
