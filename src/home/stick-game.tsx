@@ -387,8 +387,8 @@ const StickmanShadowFinal = () => {
           const color = isPlayer ? '#00ff00' : '#3b82f6';
           
           // Thay text bằng type 'LEVEL_UP'
-          // Đặt vị trí Y cao hơn (-210) để nằm trên EXP (cao hơn 160)
-          addFloatingText(entity.x, entity.y - 210, "", null, 0, 'LEVEL_UP');
+          // Đặt vị trí Y cao hơn (-170) để nằm trên EXP
+          addFloatingText(entity.x, entity.y - 170, "", null, 0, 'LEVEL_UP');
           createExplosion(entity.x, entity.y - 50, color);
       }
   };
@@ -863,7 +863,7 @@ const StickmanShadowFinal = () => {
             ctx.save();
             ctx.globalAlpha = Math.max(0, t.life / 60);
 
-            // --- 1. XỬ LÝ VẼ ICON LEVEL UP (GIẢM SIZE) ---
+            // --- 1. XỬ LÝ VẼ ICON LEVEL UP ---
             if (t.type === 'LEVEL_UP') {
                 const img = levelUpImageRef.current;
                 
@@ -873,7 +873,6 @@ const StickmanShadowFinal = () => {
                     
                     const ratio = originalH / originalW;
                     
-                    // GIẢM XUỐNG CÒN 60
                     const targetW = 60; 
                     const targetH = targetW * ratio;
                     
@@ -886,12 +885,13 @@ const StickmanShadowFinal = () => {
                     ctx.drawImage(img, -targetW / 2, -targetH / 2, targetW, targetH);
                 }
             } 
-            // --- 2. XỬ LÝ VẼ EXP ---
+            // --- 2. XỬ LÝ VẼ EXP (FONT LILITA) ---
             else if (t.type === 'EXP') {
                  if (expImageRef.current && expImageRef.current.complete) {
                     const iconSize = 20; 
                     
-                    ctx.font = 'italic 900 16px "Segoe UI", Arial, sans-serif'; 
+                    // SỬ DỤNG FONT LILITA ONE
+                    ctx.font = '20px "Lilita One", cursive'; 
                     ctx.textBaseline = 'middle'; 
                     ctx.textAlign = 'left';      
                     
@@ -915,10 +915,15 @@ const StickmanShadowFinal = () => {
                      ctx.fillText(t.text + " XP", t.x, t.y);
                  }
             } 
-            // --- 3. CÁC TEXT KHÁC ---
+            // --- 3. CÁC TEXT KHÁC (SÁT THƯƠNG - HP) ---
             else {
                 ctx.textAlign = 'center'; 
-                ctx.font = 'bold 20px Arial';
+                // SỬ DỤNG FONT LILITA ONE VÀ THÊM STROKE
+                ctx.font = '28px "Lilita One", cursive';
+                ctx.lineWidth = 3;
+                ctx.strokeStyle = 'rgba(0,0,0,0.8)';
+                ctx.strokeText(t.text, t.x | 0, t.y | 0);
+                
                 ctx.fillStyle = t.color;
                 ctx.fillText(t.text, t.x | 0, t.y | 0);
             }
@@ -973,6 +978,10 @@ const StickmanShadowFinal = () => {
 
   return (
     <div className="w-full h-screen bg-black overflow-hidden relative touch-none select-none font-sans">
+      {/* Nạp font Lilita One */}
+      <style>{`
+          @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+      `}</style>
       <canvas ref={canvasRef} className="block w-full h-full" />
       
       {showStats && (
