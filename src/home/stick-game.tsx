@@ -58,6 +58,7 @@ const StickmanShadowFinal = () => {
   const soulImageRef = useRef(null);
   const expImageRef = useRef(null);
   const levelUpImageRef = useRef(null);
+  const plusHpImageRef = useRef(null); // New Ref for HP Icon
 
   // Input controller
   const input = useRef({ left: false, right: false, jump: false, attack: false, skill: false });
@@ -120,6 +121,10 @@ const StickmanShadowFinal = () => {
     const luImg = new Image();
     luImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/level-up.webp";
     levelUpImageRef.current = luImg;
+
+    const hpImg = new Image();
+    hpImg.src = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-hp.webp";
+    plusHpImageRef.current = hpImg;
   }, []);
 
   const rand = (min, max) => Math.random() * (max - min) + min;
@@ -193,8 +198,9 @@ const StickmanShadowFinal = () => {
       const healAmount = Math.floor(p1.current.maxHp * (healPercent / 100));
       p1.current.hp = Math.min(p1.current.maxHp, p1.current.hp + healAmount);
       
-      // Hiển thị +HP: Cùng hàng với EXP (y-120), kích thước nhỏ (25)
-      addFloatingText(p1.current.x, p1.current.y - 120, `+${healAmount}`, '#22c55e', 25);
+      // Hiển thị +HP: 
+      // Dùng type 'HEAL' để kích hoạt logic vẽ icon + gradient xanh
+      addFloatingText(p1.current.x, p1.current.y - 120, `+${healAmount}`, '#22c55e', 0, 'HEAL');
       
       enemies.current = [];
       souls.current = [];
@@ -229,11 +235,6 @@ const StickmanShadowFinal = () => {
       
       waveQueue.current = count;
       waveSpawnTimer.current = 0; 
-      
-      // ĐÃ LOẠI BỎ: Không còn hiển thị chữ WAVE đỏ giữa màn hình
-      // const playerX = p1.current.x;
-      // const waveText = `WAVE ${floorWavesRef.current.current}/${floorWavesRef.current.total}`;
-      // addFloatingText(playerX, p1.current.y - 250, waveText, '#ff0000', 35);
   };
 
   // --- CẬP NHẬT LOGIC: TÍNH LEVEL QUÁI THEO NHÓM 5 TẦNG ---
@@ -828,8 +829,8 @@ const StickmanShadowFinal = () => {
                  
                  // Show Green "FLOOR CLEARED" text
                  // y-170 nằm trên hàng icon level up
-                 // size 25 (nhỏ, bằng kích cỡ -HP)
-                 addFloatingText(p1.current.x, p1.current.y - 170, "FLOOR CLEARED", '#4ade80', 25, 'TEXT');
+                 // size 20 (bằng kích cỡ -HP)
+                 addFloatingText(p1.current.x, p1.current.y - 170, "FLOOR CLEARED", '#4ade80', 20, 'TEXT');
                  
                  // Tự động qua màn sau 3 giây
                  setTimeout(() => {
@@ -1002,6 +1003,30 @@ const StickmanShadowFinal = () => {
                      ctx.fillText(t.text + " XP", t.x, t.y);
                  }
             } 
+            else if (t.type === 'HEAL') {
+                // Logic vẽ HP với Icon
+                if (plusHpImageRef.current && plusHpImageRef.current.complete) {
+                   const iconSize = 20; 
+                   ctx.font = '15px "Lilita One", cursive'; 
+                   ctx.textBaseline = 'middle'; 
+                   ctx.textAlign = 'left';      
+                   
+                   ctx.drawImage(plusHpImageRef.current, t.x - 22, t.y - 10, iconSize, iconSize);
+                   
+                   // Green Gradient
+                   const gradient = ctx.createLinearGradient(t.x, t.y - 10, t.x, t.y + 5);
+                   gradient.addColorStop(0, '#FFFFFF');      
+                   gradient.addColorStop(0.4, '#4ade80');    
+                   gradient.addColorStop(1, '#166534');      
+
+                   ctx.fillStyle = gradient;
+                   ctx.fillText(t.text, t.x, t.y);
+                } else {
+                    ctx.fillStyle = '#22c55e';
+                    ctx.font = 'bold 15px Arial';
+                    ctx.fillText(t.text, t.x, t.y);
+                }
+           }
             else {
                 ctx.textAlign = 'center'; 
                 // Sử dụng size được truyền vào
