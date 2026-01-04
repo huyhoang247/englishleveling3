@@ -1454,13 +1454,43 @@ const StickmanShadowFinal = ({ onClose }) => {
                                     )}
                                 </div>
 
-                                {/* Attack Button (Styled) */}
-                                <button className="w-20 h-20 bg-black/40 border border-white/20 rounded-full active:bg-black/60 active:scale-95 transition-all backdrop-blur-sm flex items-center justify-center relative overflow-hidden"
-                                    onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}>
-                                    <img 
-                                        src={ATTACK_SKILL_IMG_URL} 
-                                        alt="Attack" 
-                                        className="w-full h-full object-cover opacity-50 pointer-events-none p-1"
+                                {/* Attack Button (New Design - No Backdrop Blur) */}
+                                <button
+                                    className="
+                                        group relative
+                                        w-20 h-20
+                                        rounded-full
+                                        bg-slate-900/60
+                                        border-[3px] border-white/20
+                                        shadow-[0_4px_10px_rgba(0,0,0,0.5)]
+                                        active:scale-90
+                                        active:border-white/80
+                                        active:shadow-[0_0_25px_rgba(255,255,255,0.4)]
+                                        active:bg-slate-800
+                                        transition-all duration-75 ease-out
+                                        flex items-center justify-center
+                                        touch-none select-none
+                                    "
+                                    onTouchStart={handleTouch('attack', true)}
+                                    onTouchEnd={handleTouch('attack', false)}
+                                >
+                                    {/* Decorative inner thin ring for "tech" feel */}
+                                    <div className="absolute inset-1.5 rounded-full border border-white/10 pointer-events-none group-active:border-white/30"></div>
+
+                                    {/* Icon */}
+                                    <img
+                                        src={ATTACK_SKILL_IMG_URL}
+                                        alt="Attack"
+                                        className="
+                                            w-11 h-11
+                                            object-contain
+                                            opacity-50
+                                            group-active:opacity-100
+                                            group-active:scale-110
+                                            group-active:brightness-150
+                                            transition-all duration-75
+                                            pointer-events-none
+                                        "
                                     />
                                 </button>
                             </div>
