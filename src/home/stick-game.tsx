@@ -22,6 +22,9 @@ const getActivationChanceLocal = (rarity) => {
 // URL ảnh Coin dùng cho Canvas vẽ loot
 const COIN_IMG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coin.webp";
 
+// URL ảnh Attack Button
+const ATTACK_SKILL_IMG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/attack-skill.webp";
+
 // --- ICON COMPONENTS ---
 
 const HomeIcon = ({ className = '' }) => (
@@ -1415,9 +1418,9 @@ const StickmanShadowFinal = ({ onClose }) => {
             {/* --- IN-GAME CONTROLS --- */}
             {(gameState === 'PLAYING') && !showStats && (
                 <>
-                    {/* JOYSTICK CONTROLLER (REPLACES OLD ARROWS) */}
+                    {/* JOYSTICK CONTROLLER (Moved Up) */}
                     {!isAuto && !floorTransitioning.current && (
-                        <div className="absolute bottom-16 left-8 z-40">
+                        <div className="absolute bottom-28 left-8 z-40">
                             <VirtualJoystick onStickMove={handleJoystickMove} />
                         </div>
                     )}
@@ -1451,13 +1454,14 @@ const StickmanShadowFinal = ({ onClose }) => {
                                     )}
                                 </div>
 
-                                {/* Attack Button (To, Rõ ràng) */}
-                                <button className="w-20 h-20 bg-gradient-to-t from-red-600 to-red-500 border-4 border-red-400 rounded-full active:bg-red-700 active:scale-95 transition-all shadow-[0_0_15px_rgba(255,0,0,0.5)] flex items-center justify-center relative group"
+                                {/* Attack Button (Styled) */}
+                                <button className="w-20 h-20 bg-black/40 border border-white/20 rounded-full active:bg-black/60 active:scale-95 transition-all backdrop-blur-sm flex items-center justify-center relative overflow-hidden"
                                     onTouchStart={handleTouch('attack', true)} onTouchEnd={handleTouch('attack', false)}>
-                                    <span className="absolute inset-0 rounded-full bg-white/20 blur-sm opacity-0 group-active:opacity-100 transition-opacity"></span>
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <path d="M14.5 14.5L19 19M19 19L5 5L19 19ZM19 19C19 19 21.5 16.5 19.5 14.5C17.5 12.5 12 11 12 11L5 5L12 11C12 11 10.5 6.5 12.5 4.5C14.5 2.5 17 5 17 5" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                                    </svg>
+                                    <img 
+                                        src={ATTACK_SKILL_IMG_URL} 
+                                        alt="Attack" 
+                                        className="w-full h-full object-cover opacity-50 pointer-events-none p-1"
+                                    />
                                 </button>
                             </div>
                         )}
