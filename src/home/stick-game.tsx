@@ -25,18 +25,14 @@ const COIN_IMG_URL = "https://raw.githubusercontent.com/huyhoang247/englishlevel
 // URL ảnh Attack Button
 const ATTACK_SKILL_IMG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/attack-skill.webp";
 
+// URL ảnh Shadow Icon (Mới)
+const SHADOW_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.webp";
+
 // --- ICON COMPONENTS ---
 
 const HomeIcon = ({ className = '' }) => (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}>
         <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" />
-    </svg>
-);
-
-const GemIcon = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 2L3 9L12 22L21 9L12 2Z" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="2" strokeLinejoin="round" />
-        <path d="M12 2L12 22M3 9L21 9" stroke="#93C5FD" strokeWidth="1" strokeLinecap="round" />
     </svg>
 );
 
@@ -157,7 +153,8 @@ const VirtualJoystick = ({ onStickMove }) => {
 };
 
 // --- COMPONENT HEADER UI ---
-const GameHeader = ({ onHome, stats }) => {
+// Đã thay đổi: Thay hiển thị Gems bằng hiển thị Shadow Count
+const GameHeader = ({ onHome, stats, shadowCount, maxShadows }) => {
     return (
         <header className="absolute top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/90 border-b border-white/10 z-[60]">
             {/* Nút Home */}
@@ -172,10 +169,10 @@ const GameHeader = ({ onHome, stats }) => {
 
             {/* Thông tin tài nguyên Global */}
             <div className="flex items-center gap-3">
-                {/* Gems Display */}
-                <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-blue-500/30">
-                    <GemIcon />
-                    <span className="text-blue-100 font-bold text-sm">{stats.gems || 0}</span>
+                {/* Shadow Display (Thay thế Gems) */}
+                <div className="flex items-center gap-2 px-3 py-1 bg-slate-900/50 rounded-full border border-purple-500/30">
+                    <img src={SHADOW_ICON_URL} alt="Shadows" className="w-5 h-5 object-contain" />
+                    <span className="text-purple-100 font-bold text-sm">{shadowCount || 0}/{maxShadows || 3}</span>
                 </div>
 
                 {/* Coins Display (Component mới) */}
@@ -199,6 +196,10 @@ const StickmanShadowFinal = ({ onClose }) => {
     const [gameState, setGameState] = useState('INIT');
     const [winner, setWinner] = useState(null);
     const [showStats, setShowStats] = useState(false);
+
+    // --- STATE UI HEADER ---
+    // State để hiển thị số lượng shadow trên Header
+    const [shadowCount, setShadowCount] = useState(0);
 
     // --- STATE QUẢN LÝ HIỆU ỨNG NÚT ATTACK ---
     const [isAttackPressed, setIsAttackPressed] = useState(false);
@@ -380,6 +381,7 @@ const StickmanShadowFinal = ({ onClose }) => {
 
         enemies.current = [];
         shadows.current = [];
+        setShadowCount(0); // Reset UI shadow count
         souls.current = [];
         particles.current = [];
         floatingTexts.current = [];
@@ -514,6 +516,9 @@ const StickmanShadowFinal = ({ onClose }) => {
                 name: 'SHADOW', isDead: false, type: 'ALLY'
             });
 
+            // Update Header State
+            setShadowCount(shadows.current.length);
+
             createExplosion(s.x, s.y - 50, '#9333ea');
             addFloatingText(s.x, s.y - 120, "ARISE!", '#9333ea', 32);
 
@@ -522,12 +527,19 @@ const StickmanShadowFinal = ({ onClose }) => {
     };
 
     const updateShadows = (floorY) => {
+        let shadowDied = false;
         for (let i = shadows.current.length - 1; i >= 0; i--) {
             if (shadows.current[i].isDead) {
                 createExplosion(shadows.current[i].x, shadows.current[i].y, '#555');
                 shadows.current.splice(i, 1);
+                shadowDied = true;
             }
         }
+        // Update Header State if a shadow died
+        if (shadowDied) {
+            setShadowCount(shadows.current.length);
+        }
+
         shadows.current.forEach(s => {
             let target = null;
             let minDst = 10000;
@@ -701,25 +713,7 @@ const StickmanShadowFinal = ({ onClose }) => {
 
         ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 25);
 
-        // Vẽ Shadow UI
-        const sHudW = 150;
-        const sHudX = (canvasRef.current.width / dprRef.current) - sHudW - 20;
-
-        const grad = ctx.createLinearGradient(sHudX, hudY, sHudX + sHudW, hudY + 36);
-        grad.addColorStop(0, '#3b0764');
-        grad.addColorStop(1, '#6b21a8');
-
-        ctx.fillStyle = grad;
-        ctx.beginPath(); ctx.roundRect(sHudX, hudY, sHudW, 36, 18); ctx.fill();
-        ctx.strokeStyle = '#d8b4fe'; ctx.lineWidth = 1.5; ctx.stroke();
-
-        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(sHudX + 25, hudY + 16, 6, 0, Math.PI * 2); ctx.fill();
-        ctx.beginPath(); ctx.arc(sHudX + 25, hudY + 26, 8, Math.PI, 0); ctx.fill();
-        ctx.fillStyle = '#e9d5ff'; ctx.font = 'bold 12px Arial'; ctx.textAlign = 'left'; ctx.fillText('SHADOW', sHudX + 40, hudY + 23);
-
-        ctx.fillStyle = shadows.current.length >= CFG.maxShadows ? '#f87171' : '#fff';
-        ctx.font = 'bold 18px Arial'; ctx.textAlign = 'right';
-        ctx.fillText(`${shadows.current.length}/${CFG.maxShadows}`, sHudX + sHudW - 15, hudY + 23);
+        // Đã xóa bỏ phần vẽ Shadow UI ở đây (đã chuyển lên Header)
 
         // Vẽ Floor / Wave info
         const centerX = (canvasRef.current.width / dprRef.current) / 2;
@@ -1375,7 +1369,8 @@ const StickmanShadowFinal = ({ onClose }) => {
       `}</style>
 
             {/* --- HEADER --- */}
-            <GameHeader onHome={onClose} stats={totalPlayerStats} />
+            {/* Đã cập nhật props: Truyền shadowCount và maxShadows */}
+            <GameHeader onHome={onClose} stats={totalPlayerStats} shadowCount={shadowCount} maxShadows={CFG.maxShadows} />
 
             {/* --- CANVAS --- */}
             <canvas ref={canvasRef} className="block w-full h-full absolute top-0 left-0" />
