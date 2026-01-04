@@ -29,7 +29,6 @@ const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: Combat
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
   
     return (
-      // Changed: bg-slate-900/50 backdrop-blur-sm -> bg-slate-900/80
       <div className="w-64 bg-slate-900/80 rounded-lg p-2.5 border border-slate-700/50 shadow-lg flex items-center gap-3">
           <div 
             onClick={onAvatarClick}
@@ -66,7 +65,6 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   const scale = Math.max(0, current / max); 
   return (
     <div className="w-full">
-      {/* Changed: Removed backdrop-blur-sm */}
       <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner">
         <div 
             className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`} 
@@ -93,8 +91,11 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
+  
   const StatItem = ({ label, icon, current, max }: { label: string, icon: string, current: number, max?: number }) => {
-    const valueText = max ? `${Math.ceil(current)} / ${max}` : String(current);
+    // --- CHỈNH SỬA: Nếu có max (tức là HP), chỉ hiển thị max. Nếu không có max (ATK/DEF), hiển thị current ---
+    const valueText = max ? String(max) : String(current);
+
     return (
       <div className="flex items-center gap-3 w-full">
         <div className="flex-shrink-0 w-24 h-10 bg-slate-800 rounded-lg flex items-center justify-center gap-2 border border-slate-700 p-2">
@@ -108,7 +109,6 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
     );
   };
   return (
-    // Changed: bg-black/60 backdrop-blur-sm -> bg-black/80
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
@@ -125,7 +125,6 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
 
 const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => {
     return (
-      // Changed: bg-black/60 backdrop-blur-sm -> bg-black/80
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
@@ -140,7 +139,6 @@ const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void })
 
 const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
   return (
-    // Changed: bg-black/60 backdrop-blur-sm -> bg-black/80
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
         <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
@@ -164,7 +162,6 @@ const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards:
 
 const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
   return (
-    // Changed: bg-black/70 backdrop-blur-sm -> bg-black/80
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
           <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" />
@@ -195,7 +192,6 @@ const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { on
 
 const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => {
   return (
-    // Changed: bg-black/70 backdrop-blur-sm -> bg-black/80
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
           <img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2" />
@@ -216,7 +212,6 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
     : bossBattleAssets.defeatIcon;
 
   return (
-    // Changed: bg-black/70 backdrop-blur-sm -> bg-black/80
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
       <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
         <img src={iconSrc} alt={title} className="w-16 h-16 object-contain mb-2" />
@@ -320,7 +315,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     }, [currentFloor]);
 
     // --- RENDER LOGIC CHO LỖI ---
-    // Changed: bg-red-900/80 backdrop-blur-sm -> bg-red-900/90
     if (error) return <div className="absolute inset-0 bg-red-900/90 flex flex-col items-center justify-center z-50 text-white font-lilita"><p>Error: {error}</p><button onClick={onClose} className="mt-4 px-4 py-2 bg-slate-700 rounded">Close</button></div>;
     
     // --- RENDER ---
@@ -379,7 +373,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             </div>
                         ) : (
                             <>
-                                {/* Changed: bg-black/30 backdrop-blur-sm -> bg-slate-900/90 */}
                                 <header className="fixed top-0 left-0 w-full z-20 p-2 bg-slate-900/90 border-b border-slate-700/50 shadow-lg h-14">
                                     <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                                         <div className="flex items-center gap-3">
@@ -407,12 +400,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 <div className="fixed top-16 left-4 z-20 flex flex-col items-start gap-2">
                                     <PlayerInfoDisplay stats={playerStats} floor={currentBossData.floor} onAvatarClick={() => setStatsModalTarget('player')} />
                                     {battleState === 'idle' && currentFloor > 0 && (
-                                        // Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90
                                         <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} title="Instantly clear the previous floor for rewards" className="font-sans px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-purple-400 active:scale-95 shadow-md text-purple-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:text-slate-500 disabled:border-slate-700">
                                             {isSweeping ? 'Sweeping...' : 'Sweep Previous'}
                                         </button>
                                     )}
-                                    {/* Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90 */}
                                     {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button> )}
                                 </div>
     
@@ -421,11 +412,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         <div></div>
                                         <div className="flex flex-col items-end gap-2">
                                             <div className="w-full flex justify-center gap-2">
-                                                {/* Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90 */}
                                                 <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
                                                     <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
                                                 </button>
-                                                {/* Changed: bg-slate-800/70 backdrop-blur-sm -> bg-slate-800/90 */}
                                                 <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
                                                     <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
                                                 </button>
@@ -438,15 +427,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* --- BOSS DISPLAY AREA --- */}
                                     <div className="w-full max-w-4xl flex justify-center items-center my-8">
                                         <div 
-                                            // Changed: bg-slate-900/50 backdrop-blur-sm -> bg-slate-900/60
                                             className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible" 
                                             onClick={() => setStatsModalTarget('boss')} 
                                             title="View Boss Stats"
                                         >
-                                            {/* MAGIC CIRCLE LAYER (Z-INDEX 0) 
-                                                - Nằm dưới chân (bottom-[0%])
-                                                - Kích thước nhỏ gọn (90% width)
-                                            */}
+                                            {/* MAGIC CIRCLE LAYER (Z-INDEX 0) */}
                                             <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
                                                 <MagicCircle elementKey={bossElement} />
                                             </div>
@@ -462,9 +447,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 </div>
 
                                                 <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
-                                                    {/* BOSS IMAGE WITH ANIMATION 
-                                                        - animate-hover-boss: Lơ lửng
-                                                    */}
+                                                    {/* BOSS IMAGE WITH ANIMATION */}
                                                     <img 
                                                         src={`/images/boss/${String(currentBossData.id).padStart(2, '0')}.webp`} 
                                                         alt={currentBossData.name} 
@@ -487,7 +470,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         </button>
                                         )}
                                         {battleState !== 'idle' && (
-                                        // Changed: bg-slate-900/50 backdrop-blur-sm -> bg-slate-900/80
                                         <div className="mt-2 h-40 w-full bg-slate-900/80 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
                                             {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
                                         </div>
@@ -509,11 +491,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 // --- WRAPPER COMPONENT ---
 export default function BossBattle(props: BossBattleWrapperProps) {
     return (
-        <BossBattleProvider
-            userId={props.userId}
-            onBattleEnd={props.onBattleEnd}
-            onFloorComplete={props.onFloorComplete}
-        >
+        <BossBattleProvider>
             <BossBattleView onClose={props.onClose} />
         </BossBattleProvider>
     );
