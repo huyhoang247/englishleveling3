@@ -603,9 +603,57 @@ const StickmanShadowFinal = ({ onClose }) => {
         }
     };
 
+    // --- SỬA ĐỔI HÀM: addFloatingText (Phiên bản Game Style) ---
+    // Giúp các số damage/hồi máu tự động tránh nhau, tạo hiệu ứng xếp chồng đẹp mắt
     const addFloatingText = (x, y, text, color, size = 20, type = 'TEXT') => {
+        // 1. Tạo độ lệch ngẫu nhiên ban đầu (Spread)
+        // Để số không xuất hiện ở đúng 1 điểm x,y mà tản ra xung quanh 1 chút
+        let finalX = x + (Math.random() * 30 - 15);
+        let finalY = y;
+        
+        // Tốc độ bay lên (Mặc định là -2) -> Random nhẹ để tách dòng theo chiều dọc
+        let velocityY = -2 - (Math.random() * 0.5); 
+
+        // 2. Logic "Smart Stacking" - Chống đè chữ
+        // Chỉ kiểm tra 10 text gần nhất để tối ưu
+        const checkLimit = 10;
+        let count = 0;
+
+        // Duyệt ngược từ text mới nhất
+        for (let i = floatingTexts.current.length - 1; i >= 0; i--) {
+            if (count >= checkLimit) break;
+            
+            const existing = floatingTexts.current[i];
+            
+            // Tính khoảng cách
+            const dx = Math.abs(existing.x - finalX);
+            const dy = Math.abs(existing.y - finalY);
+
+            // Nếu quá gần nhau (X < 30px và Y < 30px)
+            if (dx < 30 && dy < 30) {
+                // Đẩy text mới lên trên đầu text cũ (cách 25px)
+                finalY = existing.y - 25;
+                
+                // Mẹo của Game: Đẩy nhẹ sang bên trái hoặc phải xen kẽ
+                // Để tạo thành hình rích rắc thay vì 1 cột thẳng
+                if (existing.x > x) {
+                    finalX -= 10; // Nếu text cũ ở bên phải, text mới né sang trái
+                } else {
+                    finalX += 10; // Ngược lại
+                }
+            }
+            count++;
+        }
+
         floatingTexts.current.push({
-            x, y, text, color, size, life: 60, vy: -2, type
+            x: finalX,
+            y: finalY,
+            text,
+            color,
+            size,
+            life: 60,   // Thời gian tồn tại
+            vy: velocityY, 
+            type
         });
     };
 
@@ -713,6 +761,8 @@ const StickmanShadowFinal = ({ onClose }) => {
 
         ctx.fillStyle = '#fff'; ctx.font = 'bold 18px Arial'; ctx.textAlign = 'left'; ctx.fillText(`${p.coins}`, hudX + 45, hudY + 25);
 
+        // Đã xóa bỏ phần vẽ Shadow UI ở đây (đã chuyển lên Header)
+
         // Vẽ Floor / Wave info
         const centerX = (canvasRef.current.width / dprRef.current) / 2;
         ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
@@ -759,159 +809,83 @@ const StickmanShadowFinal = ({ onClose }) => {
         ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText(p.level, barX - 14, barY + 4);
     };
 
-    // --- UPDATE: DRAW STICKMAN (Animation mượt hơn) ---
     const drawStickman = (ctx, p) => {
         if (p.isDead) return;
         const { x, y, dir, state, animTimer } = p;
-        
-        // Các biến góc cho xương
-        let lLeg1 = 0, lLeg2 = 0; // Chân trái (Đùi, Bắp chân)
-        let rLeg1 = 0, rLeg2 = 0; // Chân phải
-        let lArm1 = 0, lArm2 = 0; // Tay trái (Bắp tay, Cẳng tay)
-        let rArm1 = 0, rArm2 = 0; // Tay phải
-        let bY = 0; // Độ nhún cơ thể
-        let bodyRot = 0; // Độ nghiêng cơ thể
+        const cycle = animTimer * 0.2;
+        let lLeg = 0, rLeg = 0, lArm = 0, rArm = 0, bY = 0;
 
         if (state === 'RUN') {
-            const cycle = animTimer * 0.25; // Tăng tốc độ animation một chút
-            
-            // 1. Độ nghiêng người khi chạy (đổ về phía trước)
-            bodyRot = 0.15; 
-            
-            // 2. Độ nhún (Bounce) lên xuống 2 lần mỗi chu kỳ chân
-            bY = Math.abs(Math.cos(cycle)) * 4;
-
-            // 3. Logic Chân (Gập gối)
-            // Chân trái
-            lLeg1 = Math.sin(cycle) * 0.8; // Đùi vung biên độ 0.8
-            // Khi chân đưa ra sau (sin < 0), gập gối lên (Math.abs * 1.5). Khi đưa ra trước thì thẳng hơn.
-            lLeg2 = lLeg1 + 0.1 + (Math.sin(cycle) < 0 ? Math.abs(Math.sin(cycle)) * 1.8 : 0);
-
-            // Chân phải (Ngược pha với chân trái: + Math.PI)
-            rLeg1 = Math.sin(cycle + Math.PI) * 0.8;
-            rLeg2 = rLeg1 + 0.1 + (Math.sin(cycle + Math.PI) < 0 ? Math.abs(Math.sin(cycle + Math.PI)) * 1.8 : 0);
-
-            // 4. Logic Tay (Đánh tay mạnh hơn)
-            // Tay trái (ngược pha chân trái -> cùng pha chân phải)
-            lArm1 = Math.cos(cycle) * 0.9; 
-            lArm2 = lArm1 - 1.5; // Cẳng tay luôn gập lại (khuỷu tay)
-
-            // Tay phải
-            rArm1 = Math.cos(cycle + Math.PI) * 0.9;
-            rArm2 = rArm1 - 1.5;
-
+            lLeg = Math.sin(cycle) * 0.8; rLeg = Math.sin(cycle + Math.PI) * 0.8;
+            lArm = Math.cos(cycle) * 0.8; rArm = Math.cos(cycle + Math.PI) * 0.8;
+            bY = Math.abs(Math.sin(cycle)) * 3;
         } else if (state === 'JUMP') {
-            // Nhảy: Co chân, giơ tay
-            lLeg1 = -0.5; lLeg2 = 0.5; // Co gối trái
-            rLeg1 = 0.2; rLeg2 = 1.0;  // Duỗi nhẹ phải
-            lArm1 = -2.5; lArm2 = -2.0; // Giơ tay cao
-            rArm1 = -2.5; rArm2 = -2.0;
-            bodyRot = -0.1; // Hơi ngửa ra sau tí
+            lLeg = -0.5; rLeg = 0.5; lArm = -2; rArm = -2;
         } else if (state === 'ATTACK') {
             const pr = Math.min(1, (15 - p.attackCooldown) / 5);
-            // Chém mạnh
-            rArm1 = -1.5 + (pr * 3); rArm2 = rArm1 + 0.5;
-            lArm1 = 0.5; lArm2 = 1.0; 
-            lLeg1 = 0.5; lLeg2 = 0.6; 
-            rLeg1 = -0.5; rLeg2 = -0.2;
-            bodyRot = 0.1;
+            rArm = -1.5 + (pr * 3); lArm = 0.5; lLeg = 0.5; rLeg = -0.5;
         } else {
-            // IDLE: Thở nhẹ
-            const breath = Math.sin(animTimer * 0.1);
-            bY = breath * 1.5;
-            lArm1 = breath * 0.05; lArm2 = lArm1 + 0.2;
-            rArm1 = -breath * 0.05; rArm2 = rArm1 + 0.2;
-            lLeg1 = 0; lLeg2 = 0.1;
-            rLeg1 = 0; rLeg2 = 0.1;
+            bY = Math.sin(animTimer * 0.1) * 1.5;
+            lArm = Math.sin(animTimer * 0.1) * 0.1; rArm = -Math.sin(animTimer * 0.1) * 0.1;
         }
 
         ctx.save();
-        // Translate bao gồm cả độ nhún bY
-        ctx.translate(x | 0, (y - 25 - bY) | 0); 
-        ctx.scale(dir, 1); // Lật hình theo hướng
-        ctx.rotate(bodyRot); // Nghiêng mình
+        ctx.translate(x | 0, (y - 25 - bY) | 0); ctx.scale(dir, 1);
 
         let outline = 'transparent';
         if (p.type === 'PLAYER') outline = '#00f2ff';
         if (p.type === 'ENEMY') outline = '#ff2a00';
         if (p.type === 'ALLY') outline = '#a855f7';
 
-        // Hàm vẽ xương cập nhật: nhận 2 góc (ang1: xương trên, ang2: xương dưới)
         const drawBody = (col, wid, out) => {
             ctx.strokeStyle = col; ctx.lineWidth = wid; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
 
-            const hip = { x: 0, y: 0 }; 
-            const head = { x: 0, y: -25 }; 
-            const shoulder = { x: 0, y: -18 };
-            
-            // Vẽ Thân
+            const hip = { x: 0, y: 0 }; const head = { x: 0, y: -25 }; const shoulder = { x: 0, y: -18 };
             ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(head.x, head.y); ctx.stroke();
 
-            // Vẽ Đầu
             if (out) {
                 ctx.fillStyle = col; ctx.beginPath(); ctx.arc(head.x, head.y, 7.5, 0, Math.PI * 2); ctx.fill();
             } else {
                 ctx.fillStyle = '#000'; ctx.beginPath(); ctx.arc(head.x, head.y, 6, 0, Math.PI * 2); ctx.fill();
             }
 
-            // Hàm vẽ chi (Tay/Chân) với khớp
-            const limb = (sx, sy, ang1, ang2) => {
-                // Xương trên (Đùi/Bắp tay)
-                const mx = sx + Math.sin(ang1) * 12;
-                const my = sy + Math.cos(ang1) * 12;
+            const limb = (sx, sy, ang) => {
+                const mx = sx + Math.sin(ang) * 12, my = sy + Math.cos(ang) * 12;
                 ctx.beginPath(); ctx.moveTo(sx, sy); ctx.lineTo(mx, my); ctx.stroke();
-                
-                // Xương dưới (Bắp chân/Cẳng tay) - Dùng ang2 riêng biệt
-                const fx = mx + Math.sin(ang2) * 12;
-                const fy = my + Math.cos(ang2) * 12;
+                const fx = mx + Math.sin(ang * 0.8) * 12, fy = my + Math.cos(ang * 0.8) * 12;
                 ctx.beginPath(); ctx.moveTo(mx, my); ctx.lineTo(fx, fy); ctx.stroke();
-                
-                return { x: fx, y: fy }; // Trả về điểm cuối (bàn tay/bàn chân)
+                return { x: fx, y: fy };
             };
 
-            // Vẽ Chân
-            ctx.strokeStyle = out ? col : '#222'; limb(hip.x, hip.y, lLeg1, lLeg2); // Chân trái
-            ctx.strokeStyle = out ? col : '#000'; limb(hip.x, hip.y, rLeg1, rLeg2); // Chân phải
+            ctx.strokeStyle = out ? col : '#222'; limb(hip.x, hip.y, lLeg);
+            ctx.strokeStyle = out ? col : '#000'; limb(hip.x, hip.y, rLeg);
 
-            // Vẽ Tay
-            ctx.strokeStyle = out ? col : '#222'; limb(shoulder.x, shoulder.y, lArm1, lArm2); // Tay trái
-            ctx.strokeStyle = out ? col : '#000'; return limb(shoulder.x, shoulder.y, rArm1, rArm2); // Tay phải (trả về tọa độ bàn tay để cầm vũ khí)
+            ctx.strokeStyle = out ? col : '#222'; limb(shoulder.x, shoulder.y, lArm);
+            ctx.strokeStyle = out ? col : '#000'; return limb(shoulder.x, shoulder.y, rArm);
         };
 
-        // Vẽ Outline (Hiệu ứng phát sáng/Viền)
         if (outline !== 'transparent') {
             ctx.save(); ctx.globalAlpha = 0.5;
             drawBody(outline, 6, true);
             ctx.restore();
         }
-        
-        // Vẽ Body chính
         const hand = drawBody('#000', 3, false);
-        
-        // Vẽ Vũ khí
         if (hand) {
             ctx.strokeStyle = p.type === 'ALLY' ? '#a855f7' : p.weaponColor;
             ctx.lineWidth = 2.5;
             ctx.beginPath();
-            // Góc vũ khí theo tay phải
-            const swAng = rArm2 + 1.5; 
+            const swAng = rArm + 1.5;
             ctx.moveTo(hand.x, hand.y); ctx.lineTo(hand.x + Math.sin(swAng) * 35, hand.y + Math.cos(swAng) * 35); ctx.stroke();
 
-            // Hiệu ứng chém (Trail)
             if (state === 'ATTACK' && p.attackCooldown > 5) {
                 ctx.fillStyle = p.type === 'ALLY' ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.4)';
                 ctx.beginPath(); ctx.arc(0, -15, 50, swAng - 0.5, swAng + 0.5); ctx.fill();
             }
         }
-        
-        // Mắt tím cho Shadow
         if (p.type === 'ALLY') {
             ctx.fillStyle = '#a855f7'; ctx.beginPath(); ctx.arc(0, -26, 2, 0, Math.PI * 2); ctx.fill();
         }
-        
         ctx.restore();
-        
-        // Vẽ thanh máu (không bị xoay theo nhân vật)
         drawUnitUI(ctx, p, p.type);
     };
 
