@@ -200,6 +200,9 @@ const StickmanShadowFinal = ({ onClose }) => {
     const [winner, setWinner] = useState(null);
     const [showStats, setShowStats] = useState(false);
 
+    // --- STATE QUẢN LÝ HIỆU ỨNG NÚT ATTACK ---
+    const [isAttackPressed, setIsAttackPressed] = useState(false);
+
     // --- AUTO MODE STATE ---
     const [isAuto, setIsAuto] = useState(false);
     const isAutoRef = useRef(false);
@@ -1308,6 +1311,20 @@ const StickmanShadowFinal = ({ onClose }) => {
         input.current[key] = val;
     };
 
+    // --- NEW: ATTACK BUTTON HANDLERS FOR BETTER FEEDBACK ---
+    const handleAttackStart = (e) => {
+        handleTouch('attack', true)(e);
+        setIsAttackPressed(true);
+    };
+
+    const handleAttackEnd = (e) => {
+        handleTouch('attack', false)(e);
+        // Delay visual reset slightly so taps are visible
+        setTimeout(() => {
+            setIsAttackPressed(false);
+        }, 150);
+    };
+
     useEffect(() => {
         const keyMap = { 'ArrowLeft': 'left', 'ArrowRight': 'right', 'ArrowUp': 'jump', ' ': 'attack', 'c': 'jump', 'x': 'attack', 'z': 'skill' };
         const down = (e) => { if (keyMap[e.key]) input.current[keyMap[e.key]] = true; };
@@ -1425,7 +1442,8 @@ const StickmanShadowFinal = ({ onClose }) => {
                         </div>
                     )}
 
-                    <div className="absolute bottom-16 right-8 flex flex-col gap-4 z-40 items-center">
+                    {/* CONTROL BUTTONS GROUP - Dịch chuyển từ bottom-16 -> bottom-24 */}
+                    <div className="absolute bottom-24 right-8 flex flex-col gap-4 z-40 items-center">
 
                         {/* AUTO & INFO BUTTONS */}
                         <div className="flex gap-4 mb-2">
@@ -1454,43 +1472,42 @@ const StickmanShadowFinal = ({ onClose }) => {
                                     )}
                                 </div>
 
-                                {/* Attack Button (New Design - No Backdrop Blur) */}
+                                {/* Attack Button (Updated with visual delay logic) */}
                                 <button
-                                    className="
+                                    className={`
                                         group relative
                                         w-20 h-20
                                         rounded-full
-                                        bg-slate-900/60
-                                        border-[3px] border-white/20
-                                        shadow-[0_4px_10px_rgba(0,0,0,0.5)]
-                                        active:scale-90
-                                        active:border-white/80
-                                        active:shadow-[0_0_25px_rgba(255,255,255,0.4)]
-                                        active:bg-slate-800
-                                        transition-all duration-75 ease-out
                                         flex items-center justify-center
                                         touch-none select-none
-                                    "
-                                    onTouchStart={handleTouch('attack', true)}
-                                    onTouchEnd={handleTouch('attack', false)}
+                                        transition-all duration-100 ease-out
+                                        ${isAttackPressed
+                                            ? 'scale-90 bg-slate-800 border-[3px] border-white/80 shadow-[0_0_25px_rgba(255,255,255,0.4)]'
+                                            : 'scale-100 bg-slate-900/60 border-[3px] border-white/20 shadow-[0_4px_10px_rgba(0,0,0,0.5)]'
+                                        }
+                                    `}
+                                    onTouchStart={handleAttackStart}
+                                    onTouchEnd={handleAttackEnd}
+                                    onMouseDown={handleAttackStart}
+                                    onMouseUp={handleAttackEnd}
                                 >
-                                    {/* Decorative inner thin ring for "tech" feel */}
-                                    <div className="absolute inset-1.5 rounded-full border border-white/10 pointer-events-none group-active:border-white/30"></div>
+                                    {/* Decorative inner thin ring */}
+                                    <div className={`absolute inset-1.5 rounded-full border pointer-events-none transition-colors duration-100 ${isAttackPressed ? 'border-white/30' : 'border-white/10'}`}></div>
 
                                     {/* Icon */}
                                     <img
                                         src={ATTACK_SKILL_IMG_URL}
                                         alt="Attack"
-                                        className="
+                                        className={`
                                             w-11 h-11
                                             object-contain
-                                            opacity-50
-                                            group-active:opacity-100
-                                            group-active:scale-110
-                                            group-active:brightness-150
-                                            transition-all duration-75
+                                            transition-all duration-100
                                             pointer-events-none
-                                        "
+                                            ${isAttackPressed
+                                                ? 'opacity-100 scale-110 brightness-150'
+                                                : 'opacity-50'
+                                            }
+                                        `}
                                     />
                                 </button>
                             </div>
