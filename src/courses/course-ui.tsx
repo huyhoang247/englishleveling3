@@ -166,7 +166,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-600"></div>
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
-                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-9 w-9" />
+                    {/* CHANGED: Increased size from h-9 w-9 to h-11 w-11 */}
+                    <img src={quizHomeAssets.multipleChoiceIcon} alt="Multiple choice" className="h-11 w-11" />
                   </div>
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md opacity-90">Multiple choice</h3>
@@ -187,7 +188,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 <div className="absolute inset-0 bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600"></div>
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
-                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-9 w-9" />
+                    {/* CHANGED: Increased size from h-9 w-9 to h-11 w-11 */}
+                    <img src={quizHomeAssets.vocaMatchIcon} alt="Voca Match" className="h-11 w-11" />
                   </div>
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md opacity-90">Voca Match</h3>
@@ -208,7 +210,8 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
                 <div className="absolute inset-0 bg-gradient-to-br from-fuchsia-500 via-purple-500 to-violet-600"></div>
                 <div className="relative flex items-center p-5 bg-white/5 backdrop-blur-sm rounded-[22px] h-full">
                   <div className="h-16 w-16 bg-white/30 text-white rounded-2xl flex items-center justify-center shrink-0 shadow-sm backdrop-blur-md group-hover:rotate-6 transition-transform duration-300">
-                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-9 w-9" />
+                    {/* CHANGED: Increased size from h-9 w-9 to h-11 w-11 */}
+                    <img src={quizHomeAssets.fillInTheBlankIcon} alt="Fill in the blank" className="h-11 w-11" />
                   </div>
                   <div className="ml-5 flex-1 flex flex-col justify-center text-white">
                     <h3 className="text-lg font-['Lilita_One'] uppercase tracking-wider mb-2 drop-shadow-md opacity-90">Fill in the blank</h3>
