@@ -15,11 +15,11 @@ import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
 import { useGame } from '../../GameContext.tsx'; 
 import { processVocabularyChestOpening } from './voca-chest-service.ts';
 import { CHEST_DEFINITIONS } from './voca-chest-ui.tsx';
-// <<< THAY ĐỔI: Import localDB service để đọc dữ liệu từ IndexedDB
-import { localDB } from '../../local-data/local-vocab-db.ts'; // <= CHÚ Ý: CHỈNH LẠI ĐƯỜNG DẪN NÀY NẾU CẦN
+import { localDB } from '../../local-data/local-vocab-db.ts'; 
 
 // --- TYPE DEFINITIONS ---
-type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master';
+// <<< THAY ĐỔI: Thêm 'legendary' vào ChestType
+type ChestType = 'basic' | 'elementary' | 'intermediate' | 'advanced' | 'master' | 'legendary';
 
 interface ImageCard { 
     id: number; 
@@ -63,7 +63,10 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
     const currentUserId = auth.currentUser?.uid;
 
     const [isLoading, setIsLoading] = useState(true);
-    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ basic: [], elementary: [], intermediate: [], advanced: [], master: [] });
+    // <<< THAY ĐỔI: Thêm key legendary: [] vào state khởi tạo
+    const [availableIndices, setAvailableIndices] = useState<Record<ChestType, number[]>>({ 
+        basic: [], elementary: [], intermediate: [], advanced: [], master: [], legendary: [] 
+    });
     const [preloadPool, setPreloadPool] = useState<number[]>([]);
     const [cardsForPopup, setCardsForPopup] = useState<ImageCard[]>([]);
     const [processingChestId, setProcessingChestId] = useState<string | null>(null);
@@ -78,9 +81,7 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
 
     // --- DATA FETCHING EFFECT ---
     useEffect(() => {
-        // <<< THAY ĐỔI: Đã loại bỏ MIN_LOADING_TIME_MS và startTime để bỏ delay
         const fetchVocabSpecificData = async () => {
-            // Không cần currentUserId để đọc localDB, nhưng giữ lại để logic không chạy khi chưa đăng nhập
             if (!currentUserId) { 
                 setIsLoading(false); 
                 return; 
@@ -88,26 +89,32 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
             setIsLoading(true);
 
             try {
-                // Đọc danh sách ID (1-based) của các từ đã mở từ IndexedDB
                 const openedVocabIds = await localDB.getAllOpenedIds();
 
-                // Tính toán tất cả các index có thể có cho mỗi loại rương
                 const totalItems = Math.min(defaultVocabulary.length, defaultImageUrls.length);
-                const allIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
+                // <<< THAY ĐỔI: Thêm key legendary: [] vào biến tạm
+                const allIndices: Record<ChestType, number[]> = { 
+                    basic: [], elementary: [], intermediate: [], advanced: [], master: [], legendary: [] 
+                };
+                
                 Object.values(CHEST_DEFINITIONS).forEach(chest => {
+                    // Logic này tự động bỏ qua nếu range là null (Coming Soon)
                     if (chest.isComingSoon || chest.range[0] === null) return;
+                    
                     const endRange = chest.range[1] ?? (totalItems - 1);
                     for (let i = chest.range[0]!; i <= endRange && i < totalItems; i++) {
-                        allIndices[chest.chestType].push(i);
+                        // Cast chestType để đảm bảo TS không báo lỗi
+                        allIndices[chest.chestType as ChestType].push(i);
                     }
                 });
                 
-                // Chuyển đổi ID (1-based) từ DB thành index (0-based) để so sánh
                 const openedIndices = new Set<number>();
                 openedVocabIds.forEach(id => openedIndices.add(id - 1));
 
-                // Lọc ra các index còn lại (chưa được mở)
-                const remainingIndices: Record<ChestType, number[]> = { basic: [], elementary: [], intermediate: [], advanced: [], master: [] };
+                // <<< THAY ĐỔI: Thêm key legendary: [] vào kết quả lọc
+                const remainingIndices: Record<ChestType, number[]> = { 
+                    basic: [], elementary: [], intermediate: [], advanced: [], master: [], legendary: [] 
+                };
                 Object.keys(allIndices).forEach(key => {
                     const chestType = key as ChestType;
                     remainingIndices[chestType] = allIndices[chestType].filter(index => !openedIndices.has(index));
@@ -117,7 +124,6 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
             } catch (error) {
                 console.error("Error fetching vocab-specific data from Local DB:", error);
             } finally {
-                // <<< THAY ĐỔI: Tắt loading ngay lập tức khi hoàn tất
                 setIsLoading(false);
             }
         };
@@ -141,7 +147,11 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
     // --- CORE LOGIC: OPEN CHEST ---
     const openChest = useCallback(async (count: 1 | 4, chestType: ChestType) => {
         if (processingChestId || !currentUserId) return;
+        
+        // TypeScript access workaround if needed, or update CHEST_DEFINITIONS types in UI file
+        // @ts-ignore
         const chestDef = CHEST_DEFINITIONS[chestType];
+        
         if (!chestDef || chestDef.isComingSoon) return;
 
         const price = count === 1 ? chestDef.price1 : (chestDef.price10 ?? 0);
@@ -165,10 +175,8 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
 
             const newWordsToSave = selectedOriginalIndices.map(index => ({ id: index + 1, word: defaultVocabulary[index], chestType: chestType }));
             
-            // Gọi service để xử lý giao dịch trên Firestore và ghi vào Local DB
             await processVocabularyChestOpening(currentUserId, { currency: chestDef.currency, cost: price, gemReward: count * GEM_REWARD_PER_CARD, newWordsData: newWordsToSave });
 
-            // Cập nhật state cục bộ của màn hình này (danh sách thẻ còn lại)
             setAvailableIndices(prev => ({ ...prev, [chestType]: tempPool }));
             setPreloadPool(prev => prev.filter(idx => !selectedOriginalIndices.includes(idx)));
             setCardsForPopup(selectedCardsForPopup);
@@ -191,7 +199,6 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
         } 
     }, [lastOpenedChest, openChest]);
 
-    // --- CONTEXT VALUE ---
     const value: VocabularyChestContextType = {
         isLoading, 
         playerStats, 
@@ -209,7 +216,6 @@ export const VocabularyChestProvider: React.FC<VocabularyChestProviderProps> = (
     return <VocabularyChestContext.Provider value={value}>{children}</VocabularyChestContext.Provider>;
 };
 
-// --- CUSTOM HOOK ---
 export const useVocabularyChest = (): VocabularyChestContextType => {
     const context = useContext(VocabularyChestContext);
     if (context === undefined) { 
