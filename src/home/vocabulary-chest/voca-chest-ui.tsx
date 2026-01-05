@@ -12,68 +12,64 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import { VocabularyChestProvider, useVocabularyChest } from './voca-chest-context.tsx';
 
 // ========================================================================
-// === 0. CÁC HẰNG SỐ (ĐÃ GỘP TỪ FILE CONSTANTS) =========================
+// === 0. CÁC HẰNG SỐ =====================================================
 // ========================================================================
 
-// URL cho Legendary Chest được cung cấp
 const LEGENDARY_CHEST_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/chest-legendary.webp";
 
-// <<< THAY ĐỔI: Thêm trường 'cefr' cho các rương và thêm định nghĩa Legendary
 export const CHEST_DEFINITIONS = {
     basic: { 
         id: 'basic_vocab_chest', currency: 'gold' as const, chestType: 'basic' as const, 
-        headerTitle: "Basic Vocabulary", cefr: "A1", // Thêm tag A1
+        headerTitle: "Basic Vocabulary", cefr: "A1", 
         levelName: "Cơ Bản", imageUrl: treasureAssets.chestBasic, 
         infoText: "2,400 từ vựng cơ bản. Nền tảng vững chắc cho việc học.", 
         price1: 320, price10: 1200, isComingSoon: false, range: [0, 2399] as const 
     },
     elementary: { 
         id: 'elementary_vocab_chest', currency: 'gem' as const, chestType: 'elementary' as const, 
-        headerTitle: "Elementary Vocabulary", cefr: "A2", // Thêm tag A2
+        headerTitle: "Elementary Vocabulary", cefr: "A2", 
         levelName: "Sơ Cấp", imageUrl: treasureAssets.chestElementary, 
         infoText: "1,700 từ vựng trình độ Sơ Cấp (A1-A2). Xây dựng vốn từ giao tiếp hàng ngày.", 
         price1: 10, price10: 40, isComingSoon: false, range: [2400, 4099] as const 
     },
     intermediate: { 
         id: 'intermediate_vocab_chest', currency: 'gem' as const, chestType: 'intermediate' as const, 
-        headerTitle: "Intermediate Vocabulary", cefr: "B1", // Thêm tag B1
+        headerTitle: "Intermediate Vocabulary", cefr: "B1", 
         levelName: "Trung Cấp", imageUrl: treasureAssets.chestIntermediate, 
         infoText: <>Mở rộng kiến thức chuyên sâu hơn.</>, 
         price1: 10, price10: 40, isComingSoon: false, range: [4100, 6499] as const 
     },
     advanced: { 
         id: 'advanced_vocab_chest', currency: 'gem' as const, chestType: 'advanced' as const, 
-        headerTitle: "Advanced Vocabulary", cefr: "B2", // Thêm tag B2
+        headerTitle: "Advanced Vocabulary", cefr: "B2", 
         levelName: "Cao Cấp", imageUrl: treasureAssets.chestAdvanced, 
         infoText: <>Chinh phục các kỳ thi và sử dụng ngôn ngữ học thuật.</>, 
         price1: 10, price10: 40, isComingSoon: false, range: [6500, defaultVocabulary.length - 1] as const 
     },
     master: { 
         id: 'master_vocab_chest', currency: 'gem' as const, chestType: 'master' as const, 
-        headerTitle: "Master Vocabulary", cefr: "C1", // Thêm tag C1
+        headerTitle: "Master Vocabulary", cefr: "C1", 
         levelName: "Thông Thạo", imageUrl: treasureAssets.chestMaster, 
         infoText: <>Từ vựng chuyên ngành và thành ngữ phức tạp để đạt trình độ bản xứ.</>, 
         price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const 
     },
-    // <<< THAY ĐỔI: Thêm cấp độ Legendary
     legendary: { 
         id: 'legendary_vocab_chest', currency: 'gem' as const, chestType: 'legendary' as const, 
-        headerTitle: "Legendary Vocabulary", cefr: "C2", // Tag C2
+        headerTitle: "Legendary Vocabulary", cefr: "C2", 
         levelName: "Huyền Thoại", imageUrl: LEGENDARY_CHEST_URL, 
         infoText: <>Đỉnh cao ngôn ngữ. Đạt đến giới hạn của một huyền thoại ngôn ngữ học.</>, 
         price1: 0, price10: 0, isComingSoon: true, range: [null, null] as const 
     },
 };
 
-// Ép kiểu để mảng CHEST_DATA tương thích với map trong UI
 const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 
 // ========================================================================
-// === 1. COMPONENT CSS ===================================================
+// === 1. COMPONENT CSS (CẬP NHẬT STYLE TAG) =============================
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
-        /* --- LỚP GỐC: Thiết lập môi trường độc lập --- */
+        /* --- LỚP GỐC --- */
         .vocabulary-chest-root { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #0a0a14; background-image: radial-gradient(circle at center, #16213e, #0a0a14); color: #e0e0e0; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 100; overflow: hidden; }
         .vocabulary-chest-root .vocab-screen-home-btn { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background-color: rgba(30, 41, 59, 0.8); border: 1px solid rgb(51, 65, 85); transition: background-color 0.2s ease, opacity 0.3s ease, visibility 0.3s; cursor: pointer; color: #cbd5e1; }
         .vocabulary-chest-root .vocab-screen-home-btn:hover { background-color: rgb(51, 65, 85); }
@@ -81,26 +77,48 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .vocab-screen-home-btn svg { width: 20px; height: 20px; }
         .vocabulary-chest-root .vocab-screen-home-btn span { font-size: 0.875rem; font-weight: 600; }
         @media (max-width: 640px) { .vocabulary-chest-root .vocab-screen-home-btn span { display: none; } .vocabulary-chest-root .header-right-group { gap: 8px; } }
-        .vocabulary-chest-root .chest-gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 100%; max-width: 1300px; padding: 20px 20px 100px; box-sizing: border-box; flex-grow: 1; overflow-y: auto; -ms-overflow-style: none; /* IE and Edge */ scrollbar-width: none; /* Firefox */ }
-        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { display: none; /* Chrome, Safari and Opera */ }
+        
+        .vocabulary-chest-root .chest-gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 100%; max-width: 1300px; padding: 20px 20px 100px; box-sizing: border-box; flex-grow: 1; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none; }
+        .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { display: none; }
+        
         .vocabulary-chest-root .chest-ui-container { width: 100%; max-width: 380px; min-width: 300px; background-color: #1a1f36; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease; position: relative; border: none; }
         .vocabulary-chest-root .chest-ui-container.is-coming-soon { filter: grayscale(80%); opacity: 0.7; }
         .vocabulary-chest-root .chest-ui-container::before { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
         .vocabulary-chest-root .chest-ui-container:hover:not(.is-processing) { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3); }
         
-        /* --- HEADER & CEFR TAG CSS --- */
-        .vocabulary-chest-root .chest-header { padding: 12px 10px; background-color: rgba(42, 49, 78, 0.7); font-size: 0.9rem; font-weight: 600; color: #c7d2fe; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: center; align-items: center; gap: 8px; position: relative; }
-        .vocabulary-chest-root .cefr-tag { 
-            font-size: 0.7rem; font-weight: 800; padding: 2px 6px; border-radius: 6px; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5); box-shadow: 0 2px 5px rgba(0,0,0,0.3); vertical-align: middle; display: inline-block;
+        /* --- HEADER & CEFR TAG CSS (ĐÃ CẬP NHẬT) --- */
+        .vocabulary-chest-root .chest-header { 
+            padding: 12px 10px; 
+            background-color: rgba(42, 49, 78, 0.7); 
+            font-size: 0.9rem; 
+            font-weight: 600; 
+            color: #c7d2fe; 
+            text-align: center; 
+            text-transform: uppercase; 
+            letter-spacing: 0.5px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            gap: 8px; /* Khoảng cách giữa Text và Tag */
         }
-        /* CEFR Level Colors */
-        .vocabulary-chest-root .cefr-tag.A1 { background: linear-gradient(135deg, #10b981, #059669); }
-        .vocabulary-chest-root .cefr-tag.A2 { background: linear-gradient(135deg, #3b82f6, #2563eb); }
-        .vocabulary-chest-root .cefr-tag.B1 { background: linear-gradient(135deg, #8b5cf6, #7c3aed); }
-        .vocabulary-chest-root .cefr-tag.B2 { background: linear-gradient(135deg, #f59e0b, #d97706); }
-        .vocabulary-chest-root .cefr-tag.C1 { background: linear-gradient(135deg, #ec4899, #db2777); }
-        .vocabulary-chest-root .cefr-tag.C2 { background: linear-gradient(135deg, #ef4444, #b91c1c); border: 1px solid #fca5a5; box-shadow: 0 0 8px rgba(239, 68, 68, 0.6); }
+        
+        .vocabulary-chest-root .cefr-tag { 
+            font-size: 0.7rem; 
+            font-weight: 700; 
+            padding: 3px 6px; 
+            border-radius: 4px; 
+            color: rgba(255, 255, 255, 0.9); 
+            
+            /* <<< CẬP NHẬT MÀU: Đen, Opacity 50% */
+            background-color: rgba(0, 0, 0, 0.5); 
+            border: 1px solid rgba(255, 255, 255, 0.15); /* Viền mỏng để nổi bật trên nền tối */
+            
+            vertical-align: middle; 
+            display: inline-block;
+        }
+        /* Đã xóa các style riêng cho .A1, .A2... để đồng bộ */
 
+        /* --- BODY & COMPONENTS --- */
         .vocabulary-chest-root .chest-body { background: linear-gradient(170deg, #43335b, #2c2240); padding: 20px; position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
         .vocabulary-chest-root .chest-body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0; }
         .vocabulary-chest-root .chest-body > * { position: relative; z-index: 1; }
@@ -110,7 +128,7 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-help-icon { width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.25); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 50%; color: #c7d2fe; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; padding: 0; }
         .vocabulary-chest-root .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.4); }
         .vocabulary-chest-root .chest-visual-row { display: flex; align-items: center; gap: 15px; width: 100%; margin-bottom: 20px; }
-        .vocabulary-chest-root .chest-image { flex: 1; min-width: 0; height: auto; object-fit: contain; max-height: 120px; } /* Thêm max-height để ảnh legendary không bị vỡ */
+        .vocabulary-chest-root .chest-image { flex: 1; min-width: 0; height: auto; object-fit: contain; max-height: 120px; } 
         .vocabulary-chest-root .info-bubble { flex: 2; background-color: rgba(10, 10, 20, 0.6); color: #d1d5db; padding: 10px 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1); font-size: 0.85rem; text-align: left; }
         .vocabulary-chest-root .remaining-count-text { color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
         .vocabulary-chest-root .highlight-yellow { color: #facc15; font-weight: bold; }
@@ -122,6 +140,8 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         .vocabulary-chest-root .button-price { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.2); padding: 3px 8px; border-radius: 12px; text-shadow: none; }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
+        
+        /* --- ANIMATIONS & OVERLAYS --- */
         @keyframes vocabulary-chest-processing-pulse { 50% { transform: scale(1.02); } }
         @keyframes vocabulary-chest-particles-rise { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-150px); opacity: 0; } }
         .vocabulary-chest-root .chest-ui-container.is-processing { animation: vocabulary-chest-processing-pulse 2.5s infinite ease-in-out; pointer-events: none; }
@@ -166,16 +186,13 @@ const Card = memo(({ cardData, isFlipping, flipDelay }: { cardData: ImageCard, i
 const SingleCardOpener = ({ card, onClose, onOpenAgain }: { card: ImageCard, onClose: () => void, onOpenAgain: () => void }) => { const [isFlipping, setIsFlipping] = useState(false); const [isProcessing, setIsProcessing] = useState(true); useEffect(() => { const t1 = setTimeout(() => setIsFlipping(true), 300); const t2 = setTimeout(() => setIsProcessing(false), 1100); return () => { clearTimeout(t1); clearTimeout(t2); }; }, [card]); const handleOpenAgain = () => { if (isProcessing) return; setIsProcessing(true); setIsFlipping(false); setTimeout(() => onOpenAgain(), 300); }; return (<><div style={{ textAlign: 'center' }}><div style={{ display: 'inline-block', maxWidth: '250px', width: '60vw' }}><Card cardData={card} isFlipping={isFlipping} flipDelay={0} /></div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={isProcessing}>{isProcessing ? 'Đang mở...' : 'Mở Lại'}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
 const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], onClose: () => void, onOpenAgain: () => void }) => { const [startFlipping, setStartFlipping] = useState(false); const [phase, setPhase] = useState('DEALING'); const startRound = useCallback(() => { setPhase('DEALING'); setStartFlipping(false); const totalDealTime = 500 + 80 * (cards.length - 1); setTimeout(() => { setPhase('FLIPPING'); setStartFlipping(true); const totalFlipTime = 800 + 200 * (cards.length - 1); setTimeout(() => setPhase('REVEALED'), totalFlipTime); }, totalDealTime); }, [cards.length]); useEffect(() => { if (cards.length > 0) startRound(); }, [cards, startRound]); const handleOpenAgain = () => { if (phase !== 'REVEALED') return; onOpenAgain(); }; const btnProps = (() => { switch (phase) { case 'DEALING': return { text: 'Đang chia bài...', disabled: true }; case 'FLIPPING': return { text: 'Đang lật...', disabled: true }; case 'REVEALED': return { text: 'Mở Lại x4', disabled: false }; default: return { text: '', disabled: true }; } })(); return (<><div style={{ textAlign: 'center' }}><div className="four-card-grid-container">{cards.map((card, index) => (<div key={card.id} className={`card-wrapper dealt-in`} style={{ animationDelay: `${index * 80}ms`, opacity: 0 }}><Card cardData={card} isFlipping={startFlipping} flipDelay={index * 200} /></div>))}</div></div><div className="overlay-footer"><button onClick={handleOpenAgain} className="footer-btn primary" disabled={btnProps.disabled}>{btnProps.text}</button><button onClick={onClose} className="footer-btn">Đóng</button></div></>); };
 
-// <<< THAY ĐỔI: Thêm prop 'cefr' vào Interface
 interface ChestUIProps { headerTitle: string; cefr: string; levelName: string | null; imageUrl: string; infoText: React.ReactNode; price1: number | string; price10: number | null; priceIconUrl: string; onOpen1: () => void; onOpen10: () => void; isComingSoon: boolean; remainingCount: number; isProcessing: boolean; }
 
-// <<< THAY ĐỔI: Cập nhật component hiển thị header để bao gồm Tag
 const ChestUI: React.FC<ChestUIProps> = ({ headerTitle, cefr, levelName, imageUrl, infoText, price1, price10, priceIconUrl, onOpen1, onOpen10, isComingSoon, remainingCount, isProcessing }) => (
     <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''} ${isProcessing ? 'is-processing' : ''}`}>
         {isProcessing && (<div className="chest-processing-overlay"><div className="chest-spinner"></div></div>)}
         <header className="chest-header">
             {headerTitle}
-            {/* Thêm Tag CEFR */}
             <span className={`cefr-tag ${cefr}`}>{cefr}</span>
         </header>
         <main className="chest-body">
@@ -225,7 +242,6 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
                         <ChestUI
                             key={chest.id} {...chest}
                             priceIconUrl={chest.currency === 'gem' ? uiAssets.gemIcon : uiAssets.priceIcon}
-                            // Sử dụng ép kiểu keyof để tránh lỗi TypeScript khi truy cập dynamic object key
                             // @ts-ignore
                             remainingCount={availableIndices[chest.chestType]?.length ?? 0}
                             onOpen1={() => openChest(1, chest.chestType)}
