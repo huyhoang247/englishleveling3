@@ -1,5 +1,3 @@
-// --- START OF FILE item-database.ts (FINAL, FIXED VERSION) ---
-
 import { itemAssets } from '../../game-assets.ts';
 
 // --- CÁC ĐỊNH NGHĨA CỐT LÕI (Không đổi) ---
@@ -46,7 +44,6 @@ const rankModifiers: { [key in ItemRank]: { statMultiplier: number; levelMultipl
 };
 
 export const itemBlueprints: ItemBlueprint[] = [
-    // SỬA LỖI: Đổi HP, ATK, DEF thành hp, atk, def
     { baseId: 1000, name: 'Nomad Sword', type: 'weapon', baseDescription: 'Thanh kiếm của dân du mục, thích hợp cho những chuyến đi dài.', icon: itemAssets.nomadSword, baseStats: { hp: 1000, atk: 100, def: 50 }, baseMaxLevel: 10 },
     { baseId: 2000, name: 'Tunic', type: 'armor', baseDescription: 'Một chiếc áo tunic đơn giản, cung cấp sự bảo vệ cơ bản.', icon: itemAssets.tunic, baseStats: { hp: 600, atk: 5, def: 80 }, baseMaxLevel: 10 },
     { baseId: 3000, name: 'Warrior\'s Sword', type: 'weapon', baseDescription: 'Thanh kiếm được rèn cho những chiến binh dũng cảm.', icon: itemAssets.warriorsSword, baseStats: { hp: 1800, atk: 180, def: 90 }, baseMaxLevel: 15 },
@@ -72,6 +69,15 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 23000, name: 'Revival Cape', type: 'armor', baseDescription: 'Chiếc áo choàng chứa đựng sức mạnh phục sinh, có khả năng bảo vệ người mặc khỏi cái chết.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/revival-cape.webp', baseStats: { hp: 4000, atk: 0, def: 250 }, baseMaxLevel: 30 },
     { baseId: 24000, name: 'Hard Armor', type: 'armor', baseDescription: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/hard-armor.webp', baseStats: { hp: 1500, atk: 10, def: 150 }, baseMaxLevel: 20 },
     { baseId: 25000, name: 'Warden\'s Mail', type: 'armor', baseDescription: 'Giáp của người cai ngục, nổi tiếng với khả năng chống chịu bền bỉ.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/warden-mail.webp', baseStats: { hp: 2500, atk: 5, def: 220 }, baseMaxLevel: 25 },
+    { 
+        baseId: 26000, 
+        name: 'Excalibur', 
+        type: 'weapon', 
+        baseDescription: 'Thanh thánh kiếm huyền thoại trong truyền thuyết, tỏa ra ánh sáng rực rỡ và sức mạnh áp đảo mọi kẻ thù.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/excalibur.webp', 
+        baseStats: { hp: 3500, atk: 450, def: 200 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
@@ -80,16 +86,13 @@ const blueprintByName = new Map<string, ItemBlueprint>(itemBlueprints.map(bp => 
 
 // --- NÂNG CẤP HỆ THỐNG RANDOM ---
 
-// 1. Định nghĩa các Phân loại (Archetypes)
 const archetypes = [
-    // SỬA LỖI: Đổi weights thành chữ thường
-    { name: 'Balanced',   weights: { hp: {min: 0.8, max: 1.2}, atk: {min: 0.8, max: 1.2}, def: {min: 0.8, max: 1.2} } }, // Cân bằng
-    { name: 'Sturdy',     weights: { hp: {min: 1.5, max: 2.0}, atk: {min: 0.5, max: 0.8}, def: {min: 1.3, max: 1.8} } }, // Trâu bò, phòng thủ
-    { name: 'GlassCannon',weights: { hp: {min: 0.5, max: 0.8}, atk: {min: 1.6, max: 2.2}, def: {min: 0.4, max: 0.7} } }, // Sát thương cao, máu giấy
-    { name: 'Bruiser',    weights: { hp: {min: 1.2, max: 1.6}, atk: {min: 1.1, max: 1.5}, def: {min: 0.6, max: 0.9} } }, // Đấu sĩ, công và máu cao
+    { name: 'Balanced',   weights: { hp: {min: 0.8, max: 1.2}, atk: {min: 0.8, max: 1.2}, def: {min: 0.8, max: 1.2} } }, 
+    { name: 'Sturdy',     weights: { hp: {min: 1.5, max: 2.0}, atk: {min: 0.5, max: 0.8}, def: {min: 1.3, max: 1.8} } }, 
+    { name: 'GlassCannon',weights: { hp: {min: 0.5, max: 0.8}, atk: {min: 1.6, max: 2.2}, def: {min: 0.4, max: 0.7} } }, 
+    { name: 'Bruiser',    weights: { hp: {min: 1.2, max: 1.6}, atk: {min: 1.1, max: 1.5}, def: {min: 0.6, max: 0.9} } }, 
 ];
 
-// Hàm tiện ích để lấy số ngẫu nhiên trong khoảng
 const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
 
 export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank, isRandomizedCraft: boolean = false): ItemDefinition {
@@ -98,15 +101,10 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
 
     let workingStats: { [key: string]: number };
 
-    // BƯỚC 1: Xác định bộ chỉ số "gốc" sẽ được sử dụng.
     if (blueprint.type === 'weapon' && isRandomizedCraft) {
-        // A. Chọn ngẫu nhiên một archetype
         const selectedArchetype = archetypes[Math.floor(Math.random() * archetypes.length)];
-
-        // B. Lấy chỉ số cơ bản của blueprint làm nền
         const base = blueprint.baseStats;
 
-        // C. Tạo chỉ số mới dựa trên archetype đã chọn (SỬA LỖI: sử dụng key viết thường)
         workingStats = {
             hp:  Math.round((base.hp || 0)  * randomInRange(selectedArchetype.weights.hp.min,  selectedArchetype.weights.hp.max)),
             atk: Math.round((base.atk || 0) * randomInRange(selectedArchetype.weights.atk.min, selectedArchetype.weights.atk.max)),
@@ -114,22 +112,18 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
         };
 
     } else {
-        // Nếu không phải chế tạo ngẫu nhiên, dùng chỉ số cơ bản
         workingStats = { ...blueprint.baseStats };
     }
 
-    // BƯỚC 2: Áp dụng hệ số nhân của Rank vào bộ chỉ số đã chọn.
     const finalStats: { [key: string]: any } = {};
     for (const key in workingStats) {
         finalStats[key] = Math.round(workingStats[key] * modifier.statMultiplier);
     }
     
-    // Thêm các chỉ số đặc biệt từ rank (nếu có và không phải vũ khí)
     if (blueprint.type !== 'weapon' && modifier.specialStats) {
         Object.assign(finalStats, modifier.specialStats);
     }
 
-    // BƯỚC 3: Trả về ItemDefinition hoàn chỉnh.
     return {
         id: blueprint.baseId + rankIndex,
         baseId: blueprint.baseId,
@@ -145,7 +139,7 @@ export function generateItemDefinition(blueprint: ItemBlueprint, rank: ItemRank,
 }
 
 
-// --- DATABASE TRUNG TÂM VÀ HÀM TRUY CẬP (Không đổi) ---
+// --- DATABASE TRUNG TÂM VÀ HÀM TRUY CẬP ---
 
 export const itemDatabase = new Map<number, ItemDefinition>([
     [26, { id: 26, name: 'Lá cây hiếm', type: 'material', rarity: 'D', description: 'Lá cây dùng để chế thuốc.', icon: '🍃' }],
@@ -175,7 +169,6 @@ export function getItemDefinition(id: number): ItemDefinition | undefined {
     const blueprint = blueprintByBaseId.get(baseId);
     if (blueprint && rankIndex >= 0 && rankIndex < RARITY_ORDER.length) {
         const rank = RARITY_ORDER[rankIndex];
-        // Khi lấy item theo ID, ta không dùng randomized craft mà dùng chỉ số gốc
         const newItemDef = generateItemDefinition(blueprint, rank, false); 
         
         itemDatabase.set(newItemDef.id, newItemDef);
@@ -189,4 +182,4 @@ export function getItemDefinition(id: number): ItemDefinition | undefined {
 
 export function getBlueprintByName(name: string): ItemBlueprint | undefined {
     return blueprintByName.get(name);
-}
+          }
