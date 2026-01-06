@@ -258,7 +258,7 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 };
 
 // --- COMPONENT MỚI: UPGRADE MODAL (POPUP CƯỜNG HOÁ) ---
-const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing }: { isOpen: boolean; onClose: () => void; item: OwnedItem | null; onUpgrade: (item: OwnedItem, stone: StoneTier) => Promise<boolean>; isProcessing: boolean; }) => {
+const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, stoneCounts }: { isOpen: boolean; onClose: () => void; item: OwnedItem | null; onUpgrade: (item: OwnedItem, stone: StoneTier) => Promise<boolean>; isProcessing: boolean; stoneCounts: Record<StoneTier, number> }) => {
     const [selectedStone, setSelectedStone] = useState<StoneTier>('low');
     const [upgradeStatus, setUpgradeStatus] = useState<'idle' | 'success' | 'fail'>('idle');
 
@@ -300,8 +300,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing }: {
 
                 {/* Cột trái: Thông tin Item */}
                 <div className="w-full md:w-1/3 bg-slate-900/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-700 relative">
-                    {/* Ẩn tiêu đề "Cường Hoá" theo yêu cầu */}
-                    {/* <h3 className="text-xl font-bold text-white mb-6 uppercase tracking-wider">Cường Hoá</h3> */}
                     <div className="mt-4"></div> 
                     
                     <div className={`relative w-32 h-32 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-[0_0_20px_rgba(0,0,0,0.5)] mb-4`}>
@@ -338,11 +336,11 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing }: {
                 {/* Cột phải: Chọn đá & Action */}
                 <div className="flex-1 p-8 flex flex-col justify-center relative">
                     
-                    <div className="flex flex-col items-center justify-center gap-8">
+                    <div className="flex flex-col items-center justify-center mb-8">
                         <div className="text-center">
                             <h4 className="text-slate-400 text-sm uppercase tracking-widest font-bold mb-4">Select Stone</h4>
                             
-                            {/* KHU VỰC CHỌN ĐÁ: Thiết kế nhỏ gọn, tinh tế */}
+                            {/* KHU VỰC CHỌN ĐÁ */}
                             <div className="flex items-center justify-center gap-6">
                                 {stones.map((tier) => {
                                     const stone = ENHANCEMENT_STONES[tier];
@@ -355,48 +353,51 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing }: {
                                     if(tier === 'high') glowColor = 'group-hover:shadow-orange-500/50 shadow-orange-500/20';
 
                                     return (
-                                        <div 
-                                            key={tier}
-                                            onClick={() => setSelectedStone(tier)}
-                                            className={`
-                                                cursor-pointer group relative w-14 h-14 rounded-xl flex items-center justify-center transition-all duration-300
-                                                ${isSelected 
-                                                    ? `scale-110 border-2 ${stone.color.replace('text-', 'border-')} bg-slate-800 shadow-lg ${glowColor}` 
-                                                    : 'bg-slate-900 border border-slate-700 opacity-60 hover:opacity-100 hover:scale-105'
-                                                }
-                                            `}
-                                        >
-                                            {/* Chỉ hiện Icon (Text giả lập icon I, II, III) */}
-                                            <span className={`font-black text-lg ${stone.color} font-serif`}>
-                                                {tier === 'low' ? 'I' : tier === 'medium' ? 'II' : 'III'}
+                                        <div key={tier} className="flex flex-col items-center gap-2">
+                                            <div 
+                                                onClick={() => setSelectedStone(tier)}
+                                                className={`
+                                                    cursor-pointer group relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300
+                                                    ${isSelected 
+                                                        ? `scale-110 border-2 ${stone.color.replace('text-', 'border-')} bg-slate-800 shadow-lg ${glowColor}` 
+                                                        : 'bg-slate-900 border border-slate-700 opacity-60 hover:opacity-100 hover:scale-105'
+                                                    }
+                                                `}
+                                            >
+                                                {/* Chỉ hiện Icon (Text giả lập icon I, II, III) */}
+                                                <span className={`font-black text-xl ${stone.color} font-serif`}>
+                                                    {tier === 'low' ? 'I' : tier === 'medium' ? 'II' : 'III'}
+                                                </span>
+                                            </div>
+                                            {/* HIỂN THỊ SỐ LƯỢNG: Hiện có / 1 */}
+                                            <span className="text-xs font-mono font-bold text-slate-400 bg-black/40 px-2 py-0.5 rounded border border-slate-700">
+                                                {stoneCounts[tier]}/1
                                             </span>
                                         </div>
                                     );
                                 })}
                             </div>
                         </div>
+                    </div>
 
-                        {/* HIỂN THỊ TỈ LỆ THÀNH CÔNG RIÊNG BIỆT */}
-                        <div className="flex flex-col items-center justify-center animate-fade-in">
+                    {/* HÀNG DƯỚI: TỈ LỆ THÀNH CÔNG VÀ NÚT NÂNG CẤP */}
+                    <div className="flex flex-row items-center justify-center gap-8 w-full mt-4">
+                        {/* HIỂN THỊ TỈ LỆ THÀNH CÔNG */}
+                        <div className="flex flex-col items-center justify-center animate-fade-in min-w-[120px]">
                              <div className={`text-5xl font-black ${currentStone.color} drop-shadow-md`}>
                                  {Math.round(currentStone.successRate * 100)}%
                              </div>
                              <span className="text-slate-400 text-xs uppercase tracking-wider mt-1">Success Rate</span>
                         </div>
 
-                        {/* Description Text */}
-                         <p className="text-slate-500 text-xs text-center max-w-xs italic">
-                            {currentStone.description}. <br/>If failed, item level remains unchanged but stone is consumed.
-                        </p>
-
                         {/* Nút Action */}
-                        <div className="w-full max-w-xs">
+                        <div className="flex-1 max-w-[200px]">
                             <button 
                                 onClick={handleEnhance}
                                 disabled={isProcessing}
                                 className={`
-                                    relative overflow-hidden group w-full py-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all duration-200
-                                    ${isProcessing ? 'bg-slate-700 cursor-wait' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:scale-[1.02] hover:shadow-xl hover:shadow-indigo-500/30 text-white'}
+                                    relative overflow-hidden group w-full py-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all duration-200 shadow-lg
+                                    ${isProcessing ? 'bg-slate-700 cursor-wait' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:scale-[1.02] hover:shadow-indigo-500/30 text-white'}
                                 `}
                             >
                                 <span className="relative z-10">{isProcessing ? 'Processing...' : 'Enhance'}</span>
@@ -734,6 +735,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
         isUpgradeModalOpen,
         handleOpenUpgradeModal,
         handleCloseUpgradeModal,
+        stoneCounts,
         
         MAX_ITEMS_IN_STORAGE,
         CRAFTING_COST
@@ -824,6 +826,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                 item={itemToUpgrade}
                 onUpgrade={handleUpgradeItem}
                 isProcessing={isProcessing}
+                stoneCounts={stoneCounts}
             />
 
             {/* Modal Craft Success chỉ hiện khi hiệu ứng đã tắt */}
