@@ -254,7 +254,7 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: THAY NÚT UPGRADE BẰNG ICON) ---
+// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: ICON DỊCH PHẢI VÀ NẢY NHẸ) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
     ownedItem: OwnedItem, 
     onClose: () => void, 
@@ -323,18 +323,20 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                  <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
                             </div>
                             
-                            {/* Nút mở Popup Cường Hoá (Dạng Icon bên phải) */}
+                            {/* Nút mở Popup Cường Hoá (Dạng Icon bên phải, không glow, nảy nhẹ) */}
                             {isUpgradable && (
                                 <button 
                                     onClick={() => onOpenUpgrade(ownedItem)}
                                     disabled={actionDisabled}
                                     title="Enhance Equipment"
-                                    className="absolute top-1/2 -right-14 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+                                    // Thay đổi -right-14 thành -right-20 để dịch sang phải nhiều hơn
+                                    className="absolute top-1/2 -right-20 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
                                 >
                                     <img 
                                         src={UPGRADE_ICON_URL} 
                                         alt="Enhance" 
-                                        className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]" 
+                                        // Xóa drop-shadow, thêm animate-subtle-bounce
+                                        className="w-full h-full object-contain animate-subtle-bounce" 
                                     />
                                 </button>
                             )}
@@ -364,8 +366,6 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                 })}
                             </div>
                         )}
-                        
-                        {/* ĐÃ XÓA NÚT "Enhance Equipment" DẠNG TEXT Ở ĐÂY */}
                     </div>
                 </div>
                 
@@ -635,7 +635,17 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
 
     return (
         <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
-            <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
+            <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } 
+            
+            /* Thêm hiệu ứng nảy nhẹ nhàng */
+            @keyframes subtle-bounce {
+              0%, 100% { transform: translateY(0); }
+              50% { transform: translateY(-5px); }
+            }
+            .animate-subtle-bounce {
+              animation: subtle-bounce 2s infinite ease-in-out;
+            }
+            `}</style>
             
             {/* --- COMPONENT HIỆU ỨNG CANVAS --- */}
             {/* Truyền isActive={showEffect} để canvas biết khi nào chạy */}
