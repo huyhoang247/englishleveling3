@@ -8,9 +8,8 @@ import {
 } from './equipment-context.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import type { OwnedItem } from './equipment-ui.tsx';
-import { uiAssets as assets } from '../../game-assets.ts'; // Hoặc import từ nơi bạn lưu assets
 
-// --- CÁC HÀM TIỆN ÍCH HELPER (Copy từ file gốc để hiển thị đúng màu sắc) ---
+// --- CÁC HÀM TIỆN ÍCH HELPER ---
 const getRarityColor = (rank: string): string => {
     switch (rank) {
         case 'SSR': return 'border-red-500';
@@ -92,16 +91,16 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
             
             <div className="relative bg-gradient-to-br from-[#1a1c2e] to-[#0f111a] p-0 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
                 
-                {/* NÚT ĐÓNG */}
+                {/* NÚT ĐÓNG (Đã bỏ background và border) */}
                 <button 
                     onClick={onClose} 
-                    className="absolute top-3 right-3 z-50 p-1.5 rounded-full bg-black/40 text-slate-400 hover:text-white hover:bg-red-500/80 transition-all border border-transparent hover:border-red-400"
+                    className="absolute top-3 right-3 z-50 p-2 text-slate-400 hover:text-white hover:scale-110 transition-all"
                 >
-                    <CloseIcon className="w-5 h-5" />
+                    <CloseIcon className="w-6 h-6" />
                 </button>
 
-                {/* Cột trái: Thông tin Item */}
-                <div className="w-full md:w-1/3 bg-slate-900/50 p-6 flex flex-col items-center border-b md:border-b-0 md:border-r border-slate-700 relative">
+                {/* Cột trái: Thông tin Item (Đã bỏ background riêng và border phải) */}
+                <div className="w-full md:w-1/3 p-6 flex flex-col items-center relative">
                     <div className="mt-4"></div> 
                     
                     <div className={`relative w-32 h-32 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-[0_0_20px_rgba(0,0,0,0.5)] mb-4`}>
@@ -111,8 +110,8 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
                     </div>
                     
-                    <h4 className={`text-lg font-bold ${getRarityTextColor(itemDef.rarity)} mb-1 text-center`}>{itemDef.name}</h4>
-                    <span className="text-xs text-slate-400 mb-6">{itemDef.rarity} Rank</span>
+                    {/* Item Name (Đã xóa dòng Rarity text bên dưới) */}
+                    <h4 className={`text-lg font-bold ${getRarityTextColor(itemDef.rarity)} mb-6 text-center`}>{itemDef.name}</h4>
 
                     {/* Stats Preview */}
                     <div className="w-full space-y-2">
@@ -120,14 +119,17 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             if (typeof value !== 'number') return null;
                             const config = STAT_CONFIG[key.toLowerCase()];
                             return (
-                                <div key={key} className="flex justify-between items-center bg-black/30 px-3 py-2 rounded-lg border border-slate-700/50">
-                                    <div className="flex items-center gap-2">
-                                        {config && <config.Icon className="w-4 h-4" />}
-                                        <span className="text-sm text-slate-300 uppercase">{key}</span>
+                                <div key={key} className="flex justify-between items-center bg-black/30 px-3 py-3 rounded-lg border border-slate-700/50">
+                                    <div className="flex items-center gap-3">
+                                        {/* Icon to hơn (w-6 h-6) */}
+                                        {config && <config.Icon className="w-6 h-6" />}
+                                        {/* Tên chỉ số font-lilita */}
+                                        <span className="text-base text-slate-300 uppercase font-lilita tracking-wide">{key}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-white font-mono">{value}</span>
-                                        <span className="text-xs text-green-500">➜ ?</span>
+                                        {/* Giá trị chỉ số font-lilita */}
+                                        <span className="text-white text-lg font-lilita">{value}</span>
+                                        <span className="text-xs text-green-500 font-lilita">➜ ?</span>
                                     </div>
                                 </div>
                             );
@@ -140,7 +142,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     
                     <div className="flex flex-col items-center justify-center mb-8">
                         <div className="text-center">
-                            <h4 className="text-slate-400 text-sm uppercase tracking-widest font-bold mb-4">Select Stone</h4>
+                            {/* Đã xóa dòng chữ 'Select Stone' */}
                             
                             {/* KHU VỰC CHỌN ĐÁ */}
                             <div className="flex items-center justify-center gap-6">
