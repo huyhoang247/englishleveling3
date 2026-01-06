@@ -329,13 +329,13 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     onClick={() => onOpenUpgrade(ownedItem)}
                                     disabled={actionDisabled}
                                     title="Enhance Equipment"
-                                    // Thay đổi -right-14 thành -right-20 để dịch sang phải nhiều hơn
-                                    className="absolute top-1/2 -right-20 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+                                    // Thay đổi -right-20 thành -right-18
+                                    className="absolute top-1/2 -right-18 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
                                 >
                                     <img 
                                         src={UPGRADE_ICON_URL} 
                                         alt="Enhance" 
-                                        // Xóa drop-shadow, thêm animate-subtle-bounce
+                                        // Animate subtle bounce
                                         className="w-full h-full object-contain animate-subtle-bounce" 
                                     />
                                 </button>
@@ -640,7 +640,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             /* Thêm hiệu ứng nảy nhẹ nhàng */
             @keyframes subtle-bounce {
               0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-5px); }
+              50% { transform: translateY(-4px); }
             }
             .animate-subtle-bounce {
               animation: subtle-bounce 2s infinite ease-in-out;
