@@ -110,6 +110,9 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
+// URL ICON NÂNG CẤP
+const UPGRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-equipment.webp";
+
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
     const animatedGold = useAnimateValue(gold);
@@ -251,7 +254,7 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT TIẾNG ANH) ---
+// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: THAY NÚT UPGRADE BẰNG ICON) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
     ownedItem: OwnedItem, 
     onClose: () => void, 
@@ -314,9 +317,29 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
                 <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 pb-2">
                     <div className="flex flex-col items-center text-center gap-4">
-                        <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
-                             <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
+                        {/* Wrapper chứa Icon trang bị và Nút nâng cấp (icon búa) */}
+                        <div className="relative">
+                            <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
+                                 <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
+                            </div>
+                            
+                            {/* Nút mở Popup Cường Hoá (Dạng Icon bên phải) */}
+                            {isUpgradable && (
+                                <button 
+                                    onClick={() => onOpenUpgrade(ownedItem)}
+                                    disabled={actionDisabled}
+                                    title="Enhance Equipment"
+                                    className="absolute top-1/2 -right-14 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
+                                >
+                                    <img 
+                                        src={UPGRADE_ICON_URL} 
+                                        alt="Enhance" 
+                                        className="w-full h-full object-contain drop-shadow-[0_0_8px_rgba(255,215,0,0.6)]" 
+                                    />
+                                </button>
+                            )}
                         </div>
+
                         <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
                             <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
                         </div>
@@ -342,19 +365,7 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             </div>
                         )}
                         
-                        {/* Nút mở Popup Cường Hoá */}
-                        {isUpgradable && (
-                            <button 
-                                onClick={() => onOpenUpgrade(ownedItem)}
-                                disabled={actionDisabled}
-                                className="w-full py-3 rounded-lg font-bold text-white bg-gradient-to-r from-purple-700 to-indigo-700 hover:from-purple-600 hover:to-indigo-600 shadow-lg flex items-center justify-center gap-2 transition-transform hover:scale-[1.02]"
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-yellow-300" viewBox="0 0 20 20" fill="currentColor">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z" clipRule="evenodd" />
-                                </svg>
-                                <span>Enhance Equipment</span>
-                            </button>
-                        )}
+                        {/* ĐÃ XÓA NÚT "Enhance Equipment" DẠNG TEXT Ở ĐÂY */}
                     </div>
                 </div>
                 
