@@ -25,7 +25,6 @@ export interface EnhancementStone {
     description: string;
 }
 
-// CẬP NHẬT: Xóa text mô tả thừa trong description
 export const ENHANCEMENT_STONES: Record<StoneTier, EnhancementStone> = {
     low: { 
         id: 'low', 
@@ -50,12 +49,10 @@ export const ENHANCEMENT_STONES: Record<StoneTier, EnhancementStone> = {
     },
 };
 
-// Định nghĩa các hằng số logic
 const CRAFTING_COST = 50;
 const DISMANTLE_RETURN_PIECES = 25;
 const MAX_ITEMS_IN_STORAGE = 50;
 
-// Hàm tính giá trị này vẫn dùng cho việc tính vàng hoàn trả khi Phân rã hoặc Hợp nhất
 const getBaseUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
     const baseCost = 50;
@@ -92,13 +89,10 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
     return { level: finalLevel, refundGold: remainingGold };
 };
 
-
-// Interface cho các props của Provider
 interface EquipmentProviderProps {
     children: ReactNode;
 }
 
-// Interface định nghĩa ForgeGroup để dùng trong hàm handleForgeItems
 interface ForgeGroup { 
     blueprint: ItemBlueprint;
     rarity: ItemRank; 
@@ -107,9 +101,7 @@ interface ForgeGroup {
     estimatedResult: { level: number; refundGold: number; }; 
 }
 
-// Interface định nghĩa những gì Context sẽ cung cấp
 interface EquipmentContextType {
-    // State cơ bản
     isLoading: boolean;
     gold: number;
     equipmentPieces: number;
@@ -122,31 +114,22 @@ interface EquipmentContextType {
     isProcessing: boolean;
     dismantleSuccessToast: { show: boolean; message: string };
     
-    // --- STATE MỚI CHO POPUP NÂNG CẤP ---
     itemToUpgrade: OwnedItem | null;
     isUpgradeModalOpen: boolean;
-    
-    // --- STATE SỐ LƯỢNG ĐÁ (MỚI) ---
     stoneCounts: Record<StoneTier, number>;
 
-    // Derived State
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
     unequippedItemsSorted: OwnedItem[];
     totalEquippedStats: { hp: number; atk: number; def: number; };
     userStatsValue: { hp: number; atk: number; def: number; };
 
-    // Handlers logic
     handleEquipItem: (item: OwnedItem) => Promise<void>;
     handleUnequipItem: (item: OwnedItem) => Promise<void>;
     handleCraftItem: () => Promise<void>;
     handleDismantleItem: (item: OwnedItem) => Promise<void>;
-    
-    // --- HANDLER NÂNG CẤP MỚI ---
     handleUpgradeItem: (item: OwnedItem, stoneTier: StoneTier) => Promise<boolean>;
-    
     handleForgeItems: (group: ForgeGroup) => Promise<void>;
     
-    // UI Handlers
     handleSelectItem: (item: OwnedItem) => void;
     handleSelectSlot: (slot: EquipmentSlotType) => void;
     handleCloseDetailModal: () => void;
@@ -156,21 +139,16 @@ interface EquipmentContextType {
     handleOpenStatsModal: () => void;
     handleCloseStatsModal: () => void;
 
-    // --- HANDLER CHO POPUP NÂNG CẤP ---
     handleOpenUpgradeModal: (item: OwnedItem) => void;
     handleCloseUpgradeModal: () => void;
 
-    // Constants
     MAX_ITEMS_IN_STORAGE: number;
     CRAFTING_COST: number;
 }
 
-// Tạo Context
 const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
 
-// Tạo Provider Component
 export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
-    // Lấy state trực tiếp từ GameContext
     const {
         coins: gold,
         equipmentPieces,
@@ -188,18 +166,14 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         }));
     }, [rawOwnedItems]);
 
-    // Các state cục bộ cho UI
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     
-    // --- STATE MỚI CHO UPGRADE MODAL ---
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [itemToUpgrade, setItemToUpgrade] = useState<OwnedItem | null>(null);
 
-    // --- MOCK DATA: SỐ LƯỢNG ĐÁ GIẢ LẬP ---
-    // (Trong tương lai, bạn có thể lấy dữ liệu này từ GameContext hoặc Firebase)
     const stoneCounts = useMemo<Record<StoneTier, number>>(() => ({
         low: 20,
         medium: 12,
@@ -229,10 +203,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             showMessage("Lỗi: Người dùng chưa đăng nhập.");
             return Promise.reject("Not authenticated");
         }
-        if (isProcessing) {
-            showMessage("Thao tác trước đó đang được xử lý...");
-            return Promise.reject("Processing");
-        }
+        // Lưu ý: isProcessing đã được check ở UI, hàm này chỉ thực thi
         setIsProcessing(true);
         try {
             await updateUserInventory(userId, updates);
@@ -242,7 +213,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         } finally { 
             setIsProcessing(false); 
         }
-    }, [isProcessing, showMessage]);
+    }, [showMessage]); // Bỏ isProcessing ra khỏi dep để tránh stale closure trong flow async
 
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
@@ -262,6 +233,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     }, [ownedItems, equippedItems]);
 
     const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
+        if (isProcessing) return;
         const itemDef = getItemDefinition(itemToEquip.itemId);
         if (!itemDef || !(itemDef.type in { weapon: 1, armor: 1, Helmet: 1 })) { showMessage("Vật phẩm này không thể trang bị."); return; }
         const slotType = itemDef.type as EquipmentSlotType;
@@ -272,9 +244,10 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
             setSelectedItem(null);
         } catch (error) { console.error(`Equip failed:`, error); }
-    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage, isProcessing]);
 
     const handleUnequipItem = useCallback(async (itemToUnequip: OwnedItem) => {
+        if (isProcessing) return;
         const itemDef = getItemDefinition(itemToUnequip.itemId);
         if (!itemDef) return;
         const slotType = itemDef.type as EquipmentSlotType;
@@ -285,9 +258,10 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             await performInventoryUpdate({ newOwned: ownedItems, newEquipped, goldChange: 0, piecesChange: 0 });
             setSelectedItem(null);
         } catch (error) { console.error(`Unequip failed:`, error); }
-    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage, isProcessing]);
   
     const handleCraftItem = useCallback(async () => {
+        if (isProcessing) return;
         if (equipmentPieces < CRAFTING_COST) { showMessage(`Không đủ Mảnh Trang Bị. Cần ${CRAFTING_COST}.`); return; }
         if (unequippedItemsSorted.length >= MAX_ITEMS_IN_STORAGE) { showMessage(`Kho chứa đã đầy.`); return; }
         
@@ -307,9 +281,10 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: -CRAFTING_COST });
             setNewlyCraftedItem(newOwnedItem);
         } catch(error) { console.error(`Craft failed:`, error); }
-    }, [equipmentPieces, ownedItems, equippedItems, performInventoryUpdate, showMessage, unequippedItemsSorted.length]);
+    }, [equipmentPieces, ownedItems, equippedItems, performInventoryUpdate, showMessage, unequippedItemsSorted.length, isProcessing]);
 
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
+        if (isProcessing) return;
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
         
         const itemDef = getItemDefinition(itemToDismantle.itemId)!;
@@ -322,27 +297,29 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             setDismantleSuccessToast({ show: true, message: 'Đã tái chế thành công.' });
             setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 4000);
         } catch(error) { console.error(`Dismantle failed:`, error); }
-    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage]);
+    }, [equippedItems, ownedItems, performInventoryUpdate, showMessage, isProcessing]);
 
-    // --- LOGIC NÂNG CẤP MỚI VỚI ĐÁ CƯỜNG HOÁ VÀ TỈ LỆ THÀNH CÔNG ---
+    // --- LOGIC NÂNG CẤP MỚI: OPTIMISTIC UPDATE ---
     const handleUpgradeItem = useCallback(async (item: OwnedItem, stoneTier: StoneTier): Promise<boolean> => {
-        const itemDef = getItemDefinition(item.itemId)!;
-        
-        // 1. Xác định tỉ lệ thành công dựa trên loại đá
+        // Nếu đang xử lý (spam nút), chặn lại
+        if (isProcessing) return false;
+
         const stone = ENHANCEMENT_STONES[stoneTier];
         const isSuccess = Math.random() < stone.successRate;
 
+        // 1. Nếu thất bại:
         if (!isSuccess) {
-            // Trường hợp thất bại: 
-            // - Ở đây chúng ta chỉ trả về false để UI hiển thị animation thất bại.
-            // - Trong thực tế game, bạn có thể muốn thêm logic tiêu thụ đá trong inventory tại đây.
+            // Vẫn gọi hàm update inventory để trừ đá (logic trừ đá nên nằm trong updateUserInventory hoặc service)
+            // Ở đây ta gọi "Fire-and-forget" - không await kết quả để UI phản hồi ngay
+            performInventoryUpdate({ newOwned: ownedItems, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
+                .catch(err => console.error("Sync failed:", err));
+            
+            // Trả về false NGAY LẬP TỨC để modal hiện ảnh Failed
             return false;
         }
 
-        // 2. Trường hợp thành công: Tăng chỉ số
-        // Chọn ngẫu nhiên 1 chỉ số để tăng (HP, ATK, hoặc DEF)
+        // 2. Nếu thành công: Tính toán chỉ số ngay tại Client
         const upgradableStats = Object.keys(item.stats).filter(k => typeof item.stats[k] === 'number');
-        
         if (upgradableStats.length === 0) {
             showMessage("Trang bị không có chỉ số để nâng cấp.");
             return false;
@@ -350,8 +327,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         
         const statKey = upgradableStats[Math.floor(Math.random() * upgradableStats.length)];
         const currentValue = item.stats[statKey];
-        
-        // Tăng ngẫu nhiên từ 2% đến 6% giá trị hiện tại
         const increasePercent = 0.02 + Math.random() * 0.04; 
         const increase = Math.max(1, Math.round(currentValue * increasePercent));
         
@@ -360,24 +335,26 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         
         const newOwnedList = ownedItems.map(s => s.id === item.id ? updatedItem : s);
 
-        try {
-            // Cập nhật database
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 });
-            
-            // Cập nhật lại item đang chọn trong modal để UI refresh tức thì
-            setItemToUpgrade(updatedItem); 
-            
-            // Nếu item này cũng đang được xem chi tiết (selectedItem), update nó luôn để đồng bộ
-            if (selectedItem?.id === item.id) setSelectedItem(updatedItem);
-            
-            return true;
-        } catch(error) { 
-            console.error(`Upgrade failed:`, error); 
-            throw error;
-        }
-    }, [ownedItems, equippedItems, performInventoryUpdate, selectedItem, showMessage]);
+        // 3. Cập nhật state UI NGAY LẬP TỨC (Optimistic UI)
+        // Cập nhật modal
+        setItemToUpgrade(updatedItem); 
+        // Cập nhật detail nếu đang mở
+        if (selectedItem?.id === item.id) setSelectedItem(updatedItem);
+
+        // 4. Gọi Firestore chạy ngầm (Không await)
+        performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
+            .catch(err => {
+                console.error("Sync upgrade failed:", err);
+                // TODO: Nếu muốn chuẩn xác hơn, ở đây nên có logic Revert state nếu lỗi
+            });
+
+        // 5. Trả về true NGAY LẬP TỨC để modal hiện chữ Success
+        return true;
+
+    }, [ownedItems, equippedItems, performInventoryUpdate, selectedItem, showMessage, isProcessing]);
 
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
+        if (isProcessing) return;
         if (group.items.length < 3 || !group.nextRank) { showMessage("Không đủ điều kiện để hợp nhất."); return; }
         
         const itemsToConsume = group.items.slice(0, 3);
@@ -403,7 +380,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             
             setIsForgeModalOpen(false);
         } catch (error) { console.error(`Forge failed:`, error); }
-    }, [ownedItems, equippedItems, performInventoryUpdate, showMessage]);
+    }, [ownedItems, equippedItems, performInventoryUpdate, showMessage, isProcessing]);
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
@@ -438,9 +415,8 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleOpenStatsModal = useCallback(() => setIsStatsModalOpen(true), []);
     const handleCloseStatsModal = useCallback(() => setIsStatsModalOpen(false), []);
 
-    // --- HANDLER CHO UPGRADE MODAL ---
     const handleOpenUpgradeModal = useCallback((item: OwnedItem) => {
-        setSelectedItem(null); // Đóng detail modal trước khi mở upgrade modal
+        setSelectedItem(null); 
         setItemToUpgrade(item);
         setIsUpgradeModalOpen(true);
     }, []);
@@ -456,9 +432,8 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         equippedItemsMap, unequippedItemsSorted, totalEquippedStats, userStatsValue,
         handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
         handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal, handleOpenStatsModal, handleCloseStatsModal,
-        // Xuất các state và handler mới cho Upgrade Modal
         itemToUpgrade, isUpgradeModalOpen, handleOpenUpgradeModal, handleCloseUpgradeModal,
-        stoneCounts, // EXPORT STONE COUNTS
+        stoneCounts, 
         MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
     };
 
@@ -470,7 +445,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     );
  };
 
-// Tạo custom hook để sử dụng context
 export const useEquipment = (): EquipmentContextType => {
     const context = useContext(EquipmentContext);
     if (context === undefined) {
