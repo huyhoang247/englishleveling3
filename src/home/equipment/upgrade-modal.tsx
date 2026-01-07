@@ -9,6 +9,9 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import type { OwnedItem } from './equipment-ui.tsx';
 
+// --- CONSTANTS ---
+const UPGRADE_BUTTON_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-button.webp';
+
 // --- STYLES & ANIMATIONS ---
 const animationStyles = `
     @keyframes floatUp {
@@ -181,7 +184,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     {upgradeStatus !== 'idle' && (
                         <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
-                                {/* Cập nhật: Font Lilita, Màu Xanh lá cho Success */}
                                 <h2 
                                     className={`
                                         text-6xl md:text-8xl font-lilita uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
@@ -199,7 +201,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                 </h2>
                             </div>
                             
-                            {/* Background Flash (Xanh lá) */}
                             <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-green-500/20' : 'bg-gray-500/10'} animate-[pulse_0.5s_ease-out]`} />
                         </div>
                     )}
@@ -316,22 +317,24 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
+                            {/* NÚT UPGRADE MỚI - DÙNG ẢNH */}
                             <div className="flex-1 max-w-[150px]">
                                 <button 
                                     onClick={handleEnhance}
                                     disabled={!canUpgrade || isProcessing}
                                     className={`
-                                        relative w-full py-2 rounded-lg
-                                        font-lilita text-xl tracking-wide uppercase
-                                        shadow-lg transition-all duration-150 transform
-                                        flex items-center justify-center overflow-hidden
-                                        ${!canUpgrade
-                                            ? 'bg-slate-700 text-slate-500 border-b-4 border-slate-800 cursor-not-allowed opacity-70' 
-                                            : 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-b-4 border-blue-800 hover:brightness-110 active:border-b-0 active:translate-y-1'
+                                        w-full relative outline-none transition-all duration-100
+                                        ${(!canUpgrade || isProcessing)
+                                            ? 'opacity-50 grayscale cursor-not-allowed' // Trạng thái Disabled
+                                            : 'hover:brightness-110 active:scale-90 cursor-pointer' // Trạng thái Active
                                         }
                                     `}
                                 >
-                                    <span className="drop-shadow-md relative z-10">Upgrade</span>
+                                    <img 
+                                        src={UPGRADE_BUTTON_IMG} 
+                                        alt="Upgrade" 
+                                        className="w-full h-auto object-contain drop-shadow-lg"
+                                    />
                                 </button>
                             </div>
                         </div>
