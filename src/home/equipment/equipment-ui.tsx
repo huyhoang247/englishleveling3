@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
@@ -111,8 +110,9 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// URL ICON NÂNG CẤP & MERGE
+// URL ICON NÂNG CẤP
 const UPGRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-equipment.webp";
+// URL ICON HỢP NHẤT (MERGE) - MỚI
 const MERGE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/merge.webp";
 
 // --- CÁC COMPONENT CON ---
@@ -729,18 +729,14 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                             </div>
                             <div className="flex items-center gap-2">
                                 <button onClick={handleOpenStatsModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><StatsIcon className="w-4 h-4" />Stats</button>
-                                {/* NÚT MERGE ĐÃ CẬP NHẬT: HIỂN THỊ FULL ẢNH ICON */}
+                                {/* NÚT MERGE MỚI: HÌNH ẢNH ICON, KHÔNG CHỮ, KHÔNG NỀN */}
                                 <button 
                                     onClick={handleOpenForgeModal} 
-                                    className="relative w-10 h-10 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none" 
+                                    className="w-10 h-10 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" 
                                     disabled={isProcessing}
                                     title="Merge Equipment"
                                 >
-                                    <img 
-                                        src={MERGE_ICON_URL} 
-                                        alt="Merge" 
-                                        className="w-full h-full object-contain filter drop-shadow-md" 
-                                    />
+                                    <img src={MERGE_ICON_URL} alt="Merge" className="w-full h-full object-contain filter drop-shadow-md" />
                                 </button>
                             </div>
                         </div>
