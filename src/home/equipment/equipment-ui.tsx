@@ -1,3 +1,5 @@
+--- START OF FILE equipment-ui.tsx (16).txt ---
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
@@ -729,10 +731,10 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                             </div>
                             <div className="flex items-center gap-2">
                                 <button onClick={handleOpenStatsModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><StatsIcon className="w-4 h-4" />Stats</button>
-                                {/* NÚT MERGE MỚI: HÌNH ẢNH ICON, KHÔNG CHỮ, KHÔNG NỀN */}
+                                {/* NÚT MERGE MỚI: ĐÃ CHỈNH SỬA KÍCH THƯỚC LỚN HƠN (w-14 h-14) */}
                                 <button 
                                     onClick={handleOpenForgeModal} 
-                                    className="w-10 h-10 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" 
+                                    className="w-14 h-14 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" 
                                     disabled={isProcessing}
                                     title="Merge Equipment"
                                 >
