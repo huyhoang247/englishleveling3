@@ -90,7 +90,8 @@ const SuccessRateGauge = ({ rate }: { rate: number }) => {
     }
 
     return (
-        <div className="relative w-24 h-24 flex items-center justify-center transition-all duration-300 hover:scale-105">
+        // CẬP NHẬT: w-24 -> w-20, thêm -translate-y-3
+        <div className="relative w-20 h-20 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-3">
             <img 
                 src={imgSrc} 
                 alt={`${Math.round(rate * 100)}% Rate`} 
