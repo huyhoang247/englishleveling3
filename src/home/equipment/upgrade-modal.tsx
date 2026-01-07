@@ -12,6 +12,7 @@ import type { OwnedItem } from './equipment-ui.tsx';
 // --- CONSTANTS ---
 const UPGRADE_BUTTON_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-button.webp';
 const FAILED_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/failed.webp';
+const SUCCESS_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/success.webp';
 
 // --- STYLES & ANIMATIONS ---
 const animationStyles = `
@@ -130,15 +131,11 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
     const itemDef = getItemDefinition(item.itemId)!;
     
     const handleEnhance = async () => {
-        // Vẫn check isProcessing để tránh spam nút, nhưng không hiện overlay
         if (isProcessing) return;
         setUpgradeStatus('idle'); 
         
         try {
-            // onUpgrade (logic mới) sẽ trả về kết quả ngay lập tức (RNG local)
-            // Việc lưu DB sẽ chạy ngầm sau đó
             const success = await onUpgrade(item, selectedStone);
-            
             setUpgradeStatus(success ? 'success' : 'fail');
             setTimeout(() => {
                 setUpgradeStatus('idle');
@@ -161,23 +158,19 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 
                 <div className="relative bg-gradient-to-br from-[#1a1c2e] to-[#0f111a] p-0 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
                     
-                    {/* ĐÃ XÓA OVERLAY UPGRADING... */}
-
                     {/* OVERLAY: RESULT */}
                     {upgradeStatus !== 'idle' && (
                         <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
                                 {upgradeStatus === 'success' ? (
-                                    <h2 
-                                        className="text-6xl md:text-8xl font-lilita uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] text-transparent bg-clip-text bg-gradient-to-b from-green-300 via-green-500 to-green-700"
-                                        style={{ 
-                                            WebkitTextStroke: '2px #14532d',
-                                            textShadow: '0 0 30px rgba(34, 197, 94, 0.6)'
-                                        }}
-                                    >
-                                        SUCCESS!
-                                    </h2>
+                                    /* HÌNH ẢNH SUCCESS */
+                                    <img 
+                                        src={SUCCESS_IMG} 
+                                        alt="Success" 
+                                        className="w-64 h-auto object-contain drop-shadow-2xl"
+                                    />
                                 ) : (
+                                    /* HÌNH ẢNH FAILED */
                                     <img 
                                         src={FAILED_IMG} 
                                         alt="Failed" 
@@ -186,19 +179,14 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                 )}
                             </div>
                             
-                            {/* Background Flash: Xanh cho Success, Đen (30% opacity) cho Fail */}
-                            <div className={`
-                                absolute inset-0 -z-10 transition-opacity duration-1000 
-                                ${upgradeStatus === 'success' ? 'bg-green-500/20' : 'bg-black/30'} 
-                                animate-[pulse_0.5s_ease-out]
-                            `} />
+                            {/* Background Flash: Đều dùng màu đen 30% cho cả 2 trường hợp */}
+                            <div className="absolute inset-0 -z-10 transition-opacity duration-1000 bg-black/30 animate-[pulse_0.5s_ease-out]" />
                         </div>
                     )}
 
                     {/* NÚT ĐÓNG */}
                     <button 
                         onClick={onClose} 
-                        // Cho phép đóng ngay cả khi đang xử lý ngầm (để trải nghiệm mượt hơn)
                         className="absolute top-3 right-3 z-50 p-2 text-slate-400 hover:text-white hover:scale-110 transition-all"
                     >
                         <CloseIcon className="w-6 h-6" />
