@@ -77,9 +77,12 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 // --- COMPONENT HIỂN THỊ TỈ LỆ (TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
     return (
-        // CẬP NHẬT: Thay ảnh bằng text font-lilita, màu trắng, opacity 60%
-        <div className="flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 min-w-[80px]">
-            <span className="text-white font-lilita text-5xl drop-shadow-xl tracking-wider">
+        // CẬP NHẬT: 
+        // - w-[100px]: Cố định chiều rộng container để không bị nhảy layout khi số thay đổi độ dài.
+        // - text-4xl: Giảm size chữ nhỏ hơn.
+        // - flex justify-center: Căn giữa chữ trong khung cố định.
+        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60">
+            <span className="text-white font-lilita text-4xl drop-shadow-xl tracking-wider whitespace-nowrap">
                 {Math.round(rate * 100)}%
             </span>
         </div>
@@ -270,14 +273,14 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
 
                         {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
-                        <div className="flex-1 flex flex-row items-center justify-center gap-8 w-full mt-2">
+                        <div className="flex-1 flex flex-row items-center justify-center gap-4 w-full mt-2">
                             
-                            {/* RATE TEXT */}
+                            {/* RATE TEXT - Đã cố định khung (Fixed width) */}
                             <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* NÚT UPGRADE (Size: max-w-[150px]) - Đã chỉnh nhỏ lại */}
+                            {/* NÚT UPGRADE */}
                             <div className="flex-1 max-w-[150px]">
                                 <button 
                                     onClick={handleEnhance}
