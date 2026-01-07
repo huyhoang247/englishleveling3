@@ -1,3 +1,5 @@
+--- START OF FILE upgrade-modal.tsx ---
+
 import React, { useState, useEffect, memo, useRef } from 'react';
 import { 
     getItemDefinition 
@@ -73,139 +75,130 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// --- GALAXY TEXT COMPONENT (Adapted for Dark Modal) ---
+// --- GALAXY TEXT COMPONENT (Ported from course-ui) ---
 const GalaxyText = memo(({ text, className = "" }: { text: string, className?: string }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-
+  
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        let animationFrameId: number;
-        let particles: Array<{x: number, y: number, r: number, s: number, alpha: number, fade: number}> = [];
-        const colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B']; 
-
-        // Resize & Init
-        const resize = () => {
-            const parent = containerRef.current;
-            if (parent) {
-                const rect = parent.getBoundingClientRect();
-                // Tăng scale để text nét hơn
-                canvas.width = rect.width * 2; 
-                canvas.height = rect.height * 2;
-                canvas.style.width = '100%';
-                canvas.style.height = '100%';
-                ctx.scale(2, 2);
-            }
-        };
-        setTimeout(resize, 0);
-
-        const initParticles = () => {
-            particles = [];
-            // Particle count thấp hơn tí cho nhẹ modal
-            const w = canvas.width / 2;
-            const h = canvas.height / 2;
-            for(let i=0; i<25; i++) {
-                particles.push({
-                    x: Math.random() * w,
-                    y: Math.random() * h,
-                    r: Math.random() * 2 + 0.5,
-                    s: Math.random() * 0.8 + 0.2, 
-                    alpha: Math.random(),
-                    fade: Math.random() > 0.5 ? 0.02 : -0.02
-                });
-            }
-        };
-        initParticles();
-
-        let gradientOffset = 0;
-
-        const render = () => {
-            const width = canvas.width / 2;
-            const height = canvas.height / 2;
-
-            if (width === 0 || height === 0) {
-                animationFrameId = requestAnimationFrame(render);
-                return;
-            }
-
-            // 1. Clear previous frame
-            ctx.clearRect(0, 0, width, height);
-
-            // 2. Draw Text (Làm mặt nạ)
-            ctx.save();
-            ctx.font = "900 60px 'Lilita One', cursive"; // Font to & bold
-            ctx.textAlign = "center";
-            ctx.textBaseline = "middle";
-            ctx.fillStyle = "#ffffff";
-            // Vẽ text vào giữa canvas
-            ctx.fillText(text, width / 2, height / 2 + 4); 
-
-            // 3. Composite Operation: Giữ lại những gì vẽ đè lên text (Source-In)
-            // Điều này khiến background galaxy chỉ hiện bên trong chữ
-            ctx.globalCompositeOperation = 'source-in';
-
-            // 4. Draw Animated Gradient Background
-            gradientOffset += 0.008; 
-            const gradient = ctx.createLinearGradient(0, 0, width, height);
-            const c1 = colors[Math.floor(gradientOffset) % colors.length];
-            const c2 = colors[Math.floor(gradientOffset + 1) % colors.length];
-            const c3 = colors[Math.floor(gradientOffset + 2) % colors.length];
-            gradient.addColorStop(0, c1);
-            gradient.addColorStop(0.5, c2);
-            gradient.addColorStop(1, c3);
-            
-            ctx.fillStyle = gradient;
-            ctx.fillRect(0, 0, width, height);
-
-            // 5. Draw Particles (Sao lấp lánh bên trong chữ)
-            particles.forEach(p => {
-                ctx.beginPath();
-                ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
-                ctx.fill();
-
-                p.y -= p.s;
-                if (p.y < -5) {
-                    p.y = height + 5;
-                    p.x = Math.random() * width;
-                }
-                p.alpha += p.fade;
-                if (p.alpha > 0.9 || p.alpha < 0.2) p.fade = -p.fade;
-            });
-
-            ctx.restore(); // Restore để frame sau vẽ lại từ đầu
-
-            animationFrameId = requestAnimationFrame(render);
-        };
-
-        // Đợi font load xong để vẽ không bị lỗi
-        document.fonts.ready.then(() => {
-             render();
+      const canvas = canvasRef.current;
+      if (!canvas) return;
+  
+      const ctx = canvas.getContext('2d');
+      if (!ctx) return;
+  
+      let animationFrameId: number;
+      let particles: Array<{x: number, y: number, r: number, s: number, alpha: number, fade: number}> = [];
+      
+      const particleCount = 20;
+      // Màu sắc rực rỡ hơn cho rate
+      const colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#F43F5E']; 
+  
+      const resize = () => {
+        const parent = containerRef.current;
+        if (parent) {
+          const rect = parent.getBoundingClientRect();
+          canvas.width = rect.width * 2; 
+          canvas.height = rect.height * 2;
+          canvas.style.width = '100%';
+          canvas.style.height = '100%';
+          ctx.scale(2, 2);
+        }
+      };
+      
+      setTimeout(resize, 0);
+  
+      const initParticles = () => {
+          particles = [];
+          const w = canvas.width / 2;
+          const h = canvas.height / 2;
+          for(let i=0; i<particleCount; i++) {
+              particles.push({
+                  x: Math.random() * w,
+                  y: Math.random() * h,
+                  r: Math.random() * 2 + 0.5,
+                  s: Math.random() * 0.8 + 0.2, 
+                  alpha: Math.random(),
+                  fade: Math.random() > 0.5 ? 0.02 : -0.02
+              });
+          }
+      };
+      initParticles();
+  
+      let gradientOffset = 0;
+  
+      const render = () => {
+        const width = canvas.width / 2;
+        const height = canvas.height / 2;
+        
+        if (width === 0 || height === 0) {
+           animationFrameId = requestAnimationFrame(render);
+           return;
+        }
+  
+        gradientOffset += 0.015; // Tốc độ nhanh hơn chút
+        const gradient = ctx.createLinearGradient(0, 0, width, height);
+        const c1 = colors[Math.floor(gradientOffset) % colors.length];
+        const c2 = colors[Math.floor(gradientOffset + 1) % colors.length];
+        const c3 = colors[Math.floor(gradientOffset + 2) % colors.length];
+        
+        gradient.addColorStop(0, c1);
+        gradient.addColorStop(0.5, c2);
+        gradient.addColorStop(1, c3);
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, width, height);
+  
+        particles.forEach(p => {
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+          ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
+          ctx.fill();
+  
+          p.y -= p.s;
+          if (p.y < -5) {
+               p.y = height + 5;
+               p.x = Math.random() * width;
+          }
+  
+          p.alpha += p.fade;
+          if (p.alpha > 0.9 || p.alpha < 0.2) p.fade = -p.fade;
         });
-
-        return () => cancelAnimationFrame(animationFrameId);
-    }, [text]);
-
+  
+        animationFrameId = requestAnimationFrame(render);
+      };
+  
+      render();
+  
+      return () => cancelAnimationFrame(animationFrameId);
+    }, []);
+  
     return (
-        <div ref={containerRef} className={`relative w-32 h-20 ${className}`}>
-             <canvas ref={canvasRef} className="block" />
-        </div>
+      <div ref={containerRef} className="relative inline-block w-full h-full rounded-lg overflow-hidden">
+          <canvas 
+              ref={canvasRef} 
+              className="absolute inset-0 w-full h-full pointer-events-none bg-black" 
+          />
+          <div 
+              className="absolute inset-0 z-10 flex items-center justify-center bg-white"
+              style={{ mixBlendMode: 'screen' }} 
+          >
+               <span className={`${className} text-black m-0 leading-none`}>{text}</span>
+          </div>
+      </div>
     );
 });
 
 // --- COMPONENT HIỂN THỊ TỈ LỆ (GALAXY TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
-    // Chuyển đổi rate thành text (ví dụ: 0.3 -> 30%)
-    const rateText = `${Math.round(rate * 100)}%`;
+    const percentage = Math.round(rate * 100);
 
     return (
-        <div className="flex flex-col items-center justify-center -translate-y-1">
-            <GalaxyText text={rateText} />
-            <span className="text-xs text-slate-400 font-bold uppercase tracking-widest -mt-2">Success Rate</span>
+        <div className="relative w-28 h-16 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-1">
+            <GalaxyText 
+                text={`${percentage}%`} 
+                className="text-5xl font-lilita tracking-wide"
+            />
         </div>
     );
 };
@@ -396,13 +389,13 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
                         <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full mt-2">
                             
-                            {/* RATE TEXT (Galaxy Canvas) */}
+                            {/* RATE TEXT (Galaxy Font) */}
                             <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* NÚT UPGRADE (Size Reduced: max-w-[130px]) */}
-                            <div className="flex-1 max-w-[130px]">
+                            {/* NÚT UPGRADE (Size: max-w-[150px] - Reduced size) */}
+                            <div className="flex-1 max-w-[150px]">
                                 <button 
                                     onClick={handleEnhance}
                                     disabled={!canUpgrade || isProcessing}
