@@ -57,11 +57,19 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 };
 
 // --- COMPONENT VÒNG TRÒN TỈ LỆ ---
-const SuccessRateGauge = ({ rate, colorClass }: { rate: number, colorClass: string }) => {
+const SuccessRateGauge = ({ rate }: { rate: number }) => {
     const radius = 36;
     const circumference = 2 * Math.PI * radius;
     const offset = circumference - (rate * circumference);
     const percent = Math.round(rate * 100);
+
+    // Xác định màu sắc dựa trên % tỉ lệ
+    let colorClass = 'text-gray-400'; // Mặc định 30% (Low) là màu xám
+    if (rate >= 0.8) {
+        colorClass = 'text-purple-400'; // 90% (High) là màu tím
+    } else if (rate >= 0.5) {
+        colorClass = 'text-blue-400'; // 60% (Medium) là màu xanh
+    }
 
     return (
         <div className="relative w-24 h-24 flex items-center justify-center group">
@@ -70,7 +78,7 @@ const SuccessRateGauge = ({ rate, colorClass }: { rate: number, colorClass: stri
                 <circle
                     cx="48" cy="48" r={radius}
                     stroke="currentColor"
-                    strokeWidth="8"
+                    strokeWidth="6"
                     fill="transparent"
                     className="text-slate-800"
                 />
@@ -78,7 +86,7 @@ const SuccessRateGauge = ({ rate, colorClass }: { rate: number, colorClass: stri
                 <circle
                     cx="48" cy="48" r={radius}
                     stroke="currentColor"
-                    strokeWidth="8"
+                    strokeWidth="6"
                     fill="transparent"
                     strokeDasharray={circumference}
                     strokeDashoffset={offset}
@@ -88,14 +96,14 @@ const SuccessRateGauge = ({ rate, colorClass }: { rate: number, colorClass: stri
             </svg>
             
             {/* Text Value */}
-            <div className="absolute inset-0 flex items-center justify-center">
-                <span className={`text-2xl font-black ${colorClass} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]`}>
+            <div className="absolute inset-0 flex items-center justify-center pt-1">
+                <span className={`text-xl font-lilita ${colorClass} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]`}>
                     {percent}%
                 </span>
             </div>
 
             {/* Decorative Glow */}
-            <div className={`absolute inset-0 rounded-full ${colorClass.replace('text-', 'bg-')} opacity-10 blur-xl`}></div>
+            <div className={`absolute inset-0 rounded-full ${colorClass.replace('text-', 'bg-')} opacity-5 blur-xl`}></div>
         </div>
     );
 };
@@ -189,14 +197,9 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 {/* Cột phải: Chọn đá & Action */}
                 <div className="flex-1 p-8 flex flex-col relative">
                     
-                    {/* KHU VỰC CHỌN ĐÁ (Dịch lên trên bằng cách bỏ mb lớn và dùng khoảng cách nhỏ) */}
-                    <div className="flex flex-col items-center justify-start pt-2">
+                    {/* KHU VỰC CHỌN ĐÁ (Dịch lên trên) */}
+                    <div className="flex flex-col items-center justify-start pt-6">
                         
-                        {/* Title nhỏ (Option) */}
-                        <div className="w-full text-center mb-6">
-                            <span className="text-slate-500 text-sm uppercase tracking-widest font-bold">Select Material</span>
-                        </div>
-
                         <div className="flex items-center justify-center gap-6 mb-8">
                             {stones.map((tier) => {
                                 const stone = ENHANCEMENT_STONES[tier];
@@ -259,10 +262,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         
                         {/* COMPONENT VÒNG TRÒN TỈ LỆ MỚI */}
                         <div className="animate-fade-in">
-                            <SuccessRateGauge 
-                                rate={currentStone.successRate} 
-                                colorClass={currentStone.color} 
-                            />
+                            <SuccessRateGauge rate={currentStone.successRate} />
                         </div>
 
                         {/* BUTTON */}
