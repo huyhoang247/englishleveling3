@@ -10,7 +10,6 @@ import { uiAssets } from '../../game-assets.ts';
 import type { OwnedItem } from './equipment-ui.tsx';
 
 // --- STYLES & ANIMATIONS ---
-// Thêm style cục bộ cho animation chữ bay
 const animationStyles = `
     @keyframes floatUp {
         0% { opacity: 0; transform: translateY(20px) scale(0.5); }
@@ -19,7 +18,7 @@ const animationStyles = `
         100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
     }
     .animate-float-up {
-        animation: floatUp 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        animation: floatUp 2.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
     }
     @keyframes spin-slow {
         from { transform: rotate(0deg); }
@@ -31,7 +30,7 @@ const animationStyles = `
     }
 `;
 
-// --- CÁC HÀM TIỆN ÍCH HELPER ---
+// --- CÁC HÀM HELPER GIỮ NGUYÊN ---
 const getRarityColor = (rank: string): string => {
     switch (rank) {
         case 'SSR': return 'border-red-500';
@@ -125,27 +124,29 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
     const [selectedStone, setSelectedStone] = useState<StoneTier>('low');
     const [upgradeStatus, setUpgradeStatus] = useState<'idle' | 'success' | 'fail'>('idle');
 
+    // FIX QUAN TRỌNG: Chỉ reset status khi mở/đóng modal, KHÔNG reset khi item thay đổi (vì item thay đổi khi upgrade thành công)
     useEffect(() => {
-        if (isOpen) setUpgradeStatus('idle');
-    }, [isOpen, item]);
+        if (isOpen) {
+            setUpgradeStatus('idle');
+        }
+    }, [isOpen]); 
 
     if (!isOpen || !item) return null;
     const itemDef = getItemDefinition(item.itemId)!;
     
     const handleEnhance = async () => {
         if (isProcessing) return;
-        setUpgradeStatus('idle'); // Reset trạng thái trước khi bắt đầu
+        setUpgradeStatus('idle'); 
         
         try {
-            // Hàm onUpgrade sẽ xử lý logic và gọi Firestore
-            // isProcessing (từ props) sẽ tự động bật tắt loading overlay
             const success = await onUpgrade(item, selectedStone);
-            
-            // Sau khi có kết quả, cập nhật status để hiện chữ bay
+            // Ngay lập tức set status sau khi await xong
             setUpgradeStatus(success ? 'success' : 'fail');
             
-            // Reset về idle sau 2.5 giây để ẩn chữ bay
-            setTimeout(() => setUpgradeStatus('idle'), 2500); 
+            // Tự động tắt sau khi animation chạy xong
+            setTimeout(() => {
+                setUpgradeStatus('idle');
+            }, 2500); 
         } catch (e) {
             console.error(e);
             setUpgradeStatus('idle');
@@ -182,30 +183,34 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     )}
 
                     {/* OVERLAY: RESULT (HIỆN CHỮ BAY KHI CÓ KẾT QUẢ) */}
-                    {upgradeStatus !== 'idle' && !isProcessing && (
-                        <div className="absolute inset-0 z-[90] flex items-center justify-center pointer-events-none">
+                    {/* FIX: Bỏ điều kiện !isProcessing để đảm bảo nó hiện ngay cả khi state chưa kịp sync */}
+                    {upgradeStatus !== 'idle' && (
+                        <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
                                 <h2 
                                     className={`
                                         text-6xl md:text-8xl font-black uppercase tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
                                         ${upgradeStatus === 'success' 
-                                            ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-400 to-yellow-600 stroke-text-gold' 
+                                            ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-400 to-yellow-600' 
                                             : 'text-gray-400 stroke-text-gray'
                                         }
                                     `}
-                                    style={{ WebkitTextStroke: upgradeStatus === 'success' ? '2px #7c2d12' : '2px #1f2937' }}
+                                    style={{ 
+                                        WebkitTextStroke: upgradeStatus === 'success' ? '2px #7c2d12' : '2px #1f2937',
+                                        textShadow: upgradeStatus === 'success' ? '0 0 30px rgba(234, 179, 8, 0.5)' : 'none'
+                                    }}
                                 >
                                     {upgradeStatus === 'success' ? 'SUCCESS!' : 'FAILED'}
                                 </h2>
                                 {upgradeStatus === 'success' && (
-                                    <div className="mt-2 text-yellow-200 text-xl font-lilita text-shadow-glow">
+                                    <div className="mt-2 text-yellow-200 text-xl font-lilita drop-shadow-md">
                                         Stats Increased!
                                     </div>
                                 )}
                             </div>
                             
                             {/* Hiệu ứng nền flash nhẹ */}
-                            <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-orange-500/20' : 'bg-gray-500/10'} opacity-0 animate-[pulse_0.5s_ease-out]`} />
+                            <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-orange-500/20' : 'bg-gray-500/10'} animate-[pulse_0.5s_ease-out]`} />
                         </div>
                     )}
 
@@ -244,7 +249,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-white text-lg font-lilita">{value}</span>
-                                            {/* Chỉ hiện mũi tên dự báo khi không phải là kết quả fail */}
+                                            {/* Chỉ hiện mũi tên dự báo khi ở trạng thái bình thường */}
                                             <span className="text-xs text-green-500 font-lilita">➜ ?</span>
                                         </div>
                                     </div>
