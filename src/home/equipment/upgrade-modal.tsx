@@ -56,6 +56,50 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
+// --- COMPONENT VÒNG TRÒN TỈ LỆ ---
+const SuccessRateGauge = ({ rate, colorClass }: { rate: number, colorClass: string }) => {
+    const radius = 36;
+    const circumference = 2 * Math.PI * radius;
+    const offset = circumference - (rate * circumference);
+    const percent = Math.round(rate * 100);
+
+    return (
+        <div className="relative w-24 h-24 flex items-center justify-center group">
+            {/* Background Ring */}
+            <svg className="w-full h-full transform -rotate-90 drop-shadow-lg">
+                <circle
+                    cx="48" cy="48" r={radius}
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    className="text-slate-800"
+                />
+                {/* Progress Ring */}
+                <circle
+                    cx="48" cy="48" r={radius}
+                    stroke="currentColor"
+                    strokeWidth="8"
+                    fill="transparent"
+                    strokeDasharray={circumference}
+                    strokeDashoffset={offset}
+                    strokeLinecap="round"
+                    className={`${colorClass} transition-all duration-1000 ease-out`}
+                />
+            </svg>
+            
+            {/* Text Value */}
+            <div className="absolute inset-0 flex items-center justify-center">
+                <span className={`text-2xl font-black ${colorClass} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]`}>
+                    {percent}%
+                </span>
+            </div>
+
+            {/* Decorative Glow */}
+            <div className={`absolute inset-0 rounded-full ${colorClass.replace('text-', 'bg-')} opacity-10 blur-xl`}></div>
+        </div>
+    );
+};
+
 // --- PROPS INTERFACE ---
 interface UpgradeModalProps {
     isOpen: boolean;
@@ -108,7 +152,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 </button>
 
                 {/* Cột trái: Thông tin Item */}
-                <div className="w-full md:w-1/3 p-6 flex flex-col items-center relative">
+                <div className="w-full md:w-1/3 p-6 flex flex-col items-center relative border-r border-slate-700/30">
                     <div className="mt-4"></div> 
                     
                     <div className={`relative w-32 h-32 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-[0_0_20px_rgba(0,0,0,0.5)] mb-4`}>
@@ -143,85 +187,86 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 </div>
 
                 {/* Cột phải: Chọn đá & Action */}
-                <div className="flex-1 p-8 flex flex-col justify-center relative">
+                <div className="flex-1 p-8 flex flex-col relative">
                     
-                    <div className="flex flex-col items-center justify-center mb-8">
-                        <div className="text-center">
-                            
-                            {/* KHU VỰC CHỌN ĐÁ */}
-                            <div className="flex items-center justify-center gap-6 mt-4">
-                                {stones.map((tier) => {
-                                    const stone = ENHANCEMENT_STONES[tier];
-                                    const isSelected = selectedStone === tier;
-                                    const count = stoneCounts[tier];
-                                    const cost = 1; // Mặc định tốn 1 đá
-                                    const hasEnough = count >= cost;
-                                    
-                                    let glowColor = '';
-                                    if(tier === 'low') glowColor = 'group-hover:shadow-green-500/20';
-                                    if(tier === 'medium') glowColor = 'group-hover:shadow-blue-500/20';
-                                    if(tier === 'high') glowColor = 'group-hover:shadow-orange-500/20';
+                    {/* KHU VỰC CHỌN ĐÁ (Dịch lên trên bằng cách bỏ mb lớn và dùng khoảng cách nhỏ) */}
+                    <div className="flex flex-col items-center justify-start pt-2">
+                        
+                        {/* Title nhỏ (Option) */}
+                        <div className="w-full text-center mb-6">
+                            <span className="text-slate-500 text-sm uppercase tracking-widest font-bold">Select Material</span>
+                        </div>
 
-                                    return (
-                                        <div key={tier} className="flex flex-col items-center gap-3 relative pb-3"> 
-                                            <div 
-                                                onClick={() => setSelectedStone(tier)}
-                                                className={`
-                                                    cursor-pointer group relative rounded-xl flex items-center justify-center transition-all duration-300
-                                                    w-20 h-20
-                                                    ${isSelected 
-                                                        ? `scale-110 border-2 border-slate-400 bg-slate-800 shadow-lg ${glowColor}` 
-                                                        : 'bg-slate-900 border border-slate-600 opacity-60 hover:opacity-100 hover:scale-105'
-                                                    }
-                                                `}
-                                            >
-                                                {/* ICON ĐÁ */}
-                                                <img 
-                                                    src={STONE_ICONS[tier]} 
-                                                    alt={stone.name} 
-                                                    className="w-16 h-16 object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-300"
-                                                />
-                                                
-                                                {/* --- THIẾT KẾ MỚI CHO SỐ LƯỢNG (FLOATING PILL) --- */}
-                                                <div className={`
-                                                    absolute -bottom-3 left-1/2 -translate-x-1/2 z-10
-                                                    flex items-center justify-center gap-[2px]
-                                                    px-3 py-0.5 rounded-full shadow-md whitespace-nowrap min-w-[50px]
-                                                    border transition-colors duration-300
-                                                    ${hasEnough 
-                                                        ? 'bg-[#1a1c2e] border-slate-600' // Đủ đá: Nền tối, viền xám
-                                                        : 'bg-red-950/90 border-red-500/50' // Thiếu đá: Nền đỏ tối, viền đỏ
-                                                    }
-                                                `}>
-                                                    {/* Số lượng đang có */}
-                                                    <span className={`text-xs font-bold ${hasEnough ? 'text-slate-200' : 'text-red-400 animate-pulse'}`}>
-                                                        {count}
-                                                    </span>
-                                                    {/* Dấu gạch chéo */}
-                                                    <span className="text-[10px] text-slate-500">/</span>
-                                                    {/* Số lượng cần */}
-                                                    <span className="text-[10px] font-bold text-slate-500">
-                                                        {cost}
-                                                    </span>
-                                                </div>
+                        <div className="flex items-center justify-center gap-6 mb-8">
+                            {stones.map((tier) => {
+                                const stone = ENHANCEMENT_STONES[tier];
+                                const isSelected = selectedStone === tier;
+                                const count = stoneCounts[tier];
+                                const cost = 1; 
+                                const hasEnough = count >= cost;
+                                
+                                let glowColor = '';
+                                if(tier === 'low') glowColor = 'group-hover:shadow-green-500/20';
+                                if(tier === 'medium') glowColor = 'group-hover:shadow-blue-500/20';
+                                if(tier === 'high') glowColor = 'group-hover:shadow-orange-500/20';
+
+                                return (
+                                    <div key={tier} className="flex flex-col items-center gap-3 relative pb-3"> 
+                                        <div 
+                                            onClick={() => setSelectedStone(tier)}
+                                            className={`
+                                                cursor-pointer group relative rounded-xl flex items-center justify-center transition-all duration-300
+                                                w-20 h-20
+                                                ${isSelected 
+                                                    ? `scale-110 border-2 border-slate-400 bg-slate-800 shadow-lg ${glowColor}` 
+                                                    : 'bg-slate-900 border border-slate-600 opacity-60 hover:opacity-100 hover:scale-105'
+                                                }
+                                            `}
+                                        >
+                                            {/* ICON ĐÁ */}
+                                            <img 
+                                                src={STONE_ICONS[tier]} 
+                                                alt={stone.name} 
+                                                className="w-16 h-16 object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-300"
+                                            />
+                                            
+                                            {/* SỐ LƯỢNG (Floating Pill) */}
+                                            <div className={`
+                                                absolute -bottom-3 left-1/2 -translate-x-1/2 z-10
+                                                flex items-center justify-center gap-[2px]
+                                                px-3 py-0.5 rounded-full shadow-md whitespace-nowrap min-w-[50px]
+                                                border transition-colors duration-300
+                                                ${hasEnough 
+                                                    ? 'bg-[#1a1c2e] border-slate-600' 
+                                                    : 'bg-red-950/90 border-red-500/50' 
+                                                }
+                                            `}>
+                                                <span className={`text-xs font-bold ${hasEnough ? 'text-slate-200' : 'text-red-400 animate-pulse'}`}>
+                                                    {count}
+                                                </span>
+                                                <span className="text-[10px] text-slate-500">/</span>
+                                                <span className="text-[10px] font-bold text-slate-500">{cost}</span>
                                             </div>
                                         </div>
-                                    );
-                                })}
-                            </div>
+                                    </div>
+                                );
+                            })}
                         </div>
                     </div>
 
-                    {/* HÀNG DƯỚI: TỈ LỆ THÀNH CÔNG VÀ NÚT NÂNG CẤP */}
-                    <div className="flex flex-row items-center justify-center gap-8 w-full mt-6">
-                        <div className="flex flex-col items-center justify-center animate-fade-in min-w-[120px]">
-                             <div className={`text-5xl font-black ${currentStone.color} drop-shadow-md`}>
-                                 {Math.round(currentStone.successRate * 100)}%
-                             </div>
-                             <span className="text-slate-400 text-xs uppercase tracking-wider mt-1">Success Rate</span>
+                    {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM (Căn giữa theo trục dọc còn lại) */}
+                    <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full mt-2">
+                        
+                        {/* COMPONENT VÒNG TRÒN TỈ LỆ MỚI */}
+                        <div className="animate-fade-in">
+                            <SuccessRateGauge 
+                                rate={currentStone.successRate} 
+                                colorClass={currentStone.color} 
+                            />
                         </div>
 
-                        <div className="flex-1 max-w-[200px]">
+                        {/* BUTTON */}
+                        <div className="flex-1 max-w-[220px]">
                             <button 
                                 onClick={handleEnhance}
                                 disabled={isProcessing || stoneCounts[selectedStone] < 1}
