@@ -14,6 +14,11 @@ const UPGRADE_BUTTON_IMG = 'https://raw.githubusercontent.com/huyhoang247/englis
 const FAILED_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/failed.webp';
 const SUCCESS_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/success.webp';
 
+// --- RATE ICONS ---
+const RATE_30_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/30-rate.webp';
+const RATE_60_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/60-rate.webp';
+const RATE_90_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/90-rate.webp';
+
 // --- STYLES & ANIMATIONS ---
 const animationStyles = `
     @keyframes floatUp {
@@ -73,35 +78,24 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// --- COMPONENT VÒNG TRÒN TỈ LỆ ---
+// --- COMPONENT HIỂN THỊ TỈ LỆ (DÙNG ẢNH) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
-    const radius = 36;
-    const circumference = 2 * Math.PI * radius;
-    const offset = circumference - (rate * circumference);
-    const percent = Math.round(rate * 100);
-
-    let colorClass = 'text-gray-400'; 
-    if (rate >= 0.8) {
-        colorClass = 'text-purple-400';
-    } else if (rate >= 0.5) {
-        colorClass = 'text-blue-400';
+    // Xác định ảnh dựa trên tỉ lệ
+    let imgSrc = RATE_30_IMG; // Mặc định là thấp (30%)
+    
+    if (rate >= 0.85) {
+        imgSrc = RATE_90_IMG;
+    } else if (rate >= 0.55) {
+        imgSrc = RATE_60_IMG;
     }
 
     return (
-        <div className="relative w-24 h-24 flex items-center justify-center group">
-            <svg className="w-full h-full transform -rotate-90 drop-shadow-lg">
-                <circle cx="48" cy="48" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent" className="text-slate-800" />
-                <circle cx="48" cy="48" r={radius} stroke="currentColor" strokeWidth="6" fill="transparent"
-                    strokeDasharray={circumference} strokeDashoffset={offset} strokeLinecap="round"
-                    className={`${colorClass} transition-all duration-1000 ease-out`}
-                />
-            </svg>
-            <div className="absolute inset-0 flex items-center justify-center pt-1">
-                <span className={`text-xl font-lilita ${colorClass} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]`}>
-                    {percent}%
-                </span>
-            </div>
-            <div className={`absolute inset-0 rounded-full ${colorClass.replace('text-', 'bg-')} opacity-5 blur-xl`}></div>
+        <div className="relative w-24 h-24 flex items-center justify-center transition-all duration-300 hover:scale-105">
+            <img 
+                src={imgSrc} 
+                alt={`${Math.round(rate * 100)}% Rate`} 
+                className="w-full h-full object-contain drop-shadow-lg"
+            />
         </div>
     );
 };
@@ -179,7 +173,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                 )}
                             </div>
                             
-                            {/* Background Flash: Đều dùng màu đen 30% cho cả 2 trường hợp */}
+                            {/* Background Flash: Đen 30% */}
                             <div className="absolute inset-0 -z-10 transition-opacity duration-1000 bg-black/30 animate-[pulse_0.5s_ease-out]" />
                         </div>
                     )}
@@ -291,6 +285,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM */}
                         <div className="flex-1 flex flex-row items-center justify-center gap-8 w-full">
                             
+                            {/* COMPONENT ẢNH TỈ LỆ */}
                             <div className="animate-fade-in">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
