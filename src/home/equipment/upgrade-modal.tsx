@@ -63,12 +63,12 @@ const SuccessRateGauge = ({ rate }: { rate: number }) => {
     const offset = circumference - (rate * circumference);
     const percent = Math.round(rate * 100);
 
-    // Xác định màu sắc dựa trên % tỉ lệ
-    let colorClass = 'text-gray-400'; // Mặc định 30% (Low) là màu xám
+    // Logic màu sắc: 30% xám, 60% xanh, 90% tím
+    let colorClass = 'text-gray-400'; 
     if (rate >= 0.8) {
-        colorClass = 'text-purple-400'; // 90% (High) là màu tím
+        colorClass = 'text-purple-400';
     } else if (rate >= 0.5) {
-        colorClass = 'text-blue-400'; // 60% (Medium) là màu xanh
+        colorClass = 'text-blue-400';
     }
 
     return (
@@ -195,10 +195,12 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 </div>
 
                 {/* Cột phải: Chọn đá & Action */}
-                <div className="flex-1 p-8 flex flex-col relative">
+                {/* CẬP NHẬT: pt-4 để đẩy nội dung lên sát phía trên, giảm bớt khoảng trống */}
+                <div className="flex-1 px-8 pb-8 pt-4 flex flex-col relative">
                     
-                    {/* KHU VỰC CHỌN ĐÁ (Dịch lên trên) */}
-                    <div className="flex flex-col items-center justify-start pt-6">
+                    {/* KHU VỰC CHỌN ĐÁ */}
+                    {/* CẬP NHẬT: justify-start và mt-2 để đảm bảo nó nằm ngay trên cùng */}
+                    <div className="flex flex-col items-center justify-start mt-2">
                         
                         <div className="flex items-center justify-center gap-6 mb-8">
                             {stones.map((tier) => {
@@ -257,10 +259,10 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
                     </div>
 
-                    {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM (Căn giữa theo trục dọc còn lại) */}
-                    <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full mt-2">
+                    {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM */}
+                    <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full">
                         
-                        {/* COMPONENT VÒNG TRÒN TỈ LỆ MỚI */}
+                        {/* COMPONENT VÒNG TRÒN TỈ LỆ */}
                         <div className="animate-fade-in">
                             <SuccessRateGauge rate={currentStone.successRate} />
                         </div>
