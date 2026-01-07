@@ -1,5 +1,6 @@
+--- START OF FILE upgrade-modal.tsx ---
 
-import React, { useState, useEffect, memo, useRef } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { 
     getItemDefinition 
 } from './item-database.ts';
@@ -74,145 +75,14 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// --- GALAXY TEXT COMPONENT (CANVAS MASKING VERSION) ---
-// Phiên bản này vẽ text trực tiếp lên canvas và dùng mask để loại bỏ background trắng
-const GalaxyText = memo(({ text, fontSize = 40 }: { text: string, fontSize?: number }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-  
-    useEffect(() => {
-      const canvas = canvasRef.current;
-      if (!canvas) return;
-  
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-  
-      let animationFrameId: number;
-      let particles: Array<{x: number, y: number, r: number, s: number, alpha: number, fade: number}> = [];
-      
-      const particleCount = 20;
-      const colors = ['#3B82F6', '#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#F43F5E']; 
-  
-      const resize = () => {
-        const parent = containerRef.current;
-        if (parent) {
-          const rect = parent.getBoundingClientRect();
-          // Scale pixel ratio for sharpness
-          canvas.width = rect.width * 2; 
-          canvas.height = rect.height * 2;
-          canvas.style.width = '100%';
-          canvas.style.height = '100%';
-          ctx.scale(2, 2);
-        }
-      };
-      
-      // Initial resize
-      resize();
-
-      const initParticles = () => {
-          particles = [];
-          // Use logic coordinates (half of canvas size because of scale(2,2))
-          const w = canvas.width / 2;
-          const h = canvas.height / 2;
-          for(let i=0; i<particleCount; i++) {
-              particles.push({
-                  x: Math.random() * w,
-                  y: Math.random() * h,
-                  r: Math.random() * 2 + 0.5,
-                  s: Math.random() * 0.8 + 0.2, 
-                  alpha: Math.random(),
-                  fade: Math.random() > 0.5 ? 0.02 : -0.02
-              });
-          }
-      };
-      initParticles();
-  
-      let gradientOffset = 0;
-  
-      const render = () => {
-        const width = canvas.width / 2;
-        const height = canvas.height / 2;
-        
-        if (width === 0 || height === 0) {
-           animationFrameId = requestAnimationFrame(render);
-           return;
-        }
-
-        // 1. Clear Canvas (Transparent)
-        ctx.clearRect(0, 0, width, height);
-
-        // 2. Draw Text (This creates the shape)
-        ctx.save();
-        ctx.font = `bold ${fontSize}px "Lilita One", sans-serif`;
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        ctx.fillStyle = '#000'; // Color doesn't matter, opacity does
-        ctx.fillText(text, width / 2, height / 2);
-        
-        // 3. Composite Operation: "source-in"
-        // Chỉ vẽ những gì đè lên phần Text đã vẽ ở bước 2
-        ctx.globalCompositeOperation = 'source-in';
-
-        // 4. Draw Galaxy Background (Gradient)
-        gradientOffset += 0.015;
-        const gradient = ctx.createLinearGradient(0, 0, width, height);
-        const c1 = colors[Math.floor(gradientOffset) % colors.length];
-        const c2 = colors[Math.floor(gradientOffset + 1) % colors.length];
-        const c3 = colors[Math.floor(gradientOffset + 2) % colors.length];
-        
-        gradient.addColorStop(0, c1);
-        gradient.addColorStop(0.5, c2);
-        gradient.addColorStop(1, c3);
-        
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
-
-        // 5. Draw Particles
-        particles.forEach(p => {
-          ctx.beginPath();
-          ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-          ctx.fillStyle = `rgba(255, 255, 255, ${p.alpha})`;
-          ctx.fill();
-  
-          p.y -= p.s;
-          if (p.y < -5) {
-               p.y = height + 5;
-               p.x = Math.random() * width;
-          }
-  
-          p.alpha += p.fade;
-          if (p.alpha > 0.9 || p.alpha < 0.2) p.fade = -p.fade;
-        });
-
-        ctx.restore(); // Reset composite operation for next frame (though clearRect handles it)
-  
-        animationFrameId = requestAnimationFrame(render);
-      };
-  
-      // Start render loop
-      render();
-  
-      return () => cancelAnimationFrame(animationFrameId);
-    }, [text, fontSize]); // Re-run if text/size changes
-  
-    return (
-      <div ref={containerRef} className="w-full h-full flex items-center justify-center">
-          <canvas ref={canvasRef} className="block" />
-      </div>
-    );
-});
-
-// --- COMPONENT HIỂN THỊ TỈ LỆ (GALAXY TEXT) ---
+// --- COMPONENT HIỂN THỊ TỈ LỆ (TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
-    const percentage = Math.round(rate * 100);
-
-    // Điều chỉnh kích thước container nhỏ hơn (w-20 h-12) và font size 32
     return (
-        <div className="relative w-24 h-12 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-1">
-            <GalaxyText 
-                text={`${percentage}%`} 
-                fontSize={32}
-            />
+        // CẬP NHẬT: Thay ảnh bằng text font-lilita, màu trắng, opacity 60%
+        <div className="flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 min-w-[80px]">
+            <span className="text-white font-lilita text-5xl drop-shadow-xl tracking-wider">
+                {Math.round(rate * 100)}%
+            </span>
         </div>
     );
 };
@@ -401,14 +271,14 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
 
                         {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
-                        <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full mt-2">
+                        <div className="flex-1 flex flex-row items-center justify-center gap-8 w-full mt-2">
                             
-                            {/* RATE TEXT (Galaxy Font Transparent) */}
+                            {/* RATE TEXT */}
                             <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* NÚT UPGRADE (Size: max-w-[150px]) */}
+                            {/* NÚT UPGRADE (Size: max-w-[150px]) - Đã chỉnh nhỏ lại */}
                             <div className="flex-1 max-w-[150px]">
                                 <button 
                                     onClick={handleEnhance}
