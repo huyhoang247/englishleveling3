@@ -266,26 +266,26 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             <SuccessRateGauge rate={currentStone.successRate} />
                         </div>
 
-                        {/* BUTTON UPGRADE MỚI */}
-                        <div className="flex-1 max-w-[180px]">
+                        {/* BUTTON UPGRADE: Tinh tế, Nhỏ gọn, Phẳng */}
+                        <div className="flex-1 max-w-[140px]">
                             <button 
                                 onClick={handleEnhance}
                                 disabled={!canUpgrade}
                                 className={`
-                                    relative w-full py-2 rounded-xl
-                                    font-lilita text-2xl tracking-wide uppercase
-                                    shadow-lg transition-all duration-150 transform
+                                    w-full py-2 rounded-lg 
+                                    font-lilita text-lg tracking-wide
+                                    transition-all duration-300
                                     flex items-center justify-center
                                     ${!canUpgrade
-                                        ? 'bg-slate-700 text-slate-500 border-b-4 border-slate-800 cursor-not-allowed opacity-70' 
-                                        : 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-b-4 border-blue-800 hover:brightness-110 active:border-b-0 active:translate-y-1'
+                                        ? 'bg-slate-800 text-slate-600 border border-slate-700 cursor-not-allowed'
+                                        : 'bg-gradient-to-r from-blue-600 to-blue-500 text-white border border-blue-400/40 hover:shadow-[0_0_15px_rgba(59,130,246,0.5)] hover:border-blue-300 hover:scale-105'
                                     }
                                 `}
                             >
                                 {isProcessing ? (
-                                    <span className="animate-pulse text-lg">...</span>
+                                    <span className="animate-pulse">...</span>
                                 ) : (
-                                    <span className="drop-shadow-md">Upgrade</span>
+                                    <span>Upgrade</span>
                                 )}
                             </button>
                         </div>
