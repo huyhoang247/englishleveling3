@@ -181,26 +181,26 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     {upgradeStatus !== 'idle' && (
                         <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
-                                {/* Cập nhật: Font Lilita, Xóa Stats Increased */}
+                                {/* Cập nhật: Font Lilita, Màu Xanh lá cho Success */}
                                 <h2 
                                     className={`
                                         text-6xl md:text-8xl font-lilita uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
                                         ${upgradeStatus === 'success' 
-                                            ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-400 to-yellow-600' 
+                                            ? 'text-transparent bg-clip-text bg-gradient-to-b from-green-300 via-green-500 to-green-700' 
                                             : 'text-gray-400 stroke-text-gray'
                                         }
                                     `}
                                     style={{ 
-                                        WebkitTextStroke: upgradeStatus === 'success' ? '2px #7c2d12' : '2px #1f2937',
-                                        textShadow: upgradeStatus === 'success' ? '0 0 30px rgba(234, 179, 8, 0.5)' : 'none'
+                                        WebkitTextStroke: upgradeStatus === 'success' ? '2px #14532d' : '2px #1f2937',
+                                        textShadow: upgradeStatus === 'success' ? '0 0 30px rgba(34, 197, 94, 0.6)' : 'none'
                                     }}
                                 >
                                     {upgradeStatus === 'success' ? 'SUCCESS!' : 'FAILED'}
                                 </h2>
                             </div>
                             
-                            {/* Background Flash */}
-                            <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-orange-500/20' : 'bg-gray-500/10'} animate-[pulse_0.5s_ease-out]`} />
+                            {/* Background Flash (Xanh lá) */}
+                            <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-green-500/20' : 'bg-gray-500/10'} animate-[pulse_0.5s_ease-out]`} />
                         </div>
                     )}
 
