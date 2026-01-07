@@ -80,8 +80,7 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 
 // --- COMPONENT HIỂN THỊ TỈ LỆ (DÙNG ẢNH) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
-    // Xác định ảnh dựa trên tỉ lệ
-    let imgSrc = RATE_30_IMG; // Mặc định là thấp (30%)
+    let imgSrc = RATE_30_IMG; 
     
     if (rate >= 0.85) {
         imgSrc = RATE_90_IMG;
@@ -90,8 +89,8 @@ const SuccessRateGauge = ({ rate }: { rate: number }) => {
     }
 
     return (
-        // CẬP NHẬT: Nhỏ hơn (w-14), dịch lên trên (-translate-y-2)
-        <div className="relative w-14 h-14 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-2">
+        // CẬP NHẬT: w-20 h-20 (Lớn hơn), opacity-60, dịch lên (-translate-y-1)
+        <div className="relative w-20 h-20 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-1 opacity-60">
             <img 
                 src={imgSrc} 
                 alt={`${Math.round(rate * 100)}% Rate`} 
@@ -227,7 +226,8 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         
                         {/* KHU VỰC CHỌN ĐÁ */}
                         <div className="flex flex-col items-center justify-start mt-2">
-                            <div className="flex items-center justify-center gap-6 mb-8">
+                            {/* CẬP NHẬT: Giảm mb-8 -> mb-2 để kéo các hàng gần nhau hơn */}
+                            <div className="flex items-center justify-center gap-6 mb-2">
                                 {stones.map((tier) => {
                                     const stone = ENHANCEMENT_STONES[tier];
                                     const isSelected = selectedStone === tier;
@@ -286,13 +286,13 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
                         <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full mt-2">
                             
-                            {/* COMPONENT ẢNH TỈ LỆ (NHỎ HƠN) */}
+                            {/* RATE ICON (Size: w-20, Opacity: 60) */}
                             <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* NÚT UPGRADE (TO HƠN) */}
-                            <div className="flex-1 max-w-[240px]">
+                            {/* NÚT UPGRADE (Size: max-w-[200px]) */}
+                            <div className="flex-1 max-w-[200px]">
                                 <button 
                                     onClick={handleEnhance}
                                     disabled={!canUpgrade || isProcessing}
