@@ -728,7 +728,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                 <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
                                 <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
-                            <div className="flex items-center gap-8"> {/* Tăng gap để icon to không đè lên nút Stats */}
+                            <div className="flex items-center gap-14"> {/* Tăng gap từ 8 lên 14 để icon to không đè lên nút Stats */}
                                 <button onClick={handleOpenStatsModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><StatsIcon className="w-4 h-4" />Stats</button>
                                 {/* NÚT MERGE MỚI: SỬ DỤNG KỸ THUẬT ABSOLUTE ĐỂ KHÔNG ẢNH HƯỞNG LAYOUT */}
                                 <button 
@@ -740,7 +740,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                     <img 
                                         src={MERGE_ICON_URL} 
                                         alt="Merge" 
-                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-28 h-28 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
+                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
                                     />
                                 </button>
                             </div>
