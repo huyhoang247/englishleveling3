@@ -3,7 +3,6 @@ import {
     getItemDefinition, 
     itemBlueprints, 
     generateItemDefinition,
-    getBlueprintByName,
     type ItemBlueprint,
     type ItemDefinition, 
     type ItemRank, 
@@ -49,10 +48,12 @@ export const ENHANCEMENT_STONES: Record<StoneTier, EnhancementStone> = {
     },
 };
 
+// Định nghĩa các hằng số logic
 const CRAFTING_COST = 50;
 const DISMANTLE_RETURN_PIECES = 25;
 const MAX_ITEMS_IN_STORAGE = 50;
 
+// Hàm tính giá trị nâng cấp (dùng cho logic cũ hoặc tính vàng hoàn trả)
 const getBaseUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
     const baseCost = 50;
@@ -89,10 +90,13 @@ const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinit
     return { level: finalLevel, refundGold: remainingGold };
 };
 
+
+// Interface cho các props của Provider
 interface EquipmentProviderProps {
     children: ReactNode;
 }
 
+// Interface định nghĩa ForgeGroup
 interface ForgeGroup { 
     blueprint: ItemBlueprint;
     rarity: ItemRank; 
@@ -101,7 +105,9 @@ interface ForgeGroup {
     estimatedResult: { level: number; refundGold: number; }; 
 }
 
+// Interface Context
 interface EquipmentContextType {
+    // State cơ bản
     isLoading: boolean;
     gold: number;
     equipmentPieces: number;
@@ -114,22 +120,29 @@ interface EquipmentContextType {
     isProcessing: boolean;
     dismantleSuccessToast: { show: boolean; message: string };
     
+    // State cho Modal Nâng cấp
     itemToUpgrade: OwnedItem | null;
     isUpgradeModalOpen: boolean;
     stoneCounts: Record<StoneTier, number>;
 
+    // Derived State
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
     unequippedItemsSorted: OwnedItem[];
     totalEquippedStats: { hp: number; atk: number; def: number; };
     userStatsValue: { hp: number; atk: number; def: number; };
 
+    // Handlers logic
     handleEquipItem: (item: OwnedItem) => Promise<void>;
     handleUnequipItem: (item: OwnedItem) => Promise<void>;
     handleCraftItem: () => Promise<void>;
     handleDismantleItem: (item: OwnedItem) => Promise<void>;
+    
+    // HANDLER NÂNG CẤP (OPTIMISTIC)
     handleUpgradeItem: (item: OwnedItem, stoneTier: StoneTier) => Promise<boolean>;
+    
     handleForgeItems: (group: ForgeGroup) => Promise<void>;
     
+    // UI Handlers
     handleSelectItem: (item: OwnedItem) => void;
     handleSelectSlot: (slot: EquipmentSlotType) => void;
     handleCloseDetailModal: () => void;
@@ -138,10 +151,10 @@ interface EquipmentContextType {
     handleCloseForgeModal: () => void;
     handleOpenStatsModal: () => void;
     handleCloseStatsModal: () => void;
-
     handleOpenUpgradeModal: (item: OwnedItem) => void;
     handleCloseUpgradeModal: () => void;
 
+    // Constants
     MAX_ITEMS_IN_STORAGE: number;
     CRAFTING_COST: number;
 }
@@ -149,6 +162,7 @@ interface EquipmentContextType {
 const EquipmentContext = createContext<EquipmentContextType | undefined>(undefined);
 
 export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
+    // Lấy state từ GameContext
     const {
         coins: gold,
         equipmentPieces,
@@ -166,14 +180,17 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         }));
     }, [rawOwnedItems]);
 
+    // Các state cục bộ cho UI
     const [selectedItem, setSelectedItem] = useState<OwnedItem | null>(null);
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
     
+    // State cho Upgrade Modal
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [itemToUpgrade, setItemToUpgrade] = useState<OwnedItem | null>(null);
 
+    // Mock Data Stone Counts (Bạn có thể thay thế bằng dữ liệu thật từ DB)
     const stoneCounts = useMemo<Record<StoneTier, number>>(() => ({
         low: 20,
         medium: 12,
@@ -192,6 +209,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         return () => clearTimeout(timer);
     }, []);
 
+    // Hàm cập nhật xuống Firestore
     const performInventoryUpdate = useCallback(async (updates: { 
         newOwned: OwnedItem[]; 
         newEquipped: EquippedItems; 
@@ -203,7 +221,9 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             showMessage("Lỗi: Người dùng chưa đăng nhập.");
             return Promise.reject("Not authenticated");
         }
-        // Lưu ý: isProcessing đã được check ở UI, hàm này chỉ thực thi
+        
+        // Chỉ set isProcessing nếu không phải là upgrade (để tránh chặn UI upgrade)
+        // Tuy nhiên, logic ở các hàm con sẽ quyết định việc await hay không.
         setIsProcessing(true);
         try {
             await updateUserInventory(userId, updates);
@@ -213,7 +233,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         } finally { 
             setIsProcessing(false); 
         }
-    }, [showMessage]); // Bỏ isProcessing ra khỏi dep để tránh stale closure trong flow async
+    }, [showMessage]);
 
     const unequippedItemsSorted = useMemo(() => {
         const equippedIds = Object.values(equippedItems).filter(id => id !== null);
@@ -231,6 +251,8 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
                 return itemDefA.name.localeCompare(itemDefB.name);
             });
     }, [ownedItems, equippedItems]);
+
+    // --- HANDLERS ---
 
     const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
         if (isProcessing) return;
@@ -301,24 +323,23 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
 
     // --- LOGIC NÂNG CẤP MỚI: OPTIMISTIC UPDATE ---
     const handleUpgradeItem = useCallback(async (item: OwnedItem, stoneTier: StoneTier): Promise<boolean> => {
-        // Nếu đang xử lý (spam nút), chặn lại
+        // Chặn nếu đang xử lý để tránh spam click quá nhanh
         if (isProcessing) return false;
 
         const stone = ENHANCEMENT_STONES[stoneTier];
         const isSuccess = Math.random() < stone.successRate;
 
-        // 1. Nếu thất bại:
+        // 1. Trường hợp Thất bại
         if (!isSuccess) {
-            // Vẫn gọi hàm update inventory để trừ đá (logic trừ đá nên nằm trong updateUserInventory hoặc service)
-            // Ở đây ta gọi "Fire-and-forget" - không await kết quả để UI phản hồi ngay
+            // Gọi update chạy ngầm (trừ đá - logic trừ đá nên nằm trong service)
+            // Không await để trả về kết quả UI ngay lập tức
             performInventoryUpdate({ newOwned: ownedItems, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
                 .catch(err => console.error("Sync failed:", err));
             
-            // Trả về false NGAY LẬP TỨC để modal hiện ảnh Failed
-            return false;
+            return false; // Trả về false ngay để hiện animation thất bại
         }
 
-        // 2. Nếu thành công: Tính toán chỉ số ngay tại Client
+        // 2. Trường hợp Thành công: Tính toán chỉ số ngay tại Client
         const upgradableStats = Object.keys(item.stats).filter(k => typeof item.stats[k] === 'number');
         if (upgradableStats.length === 0) {
             showMessage("Trang bị không có chỉ số để nâng cấp.");
@@ -335,21 +356,17 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         
         const newOwnedList = ownedItems.map(s => s.id === item.id ? updatedItem : s);
 
-        // 3. Cập nhật state UI NGAY LẬP TỨC (Optimistic UI)
+        // 3. Cập nhật UI ngay lập tức (Optimistic UI)
         // Cập nhật modal
         setItemToUpgrade(updatedItem); 
-        // Cập nhật detail nếu đang mở
+        // Cập nhật item trong list nếu đang xem chi tiết
         if (selectedItem?.id === item.id) setSelectedItem(updatedItem);
 
-        // 4. Gọi Firestore chạy ngầm (Không await)
+        // 4. Gọi Firestore chạy ngầm để đồng bộ dữ liệu
         performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
-            .catch(err => {
-                console.error("Sync upgrade failed:", err);
-                // TODO: Nếu muốn chuẩn xác hơn, ở đây nên có logic Revert state nếu lỗi
-            });
+            .catch(err => console.error("Sync upgrade failed:", err));
 
-        // 5. Trả về true NGAY LẬP TỨC để modal hiện chữ Success
-        return true;
+        return true; // Trả về true ngay để hiện animation thành công
 
     }, [ownedItems, equippedItems, performInventoryUpdate, selectedItem, showMessage, isProcessing]);
 
@@ -415,6 +432,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleOpenStatsModal = useCallback(() => setIsStatsModalOpen(true), []);
     const handleCloseStatsModal = useCallback(() => setIsStatsModalOpen(false), []);
 
+    // Handlers cho Upgrade Modal
     const handleOpenUpgradeModal = useCallback((item: OwnedItem) => {
         setSelectedItem(null); 
         setItemToUpgrade(item);
