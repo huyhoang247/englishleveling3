@@ -144,6 +144,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
 
     const stones: StoneTier[] = ['low', 'medium', 'high'];
     const currentStone = ENHANCEMENT_STONES[selectedStone];
+    const canUpgrade = !isProcessing && stoneCounts[selectedStone] >= 1;
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-[60] p-4">
@@ -195,11 +196,9 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 </div>
 
                 {/* Cột phải: Chọn đá & Action */}
-                {/* CẬP NHẬT: pt-4 để đẩy nội dung lên sát phía trên, giảm bớt khoảng trống */}
                 <div className="flex-1 px-8 pb-8 pt-4 flex flex-col relative">
                     
-                    {/* KHU VỰC CHỌN ĐÁ */}
-                    {/* CẬP NHẬT: justify-start và mt-2 để đảm bảo nó nằm ngay trên cùng */}
+                    {/* KHU VỰC CHỌN ĐÁ (Đã đẩy lên cao) */}
                     <div className="flex flex-col items-center justify-start mt-2">
                         
                         <div className="flex items-center justify-center gap-6 mb-8">
@@ -259,29 +258,35 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
                     </div>
 
-                    {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM */}
-                    <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full">
+                    {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM (Đã chỉnh sửa Nút Upgrade) */}
+                    <div className="flex-1 flex flex-row items-center justify-center gap-8 w-full">
                         
                         {/* COMPONENT VÒNG TRÒN TỈ LỆ */}
                         <div className="animate-fade-in">
                             <SuccessRateGauge rate={currentStone.successRate} />
                         </div>
 
-                        {/* BUTTON */}
-                        <div className="flex-1 max-w-[220px]">
+                        {/* BUTTON UPGRADE MỚI */}
+                        <div className="flex-1 max-w-[180px]">
                             <button 
                                 onClick={handleEnhance}
-                                disabled={isProcessing || stoneCounts[selectedStone] < 1}
+                                disabled={!canUpgrade}
                                 className={`
-                                    relative overflow-hidden group w-full py-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all duration-200 shadow-lg
-                                    ${(isProcessing || stoneCounts[selectedStone] < 1)
-                                        ? 'bg-slate-700 cursor-not-allowed opacity-70 grayscale' 
-                                        : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:scale-[1.02] hover:shadow-indigo-500/30 text-white cursor-pointer'
+                                    relative w-full py-2 rounded-xl
+                                    font-lilita text-2xl tracking-wide uppercase
+                                    shadow-lg transition-all duration-150 transform
+                                    flex items-center justify-center
+                                    ${!canUpgrade
+                                        ? 'bg-slate-700 text-slate-500 border-b-4 border-slate-800 cursor-not-allowed opacity-70' 
+                                        : 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-b-4 border-blue-800 hover:brightness-110 active:border-b-0 active:translate-y-1'
                                     }
                                 `}
                             >
-                                <span className="relative z-10">{isProcessing ? 'Processing...' : 'Enhance'}</span>
-                                {!isProcessing && stoneCounts[selectedStone] >= 1 && <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />}
+                                {isProcessing ? (
+                                    <span className="animate-pulse text-lg">...</span>
+                                ) : (
+                                    <span className="drop-shadow-md">Upgrade</span>
+                                )}
                             </button>
                         </div>
                     </div>
