@@ -1,4 +1,3 @@
---- START OF FILE equipment-ui.tsx (16).txt ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
