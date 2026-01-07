@@ -1,3 +1,4 @@
+--- START OF FILE upgrade-modal.tsx ---
 
 import React, { useState, useEffect, memo } from 'react';
 import { 
@@ -149,44 +150,62 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         <div className="text-center">
                             
                             {/* KHU VỰC CHỌN ĐÁ */}
-                            <div className="flex items-center justify-center gap-6">
+                            <div className="flex items-center justify-center gap-6 mt-4">
                                 {stones.map((tier) => {
                                     const stone = ENHANCEMENT_STONES[tier];
                                     const isSelected = selectedStone === tier;
+                                    const count = stoneCounts[tier];
+                                    const cost = 1; // Mặc định tốn 1 đá
+                                    const hasEnough = count >= cost;
                                     
-                                    // Glow effect vẫn giữ một chút để người dùng biết đang focus vào đâu, 
-                                    // nhưng Border cứng thì đã chuyển sang xám đồng nhất.
                                     let glowColor = '';
                                     if(tier === 'low') glowColor = 'group-hover:shadow-green-500/20';
                                     if(tier === 'medium') glowColor = 'group-hover:shadow-blue-500/20';
                                     if(tier === 'high') glowColor = 'group-hover:shadow-orange-500/20';
 
                                     return (
-                                        <div key={tier} className="flex flex-col items-center gap-2">
+                                        <div key={tier} className="flex flex-col items-center gap-3 relative pb-3"> 
                                             <div 
                                                 onClick={() => setSelectedStone(tier)}
                                                 className={`
                                                     cursor-pointer group relative rounded-xl flex items-center justify-center transition-all duration-300
-                                                    ${/* Tăng kích thước ô lên w-20 h-20 (to hơn w-16 cũ) */ ''}
                                                     w-20 h-20
-                                                    ${/* Logic viền xám đồng nhất */ ''}
                                                     ${isSelected 
                                                         ? `scale-110 border-2 border-slate-400 bg-slate-800 shadow-lg ${glowColor}` 
                                                         : 'bg-slate-900 border border-slate-600 opacity-60 hover:opacity-100 hover:scale-105'
                                                     }
                                                 `}
                                             >
-                                                {/* Hiển thị hình ảnh đá thay vì text */}
+                                                {/* ICON ĐÁ */}
                                                 <img 
                                                     src={STONE_ICONS[tier]} 
                                                     alt={stone.name} 
-                                                    className="w-16 h-16 object-contain drop-shadow-md"
+                                                    className="w-16 h-16 object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-300"
                                                 />
+                                                
+                                                {/* --- THIẾT KẾ MỚI CHO SỐ LƯỢNG (FLOATING PILL) --- */}
+                                                <div className={`
+                                                    absolute -bottom-3 left-1/2 -translate-x-1/2 z-10
+                                                    flex items-center justify-center gap-[2px]
+                                                    px-3 py-0.5 rounded-full shadow-md whitespace-nowrap min-w-[50px]
+                                                    border transition-colors duration-300
+                                                    ${hasEnough 
+                                                        ? 'bg-[#1a1c2e] border-slate-600' // Đủ đá: Nền tối, viền xám
+                                                        : 'bg-red-950/90 border-red-500/50' // Thiếu đá: Nền đỏ tối, viền đỏ
+                                                    }
+                                                `}>
+                                                    {/* Số lượng đang có */}
+                                                    <span className={`text-xs font-bold ${hasEnough ? 'text-slate-200' : 'text-red-400 animate-pulse'}`}>
+                                                        {count}
+                                                    </span>
+                                                    {/* Dấu gạch chéo */}
+                                                    <span className="text-[10px] text-slate-500">/</span>
+                                                    {/* Số lượng cần */}
+                                                    <span className="text-[10px] font-bold text-slate-500">
+                                                        {cost}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            {/* HIỂN THỊ SỐ LƯỢNG */}
-                                            <span className="text-xs font-mono font-bold text-slate-400 bg-black/40 px-2 py-0.5 rounded border border-slate-700">
-                                                {stoneCounts[tier]}/1
-                                            </span>
                                         </div>
                                     );
                                 })}
@@ -195,7 +214,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     </div>
 
                     {/* HÀNG DƯỚI: TỈ LỆ THÀNH CÔNG VÀ NÚT NÂNG CẤP */}
-                    <div className="flex flex-row items-center justify-center gap-8 w-full mt-4">
+                    <div className="flex flex-row items-center justify-center gap-8 w-full mt-6">
                         <div className="flex flex-col items-center justify-center animate-fade-in min-w-[120px]">
                              <div className={`text-5xl font-black ${currentStone.color} drop-shadow-md`}>
                                  {Math.round(currentStone.successRate * 100)}%
@@ -206,14 +225,17 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         <div className="flex-1 max-w-[200px]">
                             <button 
                                 onClick={handleEnhance}
-                                disabled={isProcessing}
+                                disabled={isProcessing || stoneCounts[selectedStone] < 1}
                                 className={`
                                     relative overflow-hidden group w-full py-4 rounded-xl font-black text-lg uppercase tracking-widest transition-all duration-200 shadow-lg
-                                    ${isProcessing ? 'bg-slate-700 cursor-wait' : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:scale-[1.02] hover:shadow-indigo-500/30 text-white'}
+                                    ${(isProcessing || stoneCounts[selectedStone] < 1)
+                                        ? 'bg-slate-700 cursor-not-allowed opacity-70 grayscale' 
+                                        : 'bg-gradient-to-r from-indigo-600 to-purple-600 hover:scale-[1.02] hover:shadow-indigo-500/30 text-white cursor-pointer'
+                                    }
                                 `}
                             >
                                 <span className="relative z-10">{isProcessing ? 'Processing...' : 'Enhance'}</span>
-                                {!isProcessing && <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />}
+                                {!isProcessing && stoneCounts[selectedStone] >= 1 && <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />}
                             </button>
                         </div>
                     </div>
