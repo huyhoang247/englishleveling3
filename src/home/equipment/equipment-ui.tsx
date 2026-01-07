@@ -110,8 +110,9 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// URL ICON NÂNG CẤP
+// URL ICON
 const UPGRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-equipment.webp";
+const MERGE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/merge.webp";
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
@@ -727,7 +728,26 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                             </div>
                             <div className="flex items-center gap-2">
                                 <button onClick={handleOpenStatsModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><StatsIcon className="w-4 h-4" />Stats</button>
-                                <button onClick={handleOpenForgeModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><MergeIcon className="w-4 h-4" />Merge</button>
+                                
+                                {/* NÚT MERGE ĐÃ ĐƯỢC THAY ĐỔI */}
+                                <button 
+                                    onClick={handleOpenForgeModal} 
+                                    className="group relative flex items-center gap-2 pl-2 pr-4 py-1.5 rounded-lg bg-gradient-to-b from-purple-700 via-purple-800 to-indigo-900 border border-purple-500/50 shadow-lg shadow-purple-900/40 hover:shadow-purple-500/40 hover:scale-105 hover:border-purple-400 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:grayscale"
+                                    disabled={isProcessing}
+                                    title="Hợp nhất trang bị"
+                                >
+                                    <div className="relative w-6 h-6 sm:w-7 sm:h-7 filter drop-shadow-md group-hover:drop-shadow-xl transition-all">
+                                        <img 
+                                            src={MERGE_ICON_URL} 
+                                            alt="Merge" 
+                                            className="w-full h-full object-contain" 
+                                        />
+                                    </div>
+                                    <span className="text-sm font-bold text-slate-100 tracking-wide uppercase group-hover:text-white text-shadow-sm">Merge</span>
+                                    {/* Hiệu ứng bóng lóa nhẹ khi hover */}
+                                    <div className="absolute inset-0 rounded-lg bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+                                </button>
+
                             </div>
                         </div>
                         <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
