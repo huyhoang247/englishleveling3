@@ -1,4 +1,3 @@
---- START OF FILE upgrade-modal.tsx ---
 
 import React, { useState, useEffect, memo } from 'react';
 import { 
