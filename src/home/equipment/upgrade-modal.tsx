@@ -11,6 +11,7 @@ import type { OwnedItem } from './equipment-ui.tsx';
 
 // --- CONSTANTS ---
 const UPGRADE_BUTTON_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-button.webp';
+const FAILED_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/failed.webp';
 
 // --- STYLES & ANIMATIONS ---
 const animationStyles = `
@@ -184,24 +185,32 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     {upgradeStatus !== 'idle' && (
                         <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
-                                <h2 
-                                    className={`
-                                        text-6xl md:text-8xl font-lilita uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
-                                        ${upgradeStatus === 'success' 
-                                            ? 'text-transparent bg-clip-text bg-gradient-to-b from-green-300 via-green-500 to-green-700' 
-                                            : 'text-gray-400 stroke-text-gray'
-                                        }
-                                    `}
-                                    style={{ 
-                                        WebkitTextStroke: upgradeStatus === 'success' ? '2px #14532d' : '2px #1f2937',
-                                        textShadow: upgradeStatus === 'success' ? '0 0 30px rgba(34, 197, 94, 0.6)' : 'none'
-                                    }}
-                                >
-                                    {upgradeStatus === 'success' ? 'SUCCESS!' : 'FAILED'}
-                                </h2>
+                                {upgradeStatus === 'success' ? (
+                                    <h2 
+                                        className="text-6xl md:text-8xl font-lilita uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)] text-transparent bg-clip-text bg-gradient-to-b from-green-300 via-green-500 to-green-700"
+                                        style={{ 
+                                            WebkitTextStroke: '2px #14532d',
+                                            textShadow: '0 0 30px rgba(34, 197, 94, 0.6)'
+                                        }}
+                                    >
+                                        SUCCESS!
+                                    </h2>
+                                ) : (
+                                    /* HÌNH ẢNH FAILED THAY CHO CHỮ */
+                                    <img 
+                                        src={FAILED_IMG} 
+                                        alt="Failed" 
+                                        className="w-64 h-auto object-contain drop-shadow-2xl"
+                                    />
+                                )}
                             </div>
                             
-                            <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-green-500/20' : 'bg-gray-500/10'} animate-[pulse_0.5s_ease-out]`} />
+                            {/* Background Flash: Xanh cho Success, Đen/30% cho Fail */}
+                            <div className={`
+                                absolute inset-0 -z-10 transition-opacity duration-1000 
+                                ${upgradeStatus === 'success' ? 'bg-green-500/20' : 'bg-black/30'} 
+                                animate-[pulse_0.5s_ease-out]
+                            `} />
                         </div>
                     )}
 
