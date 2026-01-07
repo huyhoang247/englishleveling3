@@ -30,7 +30,7 @@ const animationStyles = `
     }
 `;
 
-// --- CÁC HÀM HELPER GIỮ NGUYÊN ---
+// --- CÁC HÀM TIỆN ÍCH HELPER ---
 const getRarityColor = (rank: string): string => {
     switch (rank) {
         case 'SSR': return 'border-red-500';
@@ -124,7 +124,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
     const [selectedStone, setSelectedStone] = useState<StoneTier>('low');
     const [upgradeStatus, setUpgradeStatus] = useState<'idle' | 'success' | 'fail'>('idle');
 
-    // FIX QUAN TRỌNG: Chỉ reset status khi mở/đóng modal, KHÔNG reset khi item thay đổi (vì item thay đổi khi upgrade thành công)
     useEffect(() => {
         if (isOpen) {
             setUpgradeStatus('idle');
@@ -140,10 +139,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
         
         try {
             const success = await onUpgrade(item, selectedStone);
-            // Ngay lập tức set status sau khi await xong
             setUpgradeStatus(success ? 'success' : 'fail');
-            
-            // Tự động tắt sau khi animation chạy xong
             setTimeout(() => {
                 setUpgradeStatus('idle');
             }, 2500); 
@@ -165,10 +161,9 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                 
                 <div className="relative bg-gradient-to-br from-[#1a1c2e] to-[#0f111a] p-0 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
                     
-                    {/* OVERLAY: PROCESSING (HIỆN KHI FIREBASE ĐANG XỬ LÝ) */}
+                    {/* OVERLAY: PROCESSING */}
                     {isProcessing && (
                         <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
-                            {/* Magic Circle Spinner */}
                             <div className="relative w-32 h-32 mb-6">
                                 <div className="absolute inset-0 border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-[spin-slow_2s_linear_infinite]" />
                                 <div className="absolute inset-2 border-4 border-t-transparent border-r-purple-500 border-b-transparent border-l-purple-500 rounded-full animate-[spin-reverse_1.5s_linear_infinite]" />
@@ -176,20 +171,20 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                     <div className="w-4 h-4 bg-white rounded-full animate-pulse shadow-[0_0_15px_white]" />
                                 </div>
                             </div>
-                            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse tracking-widest font-lilita">
+                            <h2 className="text-3xl font-lilita text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse tracking-widest">
                                 UPGRADING...
                             </h2>
                         </div>
                     )}
 
-                    {/* OVERLAY: RESULT (HIỆN CHỮ BAY KHI CÓ KẾT QUẢ) */}
-                    {/* FIX: Bỏ điều kiện !isProcessing để đảm bảo nó hiện ngay cả khi state chưa kịp sync */}
+                    {/* OVERLAY: RESULT */}
                     {upgradeStatus !== 'idle' && (
                         <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
+                                {/* Cập nhật: Font Lilita, Xóa Stats Increased */}
                                 <h2 
                                     className={`
-                                        text-6xl md:text-8xl font-black uppercase tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
+                                        text-6xl md:text-8xl font-lilita uppercase tracking-wider drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
                                         ${upgradeStatus === 'success' 
                                             ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-400 to-yellow-600' 
                                             : 'text-gray-400 stroke-text-gray'
@@ -202,14 +197,9 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                 >
                                     {upgradeStatus === 'success' ? 'SUCCESS!' : 'FAILED'}
                                 </h2>
-                                {upgradeStatus === 'success' && (
-                                    <div className="mt-2 text-yellow-200 text-xl font-lilita drop-shadow-md">
-                                        Stats Increased!
-                                    </div>
-                                )}
                             </div>
                             
-                            {/* Hiệu ứng nền flash nhẹ */}
+                            {/* Background Flash */}
                             <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-orange-500/20' : 'bg-gray-500/10'} animate-[pulse_0.5s_ease-out]`} />
                         </div>
                     )}
