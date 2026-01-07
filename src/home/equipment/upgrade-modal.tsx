@@ -78,11 +78,10 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
     return (
         // CẬP NHẬT: 
-        // - w-[100px]: Cố định chiều rộng container để không bị nhảy layout khi số thay đổi độ dài.
-        // - text-4xl: Giảm size chữ nhỏ hơn.
-        // - flex justify-center: Căn giữa chữ trong khung cố định.
-        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60">
-            <span className="text-white font-lilita text-4xl drop-shadow-xl tracking-wider whitespace-nowrap">
+        // - text-3xl: Nhỏ hơn (cũ là 4xl)
+        // - -translate-y-2: Dịch lên trên một chút
+        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 -translate-y-2">
+            <span className="text-white font-lilita text-3xl drop-shadow-xl tracking-wider whitespace-nowrap">
                 {Math.round(rate * 100)}%
             </span>
         </div>
