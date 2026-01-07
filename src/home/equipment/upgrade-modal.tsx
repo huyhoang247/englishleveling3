@@ -9,41 +9,27 @@ import {
 import { uiAssets } from '../../game-assets.ts';
 import type { OwnedItem } from './equipment-ui.tsx';
 
-// --- CSS ANIMATIONS & STYLES ---
-// Thêm style trực tiếp để tạo hiệu ứng mà không cần file CSS ngoài
-const AnimationStyles = () => (
-    <style>{`
-        @keyframes spin-slow {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        @keyframes burst-scale {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        @keyframes shake-hard {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px) rotate(-2deg); }
-            20%, 40%, 60%, 80% { transform: translateX(5px) rotate(2deg); }
-        }
-        @keyframes text-shine {
-            0% { background-position: -200% center; }
-            100% { background-position: 200% center; }
-        }
-        .animate-spin-slow { animation: spin-slow 8s linear infinite; }
-        .animate-burst { animation: burst-scale 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
-        .animate-shake-hard { animation: shake-hard 0.5s ease-in-out; }
-        .text-shine-gold {
-            background: linear-gradient(to right, #fbbf24 20%, #ffffff 40%, #fbbf24 60%, #b45309 80%);
-            background-size: 200% auto;
-            color: transparent;
-            -webkit-background-clip: text;
-            background-clip: text;
-            animation: text-shine 3s linear infinite;
-        }
-    `}</style>
-);
+// --- STYLES & ANIMATIONS ---
+// Thêm style cục bộ cho animation chữ bay
+const animationStyles = `
+    @keyframes floatUp {
+        0% { opacity: 0; transform: translateY(20px) scale(0.5); }
+        20% { opacity: 1; transform: translateY(0) scale(1.5); }
+        80% { opacity: 1; transform: translateY(-40px) scale(1); }
+        100% { opacity: 0; transform: translateY(-80px) scale(0.8); }
+    }
+    .animate-float-up {
+        animation: floatUp 2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    }
+    @keyframes spin-slow {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    @keyframes spin-reverse {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+    }
+`;
 
 // --- CÁC HÀM TIỆN ÍCH HELPER ---
 const getRarityColor = (rank: string): string => {
@@ -115,90 +101,11 @@ const SuccessRateGauge = ({ rate }: { rate: number }) => {
                 />
             </svg>
             <div className="absolute inset-0 flex items-center justify-center pt-1">
-                <span className={`text-xl font-lilita ${colorClass} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]`}>{percent}%</span>
+                <span className={`text-xl font-lilita ${colorClass} drop-shadow-[0_0_10px_rgba(0,0,0,0.8)]`}>
+                    {percent}%
+                </span>
             </div>
             <div className={`absolute inset-0 rounded-full ${colorClass.replace('text-', 'bg-')} opacity-5 blur-xl`}></div>
-        </div>
-    );
-};
-
-// --- RESULT OVERLAY COMPONENT (NEW DESIGN) ---
-const ResultOverlay = ({ status, itemDef, itemLevel }: { status: 'success' | 'fail', itemDef: any, itemLevel: number }) => {
-    const isSuccess = status === 'success';
-
-    return (
-        <div className="absolute inset-0 z-50 flex items-center justify-center overflow-hidden rounded-2xl">
-            {/* Background Backdrop */}
-            <div className={`absolute inset-0 transition-colors duration-300 ${isSuccess ? 'bg-green-900/40' : 'bg-red-900/40'} backdrop-blur-md`} />
-
-            {/* --- SUCCESS VISUALS --- */}
-            {isSuccess && (
-                <>
-                    {/* Spinning Rays (God Rays) */}
-                    <div className="absolute inset-0 flex items-center justify-center opacity-60">
-                         <div className="w-[800px] h-[800px] animate-spin-slow" style={{
-                             background: 'conic-gradient(from 0deg, transparent 0deg, rgba(251, 191, 36, 0.2) 20deg, transparent 40deg, rgba(251, 191, 36, 0.2) 60deg, transparent 80deg, rgba(251, 191, 36, 0.2) 100deg, transparent 120deg, rgba(251, 191, 36, 0.2) 140deg, transparent 160deg, rgba(251, 191, 36, 0.2) 180deg, transparent 200deg, rgba(251, 191, 36, 0.2) 220deg, transparent 240deg, rgba(251, 191, 36, 0.2) 260deg, transparent 280deg, rgba(251, 191, 36, 0.2) 300deg, transparent 320deg, rgba(251, 191, 36, 0.2) 340deg, transparent 360deg)'
-                         }} />
-                    </div>
-                    {/* Particles (Simplified dots) */}
-                    <div className="absolute w-full h-full">
-                         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-yellow-300 rounded-full animate-ping" />
-                         <div className="absolute top-3/4 right-1/4 w-1 h-1 bg-white rounded-full animate-ping delay-100" />
-                         <div className="absolute top-1/2 left-3/4 w-3 h-3 bg-yellow-500 rounded-full animate-pulse" />
-                    </div>
-                </>
-            )}
-
-            {/* --- FAILURE VISUALS --- */}
-            {!isSuccess && (
-                <>
-                    {/* Dark overlay with vignette */}
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/80 pointer-events-none" />
-                    {/* Cracked Glass SVG Effect (Simulated) */}
-                    <svg className="absolute inset-0 w-full h-full opacity-30 pointer-events-none" viewBox="0 0 100 100" preserveAspectRatio="none">
-                        <path d="M0 0 L40 40 L30 60 L60 50 L100 100" stroke="white" strokeWidth="0.5" fill="none" />
-                        <path d="M100 0 L70 30 L80 60 L40 80 L0 100" stroke="white" strokeWidth="0.5" fill="none" />
-                    </svg>
-                </>
-            )}
-
-            {/* --- MAIN CONTENT CONTAINER --- */}
-            <div className={`relative flex flex-col items-center justify-center gap-6 p-8 rounded-3xl z-10 
-                ${isSuccess ? 'animate-burst' : 'animate-shake-hard'}
-            `}>
-                {/* Result Title */}
-                <div className="relative">
-                    <h2 className={`text-6xl font-black italic tracking-tighter uppercase drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
-                        ${isSuccess ? 'text-shine-gold scale-110' : 'text-slate-400 opacity-80 line-through decoration-red-500 decoration-4'}
-                    `}>
-                        {isSuccess ? 'SUCCESS!' : 'FAILED'}
-                    </h2>
-                </div>
-
-                {/* Item Display */}
-                <div className="relative">
-                    {/* Glow effect behind item */}
-                    {isSuccess && <div className="absolute inset-0 bg-yellow-500 blur-2xl opacity-50 rounded-full animate-pulse" />}
-                    
-                    <div className={`relative w-32 h-32 bg-slate-900 border-4 rounded-xl flex items-center justify-center shadow-2xl
-                        ${isSuccess ? 'border-yellow-400 ring-4 ring-yellow-500/30' : 'border-slate-700 grayscale opacity-70'}
-                    `}>
-                        <img src={itemDef.icon} alt="Result" className="w-24 h-24 object-contain" />
-                        
-                        {/* Level badge */}
-                        <div className={`absolute -bottom-3 -right-3 px-3 py-1 rounded-full text-sm font-bold shadow-lg border
-                             ${isSuccess ? 'bg-yellow-500 text-black border-white' : 'bg-slate-700 text-slate-400 border-slate-600'}
-                        `}>
-                            {isSuccess ? `+${itemLevel}` : `+${itemLevel - 1}`}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Subtext */}
-                <p className={`text-lg font-lilita tracking-wide uppercase ${isSuccess ? 'text-yellow-200' : 'text-red-400'}`}>
-                    {isSuccess ? 'Stats Increased!' : 'Material Consumed'}
-                </p>
-            </div>
         </div>
     );
 };
@@ -227,13 +134,21 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
     
     const handleEnhance = async () => {
         if (isProcessing) return;
-        setUpgradeStatus('idle');
+        setUpgradeStatus('idle'); // Reset trạng thái trước khi bắt đầu
+        
         try {
+            // Hàm onUpgrade sẽ xử lý logic và gọi Firestore
+            // isProcessing (từ props) sẽ tự động bật tắt loading overlay
             const success = await onUpgrade(item, selectedStone);
+            
+            // Sau khi có kết quả, cập nhật status để hiện chữ bay
             setUpgradeStatus(success ? 'success' : 'fail');
-            setTimeout(() => setUpgradeStatus('idle'), 2500); // Tăng thời gian hiển thị kết quả lên một chút để tận hưởng hiệu ứng
+            
+            // Reset về idle sau 2.5 giây để ẩn chữ bay
+            setTimeout(() => setUpgradeStatus('idle'), 2500); 
         } catch (e) {
             console.error(e);
+            setUpgradeStatus('idle');
         }
     };
 
@@ -243,21 +158,62 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
 
     return (
         <>
-            <AnimationStyles />
+            <style>{animationStyles}</style>
             <div className="fixed inset-0 flex items-center justify-center z-[60] p-4">
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" onClick={onClose} />
+                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" onClick={!isProcessing ? onClose : undefined} />
                 
                 <div className="relative bg-gradient-to-br from-[#1a1c2e] to-[#0f111a] p-0 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
                     
-                    {/* RESULT OVERLAY - Đè lên toàn bộ modal khi có kết quả */}
-                    {upgradeStatus !== 'idle' && (
-                        <ResultOverlay status={upgradeStatus} itemDef={itemDef} itemLevel={item.level} />
+                    {/* OVERLAY: PROCESSING (HIỆN KHI FIREBASE ĐANG XỬ LÝ) */}
+                    {isProcessing && (
+                        <div className="absolute inset-0 z-[100] bg-black/80 backdrop-blur-sm flex flex-col items-center justify-center">
+                            {/* Magic Circle Spinner */}
+                            <div className="relative w-32 h-32 mb-6">
+                                <div className="absolute inset-0 border-4 border-t-blue-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-[spin-slow_2s_linear_infinite]" />
+                                <div className="absolute inset-2 border-4 border-t-transparent border-r-purple-500 border-b-transparent border-l-purple-500 rounded-full animate-[spin-reverse_1.5s_linear_infinite]" />
+                                <div className="absolute inset-0 flex items-center justify-center">
+                                    <div className="w-4 h-4 bg-white rounded-full animate-pulse shadow-[0_0_15px_white]" />
+                                </div>
+                            </div>
+                            <h2 className="text-3xl font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 animate-pulse tracking-widest font-lilita">
+                                UPGRADING...
+                            </h2>
+                        </div>
+                    )}
+
+                    {/* OVERLAY: RESULT (HIỆN CHỮ BAY KHI CÓ KẾT QUẢ) */}
+                    {upgradeStatus !== 'idle' && !isProcessing && (
+                        <div className="absolute inset-0 z-[90] flex items-center justify-center pointer-events-none">
+                            <div className="animate-float-up flex flex-col items-center">
+                                <h2 
+                                    className={`
+                                        text-6xl md:text-8xl font-black uppercase tracking-tighter drop-shadow-[0_5px_5px_rgba(0,0,0,0.8)]
+                                        ${upgradeStatus === 'success' 
+                                            ? 'text-transparent bg-clip-text bg-gradient-to-b from-yellow-300 via-orange-400 to-yellow-600 stroke-text-gold' 
+                                            : 'text-gray-400 stroke-text-gray'
+                                        }
+                                    `}
+                                    style={{ WebkitTextStroke: upgradeStatus === 'success' ? '2px #7c2d12' : '2px #1f2937' }}
+                                >
+                                    {upgradeStatus === 'success' ? 'SUCCESS!' : 'FAILED'}
+                                </h2>
+                                {upgradeStatus === 'success' && (
+                                    <div className="mt-2 text-yellow-200 text-xl font-lilita text-shadow-glow">
+                                        Stats Increased!
+                                    </div>
+                                )}
+                            </div>
+                            
+                            {/* Hiệu ứng nền flash nhẹ */}
+                            <div className={`absolute inset-0 -z-10 transition-opacity duration-1000 ${upgradeStatus === 'success' ? 'bg-orange-500/20' : 'bg-gray-500/10'} opacity-0 animate-[pulse_0.5s_ease-out]`} />
+                        </div>
                     )}
 
                     {/* NÚT ĐÓNG */}
                     <button 
                         onClick={onClose} 
-                        className="absolute top-3 right-3 z-50 p-2 text-slate-400 hover:text-white hover:scale-110 transition-all"
+                        disabled={isProcessing}
+                        className="absolute top-3 right-3 z-50 p-2 text-slate-400 hover:text-white hover:scale-110 transition-all disabled:opacity-0"
                     >
                         <CloseIcon className="w-6 h-6" />
                     </button>
@@ -273,7 +229,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             </div>
                         </div>
                         
-                        {/* Item Name */}
                         <h4 className={`text-lg font-bold ${getRarityTextColor(itemDef.rarity)} mb-6 text-center`}>{itemDef.name}</h4>
 
                         {/* Stats Preview */}
@@ -289,6 +244,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-white text-lg font-lilita">{value}</span>
+                                            {/* Chỉ hiện mũi tên dự báo khi không phải là kết quả fail */}
                                             <span className="text-xs text-green-500 font-lilita">➜ ?</span>
                                         </div>
                                     </div>
@@ -317,25 +273,24 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
 
                                     return (
                                         <div key={tier} className="flex flex-col items-center gap-3 relative pb-3"> 
-                                            <div 
-                                                onClick={() => setSelectedStone(tier)}
+                                            <button 
+                                                onClick={() => !isProcessing && setSelectedStone(tier)}
+                                                disabled={isProcessing}
                                                 className={`
                                                     cursor-pointer group relative rounded-xl flex items-center justify-center transition-all duration-300
-                                                    w-20 h-20
+                                                    w-20 h-20 outline-none
                                                     ${isSelected 
                                                         ? `scale-110 border-2 border-slate-400 bg-slate-800 shadow-lg ${glowColor}` 
                                                         : 'bg-slate-900 border border-slate-600 opacity-60 hover:opacity-100 hover:scale-105'
                                                     }
                                                 `}
                                             >
-                                                {/* ICON ĐÁ */}
                                                 <img 
                                                     src={STONE_ICONS[tier]} 
                                                     alt={stone.name} 
                                                     className="w-16 h-16 object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-300"
                                                 />
                                                 
-                                                {/* SỐ LƯỢNG (Floating Pill) */}
                                                 <div className={`
                                                     absolute -bottom-3 left-1/2 -translate-x-1/2 z-10
                                                     flex items-center justify-center gap-[2px]
@@ -352,7 +307,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                                     <span className="text-[10px] text-slate-500">/</span>
                                                     <span className="text-[10px] font-bold text-slate-500">{cost}</span>
                                                 </div>
-                                            </div>
+                                            </button>
                                         </div>
                                     );
                                 })}
@@ -362,32 +317,26 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM */}
                         <div className="flex-1 flex flex-row items-center justify-center gap-8 w-full">
                             
-                            {/* COMPONENT VÒNG TRÒN TỈ LỆ */}
                             <div className="animate-fade-in">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* BUTTON UPGRADE */}
                             <div className="flex-1 max-w-[150px]">
                                 <button 
                                     onClick={handleEnhance}
-                                    disabled={!canUpgrade}
+                                    disabled={!canUpgrade || isProcessing}
                                     className={`
-                                        relative w-full py-1.5 rounded-lg
+                                        relative w-full py-2 rounded-lg
                                         font-lilita text-xl tracking-wide uppercase
                                         shadow-lg transition-all duration-150 transform
-                                        flex items-center justify-center
+                                        flex items-center justify-center overflow-hidden
                                         ${!canUpgrade
                                             ? 'bg-slate-700 text-slate-500 border-b-4 border-slate-800 cursor-not-allowed opacity-70' 
                                             : 'bg-gradient-to-b from-blue-400 to-blue-600 text-white border-b-4 border-blue-800 hover:brightness-110 active:border-b-0 active:translate-y-1'
                                         }
                                     `}
                                 >
-                                    {isProcessing ? (
-                                        <span className="animate-pulse text-base">...</span>
-                                    ) : (
-                                        <span className="drop-shadow-md">Upgrade</span>
-                                    )}
+                                    <span className="drop-shadow-md relative z-10">Upgrade</span>
                                 </button>
                             </div>
                         </div>
