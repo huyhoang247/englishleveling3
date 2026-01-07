@@ -90,8 +90,8 @@ const SuccessRateGauge = ({ rate }: { rate: number }) => {
     }
 
     return (
-        // CẬP NHẬT: w-24 -> w-20, thêm -translate-y-3
-        <div className="relative w-20 h-20 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-3">
+        // CẬP NHẬT: Nhỏ hơn (w-14), dịch lên trên (-translate-y-2)
+        <div className="relative w-14 h-14 flex items-center justify-center transition-all duration-300 hover:scale-105 -translate-y-2">
             <img 
                 src={imgSrc} 
                 alt={`${Math.round(rate * 100)}% Rate`} 
@@ -283,16 +283,16 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             </div>
                         </div>
 
-                        {/* HÀNG DƯỚI: TỈ LỆ VÀ NÚT BẤM */}
-                        <div className="flex-1 flex flex-row items-center justify-center gap-8 w-full">
+                        {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
+                        <div className="flex-1 flex flex-row items-center justify-center gap-6 w-full mt-2">
                             
-                            {/* COMPONENT ẢNH TỈ LỆ */}
-                            <div className="animate-fade-in">
+                            {/* COMPONENT ẢNH TỈ LỆ (NHỎ HƠN) */}
+                            <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* NÚT UPGRADE MỚI - DÙNG ẢNH */}
-                            <div className="flex-1 max-w-[150px]">
+                            {/* NÚT UPGRADE (TO HƠN) */}
+                            <div className="flex-1 max-w-[240px]">
                                 <button 
                                     onClick={handleEnhance}
                                     disabled={!canUpgrade || isProcessing}
