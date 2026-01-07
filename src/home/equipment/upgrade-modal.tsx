@@ -1,3 +1,5 @@
+--- START OF FILE upgrade-modal.tsx ---
+
 import React, { useState, useEffect, memo } from 'react';
 import { 
     getItemDefinition 
@@ -34,6 +36,13 @@ const getRarityTextColor = (rank: string): string => {
         case 'E': return 'text-gray-400';
         default: return 'text-gray-500';
     }
+};
+
+// --- ICON ĐÁ CƯỜNG HOÁ ---
+const STONE_ICONS: Record<StoneTier, string> = {
+    low: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/basic-stone.webp',
+    medium: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/intermediate-stone.webp',
+    high: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/advanced-stone.webp',
 };
 
 // --- CÁC ICON CỤC BỘ ---
@@ -91,7 +100,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
             
             <div className="relative bg-gradient-to-br from-[#1a1c2e] to-[#0f111a] p-0 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
                 
-                {/* NÚT ĐÓNG (Đã bỏ background và border) */}
+                {/* NÚT ĐÓNG */}
                 <button 
                     onClick={onClose} 
                     className="absolute top-3 right-3 z-50 p-2 text-slate-400 hover:text-white hover:scale-110 transition-all"
@@ -99,7 +108,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     <CloseIcon className="w-6 h-6" />
                 </button>
 
-                {/* Cột trái: Thông tin Item (Đã bỏ background riêng và border phải) */}
+                {/* Cột trái: Thông tin Item */}
                 <div className="w-full md:w-1/3 p-6 flex flex-col items-center relative">
                     <div className="mt-4"></div> 
                     
@@ -110,7 +119,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
                     </div>
                     
-                    {/* Item Name (Đã xóa dòng Rarity text bên dưới) */}
+                    {/* Item Name */}
                     <h4 className={`text-lg font-bold ${getRarityTextColor(itemDef.rarity)} mb-6 text-center`}>{itemDef.name}</h4>
 
                     {/* Stats Preview */}
@@ -121,13 +130,10 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             return (
                                 <div key={key} className="flex justify-between items-center bg-black/30 px-3 py-3 rounded-lg border border-slate-700/50">
                                     <div className="flex items-center gap-3">
-                                        {/* Icon to hơn (w-6 h-6) */}
                                         {config && <config.Icon className="w-6 h-6" />}
-                                        {/* Tên chỉ số font-lilita */}
                                         <span className="text-base text-slate-300 uppercase font-lilita tracking-wide">{key}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        {/* Giá trị chỉ số font-lilita */}
                                         <span className="text-white text-lg font-lilita">{value}</span>
                                         <span className="text-xs text-green-500 font-lilita">➜ ?</span>
                                     </div>
@@ -142,7 +148,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                     
                     <div className="flex flex-col items-center justify-center mb-8">
                         <div className="text-center">
-                            {/* Đã xóa dòng chữ 'Select Stone' */}
                             
                             {/* KHU VỰC CHỌN ĐÁ */}
                             <div className="flex items-center justify-center gap-6">
@@ -150,28 +155,34 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                     const stone = ENHANCEMENT_STONES[tier];
                                     const isSelected = selectedStone === tier;
                                     
-                                    // Xác định màu glow dựa trên loại đá
+                                    // Glow effect vẫn giữ một chút để người dùng biết đang focus vào đâu, 
+                                    // nhưng Border cứng thì đã chuyển sang xám đồng nhất.
                                     let glowColor = '';
-                                    if(tier === 'low') glowColor = 'group-hover:shadow-green-500/50 shadow-green-500/20';
-                                    if(tier === 'medium') glowColor = 'group-hover:shadow-blue-500/50 shadow-blue-500/20';
-                                    if(tier === 'high') glowColor = 'group-hover:shadow-orange-500/50 shadow-orange-500/20';
+                                    if(tier === 'low') glowColor = 'group-hover:shadow-green-500/20';
+                                    if(tier === 'medium') glowColor = 'group-hover:shadow-blue-500/20';
+                                    if(tier === 'high') glowColor = 'group-hover:shadow-orange-500/20';
 
                                     return (
                                         <div key={tier} className="flex flex-col items-center gap-2">
                                             <div 
                                                 onClick={() => setSelectedStone(tier)}
                                                 className={`
-                                                    cursor-pointer group relative w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-300
+                                                    cursor-pointer group relative rounded-xl flex items-center justify-center transition-all duration-300
+                                                    ${/* Tăng kích thước ô lên w-20 h-20 (to hơn w-16 cũ) */ ''}
+                                                    w-20 h-20
+                                                    ${/* Logic viền xám đồng nhất */ ''}
                                                     ${isSelected 
-                                                        ? `scale-110 border-2 ${stone.color.replace('text-', 'border-')} bg-slate-800 shadow-lg ${glowColor}` 
-                                                        : 'bg-slate-900 border border-slate-700 opacity-60 hover:opacity-100 hover:scale-105'
+                                                        ? `scale-110 border-2 border-slate-400 bg-slate-800 shadow-lg ${glowColor}` 
+                                                        : 'bg-slate-900 border border-slate-600 opacity-60 hover:opacity-100 hover:scale-105'
                                                     }
                                                 `}
                                             >
-                                                {/* Chỉ hiện Icon (Text giả lập icon I, II, III) */}
-                                                <span className={`font-black text-xl ${stone.color} font-serif`}>
-                                                    {tier === 'low' ? 'I' : tier === 'medium' ? 'II' : 'III'}
-                                                </span>
+                                                {/* Hiển thị hình ảnh đá thay vì text */}
+                                                <img 
+                                                    src={STONE_ICONS[tier]} 
+                                                    alt={stone.name} 
+                                                    className="w-16 h-16 object-contain drop-shadow-md"
+                                                />
                                             </div>
                                             {/* HIỂN THỊ SỐ LƯỢNG */}
                                             <span className="text-xs font-mono font-bold text-slate-400 bg-black/40 px-2 py-0.5 rounded border border-slate-700">
