@@ -1,4 +1,4 @@
---- total-stats-modal.tsx ---
+
 import React, { memo, useMemo } from 'react';
 import { uiAssets } from '../../game-assets.ts';
 
