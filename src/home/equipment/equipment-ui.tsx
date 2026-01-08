@@ -621,6 +621,24 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
             return () => clearTimeout(timer);
         }
     }, [isProcessing, minTimeElapsed]);
+
+    // --- MỚI: KHÓA SCROLL KHI ĐANG CRAFTING ---
+    useEffect(() => {
+        if (isCraftingAnimation) {
+            // Khóa cuộn trang web (body)
+            document.body.style.overflow = 'hidden';
+            document.body.style.touchAction = 'none'; // Ngăn cuộn cảm ứng trên mobile
+        } else {
+            // Mở lại cuộn
+            document.body.style.overflow = 'unset';
+            document.body.style.touchAction = 'auto';
+        }
+        // Cleanup khi component bị hủy
+        return () => {
+            document.body.style.overflow = 'unset';
+            document.body.style.touchAction = 'auto';
+        };
+    }, [isCraftingAnimation]);
     // --- END: LOGIC HIỆU ỨNG CRAFTING ---
 
     const handleClose = useCallback(() => {
@@ -697,7 +715,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                 <EquipmentScreenSkeleton />
             </div>
             
-            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'hidden' : ''}`}>
+            {/* THÊM pointer-events-none KHI CRAFTING ĐỂ KHÓA TƯƠNG TÁC GIAO DIỆN PHÍA DƯỚI */}
+            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'hidden' : ''} ${isCraftingAnimation ? 'pointer-events-none select-none' : ''}`}>
                 <Header gold={displayGold} onClose={handleClose} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
                     <section className="flex-shrink-0 py-4">
