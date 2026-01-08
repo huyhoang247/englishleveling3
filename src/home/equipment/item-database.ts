@@ -1,10 +1,3 @@
-Đây là toàn bộ mã nguồn của file item-database (vvcf2).ts sau khi đã thêm vũ khí Zangetsu (ID 30000). Vũ khí này được thiết lập với chỉ số tấn công rất cao, phản ánh đặc tính của một thanh trảm hồn đao mạnh mẽ.
-
-code
-TypeScript
-download
-content_copy
-expand_less
 import { itemAssets } from '../../game-assets.ts';
 
 // --- CÁC ĐỊNH NGHĨA CỐT LÕI (Không đổi) ---
@@ -75,7 +68,7 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 22000, name: 'Dragon\'s Breath Armor', type: 'armor', baseDescription: 'Bộ giáp được rèn từ vảy rồng, mang trong mình hơi thở của lửa.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/dragon\'s-breath-armor.webp', baseStats: { hp: 3500, atk: 50, def: 200 }, baseMaxLevel: 30 },
     { baseId: 23000, name: 'Revival Cape', type: 'armor', baseDescription: 'Chiếc áo choàng chứa đựng sức mạnh phục sinh, có khả năng bảo vệ người mặc khỏi cái chết.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/revival-cape.webp', baseStats: { hp: 4000, atk: 0, def: 250 }, baseMaxLevel: 30 },
     { baseId: 24000, name: 'Hard Armor', type: 'armor', baseDescription: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/hard-armor.webp', baseStats: { hp: 1500, atk: 10, def: 150 }, baseMaxLevel: 20 },
-    { baseId: 25000, name: 'Warden\'s Mail', type: 'armor', baseDescription: 'Giáp của người cai ngục, nổi tiếng với khả năng chống chịu bền bỉ.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/warden-mail.webp', baseStats: { hp: 2500, atk: 5, def: 220 }, baseMaxLevel: 25 },
+    { baseId: 25000, name: 'Warden\'s Mail', type: 'armor', baseDescription: 'Giáp của người cai ngục, nổi tiếng with khả năng chống chịu bền bỉ.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/warden-mail.webp', baseStats: { hp: 2500, atk: 5, def: 220 }, baseMaxLevel: 25 },
     { 
         baseId: 26000, 
         name: 'Excalibur', 
@@ -89,7 +82,7 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseId: 27000, 
         name: 'Masamune', 
         type: 'weapon', 
-        baseDescription: 'Thanh katana huyền thoại được rèn bởi thợ rèn Masamune, nổi tiếng with độ sắc bén cực hạn và sự thanh tao trong từng đường kiếm.', 
+        baseDescription: 'Thanh katana huyền thoại được rèn bởi thợ rèn Masamune, nổi tiếng với độ sắc bén cực hạn và sự thanh tao trong từng đường kiếm.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/masamune.webp', 
         baseStats: { hp: 3200, atk: 480, def: 180 }, 
         baseMaxLevel: 30 
@@ -116,9 +109,9 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseId: 30000, 
         name: 'Zangetsu', 
         type: 'weapon', 
-        baseDescription: 'Thanh trảm hồn đao khổng lồ, mang sức mạnh hắc ám cực hạn và khả năng giải phóng những luồng linh lực hủy diệt.', 
+        baseDescription: 'Thanh trảm hồn đao mang hình dáng một con dao khổng lồ, có khả năng giải phóng áp lực tâm linh cực đại dưới dạng Getsuga Tenshou.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/zangetsu.webp', 
-        baseStats: { hp: 3000, atk: 520, def: 150 }, 
+        baseStats: { hp: 3400, atk: 520, def: 150 }, 
         baseMaxLevel: 30 
     },
 ];
