@@ -76,7 +76,8 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 // --- COMPONENT HIỂN THỊ TỈ LỆ (TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
     return (
-        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 -translate-y-2">
+        // CẬP NHẬT: Thay đổi -translate-y-2 thành translate-y-2 để đẩy text xuống dưới một chút
+        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 translate-y-2">
             <span className="text-white font-lilita text-3xl drop-shadow-xl tracking-wider whitespace-nowrap">
                 {Math.round(rate * 100)}%
             </span>
@@ -269,13 +270,12 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
                         <div className="flex-1 flex flex-row items-center justify-center gap-4 w-full mt-2">
                             
-                            {/* RATE TEXT - Đã cố định khung (Fixed width) */}
+                            {/* RATE TEXT */}
                             <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
                             {/* NÚT UPGRADE */}
-                            {/* CẬP NHẬT: max-w-[120px] để icon nhỏ hơn */}
                             <div className="flex-1 max-w-[120px]">
                                 <button 
                                     onClick={handleEnhance}
