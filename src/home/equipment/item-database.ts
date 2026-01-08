@@ -68,7 +68,7 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 22000, name: 'Dragon\'s Breath Armor', type: 'armor', baseDescription: 'Bộ giáp được rèn từ vảy rồng, mang trong mình hơi thở của lửa.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/dragon\'s-breath-armor.webp', baseStats: { hp: 3500, atk: 50, def: 200 }, baseMaxLevel: 30 },
     { baseId: 23000, name: 'Revival Cape', type: 'armor', baseDescription: 'Chiếc áo choàng chứa đựng sức mạnh phục sinh, có khả năng bảo vệ người mặc khỏi cái chết.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/revival-cape.webp', baseStats: { hp: 4000, atk: 0, def: 250 }, baseMaxLevel: 30 },
     { baseId: 24000, name: 'Hard Armor', type: 'armor', baseDescription: 'Áo giáp cứng cáp, cung cấp khả năng phòng thủ vượt trội.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/hard-armor.webp', baseStats: { hp: 1500, atk: 10, def: 150 }, baseMaxLevel: 20 },
-    { baseId: 25000, name: 'Warden\'s Mail', type: 'armor', baseDescription: 'Giáp của người cai ngục, nổi tiếng with khả năng chống chịu bền bỉ.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/warden-mail.webp', baseStats: { hp: 2500, atk: 5, def: 220 }, baseMaxLevel: 25 },
+    { baseId: 25000, name: 'Warden\'s Mail', type: 'armor', baseDescription: 'Giáp của người cai ngục, nổi tiếng với khả năng chống chịu bền bỉ.', icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/warden-mail.webp', baseStats: { hp: 2500, atk: 5, def: 220 }, baseMaxLevel: 25 },
     { 
         baseId: 26000, 
         name: 'Excalibur', 
@@ -121,6 +121,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseDescription: 'Một trong 21 thanh Đại Bảo Kiếm (O Wazamono), một "Hắc Kiếm" huyền thoại với độ cứng và trọng lượng phi thường, từng thuộc về kiếm sĩ Ryuma.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/shusui.webp', 
         baseStats: { hp: 3600, atk: 500, def: 210 }, 
+        baseMaxLevel: 30 
+    },
+    { 
+        baseId: 32000, 
+        name: 'Gunblade', 
+        type: 'weapon', 
+        baseDescription: 'Sự kết hợp độc đáo giữa kiếm và súng, cho phép người sử dụng tung ra những nhát chém kèm theo những phát đạn uy lực trong cự ly gần.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/gunblade.webp', 
+        baseStats: { hp: 3300, atk: 510, def: 160 }, 
         baseMaxLevel: 30 
     },
 ];
