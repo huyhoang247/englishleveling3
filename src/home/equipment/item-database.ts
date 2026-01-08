@@ -87,6 +87,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseStats: { hp: 3200, atk: 480, def: 180 }, 
         baseMaxLevel: 30 
     },
+    { 
+        baseId: 28000, 
+        name: 'Muramasa', 
+        type: 'weapon', 
+        baseDescription: 'Thanh quỷ kiếm khát máu được rèn bởi Muramasa. Tương truyền lưỡi kiếm này luôn thôi thúc chủ nhân rơi vào trạng thái cuồng loạn để đổi lấy sức mạnh hủy diệt.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/muramasa.webp', 
+        baseStats: { hp: 2800, atk: 550, def: 120 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
