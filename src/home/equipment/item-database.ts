@@ -54,7 +54,7 @@ export const itemBlueprints: ItemBlueprint[] = [
     { baseId: 8000, name: 'Assassin\'s Dagger', type: 'weapon', baseDescription: 'Con dao găm của sát thủ, nhanh và chí mạng.', icon: itemAssets.assassinsDagger, baseStats: { hp: 1100, atk: 190, def: 55 }, baseMaxLevel: 15 },
     { baseId: 9000, name: 'Nomad Staff', type: 'weapon', baseDescription: 'Cây trượng của dân du mục, chứa đựng ma thuật cơ bản.', icon: itemAssets.nomadStaff, baseStats: { hp: 900, atk: 120, def: 40 }, baseMaxLevel: 10 },
     { baseId: 10000, name: 'Nomad Bow', type: 'weapon', baseDescription: 'Cây cung của dân du mục, đáng tin cậy trên đường đi.', icon: itemAssets.nomadBow, baseStats: { hp: 1100, atk: 110, def: 45 }, baseMaxLevel: 10 },
-    { baseId: 11000, name: 'Mystic Staff', type: 'weapon', baseDescription: 'Cây trượng ẩn chứa những bí thuật cổ xưa, khuếch đại sức mạnh phép thuật.', icon: itemAssets.mysticStaff, baseStats: { hp: 1300, atk: 220, def: 65 }, baseMaxLevel: 15 },
+    { baseId: 11000, name: 'Mystic Staff', type: 'weapon', baseDescription: 'Cây trượng ẩn chứa những bí thuật cổ xưa, khuế thực đại sức mạnh phép thuật.', icon: itemAssets.mysticStaff, baseStats: { hp: 1300, atk: 220, def: 65 }, baseMaxLevel: 15 },
     { baseId: 12000, name: 'Sacrificial Sword', type: 'weapon', baseDescription: 'Thanh kiếm hiến tế, đánh đổi sinh mệnh để lấy sức mạnh vô song.', icon: itemAssets.sacrificialSword, baseStats: { hp: 800, atk: 260, def: 50 }, baseMaxLevel: 20 },
     { baseId: 13000, name: 'Leviathan Axe', type: 'weapon', baseDescription: 'Chiếc rìu được chế tác từ vảy của thủy quái Leviathan, mang sức nặng của đại dương.', icon: itemAssets.leviathanAxe, baseStats: { hp: 2800, atk: 270, def: 120 }, baseMaxLevel: 20 },
     { baseId: 14000, name: 'Angel Bow', type: 'weapon', baseDescription: 'Cây cung được ban phước bởi các thiên thần, bắn ra những mũi tên ánh sáng.', icon: itemAssets.angelBow, baseStats: { hp: 1600, atk: 240, def: 80 }, baseMaxLevel: 20 },
@@ -139,6 +139,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseDescription: 'Thanh kiếm được rèn từ quặng hấp thụ ánh sáng mặt trời, vũ khí tối thượng để tiêu diệt loài quỷ. Lưỡi kiếm sẽ đổi màu dựa trên chủ nhân của nó.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/nichirin-blade.webp', 
         baseStats: { hp: 3500, atk: 490, def: 190 }, 
+        baseMaxLevel: 30 
+    },
+    { 
+        baseId: 34000, 
+        name: 'Halberd', 
+        type: 'weapon', 
+        baseDescription: 'Cây trường rìu kết hợp giữa giáo và rìu, cung cấp tầm đánh xa và sức mạnh công phá khủng khiếp trên chiến trường.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/halberd.webp', 
+        baseStats: { hp: 3800, atk: 470, def: 190 }, 
         baseMaxLevel: 30 
     },
 ];
