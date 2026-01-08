@@ -159,6 +159,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseStats: { hp: 3400, atk: 485, def: 175 }, 
         baseMaxLevel: 30 
     },
+    { 
+        baseId: 36000, 
+        name: 'Throwing Knives', 
+        type: 'weapon', 
+        baseDescription: 'Bộ dao quăng chuyên dụng, cho phép tấn công kẻ địch từ xa với độ chính xác và tốc độ kinh ngạc.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/throwing-knives.webp', 
+        baseStats: { hp: 2500, atk: 530, def: 110 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
