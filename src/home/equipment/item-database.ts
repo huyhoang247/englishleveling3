@@ -168,6 +168,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseStats: { hp: 2500, atk: 530, def: 110 }, 
         baseMaxLevel: 30 
     },
+    { 
+        baseId: 37000, 
+        name: 'Shuriken', 
+        type: 'weapon', 
+        baseDescription: 'Vũ khí ném đặc trưng của các Ninja, cho phép tấn công nhanh chóng và liên tục từ xa.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/shuriken.webp', 
+        baseStats: { hp: 2400, atk: 540, def: 100 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
