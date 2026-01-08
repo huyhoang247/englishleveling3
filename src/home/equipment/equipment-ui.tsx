@@ -726,7 +726,7 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
-                                <h2 className="text-base font-bold text-cyan-400 tracking-wide title-glow">Storage</h2>
+                                {/* ĐÃ XÓA CHỮ STORAGE Ở ĐÂY */}
                                 <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
                             <div className="flex items-center gap-12"> {/* Giảm gap từ 14 xuống 12 để icon to không đè lên nút Stats */}
@@ -740,7 +740,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                     <img 
                                         src={STATS_ICON_URL} 
                                         alt="Stats" 
-                                        className="absolute top-1/2 left-[40%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
+                                        // ĐÃ SỬA: Thay left-[40%] thành left-[30%] để dịch sang trái nhiều hơn
+                                        className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
                                     />
                                 </button>
                                 {/* NÚT MERGE MỚI: SỬ DỤNG KỸ THUẬT ABSOLUTE ĐỂ KHÔNG ẢNH HƯỞNG LAYOUT */}
