@@ -1,3 +1,5 @@
+--- START OF FILE equipment-ui.tsx ---
+
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
@@ -115,6 +117,8 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 const UPGRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-equipment.webp";
 // URL ICON HỢP NHẤT (MERGE) - MỚI
 const MERGE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/merge.webp";
+// URL ICON STATS - MỚI
+const STATS_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats.webp";
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
@@ -729,7 +733,19 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                 <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
                             </div>
                             <div className="flex items-center gap-12"> {/* Giảm gap từ 14 xuống 12 để icon to không đè lên nút Stats */}
-                                <button onClick={handleOpenStatsModal} className="flex items-center gap-2 px-3 py-1.5 text-sm font-semibold rounded-lg bg-gradient-to-r from-cyan-600 to-blue-600 text-white hover:scale-105 transition-transform disabled:opacity-50 disabled:cursor-not-allowed" disabled={isProcessing}><StatsIcon className="w-4 h-4" />Stats</button>
+                                {/* NÚT STATS MỚI: DÙNG HÌNH ẢNH */}
+                                <button 
+                                    onClick={handleOpenStatsModal} 
+                                    className="relative w-10 h-10 group disabled:opacity-50 disabled:cursor-not-allowed" 
+                                    disabled={isProcessing}
+                                    title="View Stats"
+                                >
+                                    <img 
+                                        src={STATS_ICON_URL} 
+                                        alt="Stats" 
+                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
+                                    />
+                                </button>
                                 {/* NÚT MERGE MỚI: SỬ DỤNG KỸ THUẬT ABSOLUTE ĐỂ KHÔNG ẢNH HƯỞNG LAYOUT */}
                                 <button 
                                     onClick={handleOpenForgeModal} 
