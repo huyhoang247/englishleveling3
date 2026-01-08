@@ -91,7 +91,7 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseId: 28000, 
         name: 'Muramasa', 
         type: 'weapon', 
-        baseDescription: 'Thanh quỷ kiếm khát máu được rèn bởi Muramasa. Tương truyền lưỡi kiếm này luôn thôi thúc chủ nhân rơi vào trạng thái cuồng loạn để đổi lấy sức mạnh hủy diệt.', 
+        baseDescription: 'Thanh quỷ kiếm khát máu được rèn bởi Muramasa.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/muramasa.webp', 
         baseStats: { hp: 2800, atk: 550, def: 120 }, 
         baseMaxLevel: 30 
