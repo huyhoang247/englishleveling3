@@ -725,10 +725,18 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                     
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                            <div className="flex items-baseline gap-2">
-                                {/* ĐÃ XÓA CHỮ STORAGE Ở ĐÂY */}
-                                <span className="text-sm font-semibold text-slate-300">{unequippedItemsSorted.length}<span className="text-xs text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span></span>
+                            {/* --- Ô STORAGE ĐƯỢC THIẾT KẾ LẠI --- */}
+                            <div className="flex items-center gap-2 px-3 py-1.5 bg-slate-950/80 rounded-lg border border-slate-700 shadow-sm transition-colors hover:border-slate-500 hover:bg-slate-900">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-cyan-400" viewBox="0 0 20 20" fill="currentColor">
+                                    <path fillRule="evenodd" d="M5 4a3 3 0 00-3 3v6a3 3 0 003 3h10a3 3 0 003-3V7a3 3 0 00-3-3H5zm-1 9v-1h5v2H5a1 1 0 01-1-1zm7 1h4a1 1 0 001-1v-1h-5v2zm0-4h5V8h-5v2zM9 8H4v2h5V8z" clipRule="evenodd" />
+                                </svg>
+                                <div className="flex items-baseline text-sm font-mono">
+                                    <span className="text-white font-bold">{unequippedItemsSorted.length}</span>
+                                    <span className="text-slate-500 mx-0.5">/</span>
+                                    <span className="text-slate-400 text-xs font-semibold">{MAX_ITEMS_IN_STORAGE}</span>
+                                </div>
                             </div>
+                            
                             <div className="flex items-center gap-12"> {/* Giảm gap từ 14 xuống 12 để icon to không đè lên nút Stats */}
                                 {/* NÚT STATS MỚI: DÙNG HÌNH ẢNH */}
                                 <button 
