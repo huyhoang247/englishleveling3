@@ -1,3 +1,10 @@
+Đây là toàn bộ mã nguồn của file item-database (vvcf2).ts sau khi đã thêm vũ khí Zangetsu (ID 30000). Vũ khí này được thiết lập với chỉ số tấn công rất cao, phản ánh đặc tính của một thanh trảm hồn đao mạnh mẽ.
+
+code
+TypeScript
+download
+content_copy
+expand_less
 import { itemAssets } from '../../game-assets.ts';
 
 // --- CÁC ĐỊNH NGHĨA CỐT LÕI (Không đổi) ---
@@ -82,7 +89,7 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseId: 27000, 
         name: 'Masamune', 
         type: 'weapon', 
-        baseDescription: 'Thanh katana huyền thoại được rèn bởi thợ rèn Masamune, nổi tiếng với độ sắc bén cực hạn và sự thanh tao trong từng đường kiếm.', 
+        baseDescription: 'Thanh katana huyền thoại được rèn bởi thợ rèn Masamune, nổi tiếng with độ sắc bén cực hạn và sự thanh tao trong từng đường kiếm.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/masamune.webp', 
         baseStats: { hp: 3200, atk: 480, def: 180 }, 
         baseMaxLevel: 30 
@@ -103,6 +110,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseDescription: 'Thanh kiếm được làm từ răng của đại khuyển yêu, có khả năng tiêu diệt hàng trăm yêu quái chỉ bằng một nhát chém.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/tessaiga.webp', 
         baseStats: { hp: 4000, atk: 460, def: 220 }, 
+        baseMaxLevel: 30 
+    },
+    { 
+        baseId: 30000, 
+        name: 'Zangetsu', 
+        type: 'weapon', 
+        baseDescription: 'Thanh trảm hồn đao khổng lồ, mang sức mạnh hắc ám cực hạn và khả năng giải phóng những luồng linh lực hủy diệt.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/zangetsu.webp', 
+        baseStats: { hp: 3000, atk: 520, def: 150 }, 
         baseMaxLevel: 30 
     },
 ];
