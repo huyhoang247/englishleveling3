@@ -1,3 +1,4 @@
+--- START OF FILE equipment-ui.tsx (16).txt ---
 
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
@@ -740,8 +741,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                     <img 
                                         src={MERGE_ICON_URL} 
                                         alt="Merge" 
-                                        // ĐÃ SỬA: left-[30%]
-                                        className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
+                                        // ĐÃ SỬA: left-[15%]
+                                        className="absolute top-1/2 left-[15%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
                                     />
                                 </button>
                             </div>
