@@ -1,3 +1,4 @@
+--- total-stats-modal.tsx ---
 import React, { memo, useMemo } from 'react';
 import { uiAssets } from '../../game-assets.ts';
 
@@ -44,7 +45,8 @@ const TotalStatsModal = memo(({ isOpen, onClose, equipmentStats, upgradeStats }:
             <span className={`inline-block px-3 py-1 mb-2 text-xs font-semibold uppercase tracking-wider ${tagColor} rounded-full`}>
                 {title}
             </span>
-            <div className="w-full bg-slate-900/50 backdrop-blur-sm border border-slate-700 rounded-lg p-3 flex justify-around items-center">
+            {/* Loại bỏ backdrop-blur-sm ở nội dung bên trong để tối ưu */}
+            <div className="w-full bg-slate-900/80 border border-slate-700 rounded-lg p-3 flex justify-around items-center">
                 {[ { key: 'hp', value: stats.hp }, { key: 'atk', value: stats.atk }, { key: 'def', value: stats.def } ].map(({ key, value }) => {
                     const config = STAT_CONFIG[key as keyof typeof STAT_CONFIG];
                     return (
@@ -60,7 +62,9 @@ const TotalStatsModal = memo(({ isOpen, onClose, equipmentStats, upgradeStats }:
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
-            <div className="fixed inset-0 bg-black/80 backdrop-blur-sm" onClick={onClose} />
+            {/* THAY ĐỔI TẠI ĐÂY: Loại bỏ backdrop-blur-sm, sử dụng bg-black/60 nhẹ nhàng hơn */}
+            <div className="fixed inset-0 bg-black/60" onClick={onClose} />
+            
             <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-sm z-50 flex flex-col font-lilita">
                 <div className="flex-shrink-0 border-b border-slate-700/50 pb-4">
                     <div className="flex justify-between items-center">
