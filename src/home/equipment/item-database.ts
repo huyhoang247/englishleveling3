@@ -132,6 +132,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseStats: { hp: 3300, atk: 510, def: 160 }, 
         baseMaxLevel: 30 
     },
+    { 
+        baseId: 33000, 
+        name: 'Nichirin Blade', 
+        type: 'weapon', 
+        baseDescription: 'Thanh kiếm được rèn từ quặng hấp thụ ánh sáng mặt trời, vũ khí tối thượng để tiêu diệt loài quỷ. Lưỡi kiếm sẽ đổi màu dựa trên chủ nhân của nó.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/nichirin-blade.webp', 
+        baseStats: { hp: 3500, atk: 490, def: 190 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
