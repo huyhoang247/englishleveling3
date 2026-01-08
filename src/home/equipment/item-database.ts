@@ -91,9 +91,18 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseId: 28000, 
         name: 'Muramasa', 
         type: 'weapon', 
-        baseDescription: 'Thanh quỷ kiếm khát máu được rèn bởi Muramasa.', 
+        baseDescription: 'Thanh quỷ kiếm khát máu được rèn bởi Muramasa. Tương truyền lưỡi kiếm này luôn thôi thúc chủ nhân rơi vào trạng thái cuồng loạn để đổi lấy sức mạnh hủy diệt.', 
         icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/muramasa.webp', 
         baseStats: { hp: 2800, atk: 550, def: 120 }, 
+        baseMaxLevel: 30 
+    },
+    { 
+        baseId: 29000, 
+        name: 'Tessaiga', 
+        type: 'weapon', 
+        baseDescription: 'Thanh kiếm được làm từ răng của đại khuyển yêu, có khả năng tiêu diệt hàng trăm yêu quái chỉ bằng một nhát chém.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/tessaiga.webp', 
+        baseStats: { hp: 4000, atk: 460, def: 220 }, 
         baseMaxLevel: 30 
     },
 ];
