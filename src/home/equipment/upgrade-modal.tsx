@@ -76,8 +76,8 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 // --- COMPONENT HIỂN THỊ TỈ LỆ (TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
     return (
-        // CẬP NHẬT: Thay đổi -translate-y-2 thành translate-y-2 để đẩy text xuống dưới một chút
-        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 translate-y-2">
+        // CẬP NHẬT: translate-y-1 (dịch lên một chút so với translate-y-2 cũ)
+        <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 translate-y-1">
             <span className="text-white font-lilita text-3xl drop-shadow-xl tracking-wider whitespace-nowrap">
                 {Math.round(rate * 100)}%
             </span>
