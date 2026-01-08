@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, memo } from 'react';
 import { 
     getItemDefinition 
@@ -77,9 +76,6 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 // --- COMPONENT HIỂN THỊ TỈ LỆ (TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
     return (
-        // CẬP NHẬT: 
-        // - text-3xl: Nhỏ hơn (cũ là 4xl)
-        // - -translate-y-2: Dịch lên trên một chút
         <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 -translate-y-2">
             <span className="text-white font-lilita text-3xl drop-shadow-xl tracking-wider whitespace-nowrap">
                 {Math.round(rate * 100)}%
@@ -214,7 +210,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         
                         {/* KHU VỰC CHỌN ĐÁ */}
                         <div className="flex flex-col items-center justify-start mt-2">
-                            {/* CẬP NHẬT: Giảm mb-8 -> mb-2 để kéo các hàng gần nhau hơn */}
                             <div className="flex items-center justify-center gap-6 mb-2">
                                 {stones.map((tier) => {
                                     const stone = ENHANCEMENT_STONES[tier];
@@ -280,7 +275,8 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             </div>
 
                             {/* NÚT UPGRADE */}
-                            <div className="flex-1 max-w-[150px]">
+                            {/* CẬP NHẬT: max-w-[120px] để icon nhỏ hơn */}
+                            <div className="flex-1 max-w-[120px]">
                                 <button 
                                     onClick={handleEnhance}
                                     disabled={!canUpgrade || isProcessing}
