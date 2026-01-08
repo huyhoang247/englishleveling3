@@ -76,7 +76,6 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
 // --- COMPONENT HIỂN THỊ TỈ LỆ (TEXT) ---
 const SuccessRateGauge = ({ rate }: { rate: number }) => {
     return (
-        // CẬP NHẬT: translate-y-1 (dịch lên một chút so với translate-y-2 cũ)
         <div className="w-[100px] flex items-center justify-center transition-all duration-300 hover:scale-105 opacity-60 translate-y-1">
             <span className="text-white font-lilita text-3xl drop-shadow-xl tracking-wider whitespace-nowrap">
                 {Math.round(rate * 100)}%
@@ -133,23 +132,25 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
         <>
             <style>{animationStyles}</style>
             <div className="fixed inset-0 flex items-center justify-center z-[60] p-4">
-                <div className="fixed inset-0 bg-black/90 backdrop-blur-sm" onClick={!isProcessing ? onClose : undefined} />
+                {/* LỚP PHỦ NỀN: Đã bỏ backdrop-blur-sm để mượt hơn */}
+                <div 
+                    className="fixed inset-0 bg-black/80" 
+                    onClick={!isProcessing ? onClose : undefined} 
+                />
                 
                 <div className="relative bg-gradient-to-br from-[#1a1c2e] to-[#0f111a] p-0 rounded-2xl border border-slate-600 shadow-2xl w-full max-w-4xl flex flex-col md:flex-row overflow-hidden max-h-[90vh]">
                     
-                    {/* OVERLAY: RESULT */}
+                    {/* OVERLAY KẾT QUẢ (SUCCESS/FAIL) */}
                     {upgradeStatus !== 'idle' && (
                         <div className="absolute inset-0 z-[110] flex items-center justify-center pointer-events-none">
                             <div className="animate-float-up flex flex-col items-center">
                                 {upgradeStatus === 'success' ? (
-                                    /* HÌNH ẢNH SUCCESS */
                                     <img 
                                         src={SUCCESS_IMG} 
                                         alt="Success" 
                                         className="w-64 h-auto object-contain drop-shadow-2xl"
                                     />
                                 ) : (
-                                    /* HÌNH ẢNH FAILED */
                                     <img 
                                         src={FAILED_IMG} 
                                         alt="Failed" 
@@ -158,8 +159,8 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                 )}
                             </div>
                             
-                            {/* Background Flash: Đen 30% */}
-                            <div className="absolute inset-0 -z-10 transition-opacity duration-1000 bg-black/30 animate-[pulse_0.5s_ease-out]" />
+                            {/* Flash nền nhẹ khi có kết quả */}
+                            <div className="absolute inset-0 -z-10 bg-black/30" />
                         </div>
                     )}
 
@@ -184,7 +185,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         
                         <h4 className={`text-lg font-bold ${getRarityTextColor(itemDef.rarity)} mb-6 text-center`}>{itemDef.name}</h4>
 
-                        {/* Stats Preview */}
+                        {/* Danh sách chỉ số */}
                         <div className="w-full space-y-2">
                             {Object.entries(item.stats).map(([key, value]) => {
                                 if (typeof value !== 'number') return null;
@@ -197,7 +198,6 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-white text-lg font-lilita">{value}</span>
-                                            {/* Chỉ hiện mũi tên dự báo khi ở trạng thái bình thường */}
                                             <span className="text-xs text-green-500 font-lilita">➜ ?</span>
                                         </div>
                                     </div>
@@ -206,7 +206,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         </div>
                     </div>
 
-                    {/* Cột phải: Chọn đá & Action */}
+                    {/* Cột phải: Chọn đá & Nút Nâng cấp */}
                     <div className="flex-1 px-8 pb-8 pt-4 flex flex-col relative">
                         
                         {/* KHU VỰC CHỌN ĐÁ */}
@@ -244,6 +244,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                                     className="w-16 h-16 object-contain drop-shadow-md transform group-hover:scale-110 transition-transform duration-300"
                                                 />
                                                 
+                                                {/* Số lượng đá đang có */}
                                                 <div className={`
                                                     absolute -bottom-3 left-1/2 -translate-x-1/2 z-10
                                                     flex items-center justify-center gap-[2px]
@@ -267,15 +268,15 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             </div>
                         </div>
 
-                        {/* HÀNG DƯỚI: RATE & NÚT BẤM */}
+                        {/* HÀNG DƯỚI: TỈ LỆ & NÚT BẤM */}
                         <div className="flex-1 flex flex-row items-center justify-center gap-4 w-full mt-2">
                             
-                            {/* RATE TEXT */}
+                            {/* HIỂN THỊ TỈ LỆ THÀNH CÔNG */}
                             <div className="animate-fade-in flex-shrink-0">
                                 <SuccessRateGauge rate={currentStone.successRate} />
                             </div>
 
-                            {/* NÚT UPGRADE */}
+                            {/* NÚT UPGRADE CHÍNH */}
                             <div className="flex-1 max-w-[120px]">
                                 <button 
                                     onClick={handleEnhance}
