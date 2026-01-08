@@ -114,6 +114,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseStats: { hp: 3400, atk: 520, def: 150 }, 
         baseMaxLevel: 30 
     },
+    { 
+        baseId: 31000, 
+        name: 'Shusui', 
+        type: 'weapon', 
+        baseDescription: 'Một trong 21 thanh Đại Bảo Kiếm (O Wazamono), một "Hắc Kiếm" huyền thoại với độ cứng và trọng lượng phi thường, từng thuộc về kiếm sĩ Ryuma.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/shusui.webp', 
+        baseStats: { hp: 3600, atk: 500, def: 210 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
