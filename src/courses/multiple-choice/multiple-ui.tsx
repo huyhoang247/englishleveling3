@@ -243,10 +243,10 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
             </button>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">Chi tiết<svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xmlSpace="preserve"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg></div>
           </div>
-          {/* --- NÚT NEXT MỚI DẠNG HÌNH ẢNH --- */}
+          {/* --- NÚT NEXT MỚI DẠNG HÌNH ẢNH (KÍCH THƯỚC LỚN HƠN) --- */}
           <button 
             onClick={handleNextQuestion} 
-            className="flex items-center justify-center w-16 h-16 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 focus:outline-none" 
+            className="flex items-center justify-center w-20 h-20 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 focus:outline-none" 
             aria-label={currentQuestion < playableQuestions.length - 1 ? 'Câu tiếp theo' : 'Xem kết quả'}
           >
             <img 
