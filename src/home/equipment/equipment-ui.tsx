@@ -740,8 +740,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                                     <img 
                                         src={STATS_ICON_URL} 
                                         alt="Stats" 
-                                        // ĐÃ SỬA: Thay left-[40%] thành left-[30%] để dịch sang trái nhiều hơn
-                                        className="absolute top-1/2 left-[30%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
+                                        // ĐÃ SỬA: Thay left-[30%] thành left-[10%] để dịch sang trái nhiều hơn nữa
+                                        className="absolute top-1/2 left-[10%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
                                     />
                                 </button>
                                 {/* NÚT MERGE MỚI: SỬ DỤNG KỸ THUẬT ABSOLUTE ĐỂ KHÔNG ẢNH HƯỞNG LAYOUT */}
