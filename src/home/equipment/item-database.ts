@@ -78,6 +78,15 @@ export const itemBlueprints: ItemBlueprint[] = [
         baseStats: { hp: 3500, atk: 450, def: 200 }, 
         baseMaxLevel: 30 
     },
+    { 
+        baseId: 27000, 
+        name: 'Masamune', 
+        type: 'weapon', 
+        baseDescription: 'Thanh katana huyền thoại được rèn bởi thợ rèn Masamune, nổi tiếng với độ sắc bén cực hạn và sự thanh tao trong từng đường kiếm.', 
+        icon: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/equipment/masamune.webp', 
+        baseStats: { hp: 3200, atk: 480, def: 180 }, 
+        baseMaxLevel: 30 
+    },
 ];
 
 const blueprintByBaseId = new Map<number, ItemBlueprint>(itemBlueprints.map(bp => [bp.baseId, bp]));
@@ -182,4 +191,4 @@ export function getItemDefinition(id: number): ItemDefinition | undefined {
 
 export function getBlueprintByName(name: string): ItemBlueprint | undefined {
     return blueprintByName.get(name);
-          }
+}
