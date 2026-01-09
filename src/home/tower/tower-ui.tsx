@@ -259,12 +259,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // --- LOGIC HỖ TRỢ GIF VÀ WEBP CHO BOSS IMAGE ---
+    // --- QUẢN LÝ ẢNH BOSS (GIF/WEBP FALLBACK) ---
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
     useEffect(() => {
         if (currentBossData) {
-            // Mặc định thử tải .webp trước
             const idStr = String(currentBossData.id).padStart(2, '0');
             setBossImgSrc(`/images/boss/${idStr}.webp`);
         }
@@ -274,8 +273,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (currentBossData) {
             const idStr = String(currentBossData.id).padStart(2, '0');
             const gifPath = `/images/boss/${idStr}.gif`;
-            
-            // Nếu ảnh hiện tại đang là webp và bị lỗi, đổi sang gif
             if (!bossImgSrc.endsWith('.gif')) {
                 setBossImgSrc(gifPath);
             }
@@ -354,8 +351,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-                @keyframes hover-boss { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
-                .animate-hover-boss { animation: hover-boss 4s ease-in-out infinite; }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -448,12 +443,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 </div>
 
                                                 <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
-                                                    {/* BOSS IMAGE VỚI LOGIC FALLBACK GẦN ĐÂY */}
                                                     <img 
                                                         src={bossImgSrc} 
                                                         alt={currentBossData.name} 
                                                         onError={handleBossImgError}
-                                                        className="w-full h-full object-contain drop-shadow-2xl relative z-10 animate-hover-boss" 
+                                                        className="w-full h-full object-contain drop-shadow-2xl relative z-10" 
                                                     />
                                                 </div>
                                                 
