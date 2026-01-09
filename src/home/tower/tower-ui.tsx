@@ -63,7 +63,7 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   const scale = Math.max(0, current / max); 
   return (
     <div className="w-full">
-      <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner">
+      <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner overflow-hidden">
         <div 
             className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`} 
             style={{ 
@@ -79,9 +79,70 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   );
 });
 
+// --- BOSS VISUAL COMPONENT (Tối ưu để tránh lag GIF) ---
+const BossVisuals = memo(({ 
+    imgSrc, 
+    name, 
+    element, 
+    hp, 
+    maxHp, 
+    onImgError, 
+    onStatsClick 
+}: { 
+    imgSrc: string, 
+    name: string, 
+    element: ElementKey, 
+    hp: number, 
+    maxHp: number, 
+    onImgError: () => void, 
+    onStatsClick: () => void 
+}) => {
+    return (
+        <div className="w-full max-w-4xl flex justify-center items-center my-8">
+            <div 
+                className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible transition-transform duration-300 hover:border-red-500/50" 
+                onClick={onStatsClick} 
+                title="View Boss Stats"
+            >
+                {/* Magic Circle nằm dưới cùng */}
+                <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
+                    <MagicCircle elementKey={element} />
+                </div>
+
+                <div className="relative z-10 flex flex-col items-center gap-3 w-full">
+                    <div className="relative group flex flex-col items-center justify-center">
+                        <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
+                        <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-slate-700">
+                            {name.toUpperCase()}
+                        </div>
+                    </div>
+
+                    {/* Container ảnh Boss với will-change để tối ưu GPU */}
+                    <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
+                        <img 
+                            src={imgSrc} 
+                            alt={name} 
+                            onError={onImgError}
+                            className="w-full h-full object-contain drop-shadow-2xl relative z-10 boss-render-optimize" 
+                            style={{ willChange: 'transform, opacity' }}
+                        />
+                    </div>
+                    
+                    <HealthBar 
+                        current={hp} 
+                        max={maxHp} 
+                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
+                        shadowColor="rgba(220, 38, 38, 0.5)" 
+                    />
+                </div>
+            </div>
+        </div>
+    );
+});
+
 const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colorClass: string }) => {
   return (
-    <div key={id} className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
+    <div key={id} className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none z-30 ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
   );
 };
 
@@ -351,6 +412,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+                .boss-render-optimize {
+                    image-rendering: -webkit-optimize-contrast;
+                    transform: translateZ(0);
+                    backface-visibility: hidden;
+                }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -421,40 +487,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         </div>
                                     </div>
                             
+                                    {/* Hiển thị sát thương bay lên */}
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
-                                    {/* --- BOSS DISPLAY AREA --- */}
-                                    <div className="w-full max-w-4xl flex justify-center items-center my-8">
-                                        <div 
-                                            className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible" 
-                                            onClick={() => setStatsModalTarget('boss')} 
-                                            title="View Boss Stats"
-                                        >
-                                            <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
-                                                <MagicCircle elementKey={bossElement} />
-                                            </div>
-
-                                            <div className="relative z-10 flex flex-col items-center gap-3 w-full">
-                                                <div className="relative group flex flex-col items-center justify-center">
-                                                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                                                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
-                                                        {currentBossData.name.toUpperCase()}
-                                                    </div>
-                                                </div>
-
-                                                <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
-                                                    <img 
-                                                        src={bossImgSrc} 
-                                                        alt={currentBossData.name} 
-                                                        onError={handleBossImgError}
-                                                        className="w-full h-full object-contain drop-shadow-2xl relative z-10" 
-                                                    />
-                                                </div>
-                                                
-                                                <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {/* --- BOSS DISPLAY AREA (Đã được tách ra để chống lag) --- */}
+                                    <BossVisuals 
+                                        imgSrc={bossImgSrc}
+                                        name={currentBossData.name}
+                                        element={bossElement}
+                                        hp={bossStats.hp}
+                                        maxHp={bossStats.maxHp}
+                                        onImgError={handleBossImgError}
+                                        onStatsClick={() => setStatsModalTarget('boss')}
+                                    />
     
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                                         {battleState === 'idle' && (
@@ -487,7 +532,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 // --- WRAPPER COMPONENT ---
 export default function BossBattle(props: BossBattleWrapperProps) {
     return (
-        <BossBattleProvider>
+        <BossBattleProvider userId={props.userId}>
             <BossBattleView onClose={props.onClose} />
         </BossBattleProvider>
     );
