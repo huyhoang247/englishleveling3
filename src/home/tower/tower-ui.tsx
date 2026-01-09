@@ -1,5 +1,3 @@
-// --- START OF FILE tower-ui.tsx ---
-
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
@@ -24,45 +22,6 @@ interface BossBattleWrapperProps {
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
 
 const WarriorIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> ));
-
-// Component xử lý ảnh Boss: Ưu tiên GIF, lỗi thì sang WEBP
-const BossSprite = memo(({ bossId, bossName }: { bossId: number; bossName: string }) => {
-  const [imgSrc, setImgSrc] = useState<string>(`/images/boss/${String(bossId).padStart(2, '0')}.gif`);
-  const [hasError, setHasError] = useState(false);
-
-  // Reset khi đổi Boss (lên tầng)
-  useEffect(() => {
-    setImgSrc(`/images/boss/${String(bossId).padStart(2, '0')}.gif`);
-    setHasError(false);
-  }, [bossId]);
-
-  const handleError = () => {
-    // Nếu file .gif lỗi, thử chuyển sang .webp
-    if (imgSrc.endsWith('.gif')) {
-      setImgSrc(`/images/boss/${String(bossId).padStart(2, '0')}.webp`);
-    } else {
-      // Nếu cả 2 đều lỗi, hiện trạng thái lỗi
-      setHasError(true);
-    }
-  };
-
-  if (hasError) {
-    return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-800/40 rounded-full border-2 border-dashed border-slate-600/50">
-        <span className="text-slate-500 text-xs italic font-sans">No Sprite</span>
-      </div>
-    );
-  }
-
-  return (
-    <img
-      src={imgSrc}
-      alt={bossName}
-      onError={handleError}
-      className="w-full h-full object-contain drop-shadow-[0_10px_20px_rgba(0,0,0,0.5)] relative z-10 animate-hover-boss transition-opacity duration-500"
-    />
-  );
-});
 
 const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
@@ -285,12 +244,14 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
 
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
+    // --- LẤY STATE VÀ ACTIONS TỪ CONTEXT ---
     const {
         isLoading, error, playerStats, bossStats, combatLog, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
+    // --- STATE UI CỤC BỘ ---
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -298,12 +259,37 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
+    // --- LOGIC HỖ TRỢ GIF VÀ WEBP CHO BOSS IMAGE ---
+    const [bossImgSrc, setBossImgSrc] = useState<string>('');
+
+    useEffect(() => {
+        if (currentBossData) {
+            // Mặc định thử tải .webp trước
+            const idStr = String(currentBossData.id).padStart(2, '0');
+            setBossImgSrc(`/images/boss/${idStr}.webp`);
+        }
+    }, [currentBossData?.id]);
+
+    const handleBossImgError = useCallback(() => {
+        if (currentBossData) {
+            const idStr = String(currentBossData.id).padStart(2, '0');
+            const gifPath = `/images/boss/${idStr}.gif`;
+            
+            // Nếu ảnh hiện tại đang là webp và bị lỗi, đổi sang gif
+            if (!bossImgSrc.endsWith('.gif')) {
+                setBossImgSrc(gifPath);
+            }
+        }
+    }, [currentBossData, bossImgSrc]);
+
+    // --- LOGIC ANIMATION CHO COIN VÀ ENERGY ---
     const displayableCoins = isLoading ? 0 : displayedCoins;
     const animatedCoins = useAnimateValue(displayableCoins);
 
     const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
     const animatedEnergy = useAnimateValue(displayableEnergy);
 
+    // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
@@ -315,6 +301,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     useEffect(() => {
         if (!lastTurnEvents) return;
+
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
         if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
@@ -324,6 +311,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
         }, 500);
+
     }, [lastTurnEvents, showFloatingText]);
 
     const handleSweepClick = async () => {
@@ -366,16 +354,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-                
-                /* CẢI TIẾN ANIMATION HOVER BOSS */
-                @keyframes hover-boss {
-                    0%, 100% { transform: translateY(0px) scale(1); filter: drop-shadow(0 5px 15px rgba(0,0,0,0.3)); }
-                    50% { transform: translateY(-15px) scale(1.02); filter: drop-shadow(0 20px 25px rgba(0,0,0,0.2)); }
-                }
-                .animate-hover-boss {
-                    animation: hover-boss 4s ease-in-out infinite;
-                    will-change: transform, filter;
-                }
+                @keyframes hover-boss { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-12px); } }
+                .animate-hover-boss { animation: hover-boss 4s ease-in-out infinite; }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -451,29 +431,30 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* --- BOSS DISPLAY AREA --- */}
                                     <div className="w-full max-w-4xl flex justify-center items-center my-8">
                                         <div 
-                                            className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-6 flex flex-col items-center gap-3 cursor-pointer group overflow-visible min-w-[280px]" 
+                                            className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible" 
                                             onClick={() => setStatsModalTarget('boss')} 
                                             title="View Boss Stats"
                                         >
-                                            {/* MAGIC CIRCLE LAYER (Z-INDEX 0) */}
-                                            <div className="absolute bottom-[5%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-70 pointer-events-none">
+                                            <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
                                                 <MagicCircle elementKey={bossElement} />
                                             </div>
 
-                                            {/* BOSS CONTENT LAYER (Z-INDEX 10) */}
                                             <div className="relative z-10 flex flex-col items-center gap-3 w-full">
                                                 <div className="relative group flex flex-col items-center justify-center">
-                                                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none tracking-widest uppercase">
-                                                        {currentBossData.name}
-                                                    </h2>
+                                                    <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
+                                                    <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none">
+                                                        {currentBossData.name.toUpperCase()}
+                                                    </div>
                                                 </div>
 
-                                                <div className="w-44 h-44 md:w-60 md:h-60 relative mb-4 flex items-center justify-center">
-                                                    {/* SỬ DỤNG COMPONENT SPRITE MỚI */}
-                                                    <BossSprite bossId={currentBossData.id} bossName={currentBossData.name} />
-                                                    
-                                                    {/* Hiệu ứng bóng đổ thực tế dưới chân boss */}
-                                                    <div className="absolute bottom-[-15px] left-1/2 -translate-x-1/2 w-32 h-6 bg-black/40 blur-xl rounded-[100%] z-0"></div>
+                                                <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
+                                                    {/* BOSS IMAGE VỚI LOGIC FALLBACK GẦN ĐÂY */}
+                                                    <img 
+                                                        src={bossImgSrc} 
+                                                        alt={currentBossData.name} 
+                                                        onError={handleBossImgError}
+                                                        className="w-full h-full object-contain drop-shadow-2xl relative z-10 animate-hover-boss" 
+                                                    />
                                                 </div>
                                                 
                                                 <HealthBar current={bossStats.hp} max={bossStats.maxHp} colorGradient="bg-gradient-to-r from-red-600 to-orange-500" shadowColor="rgba(220, 38, 38, 0.5)" />
