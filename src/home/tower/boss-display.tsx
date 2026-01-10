@@ -87,21 +87,27 @@ export const BossDisplay = memo(({
                     transform-origin: bottom center;
                 }
 
-                /* THÔNG SỐ BOSS MẶC ĐỊNH (Boss 08, 50...) */
-                .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
+                /* --- THÔNG SỐ BOSS MẶC ĐỊNH (BOSS 08, 50...) --- */
+                .boss-size-default { 
+                    width: 469px; 
+                    height: 486px; 
+                    transform: scale(0.5); 
+                }
                 .boss-anim-default {
-                    width: 2814px; height: 2916px; background-size: 2814px 2916px;
+                    width: 2814px; 
+                    height: 2916px; 
+                    background-size: 2814px 2916px;
                     animation: boss-x-def 0.4s steps(6) infinite, boss-y-def 2.4s steps(6) infinite;
                 }
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* CẬP NHẬT THÔNG SỐ BOSS 01 (CÁO LỬA XANH) */
+                /* --- THÔNG SỐ BOSS 01 (CÁO LỬA XANH) --- */
                 /* Frame size: 551x477 | Grid: 6x6 = 36 frames */
                 .boss-size-01 { 
                     width: 551px; 
                     height: 477px; 
-                    transform: scale(0.58); /* Tỉ lệ hiển thị trên Desktop */
+                    transform: scale(0.48); /* Kích thước nhỏ gọn trên Desktop */
                 }
                 
                 .boss-anim-01 {
@@ -109,8 +115,8 @@ export const BossDisplay = memo(({
                     width: 3306px; 
                     height: 2862px; 
                     background-size: 3306px 2862px;
-                    /* Chạy 6 frame hàng ngang trong 0.6s, lặp lại 6 hàng dọc trong 3.6s */
-                    animation: boss-x-01 0.6s steps(6) infinite, boss-y-01 3.6s steps(6) infinite;
+                    /* Đồng bộ 2.4s toàn vòng lặp giống các boss khác */
+                    animation: boss-x-01 0.4s steps(6) infinite, boss-y-01 2.4s steps(6) infinite;
                 }
                 @keyframes boss-x-01 { 
                     from { background-position-x: 0; } 
@@ -121,10 +127,10 @@ export const BossDisplay = memo(({
                     to { background-position-y: -2862px; } 
                 }
 
-                /* Responsive cho Mobile */
+                /* Responsive cho thiết bị di động */
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
-                    .boss-size-01 { transform: scale(0.42); }
+                    .boss-size-01 { transform: scale(0.35); }
                 }
             `}</style>
 
@@ -138,7 +144,7 @@ export const BossDisplay = memo(({
                 </div>
 
                 <div className="relative z-10 flex flex-col items-center gap-3 w-full">
-                    {/* Tên Boss */}
+                    {/* Nhãn Boss & Tên Boss */}
                     <div className="relative group flex flex-col items-center">
                         <h2 className="text-2xl font-bold text-red-400 text-shadow">BOSS</h2>
                         <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 bg-slate-900 text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity border border-slate-700">
@@ -146,7 +152,7 @@ export const BossDisplay = memo(({
                         </div>
                     </div>
 
-                    {/* Hình ảnh hoặc Sprite Boss */}
+                    {/* Vùng hiển thị Sprite hoặc Hình ảnh tĩnh */}
                     <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center">
                         {isSpriteBoss ? (
                             <BossSprite bossId={bossId} />
