@@ -79,13 +79,25 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   );
 });
 
-// --- BOSS VISUAL COMPONENT (Tối ưu để tránh lag GIF) ---
+// --- COMPONENT SPRITE BOSS 50 ---
+const Boss50Sprite = memo(() => {
+    return (
+        <div className="boss-50-wrapper">
+            <div className="boss-50-container boss-render-optimize">
+                <div className="boss-50-sprite" />
+            </div>
+        </div>
+    );
+});
+
+// --- BOSS VISUAL COMPONENT ---
 const BossVisuals = memo(({ 
     imgSrc, 
     name, 
     element, 
     hp, 
     maxHp, 
+    bossId,
     onImgError, 
     onStatsClick 
 }: { 
@@ -94,9 +106,13 @@ const BossVisuals = memo(({
     element: ElementKey, 
     hp: number, 
     maxHp: number, 
+    bossId: number,
     onImgError: () => void, 
     onStatsClick: () => void 
 }) => {
+    // Kiểm tra xem có phải boss 50 không
+    const isBoss50 = bossId === 50;
+
     return (
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
             <div 
@@ -117,15 +133,19 @@ const BossVisuals = memo(({
                         </div>
                     </div>
 
-                    {/* Container ảnh Boss với will-change để tối ưu GPU */}
-                    <div className="w-40 h-40 md:w-56 md:h-56 relative mb-4">
-                        <img 
-                            src={imgSrc} 
-                            alt={name} 
-                            onError={onImgError}
-                            className="w-full h-full object-contain drop-shadow-2xl relative z-10 boss-render-optimize" 
-                            style={{ willChange: 'transform, opacity' }}
-                        />
+                    {/* Boss Render Area */}
+                    <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center overflow-visible">
+                        {isBoss50 ? (
+                            <Boss50Sprite />
+                        ) : (
+                            <img 
+                                src={imgSrc} 
+                                alt={name} 
+                                onError={onImgError}
+                                className="w-full h-full object-contain drop-shadow-2xl relative z-10 boss-render-optimize" 
+                                style={{ willChange: 'transform, opacity' }}
+                            />
+                        )}
                     </div>
                     
                     <HealthBar 
@@ -417,6 +437,51 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     transform: translateZ(0);
                     backface-visibility: hidden;
                 }
+
+                /* --- SPRITE ANIMATION LOGIC CHO BOSS 50 --- */
+                .boss-50-wrapper {
+                    padding-bottom: 8px; /* Ground Offset 8px */
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-end;
+                    height: 100%;
+                }
+
+                .boss-50-container {
+                    width: 469px;
+                    height: 486px;
+                    overflow: hidden;
+                    position: relative;
+                    /* Scale lại để vừa với khung UI cũ */
+                    transform: scale(0.65);
+                    transform-origin: bottom center;
+                }
+
+                .boss-50-sprite {
+                    width: 2814px; /* 469 * 6 */
+                    height: 2916px; /* 486 * 6 */
+                    background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/boss/Basic-animation-.png');
+                    background-repeat: no-repeat;
+                    /* Chạy 36 frame: X chạy 6 frame, Y chạy chậm hơn 6 lần để chuyển hàng */
+                    animation: boss-50-x 1.2s steps(6) infinite, 
+                               boss-50-y 7.2s steps(6) infinite;
+                }
+
+                @keyframes boss-50-x {
+                    from { background-position-x: 0px; }
+                    to { background-position-x: -2814px; }
+                }
+
+                @keyframes boss-50-y {
+                    from { background-position-y: 0px; }
+                    to { background-position-y: -2916px; }
+                }
+
+                @media (max-width: 768px) {
+                    .boss-50-container {
+                        transform: scale(0.4);
+                    }
+                }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -490,13 +555,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* Hiển thị sát thương bay lên */}
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
-                                    {/* --- BOSS DISPLAY AREA (Đã được tách ra để chống lag) --- */}
+                                    {/* --- BOSS DISPLAY AREA --- */}
                                     <BossVisuals 
                                         imgSrc={bossImgSrc}
                                         name={currentBossData.name}
                                         element={bossElement}
                                         hp={bossStats.hp}
                                         maxHp={bossStats.maxHp}
+                                        bossId={currentBossData.id}
                                         onImgError={handleBossImgError}
                                         onStatsClick={() => setStatsModalTarget('boss')}
                                     />
