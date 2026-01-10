@@ -38,6 +38,10 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
     } else if (bossId === 3) {
         sizeClass = 'boss-size-03';
         animClass = 'boss-anim-03';
+    } else if (bossId === 4) {
+        // --- CẬP NHẬT LOGIC CHO BOSS 4 ---
+        sizeClass = 'boss-size-04';
+        animClass = 'boss-anim-04';
     }
 
     return (
@@ -74,8 +78,8 @@ export const BossDisplay = memo(({
     onImgError,
     onStatsClick
 }: BossDisplayProps) => {
-    // Danh sách các boss sử dụng sprite sheet (Đã thêm 3)
-    const isSpriteBoss = [1, 3, 8, 50].includes(bossId);
+    // Danh sách các boss sử dụng sprite sheet (Đã thêm 4 vào danh sách)
+    const isSpriteBoss = [1, 3, 4, 8, 50].includes(bossId);
 
     return (
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
@@ -123,18 +127,32 @@ export const BossDisplay = memo(({
                     width: 513px; height: 399px; transform: scale(0.55);
                 }
                 .boss-anim-03 {
-                    /* Width: 513 * 6 = 3078px | Height: 399 * 6 = 2394px */
                     width: 3078px; height: 2394px; background-size: 3078px 2394px;
-                    /* Thời gian: 0.6s/hàng ngang, tổng 3.6s cho 6 hàng dọc */
                     animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite;
                 }
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
 
+                /* --- THÔNG SỐ BOSS 04 (601x664) - DỰA TRÊN ẢNH --- */
+                .boss-size-04 {
+                    width: 601px; height: 664px; 
+                    /* Do boss này cao (664px) nên giảm scale xuống 0.45 để vừa khung */
+                    transform: scale(0.45); 
+                }
+                .boss-anim-04 {
+                    /* Width: 601 * 6 = 3606px | Height: 664 * 6 = 3984px */
+                    width: 3606px; height: 3984px; background-size: 3606px 3984px;
+                    animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite;
+                }
+                @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -3606px; } }
+                @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -3984px; } }
+
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.4); }
                     .boss-size-03 { transform: scale(0.35); }
+                    /* Giảm scale boss 04 trên mobile */
+                    .boss-size-04 { transform: scale(0.3); } 
                 }
             `}</style>
 
