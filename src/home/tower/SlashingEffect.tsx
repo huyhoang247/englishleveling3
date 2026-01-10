@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect } from 'react';
 
 interface SlashingEffectProps {
     onComplete: () => void;
@@ -8,87 +8,92 @@ const SlashingEffect = memo(({ onComplete }: SlashingEffectProps) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
     
     useEffect(() => {
-        // Tự động xóa effect sau khi animation kết thúc (0.5s)
+        // Hiệu ứng kéo dài 600ms (0.6s) khớp với CSS animation
         const timer = setTimeout(() => {
             onComplete();
-        }, 500);
+        }, 600);
         return () => clearTimeout(timer);
     }, [onComplete]);
 
     return (
-        <div className="slash-effect-container">
+        <div className="slash-animation-wrapper">
             <style>{`
-                .slash-effect-container {
+                .slash-animation-wrapper {
                     position: absolute;
                     top: 50%;
                     left: 50%;
-                    transform: translate(-50%, -50%) scale(1.2);
-                    z-index: 50;
-                    pointer-events: none;
-                    width: 618px;
+                    width: 618px; 
                     height: 606px;
+                    z-index: 100;
+                    pointer-events: none;
                     overflow: hidden;
-                    /* Hiệu ứng di chuyển từ trái sang phải như yêu cầu */
-                    animation: slash-move 0.5s ease-out forwards;
+                    transform: translate(-50%, -50%);
+                    /* Animation di chuyển từ trái sang phải qua tâm boss */
+                    animation: slash-move-horizontal 0.6s ease-out forwards;
                 }
 
-                .slash-sprite {
-                    width: 3708px; /* 618 * 6 khung */
-                    height: 3636px; /* 606 * 6 khung */
+                .slash-sprite-sheet {
+                    width: 3708px; /* 618px * 6 frames */
+                    height: 3636px; /* 606px * 6 frames */
                     background-image: url('${spriteUrl}');
                     background-size: 3708px 3636px;
+                    background-repeat: no-repeat;
                     image-rendering: pixelated;
                     /* Chạy sprite sheet 6x6 */
                     animation: 
-                        slash-x 0.5s steps(6) infinite,
-                        slash-y 0.5s steps(6) infinite;
+                        slash-x-steps 0.6s steps(6) infinite,
+                        slash-y-steps 0.6s steps(6) infinite;
                 }
 
-                @keyframes slash-x {
+                @keyframes slash-x-steps {
                     from { background-position-x: 0; }
                     to { background-position-x: -3708px; }
                 }
 
-                @keyframes slash-y {
+                @keyframes slash-y-steps {
                     from { background-position-y: 0; }
                     to { background-position-y: -3636px; }
                 }
 
-                @keyframes slash-move {
+                @keyframes slash-move-horizontal {
                     0% { 
-                        transform: translate(-150%, -50%) scale(0.8); 
+                        transform: translate(-140%, -50%) scale(0.8); 
                         opacity: 0; 
                     }
-                    20% { 
+                    30% { 
                         opacity: 1; 
                     }
+                    70% {
+                        opacity: 1;
+                    }
                     100% { 
-                        transform: translate(50%, -50%) scale(1.5); 
+                        transform: translate(40%, -50%) scale(1.4); 
                         opacity: 0; 
                     }
                 }
 
+                /* Mobile: Thu nhỏ scale lại để không tràn màn hình */
                 @media (max-width: 768px) {
-                    .slash-effect-container {
-                        width: 309px; /* Scale 0.5 cho mobile */
+                    .slash-animation-wrapper {
+                        width: 309px;
                         height: 303px;
                     }
-                    .slash-sprite {
+                    .slash-sprite-sheet {
                         width: 1854px;
                         height: 1818px;
                         background-size: 1854px 1818px;
                     }
-                    @keyframes slash-x {
+                    @keyframes slash-x-steps {
                         from { background-position-x: 0; }
                         to { background-position-x: -1854px; }
                     }
-                    @keyframes slash-y {
+                    @keyframes slash-y-steps {
                         from { background-position-y: 0; }
                         to { background-position-y: -1818px; }
                     }
                 }
             `}</style>
-            <div className="slash-sprite" />
+            <div className="slash-sprite-sheet" />
         </div>
     );
 });
