@@ -7,9 +7,6 @@ import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
-// --- IMPORT COMPONENT SLASHING EFFECT ---
-import SlashingEffect from './SlashingEffect.tsx';
-
 // --- IMPORT COMPONENT BOSS ĐÃ TÁCH ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
 import BossDisplay from './boss-display.tsx';
@@ -67,6 +64,32 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   return (
     <div key={id} className={`absolute top-1/3 font-lilita text-2xl animate-float-up pointer-events-none z-30 ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
   );
+};
+
+// --- NEW COMPONENT: SLASHING EFFECT ---
+const SlashEffect = ({ id }: { id: number }) => {
+    // URL Sprite Sheet từ yêu cầu
+    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
+    
+    // Frame size: 618x606. Giả định 5 frames (3090px width).
+    // Animation: Di chuyển từ trái (Player side) sang phải (Boss side).
+    
+    return (
+        <div key={id} className="absolute top-[30%] left-[10%] z-40 pointer-events-none animate-slash-fly">
+             <div 
+                className="animate-slash-play"
+                style={{
+                    width: '618px',
+                    height: '606px',
+                    backgroundImage: `url(${spriteUrl})`,
+                    backgroundSize: '3090px 606px', // 618 * 5 frames
+                    backgroundRepeat: 'no-repeat',
+                    transformOrigin: 'top left',
+                    transform: 'scale(0.4)', // Thu nhỏ xuống còn khoảng 250px
+                }}
+             />
+        </div>
+    );
 };
 
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
@@ -235,14 +258,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     } = useBossBattle();
 
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
+    // State cho hiệu ứng Slash
+    const [slashEffects, setSlashEffects] = useState<{ id: number }[]>([]);
+    
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // State quản lý hiệu ứng chém
-    const [isSlashing, setIsSlashing] = useState(false);
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
     useEffect(() => {
@@ -277,35 +301,27 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
 
-    // --- LOGIC ĐIỀU PHỐI THỨ TỰ ĐÁNH (TIMING) ---
+    // --- TRIGGER SLASH EFFECT ---
     useEffect(() => {
         if (!lastTurnEvents) return;
 
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // BƯỚC 1: NGƯỜI CHƠI TẤN CÔNG
         if (playerDmg > 0) {
             showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
-            // Kích hoạt effect chém ngay lập tức
-            setIsSlashing(true);
+            // Kích hoạt hiệu ứng Slash khi người chơi gây sát thương
+            const slashId = Date.now() + Math.random();
+            setSlashEffects(prev => [...prev, { id: slashId }]);
+            // Xóa hiệu ứng sau khi animation kết thúc (0.5s)
+            setTimeout(() => setSlashEffects(prev => prev.filter(e => e.id !== slashId)), 500);
         }
         
-        if (playerHeal > 0) {
-            showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
-        }
+        if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
         
-        // BƯỚC 2: CHỜ EFFECT CHÉM XONG RỒI MỚI TỚI BOSS PHẢN CÔNG
-        // Chờ 700ms (Hiệu ứng chém mất 600ms)
-        const counterTimer = setTimeout(() => {
-          if (bossDmg > 0) {
-              showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
-          }
-          if (bossReflectDmg > 0) {
-              showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
-          }
-        }, 700);
-
-        return () => clearTimeout(counterTimer);
+        setTimeout(() => {
+          if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
+          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
+        }, 500);
 
     }, [lastTurnEvents, showFloatingText]);
 
@@ -349,6 +365,26 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+
+                /* --- SLASH EFFECT ANIMATIONS --- */
+                @keyframes slash-sprite-run {
+                    from { background-position-x: 0; }
+                    to { background-position-x: -3090px; } /* 618px * 5 frames */
+                }
+                .animate-slash-play {
+                    animation: slash-sprite-run 0.5s steps(5) forwards;
+                }
+                @keyframes slash-fly-path {
+                     0% { left: 10%; top: 35%; opacity: 0; transform: scale(0.8) rotate(-10deg); }
+                     15% { opacity: 1; }
+                     85% { opacity: 1; }
+                     100% { left: 60%; top: 35%; opacity: 0; transform: scale(1.2) rotate(10deg); }
+                }
+                .animate-slash-fly {
+                    animation: slash-fly-path 0.5s ease-in forwards;
+                    width: 200px; /* Container size */
+                    height: 200px;
+                }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -404,7 +440,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button> )}
                                 </div>
     
-                                <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4">
+                                <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4 relative">
                                     <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
                                         <div></div>
                                         <div className="flex flex-col items-end gap-2">
@@ -419,24 +455,24 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         </div>
                                     </div>
                             
+                                    {/* --- RENDERING SLASH EFFECTS --- */}
+                                    {slashEffects.map(effect => (
+                                        <SlashEffect key={effect.id} id={effect.id} />
+                                    ))}
+
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
-                                    {/* BỌC BOSS DISPLAY TRONG DIV RELATIVE ĐỂ ĐẶT HIỆU ỨNG CHÉM ĐÈ LÊN */}
-                                    <div className="relative">
-                                        {/* KHI isSlashing LÀ TRUE THÌ HIỂN THỊ HIỆU ỨNG */}
-                                        {isSlashing && <SlashingEffect onComplete={() => setIsSlashing(false)} />}
-                                        
-                                        <BossDisplay 
-                                            bossId={currentBossData.id}
-                                            name={currentBossData.name}
-                                            element={bossElement}
-                                            hp={bossStats.hp}
-                                            maxHp={bossStats.maxHp}
-                                            imgSrc={bossImgSrc}
-                                            onImgError={handleBossImgError}
-                                            onStatsClick={() => setStatsModalTarget('boss')}
-                                        />
-                                    </div>
+                                    {/* SỬ DỤNG COMPONENT BOSS ĐÃ TÁCH */}
+                                    <BossDisplay 
+                                        bossId={currentBossData.id}
+                                        name={currentBossData.name}
+                                        element={bossElement}
+                                        hp={bossStats.hp}
+                                        maxHp={bossStats.maxHp}
+                                        imgSrc={bossImgSrc}
+                                        onImgError={handleBossImgError}
+                                        onStatsClick={() => setStatsModalTarget('boss')}
+                                    />
     
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                                         {battleState === 'idle' && (
