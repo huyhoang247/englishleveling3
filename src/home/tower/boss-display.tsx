@@ -87,7 +87,7 @@ export const BossDisplay = memo(({
                     transform-origin: bottom center;
                 }
 
-                /* THÔNG SỐ BOSS MẶC ĐỊNH */
+                /* --- THÔNG SỐ BOSS MẶC ĐỊNH --- */
                 .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
                 .boss-anim-default {
                     width: 2814px; height: 2916px; background-size: 2814px 2916px;
@@ -96,27 +96,27 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* THÔNG SỐ BOSS 01 CẬP NHẬT (551x477) */
+                /* --- THÔNG SỐ BOSS 01 MỚI (441x442) --- */
                 .boss-size-01 { 
-                    width: 551px; 
-                    height: 477px; 
-                    transform: scale(0.5); 
+                    width: 441px; 
+                    height: 442px; 
+                    transform: scale(0.6); 
                 }
                 
                 .boss-anim-01 {
-                    /* Width: 551 * 6 = 3306 | Height: 477 * 6 = 2862 */
-                    width: 3306px; 
-                    height: 2862px; 
-                    background-size: 3306px 2862px;
-                    /* Đồng bộ 2.4s cho toàn bộ vòng lặp (0.4s mỗi hàng x 6 hàng) */
+                    /* Width: 441 * 6 = 2646px | Height: 442 * 6 = 2652px */
+                    width: 2646px; 
+                    height: 2652px; 
+                    background-size: 2646px 2652px;
+                    /* Đồng nhất 2.4s (0.4s mỗi hàng * 6 hàng) */
                     animation: boss-x-01 0.4s steps(6) infinite, boss-y-01 2.4s steps(6) infinite;
                 }
-                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -3306px; } }
-                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -2862px; } }
+                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -2646px; } }
+                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -2652px; } }
 
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
-                    .boss-size-01 { transform: scale(0.35); }
+                    .boss-size-01 { transform: scale(0.4); }
                 }
             `}</style>
 
