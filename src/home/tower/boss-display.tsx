@@ -39,7 +39,7 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
         sizeClass = 'boss-size-03';
         animClass = 'boss-anim-03';
     } else if (bossId === 4) {
-        // --- CẬP NHẬT LOGIC CHO BOSS 4 ---
+        // --- CẤU HÌNH BOSS 4 ---
         sizeClass = 'boss-size-04';
         animClass = 'boss-anim-04';
     }
@@ -78,7 +78,7 @@ export const BossDisplay = memo(({
     onImgError,
     onStatsClick
 }: BossDisplayProps) => {
-    // Danh sách các boss sử dụng sprite sheet (Đã thêm 4 vào danh sách)
+    // Danh sách các boss sử dụng sprite sheet (Thêm 4 vào đây)
     const isSpriteBoss = [1, 3, 4, 8, 50].includes(bossId);
 
     return (
@@ -87,7 +87,7 @@ export const BossDisplay = memo(({
             <style>{`
                 .boss-render-optimize {
                     image-rendering: -webkit-optimize-contrast;
-                    transform: translateZ(0);
+                    transform: translateZ(0); /* Kích hoạt GPU layer */
                 }
                 .boss-sprite-wrapper {
                     padding-bottom: 8px; 
@@ -133,26 +133,30 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
 
-                /* --- THÔNG SỐ BOSS 04 (601x664) - DỰA TRÊN ẢNH --- */
+                /* --- THÔNG SỐ BOSS 04 (ĐÃ FIX LAG: 1803x1992) --- */
                 .boss-size-04 {
-                    width: 601px; height: 664px; 
-                    /* Do boss này cao (664px) nên giảm scale xuống 0.45 để vừa khung */
-                    transform: scale(0.45); 
+                    /* 1803 / 6 = 300.5 */
+                    width: 300.5px; 
+                    /* 1992 / 6 = 332 */
+                    height: 332px; 
+                    /* Ảnh gốc nhỏ nên scale to hơn một chút so với các boss khác */
+                    transform: scale(0.9); 
                 }
                 .boss-anim-04 {
-                    /* Width: 601 * 6 = 3606px | Height: 664 * 6 = 3984px */
-                    width: 3606px; height: 3984px; background-size: 3606px 3984px;
+                    width: 1803px; height: 1992px; background-size: 1803px 1992px;
+                    will-change: background-position; /* Quan trọng: Fix lag */
                     animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite;
                 }
-                @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -3606px; } }
-                @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -3984px; } }
+                @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
+                @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
 
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.4); }
                     .boss-size-03 { transform: scale(0.35); }
-                    /* Giảm scale boss 04 trên mobile */
-                    .boss-size-04 { transform: scale(0.3); } 
+                    
+                    /* Mobile cho boss 04 */
+                    .boss-size-04 { transform: scale(0.6); } 
                 }
             `}</style>
 
