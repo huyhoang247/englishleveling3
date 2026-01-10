@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
-import { bossBattleAssets } from '../../game-assets.ts';
+// import { bossBattleAssets } from '../../game-assets.ts'; // Đã comment vì không sử dụng trực tiếp trong đoạn code này, giữ lại nếu file gốc cần
 
 // --- COMPONENT THANH MÁU ---
 const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
@@ -27,13 +27,24 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
 const BossSprite = memo(({ bossId }: { bossId: number }) => {
     const idStr = String(bossId).padStart(2, '0');
     const spritePath = `/images/boss/${idStr}.webp`;
-    const isBoss01 = bossId === 1;
+
+    // Xác định class CSS dựa trên Boss ID
+    let sizeClass = 'boss-size-default';
+    let animClass = 'boss-anim-default';
+
+    if (bossId === 1) {
+        sizeClass = 'boss-size-01';
+        animClass = 'boss-anim-01';
+    } else if (bossId === 3) {
+        sizeClass = 'boss-size-03';
+        animClass = 'boss-anim-03';
+    }
 
     return (
         <div className="boss-sprite-wrapper">
-            <div className={`boss-sprite-container boss-render-optimize ${isBoss01 ? 'boss-size-01' : 'boss-size-default'}`}>
+            <div className={`boss-sprite-container boss-render-optimize ${sizeClass}`}>
                 <div
-                    className={`boss-sprite-sheet ${isBoss01 ? 'boss-anim-01' : 'boss-anim-default'}`}
+                    className={`boss-sprite-sheet ${animClass}`}
                     style={{ backgroundImage: `url(${spritePath})` }}
                 />
             </div>
@@ -63,8 +74,8 @@ export const BossDisplay = memo(({
     onImgError,
     onStatsClick
 }: BossDisplayProps) => {
-    // Danh sách các boss sử dụng sprite sheet
-    const isSpriteBoss = [1, 8, 50].includes(bossId);
+    // Danh sách các boss sử dụng sprite sheet (Đã thêm 3)
+    const isSpriteBoss = [1, 3, 8, 50].includes(bossId);
 
     return (
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
@@ -98,25 +109,32 @@ export const BossDisplay = memo(({
 
                 /* --- THÔNG SỐ BOSS 01 (441x442) --- */
                 .boss-size-01 { 
-                    width: 441px; 
-                    height: 442px; 
-                    transform: scale(0.6); 
+                    width: 441px; height: 442px; transform: scale(0.6); 
                 }
-                
                 .boss-anim-01 {
-                    /* Width: 441 * 6 = 2646px | Height: 442 * 6 = 2652px */
-                    width: 2646px; 
-                    height: 2652px; 
-                    background-size: 2646px 2652px;
-                    /* Cập nhật thời gian thành 3s (0.5s mỗi hàng * 6 hàng dọc) */
+                    width: 2646px; height: 2652px; background-size: 2646px 2652px;
                     animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite;
                 }
                 @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -2646px; } }
                 @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -2652px; } }
 
+                /* --- THÔNG SỐ BOSS 03 (513x399) --- */
+                .boss-size-03 {
+                    width: 513px; height: 399px; transform: scale(0.55);
+                }
+                .boss-anim-03 {
+                    /* Width: 513 * 6 = 3078px | Height: 399 * 6 = 2394px */
+                    width: 3078px; height: 2394px; background-size: 3078px 2394px;
+                    /* Thời gian: 0.5s/hàng ngang, tổng 3s cho 6 hàng dọc */
+                    animation: boss-x-03 0.5s steps(6) infinite, boss-y-03 3s steps(6) infinite;
+                }
+                @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
+                @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
+
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.4); }
+                    .boss-size-03 { transform: scale(0.35); }
                 }
             `}</style>
 
