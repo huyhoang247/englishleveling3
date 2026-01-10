@@ -7,6 +7,9 @@ import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
+// --- IMPORT COMPONENT SLASHING EFFECT ---
+import SlashingEffect from './SlashingEffect.tsx';
+
 // --- IMPORT COMPONENT BOSS ĐÃ TÁCH ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
 import BossDisplay from './boss-display.tsx';
@@ -238,6 +241,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
+    // --- STATE QUẢN LÝ HIỆU ỨNG CHÉM ---
+    const [isSlashing, setIsSlashing] = useState(false);
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
     useEffect(() => {
@@ -277,7 +282,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        if (playerDmg > 0) showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
+        if (playerDmg > 0) {
+            showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
+            // KÍCH HOẠT HIỆU ỨNG CHÉM KHI NGƯỜI CHƠI ĐÁNH TRÚNG BOSS
+            setIsSlashing(true);
+        }
+        
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
         
         setTimeout(() => {
@@ -399,17 +409,22 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
-                                    {/* SỬ DỤNG COMPONENT BOSS ĐÃ TÁCH */}
-                                    <BossDisplay 
-                                        bossId={currentBossData.id}
-                                        name={currentBossData.name}
-                                        element={bossElement}
-                                        hp={bossStats.hp}
-                                        maxHp={bossStats.maxHp}
-                                        imgSrc={bossImgSrc}
-                                        onImgError={handleBossImgError}
-                                        onStatsClick={() => setStatsModalTarget('boss')}
-                                    />
+                                    {/* BỌC BOSS DISPLAY TRONG DIV RELATIVE ĐỂ ĐẶT HIỆU ỨNG CHÉM ĐÈ LÊN */}
+                                    <div className="relative">
+                                        {/* KHI isSlashing LÀ TRUE THÌ HIỂN THỊ HIỆU ỨNG */}
+                                        {isSlashing && <SlashingEffect onComplete={() => setIsSlashing(false)} />}
+                                        
+                                        <BossDisplay 
+                                            bossId={currentBossData.id}
+                                            name={currentBossData.name}
+                                            element={bossElement}
+                                            hp={bossStats.hp}
+                                            maxHp={bossStats.maxHp}
+                                            imgSrc={bossImgSrc}
+                                            onImgError={handleBossImgError}
+                                            onStatsClick={() => setStatsModalTarget('boss')}
+                                        />
+                                    </div>
     
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
                                         {battleState === 'idle' && (
