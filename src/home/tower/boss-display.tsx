@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
-// import { bossBattleAssets } from '../../game-assets.ts'; // Đã comment vì không sử dụng trực tiếp trong đoạn code này, giữ lại nếu file gốc cần
+// import { bossBattleAssets } from '../../game-assets.ts'; 
 
 // --- COMPONENT THANH MÁU ---
 const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
@@ -125,8 +125,8 @@ export const BossDisplay = memo(({
                 .boss-anim-03 {
                     /* Width: 513 * 6 = 3078px | Height: 399 * 6 = 2394px */
                     width: 3078px; height: 2394px; background-size: 3078px 2394px;
-                    /* Thời gian: 0.5s/hàng ngang, tổng 3s cho 6 hàng dọc */
-                    animation: boss-x-03 0.5s steps(6) infinite, boss-y-03 3s steps(6) infinite;
+                    /* Thời gian: 0.6s/hàng ngang, tổng 3.6s cho 6 hàng dọc */
+                    animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite;
                 }
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
