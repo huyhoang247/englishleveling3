@@ -7,8 +7,9 @@ import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
-// --- IMPORT MAGIC CIRCLE VÀ LOGIC NGUYÊN TỐ ---
-import MagicCircle, { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
+// --- IMPORT COMPONENT BOSS ĐÃ TÁCH ---
+import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
+import BossDisplay from './boss-display.tsx';
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -56,116 +57,6 @@ const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: Combat
             </div>
           </div>
       </div>
-    );
-});
-
-const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor:string }) => {
-  const scale = Math.max(0, current / max); 
-  return (
-    <div className="w-full">
-      <div className="relative w-full h-7 bg-black/40 rounded-full border-2 border-slate-700/80 p-1 shadow-inner overflow-hidden">
-        <div 
-            className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`} 
-            style={{ 
-                transform: `scaleX(${scale})`, 
-                boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}` 
-            }}>
-        </div>
-        <div className="absolute inset-0 flex justify-center items-center text-sm text-white text-shadow font-bold">
-          <span>{Math.ceil(current)} / {max}</span>
-        </div>
-      </div>
-    </div>
-  );
-});
-
-// --- COMPONENT SPRITE BOSS ---
-const BossSprite = memo(({ bossId }: { bossId: number }) => {
-    const idStr = String(bossId).padStart(2, '0');
-    const spritePath = `/images/boss/${idStr}.webp`;
-
-    // Cấu hình riêng cho từng loại Boss
-    const isBoss01 = bossId === 1;
-
-    return (
-        <div className="boss-sprite-wrapper">
-            <div 
-                className={`boss-sprite-container boss-render-optimize ${isBoss01 ? 'boss-size-01' : 'boss-size-default'}`}
-            >
-                <div 
-                    className={`boss-sprite-sheet ${isBoss01 ? 'boss-anim-01' : 'boss-anim-default'}`} 
-                    style={{ backgroundImage: `url(${spritePath})` }}
-                />
-            </div>
-        </div>
-    );
-});
-
-// --- BOSS VISUAL COMPONENT ---
-const BossVisuals = memo(({ 
-    imgSrc, 
-    name, 
-    element, 
-    hp, 
-    maxHp, 
-    bossId,
-    onImgError, 
-    onStatsClick 
-}: { 
-    imgSrc: string, 
-    name: string, 
-    element: ElementKey, 
-    hp: number, 
-    maxHp: number, 
-    bossId: number,
-    onImgError: () => void, 
-    onStatsClick: () => void 
-}) => {
-    // Boss 01, 08, 50 sử dụng Sprite Sheet
-    const isSpriteBoss = bossId === 1 || bossId === 8 || bossId === 50;
-
-    return (
-        <div className="w-full max-w-4xl flex justify-center items-center my-8">
-            <div 
-                className="relative bg-slate-900/60 border border-slate-700 rounded-xl p-4 flex flex-col items-center gap-3 cursor-pointer group overflow-visible transition-transform duration-300 hover:border-red-500/50" 
-                onClick={onStatsClick} 
-                title="View Boss Stats"
-            >
-                <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
-                    <MagicCircle elementKey={element} />
-                </div>
-
-                <div className="relative z-10 flex flex-col items-center gap-3 w-full">
-                    <div className="relative group flex flex-col items-center justify-center">
-                        <h2 className="text-2xl font-bold text-red-400 text-shadow select-none">BOSS</h2>
-                        <div className="absolute bottom-full mb-2 w-max max-w-xs px-3 py-1.5 bg-slate-900 text-sm text-center text-white rounded-md shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none border border-slate-700">
-                            {name.toUpperCase()}
-                        </div>
-                    </div>
-
-                    <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center overflow-visible">
-                        {isSpriteBoss ? (
-                            <BossSprite bossId={bossId} />
-                        ) : (
-                            <img 
-                                src={imgSrc} 
-                                alt={name} 
-                                onError={onImgError}
-                                className="w-full h-full object-contain drop-shadow-2xl relative z-10 boss-render-optimize" 
-                                style={{ willChange: 'transform, opacity' }}
-                            />
-                        )}
-                    </div>
-                    
-                    <HealthBar 
-                        current={hp} 
-                        max={maxHp} 
-                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
-                        shadowColor="rgba(220, 38, 38, 0.5)" 
-                    />
-                </div>
-            </div>
-        </div>
     );
 });
 
@@ -436,87 +327,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-                .boss-render-optimize {
-                    image-rendering: -webkit-optimize-contrast;
-                    transform: translateZ(0);
-                    backface-visibility: hidden;
-                }
-
-                /* --- SPRITE SHEET LOGIC --- */
-                .boss-sprite-wrapper {
-                    padding-bottom: 8px; 
-                    display: flex;
-                    justify-content: center;
-                    align-items: flex-end;
-                    height: 100%;
-                }
-
-                .boss-sprite-container {
-                    overflow: hidden;
-                    position: relative;
-                    transform-origin: bottom center;
-                }
-
-                /* Size mặc định cho Boss 08, 50 */
-                .boss-size-default {
-                    width: 469px;
-                    height: 486px;
-                    transform: scale(0.5); 
-                }
-
-                /* Size cho Boss 01: 422x425 */
-                .boss-size-01 {
-                    width: 422px;
-                    height: 425px;
-                    transform: scale(0.6); 
-                }
-
-                .boss-sprite-sheet {
-                    background-repeat: no-repeat;
-                }
-
-                /* Animation cho Boss 08, 50 */
-                .boss-anim-default {
-                    width: 2814px; /* 469 * 6 */
-                    height: 2916px; /* 486 * 6 */
-                    background-size: 2814px 2916px;
-                    animation: boss-x-default 0.4s steps(6) infinite, 
-                               boss-y-default 2.4s steps(6) infinite;
-                }
-
-                @keyframes boss-x-default {
-                    from { background-position-x: 0px; }
-                    to { background-position-x: -2814px; }
-                }
-
-                @keyframes boss-y-default {
-                    from { background-position-y: 0px; }
-                    to { background-position-y: -2916px; }
-                }
-
-                /* Animation cho Boss 01 (422x425) */
-                .boss-anim-01 {
-                    width: 2532px; /* 422 * 6 */
-                    height: 2550px; /* 425 * 6 */
-                    background-size: 2532px 2550px;
-                    animation: boss-x-01 0.4s steps(6) infinite, 
-                               boss-y-01 2.4s steps(6) infinite;
-                }
-
-                @keyframes boss-x-01 {
-                    from { background-position-x: 0px; }
-                    to { background-position-x: -2532px; }
-                }
-
-                @keyframes boss-y-01 {
-                    from { background-position-y: 0px; }
-                    to { background-position-y: -2550px; }
-                }
-
-                @media (max-width: 768px) {
-                    .boss-size-default { transform: scale(0.35); }
-                    .boss-size-01 { transform: scale(0.4); }
-                }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -589,13 +399,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
-                                    <BossVisuals 
-                                        imgSrc={bossImgSrc}
+                                    {/* SỬ DỤNG COMPONENT BOSS ĐÃ TÁCH */}
+                                    <BossDisplay 
+                                        bossId={currentBossData.id}
                                         name={currentBossData.name}
                                         element={bossElement}
                                         hp={bossStats.hp}
                                         maxHp={bossStats.maxHp}
-                                        bossId={currentBossData.id}
+                                        imgSrc={bossImgSrc}
                                         onImgError={handleBossImgError}
                                         onStatsClick={() => setStatsModalTarget('boss')}
                                     />
