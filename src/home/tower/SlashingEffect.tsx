@@ -1,58 +1,51 @@
-import React, { memo, useEffect, useState } from 'react';
+import React, { memo, useEffect } from 'react';
 
-const SLASH_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
+const SLASH_IMAGE = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
 
 interface SlashingEffectProps {
     onComplete: () => void;
 }
 
 const SlashingEffect = memo(({ onComplete }: SlashingEffectProps) => {
-    // Thông số từ screenshot: 618x606
-    const frameWidth = 618;
-    const frameHeight = 606;
-    const totalCols = 6; 
-    const totalRows = 6; // Giả định grid 6x6 dựa trên tỷ lệ thông thường của Ludo AI
-
     useEffect(() => {
-        // Tự hủy sau khi chạy xong animation (0.6s)
-        const timer = setTimeout(() => {
-            onComplete();
-        }, 600);
+        // Animation chạy trong 600ms rồi biến mất
+        const timer = setTimeout(onComplete, 600);
         return () => clearTimeout(timer);
     }, [onComplete]);
 
     return (
-        <div className="absolute inset-0 flex items-center justify-center z-50 pointer-events-none">
+        <div className="absolute inset-0 flex items-center justify-center z-[60] pointer-events-none">
             <style>{`
-                .slash-container {
-                    width: ${frameWidth}px;
-                    height: ${frameHeight}px;
+                .slash-sprite-container {
+                    width: 618px;
+                    height: 606px;
                     overflow: hidden;
-                    transform: scale(0.8); /* Chỉnh to nhỏ hiệu ứng tại đây */
+                    position: relative;
+                    transform: scale(0.8);
                 }
-                .slash-sprite {
-                    width: ${frameWidth * totalCols}px;
-                    height: ${frameHeight * totalRows}px;
-                    background-image: url('${SLASH_URL}');
-                    background-size: ${frameWidth * totalCols}px ${frameHeight * totalRows}px;
+                .slash-sprite-sheet {
+                    width: 3090px; /* 618 * 5 frames */
+                    height: 3030px; /* 606 * 5 frames */
+                    background-image: url('${SLASH_IMAGE}');
+                    background-size: 3090px 3030px;
                     animation: 
-                        slash-x 0.6s steps(${totalCols}) forwards,
-                        slash-y 0.6s steps(${totalRows}) forwards;
+                        slash-play-x 0.6s steps(5) infinite,
+                        slash-play-y 0.6s steps(5) infinite;
                 }
-                @keyframes slash-x {
+                @keyframes slash-play-x {
                     from { background-position-x: 0; }
-                    to { background-position-x: -${frameWidth * totalCols}px; }
+                    to { background-position-x: -3090px; }
                 }
-                @keyframes slash-y {
+                @keyframes slash-play-y {
                     from { background-position-y: 0; }
-                    to { background-position-y: -${frameHeight * totalRows}px; }
+                    to { background-position-y: -3030px; }
                 }
                 @media (max-width: 768px) {
-                    .slash-container { transform: scale(0.4); }
+                    .slash-sprite-container { transform: scale(0.45); }
                 }
             `}</style>
-            <div className="slash-container">
-                <div className="slash-sprite" />
+            <div className="slash-sprite-container">
+                <div className="slash-sprite-sheet" />
             </div>
         </div>
     );
