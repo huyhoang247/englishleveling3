@@ -8,7 +8,7 @@ interface SlashingEffectProps {
 
 const SlashingEffect = memo(({ onComplete }: SlashingEffectProps) => {
     useEffect(() => {
-        // Animation chạy trong 600ms rồi biến mất
+        // Tổng thời gian hiệu ứng là 600ms
         const timer = setTimeout(onComplete, 600);
         return () => clearTimeout(timer);
     }, [onComplete]);
@@ -21,27 +21,28 @@ const SlashingEffect = memo(({ onComplete }: SlashingEffectProps) => {
                     height: 606px;
                     overflow: hidden;
                     position: relative;
-                    transform: scale(0.8);
+                    transform: scale(0.9);
                 }
                 .slash-sprite-sheet {
                     width: 3090px; /* 618 * 5 frames */
                     height: 3030px; /* 606 * 5 frames */
                     background-image: url('${SLASH_IMAGE}');
                     background-size: 3090px 3030px;
+                    /* Chạy X 5 lần trong khi Y chạy 1 lần để quét hết lưới 5x5 */
                     animation: 
-                        slash-play-x 0.6s steps(5) infinite,
-                        slash-play-y 0.6s steps(5) infinite;
+                        slash-x 0.12s steps(5) 5, 
+                        slash-y 0.6s steps(5) forwards;
                 }
-                @keyframes slash-play-x {
+                @keyframes slash-x {
                     from { background-position-x: 0; }
                     to { background-position-x: -3090px; }
                 }
-                @keyframes slash-play-y {
+                @keyframes slash-y {
                     from { background-position-y: 0; }
                     to { background-position-y: -3030px; }
                 }
                 @media (max-width: 768px) {
-                    .slash-sprite-container { transform: scale(0.45); }
+                    .slash-sprite-container { transform: scale(0.5); }
                 }
             `}</style>
             <div className="slash-sprite-container">
