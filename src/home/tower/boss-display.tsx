@@ -96,7 +96,7 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* --- THÔNG SỐ BOSS 01 MỚI (441x442) --- */
+                /* --- THÔNG SỐ BOSS 01 (441x442) --- */
                 .boss-size-01 { 
                     width: 441px; 
                     height: 442px; 
@@ -108,8 +108,8 @@ export const BossDisplay = memo(({
                     width: 2646px; 
                     height: 2652px; 
                     background-size: 2646px 2652px;
-                    /* Đồng nhất 2.4s (0.4s mỗi hàng * 6 hàng) */
-                    animation: boss-x-01 0.4s steps(6) infinite, boss-y-01 2.4s steps(6) infinite;
+                    /* Cập nhật thời gian thành 3s (0.5s mỗi hàng * 6 hàng dọc) */
+                    animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite;
                 }
                 @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -2646px; } }
                 @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -2652px; } }
