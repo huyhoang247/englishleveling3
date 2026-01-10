@@ -79,17 +79,21 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   );
 });
 
-// --- COMPONENT SPRITE BOSS DÙNG CHUNG (CHO 08 VÀ 50) ---
+// --- COMPONENT SPRITE BOSS ---
 const BossSprite = memo(({ bossId }: { bossId: number }) => {
-    // Lấy link local dựa trên ID (ví dụ: /images/boss/08.webp)
     const idStr = String(bossId).padStart(2, '0');
     const spritePath = `/images/boss/${idStr}.webp`;
 
+    // Cấu hình riêng cho từng loại Boss
+    const isBoss01 = bossId === 1;
+
     return (
         <div className="boss-sprite-wrapper">
-            <div className="boss-sprite-container boss-render-optimize">
+            <div 
+                className={`boss-sprite-container boss-render-optimize ${isBoss01 ? 'boss-size-01' : 'boss-size-default'}`}
+            >
                 <div 
-                    className="boss-sprite-sheet" 
+                    className={`boss-sprite-sheet ${isBoss01 ? 'boss-anim-01' : 'boss-anim-default'}`} 
                     style={{ backgroundImage: `url(${spritePath})` }}
                 />
             </div>
@@ -117,8 +121,8 @@ const BossVisuals = memo(({
     onImgError: () => void, 
     onStatsClick: () => void 
 }) => {
-    // Kiểm tra xem boss hiện tại có trong danh sách dùng Sprite Sheet không
-    const isSpriteBoss = bossId === 8 || bossId === 50;
+    // Boss 01, 08, 50 sử dụng Sprite Sheet
+    const isSpriteBoss = bossId === 1 || bossId === 8 || bossId === 50;
 
     return (
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
@@ -438,7 +442,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     backface-visibility: hidden;
                 }
 
-                /* --- SPRITE SHEET LOGIC (GRID 6x6, 2.4S, SMALLER SIZE) --- */
+                /* --- SPRITE SHEET LOGIC --- */
                 .boss-sprite-wrapper {
                     padding-bottom: 8px; 
                     display: flex;
@@ -448,40 +452,70 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 }
 
                 .boss-sprite-container {
-                    width: 469px;
-                    height: 486px;
                     overflow: hidden;
                     position: relative;
-                    /* Scale thu nhỏ boss 0.5 trên máy tính */
-                    transform: scale(0.5); 
                     transform-origin: bottom center;
                 }
 
-                .boss-sprite-sheet {
-                    width: 2814px; /* 469 * 6 cột */
-                    height: 2916px; /* 486 * 6 hàng */
-                    background-repeat: no-repeat;
-                    background-size: 2814px 2916px;
-                    /* 15 FPS: 0.4s mỗi hàng, 2.4s chạy hết 36 frame */
-                    animation: boss-sprite-x 0.4s steps(6) infinite, 
-                               boss-sprite-y 2.4s steps(6) infinite;
+                /* Size mặc định cho Boss 08, 50 */
+                .boss-size-default {
+                    width: 469px;
+                    height: 486px;
+                    transform: scale(0.5); 
                 }
 
-                @keyframes boss-sprite-x {
+                /* Size cho Boss 01: 422x425 */
+                .boss-size-01 {
+                    width: 422px;
+                    height: 425px;
+                    transform: scale(0.6); 
+                }
+
+                .boss-sprite-sheet {
+                    background-repeat: no-repeat;
+                }
+
+                /* Animation cho Boss 08, 50 */
+                .boss-anim-default {
+                    width: 2814px; /* 469 * 6 */
+                    height: 2916px; /* 486 * 6 */
+                    background-size: 2814px 2916px;
+                    animation: boss-x-default 0.4s steps(6) infinite, 
+                               boss-y-default 2.4s steps(6) infinite;
+                }
+
+                @keyframes boss-x-default {
                     from { background-position-x: 0px; }
                     to { background-position-x: -2814px; }
                 }
 
-                @keyframes boss-sprite-y {
+                @keyframes boss-y-default {
                     from { background-position-y: 0px; }
                     to { background-position-y: -2916px; }
                 }
 
+                /* Animation cho Boss 01 (422x425) */
+                .boss-anim-01 {
+                    width: 2532px; /* 422 * 6 */
+                    height: 2550px; /* 425 * 6 */
+                    background-size: 2532px 2550px;
+                    animation: boss-x-01 0.4s steps(6) infinite, 
+                               boss-y-01 2.4s steps(6) infinite;
+                }
+
+                @keyframes boss-x-01 {
+                    from { background-position-x: 0px; }
+                    to { background-position-x: -2532px; }
+                }
+
+                @keyframes boss-y-01 {
+                    from { background-position-y: 0px; }
+                    to { background-position-y: -2550px; }
+                }
+
                 @media (max-width: 768px) {
-                    .boss-sprite-container {
-                        /* Scale thu nhỏ 0.35 trên điện thoại */
-                        transform: scale(0.35); 
-                    }
+                    .boss-size-default { transform: scale(0.35); }
+                    .boss-size-01 { transform: scale(0.4); }
                 }
             `}</style>
       
