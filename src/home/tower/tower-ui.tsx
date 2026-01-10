@@ -120,7 +120,6 @@ const BossVisuals = memo(({
                 onClick={onStatsClick} 
                 title="View Boss Stats"
             >
-                {/* Magic Circle nằm dưới cùng */}
                 <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
                     <MagicCircle elementKey={element} />
                 </div>
@@ -133,7 +132,6 @@ const BossVisuals = memo(({
                         </div>
                     </div>
 
-                    {/* Boss Render Area */}
                     <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center overflow-visible">
                         {isBoss50 ? (
                             <Boss50Sprite />
@@ -325,14 +323,12 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
 
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
-    // --- LẤY STATE VÀ ACTIONS TỪ CONTEXT ---
     const {
         isLoading, error, playerStats, bossStats, combatLog, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
-    // --- STATE UI CỤC BỘ ---
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -340,7 +336,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // --- QUẢN LÝ ẢNH BOSS (GIF/WEBP FALLBACK) ---
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
     useEffect(() => {
@@ -360,14 +355,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
     }, [currentBossData, bossImgSrc]);
 
-    // --- LOGIC ANIMATION CHO COIN VÀ ENERGY ---
     const displayableCoins = isLoading ? 0 : displayedCoins;
     const animatedCoins = useAnimateValue(displayableCoins);
 
     const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
     const animatedEnergy = useAnimateValue(displayableEnergy);
 
-    // --- LOGIC UI CỤC BỘ ---
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
@@ -438,7 +431,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     backface-visibility: hidden;
                 }
 
-                /* --- SPRITE ANIMATION LOGIC CHO BOSS 50 --- */
+                /* --- SPRITE ANIMATION LOGIC CHO BOSS 50 (CÁCH 1: 2.4s) --- */
                 .boss-50-wrapper {
                     padding-bottom: 8px; /* Ground Offset 8px */
                     display: flex;
@@ -452,19 +445,22 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     height: 486px;
                     overflow: hidden;
                     position: relative;
-                    /* Scale lại để vừa với khung UI cũ */
                     transform: scale(0.65);
                     transform-origin: bottom center;
                 }
 
                 .boss-50-sprite {
-                    width: 2814px; /* 469 * 6 */
-                    height: 2916px; /* 486 * 6 */
+                    width: 2814px; /* 469 * 6 cột */
+                    height: 2916px; /* 486 * 6 hàng */
                     background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/boss/Basic-animation-.png');
                     background-repeat: no-repeat;
-                    /* Chạy 36 frame: X chạy 6 frame, Y chạy chậm hơn 6 lần để chuyển hàng */
-                    animation: boss-50-x 1.2s steps(6) infinite, 
-                               boss-50-y 7.2s steps(6) infinite;
+                    /* 
+                       TỔNG THỜI GIAN: 2.4 giây cho 36 frame (~15 FPS)
+                       Trục X chạy 6 steps trong 0.4s
+                       Trục Y chạy 6 steps trong 2.4s (0.4 * 6)
+                    */
+                    animation: boss-50-x 0.4s steps(6) infinite, 
+                               boss-50-y 2.4s steps(6) infinite;
                 }
 
                 @keyframes boss-50-x {
@@ -479,7 +475,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                 @media (max-width: 768px) {
                     .boss-50-container {
-                        transform: scale(0.4);
+                        transform: scale(0.42);
                     }
                 }
             `}</style>
@@ -552,10 +548,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         </div>
                                     </div>
                             
-                                    {/* Hiển thị sát thương bay lên */}
                                     {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
     
-                                    {/* --- BOSS DISPLAY AREA --- */}
                                     <BossVisuals 
                                         imgSrc={bossImgSrc}
                                         name={currentBossData.name}
