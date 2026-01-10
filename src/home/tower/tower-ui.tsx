@@ -241,7 +241,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
-    // --- STATE QUẢN LÝ HIỆU ỨNG CHÉM ---
+    // State quản lý hiệu ứng chém
     const [isSlashing, setIsSlashing] = useState(false);
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
@@ -277,23 +277,35 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
 
+    // --- LOGIC ĐIỀU PHỐI THỨ TỰ ĐÁNH (TIMING) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
 
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
+        // BƯỚC 1: NGƯỜI CHƠI TẤN CÔNG
         if (playerDmg > 0) {
             showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
-            // KÍCH HOẠT HIỆU ỨNG CHÉM KHI NGƯỜI CHƠI ĐÁNH TRÚNG BOSS
+            // Kích hoạt effect chém ngay lập tức
             setIsSlashing(true);
         }
         
-        if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
+        if (playerHeal > 0) {
+            showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
+        }
         
-        setTimeout(() => {
-          if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
-          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
-        }, 500);
+        // BƯỚC 2: CHỜ EFFECT CHÉM XONG RỒI MỚI TỚI BOSS PHẢN CÔNG
+        // Chờ 700ms (Hiệu ứng chém mất 600ms)
+        const counterTimer = setTimeout(() => {
+          if (bossDmg > 0) {
+              showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
+          }
+          if (bossReflectDmg > 0) {
+              showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
+          }
+        }, 700);
+
+        return () => clearTimeout(counterTimer);
 
     }, [lastTurnEvents, showFloatingText]);
 
