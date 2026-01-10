@@ -120,6 +120,7 @@ const BossVisuals = memo(({
                 onClick={onStatsClick} 
                 title="View Boss Stats"
             >
+                {/* Magic Circle nằm dưới cùng */}
                 <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
                     <MagicCircle elementKey={element} />
                 </div>
@@ -132,6 +133,7 @@ const BossVisuals = memo(({
                         </div>
                     </div>
 
+                    {/* Boss Render Area - Cố định kích thước khung để boss nhỏ bên trong không làm nhảy layout */}
                     <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center overflow-visible">
                         {isBoss50 ? (
                             <Boss50Sprite />
@@ -431,9 +433,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     backface-visibility: hidden;
                 }
 
-                /* --- SPRITE ANIMATION LOGIC CHO BOSS 50 (CÁCH 1: 2.4s) --- */
+                /* --- SPRITE ANIMATION LOGIC CHO BOSS 50 (SMALLER SIZE) --- */
                 .boss-50-wrapper {
-                    padding-bottom: 8px; /* Ground Offset 8px */
+                    padding-bottom: 8px; /* Ground Offset */
                     display: flex;
                     justify-content: center;
                     align-items: flex-end;
@@ -445,20 +447,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     height: 486px;
                     overflow: hidden;
                     position: relative;
-                    transform: scale(0.65);
+                    /* Đã thu nhỏ xuống 0.5 để boss nhỏ hơn */
+                    transform: scale(0.5); 
                     transform-origin: bottom center;
                 }
 
                 .boss-50-sprite {
-                    width: 2814px; /* 469 * 6 cột */
-                    height: 2916px; /* 486 * 6 hàng */
+                    width: 2814px; 
+                    height: 2916px; 
                     background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/boss/Basic-animation-.png');
                     background-repeat: no-repeat;
-                    /* 
-                       TỔNG THỜI GIAN: 2.4 giây cho 36 frame (~15 FPS)
-                       Trục X chạy 6 steps trong 0.4s
-                       Trục Y chạy 6 steps trong 2.4s (0.4 * 6)
-                    */
                     animation: boss-50-x 0.4s steps(6) infinite, 
                                boss-50-y 2.4s steps(6) infinite;
                 }
@@ -475,7 +473,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                 @media (max-width: 768px) {
                     .boss-50-container {
-                        transform: scale(0.42);
+                        /* Đã thu nhỏ xuống 0.35 cho điện thoại */
+                        transform: scale(0.35); 
                     }
                 }
             `}</style>
