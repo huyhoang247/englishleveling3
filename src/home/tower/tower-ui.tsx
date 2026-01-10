@@ -79,12 +79,19 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
   );
 });
 
-// --- COMPONENT SPRITE BOSS 50 ---
-const Boss50Sprite = memo(() => {
+// --- COMPONENT SPRITE BOSS DÙNG CHUNG (CHO 08 VÀ 50) ---
+const BossSprite = memo(({ bossId }: { bossId: number }) => {
+    // Lấy link local dựa trên ID (ví dụ: /images/boss/08.webp)
+    const idStr = String(bossId).padStart(2, '0');
+    const spritePath = `/images/boss/${idStr}.webp`;
+
     return (
-        <div className="boss-50-wrapper">
-            <div className="boss-50-container boss-render-optimize">
-                <div className="boss-50-sprite" />
+        <div className="boss-sprite-wrapper">
+            <div className="boss-sprite-container boss-render-optimize">
+                <div 
+                    className="boss-sprite-sheet" 
+                    style={{ backgroundImage: `url(${spritePath})` }}
+                />
             </div>
         </div>
     );
@@ -110,8 +117,8 @@ const BossVisuals = memo(({
     onImgError: () => void, 
     onStatsClick: () => void 
 }) => {
-    // Kiểm tra xem có phải boss 50 không
-    const isBoss50 = bossId === 50;
+    // Kiểm tra xem boss hiện tại có trong danh sách dùng Sprite Sheet không
+    const isSpriteBoss = bossId === 8 || bossId === 50;
 
     return (
         <div className="w-full max-w-4xl flex justify-center items-center my-8">
@@ -120,7 +127,6 @@ const BossVisuals = memo(({
                 onClick={onStatsClick} 
                 title="View Boss Stats"
             >
-                {/* Magic Circle nằm dưới cùng */}
                 <div className="absolute bottom-[0%] left-1/2 -translate-x-1/2 w-[90%] h-[90%] z-0 opacity-80 pointer-events-none">
                     <MagicCircle elementKey={element} />
                 </div>
@@ -133,10 +139,9 @@ const BossVisuals = memo(({
                         </div>
                     </div>
 
-                    {/* Boss Render Area - Cố định kích thước khung để boss nhỏ bên trong không làm nhảy layout */}
                     <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center overflow-visible">
-                        {isBoss50 ? (
-                            <Boss50Sprite />
+                        {isSpriteBoss ? (
+                            <BossSprite bossId={bossId} />
                         ) : (
                             <img 
                                 src={imgSrc} 
@@ -433,47 +438,48 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     backface-visibility: hidden;
                 }
 
-                /* --- SPRITE ANIMATION LOGIC CHO BOSS 50 (SMALLER SIZE) --- */
-                .boss-50-wrapper {
-                    padding-bottom: 8px; /* Ground Offset */
+                /* --- SPRITE SHEET LOGIC (GRID 6x6, 2.4S, SMALLER SIZE) --- */
+                .boss-sprite-wrapper {
+                    padding-bottom: 8px; 
                     display: flex;
                     justify-content: center;
                     align-items: flex-end;
                     height: 100%;
                 }
 
-                .boss-50-container {
+                .boss-sprite-container {
                     width: 469px;
                     height: 486px;
                     overflow: hidden;
                     position: relative;
-                    /* Đã thu nhỏ xuống 0.5 để boss nhỏ hơn */
+                    /* Scale thu nhỏ boss 0.5 trên máy tính */
                     transform: scale(0.5); 
                     transform-origin: bottom center;
                 }
 
-                .boss-50-sprite {
-                    width: 2814px; 
-                    height: 2916px; 
-                    background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/boss/Basic-animation-.png');
+                .boss-sprite-sheet {
+                    width: 2814px; /* 469 * 6 cột */
+                    height: 2916px; /* 486 * 6 hàng */
                     background-repeat: no-repeat;
-                    animation: boss-50-x 0.4s steps(6) infinite, 
-                               boss-50-y 2.4s steps(6) infinite;
+                    background-size: 2814px 2916px;
+                    /* 15 FPS: 0.4s mỗi hàng, 2.4s chạy hết 36 frame */
+                    animation: boss-sprite-x 0.4s steps(6) infinite, 
+                               boss-sprite-y 2.4s steps(6) infinite;
                 }
 
-                @keyframes boss-50-x {
+                @keyframes boss-sprite-x {
                     from { background-position-x: 0px; }
                     to { background-position-x: -2814px; }
                 }
 
-                @keyframes boss-50-y {
+                @keyframes boss-sprite-y {
                     from { background-position-y: 0px; }
                     to { background-position-y: -2916px; }
                 }
 
                 @media (max-width: 768px) {
-                    .boss-50-container {
-                        /* Đã thu nhỏ xuống 0.35 cho điện thoại */
+                    .boss-sprite-container {
+                        /* Scale thu nhỏ 0.35 trên điện thoại */
                         transform: scale(0.35); 
                     }
                 }
