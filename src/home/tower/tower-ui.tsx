@@ -36,25 +36,17 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
         <div className="flex flex-col items-center justify-end h-full w-full" onClick={onStatsClick}>
              <style>{`
                 .hero-sprite-wrapper {
-                    /* 
-                       Tính toán kích thước Frame cho Grid 6x6:
-                       Width: 1252px / 6 = 208.66px -> 209px
-                       Height: 1178px / 6 = 196.33px -> 196px
-                       (GIỮ NGUYÊN THÔNG SỐ NÀY ĐỂ KHỚP ANIMATION)
-                    */
+                    /* Frame Size Grid 6x6 */
                     width: 209px;
                     height: 196px;
                     overflow: hidden;
                     position: relative;
                     
-                    /* 
-                       SCALE LOGIC:
-                       Giảm xuống 0.85 để nén điểm ảnh lại -> Hình sẽ sắc nét hơn.
-                    */
+                    /* Scale 0.85 để ảnh nhỏ lại và sắc nét */
                     transform: scale(0.85); 
                     transform-origin: bottom center;
 
-                    /* Tối ưu render để ảnh nét hơn */
+                    /* Tối ưu render */
                     image-rendering: -webkit-optimize-contrast;
                     image-rendering: crisp-edges;
                 }
@@ -63,12 +55,9 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                     width: 209px;
                     height: 196px;
                     background-image: url('${spriteUrl}');
-                    
-                    /* Kích thước chính xác của file ảnh */
                     background-size: 1252px 1178px;
                     background-repeat: no-repeat;
                     
-                    /* Animation 6x6 */
                     animation: 
                         hero-idle-x 0.5s steps(6) infinite,
                         hero-idle-y 3.0s steps(6) infinite;
@@ -86,30 +75,15 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
 
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
-                        /* Mobile: Giảm scale xuống nữa để vừa màn hình và nét hơn */
                         transform: scale(0.65); 
                     }
                 }
             `}</style>
             
             <div className="relative cursor-pointer group flex flex-col items-center">
-                {/* Visual Anchor/Shadow */}
-                <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
-
-                {/* Hero Name Tag */}
-                <div className="relative z-20 mb-[-20px] md:mb-[-30px]">
-                    <div className="bg-blue-900/80 border border-blue-500/30 px-3 py-0.5 rounded text-[10px] md:text-xs font-bold text-blue-200 tracking-wider uppercase text-shadow">
-                        HERO
-                    </div>
-                </div>
-
-                {/* Sprite */}
-                <div className="hero-sprite-wrapper z-10">
-                    <div className="hero-sprite-sheet"></div>
-                </div>
-
-                {/* HP Bar */}
-                <div className="w-32 md:w-48 z-20 mt-[-10px]">
+                
+                {/* 1. HP Bar (Đã chuyển lên đầu) */}
+                <div className="w-32 md:w-48 z-20 mb-[-10px]">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
@@ -117,6 +91,17 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                         shadowColor="rgba(132, 204, 22, 0.5)" 
                     />
                 </div>
+
+                {/* (Đã Xóa Name Tag "HERO") */}
+
+                {/* 2. Sprite */}
+                <div className="hero-sprite-wrapper z-10">
+                    <div className="hero-sprite-sheet"></div>
+                </div>
+
+                {/* 3. Visual Anchor/Shadow (Giữ ở dưới chân) */}
+                <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+
             </div>
         </div>
     )
@@ -124,21 +109,16 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
 
 // --- FLOATING TEXT COMPONENT ---
 const FloatingText = ({ text, id, colorClass, side }: { text: string, id: number, colorClass: string, side: 'left' | 'right' }) => {
-  // side 'left' = Player Side (Receiving Damage)
-  // side 'right' = Boss Side (Receiving Damage)
   const positionClass = side === 'left' ? 'left-[20%] md:left-[25%]' : 'right-[20%] md:right-[25%]';
-  
   return (
     <div key={id} className={`absolute top-1/2 ${positionClass} font-lilita text-2xl animate-float-up pointer-events-none z-50 ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
   );
 };
 
-// --- SLASH EFFECT COMPONENT (Targeting Boss on Right) ---
+// --- SLASH EFFECT COMPONENT ---
 const SlashEffect = ({ id }: { id: number }) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
-    
     return (
-        // Adjusted coordinates to hit the Right side (Boss)
         <div key={id} className="absolute top-[35%] right-[15%] md:right-[20%] z-40 pointer-events-none animate-slash-fly">
              <div 
                 className="animate-slash-play"
