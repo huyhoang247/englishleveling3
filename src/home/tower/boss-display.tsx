@@ -1,3 +1,4 @@
+// --- START OF FILE boss-display.tsx ---
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
@@ -253,7 +254,6 @@ export const BossDisplay = memo(({
                 <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Magic Circle - Positioned behind boss */}
-                {/* Update: bottom-[-18%] -> bottom-[-30%] để dịch vòng tròn xuống dưới nữa */}
                 <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
@@ -261,9 +261,10 @@ export const BossDisplay = memo(({
                 {/* 
                     HP Bar Boss
                     Vị trí: Dịch lên trên (margin-bottom dương) để tách khỏi đầu Boss
-                    Update: Điều chỉnh width thành w-40 md:w-60 (trước đó là w-48 md:w-72)
+                    Update: Giảm margin xuống (mb-2 md:mb-4) để thanh HP gần Boss hơn, 
+                    nhường chỗ phía trên cho Damage Text
                 */}
-                <div className="w-40 md:w-60 z-20 mb-8 md:mb-12">
+                <div className="w-40 md:w-60 z-20 mb-2 md:mb-4">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
