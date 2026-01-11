@@ -36,12 +36,12 @@ const HomeIcon = memo(({ className = '' }: { className?: string }) => (
     </svg> 
 ));
 
-// --- FLOATING TEXT COMPONENT (NEW DESIGN) ---
+// --- FLOATING TEXT COMPONENT (NEW RPG DESIGN) ---
 // Kiểu dữ liệu cho text sát thương
 interface DamageText {
     id: number;
     text: string;
-    color: string; // Hex color hoặc Tailwind class
+    color: string; // Hex color
     x: number; // Tọa độ % Left
     y: number; // Tọa độ % Top
     fontSize: number;
@@ -51,14 +51,16 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
   return (
     <div 
         key={data.id} 
-        className="absolute font-lilita animate-float-up pointer-events-none z-50 whitespace-nowrap" 
+        className="absolute font-lilita animate-damage pointer-events-none z-50 whitespace-nowrap" 
         style={{ 
             left: `${data.x}%`, 
             top: `${data.y}%`,
             color: data.color,
             fontSize: `${data.fontSize}px`,
-            // Mô phỏng style stroke giống Canvas của stick-game
-            textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 5px rgba(0,0,0,0.5)' 
+            // Dùng transform để căn giữa điểm neo, giúp hiệu ứng nảy đẹp hơn
+            transform: 'translateX(-50%)',
+            // Stroke dày hơn để nổi bật trên nền battle
+            textShadow: '3px 3px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 4px 4px 5px rgba(0,0,0,0.5)' 
         }}
     >
         {data.text}
@@ -99,7 +101,7 @@ const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
     );
 };
 
-// --- MODALS (Giữ nguyên) ---
+// --- MODALS ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -249,11 +251,18 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
-    // Sử dụng DamageText mới với tọa độ số
+    // State lưu danh sách text hiển thị
     const [damages, setDamages] = useState<DamageText[]>([]);
     
-    // Ref để lưu danh sách damages hiện tại nhằm tính toán va chạm mà không cần dependency state
-    const damagesRef = useRef<DamageText[]>([]);
+    // REF ĐỂ THEO DÕI COMBO (STACKING LOGIC)
+    // Lưu thời gian và số đếm combo của lần hit cuối cùng
+    const lastDamageRef = useRef<{
+        player: { time: number; count: number };
+        boss: { time: number; count: number };
+    }>({
+        player: { time: 0, count: 0 },
+        boss: { time: 0, count: 0 }
+    });
 
     const [orbEffects, setOrbEffects] = useState<OrbProps[]>([]);
     const [visualBossHp, setVisualBossHp] = useState(0);
@@ -297,73 +306,73 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    // --- LOGIC HIỂN THỊ DAMAGE CHỐNG ĐÈ (COLLISION DETECTION) ---
-    // Được port từ stick-game.tsx sang React
+    // --- LOGIC HIỂN THỊ DAMAGE RPG (ZIG-ZAG STACKING) ---
+    // Thay vì va chạm, ta dùng logic đếm combo theo thời gian
     const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 24) => {
-        const id = Date.now() + Math.random();
+        const now = Date.now();
+        const id = now + Math.random();
+        
+        // Lấy lịch sử combo của mục tiêu
+        const history = lastDamageRef.current[target];
 
         // 1. Xác định vị trí cơ bản
-        // Player bên trái (khoảng 25%), Boss bên phải (khoảng 75%)
-        let baseX = target === 'player' ? 25 : 75; 
-        const baseY = 55; // Tọa độ Y cơ bản (khoảng giữa màn hình)
+        // Player bên trái (25%), Boss bên phải (75%)
+        // Y = 50% là khoảng giữa ngực/đầu nhân vật (điểm neo của text)
+        const baseX = target === 'player' ? 25 : 75; 
+        const baseY = 50; 
 
-        // 2. Random nhẹ ban đầu
-        // Random từ -2% đến +2% cho X, Y đẩy lên một chút
-        let finalX = baseX + (Math.random() * 4 - 2);
-        let finalY = baseY + (Math.random() * 5 - 2.5);
+        // 2. Logic Combo
+        // Nếu sát thương mới cách sát thương cũ < 800ms -> Tăng Combo
+        if (now - history.time < 800) {
+            history.count += 1;
+        } else {
+            history.count = 0; // Reset nếu ngắt quãng
+        }
+        history.time = now;
 
-        // 3. Logic Heal (Máu bay lên cao hơn chút)
+        // 3. Tính toán độ lệch (Offset) để tạo hiệu ứng ZigZag
+        // Y: Càng nhiều hit, càng bay cao hơn (trừ vào Top)
+        const yOffset = history.count * 6; 
+        
+        // X: Hit chẵn sang phải, Hit lẻ sang trái (Tạo hiệu ứng ZigZag)
+        // Ví dụ: 0(giữa) -> 1(trái) -> 2(phải) -> 3(trái rộng hơn)...
+        const spreadDirection = history.count % 2 === 0 ? 1 : -1;
+        const spreadMagnitude = Math.ceil(history.count / 2) * 5; // Độ lệch ngang
+        const xOffset = (history.count > 0 ? spreadDirection * spreadMagnitude : 0);
+
+        // 4. Random nhẹ (Noise) để không quá cứng nhắc
+        const randomJitterX = (Math.random() - 0.5) * 2; // -1% đến +1%
+        const randomJitterY = (Math.random() - 0.5) * 2;
+
+        const finalX = baseX + xOffset + randomJitterX;
+        // Trừ Y để đi lên trên.
+        let finalY = baseY - yOffset + randomJitterY; 
+
+        // Logic Heal (Máu bay lên cao hơn chút để không che số Dame nhận vào)
         const isHeal = text.startsWith('+');
         if (isHeal) {
-            finalY -= 5; 
+            finalY -= 15; 
         }
 
-        // 4. KIỂM TRA VA CHẠM (COLLISION CHECK)
-        // Lặp qua danh sách text đang hiện hữu để tránh đè
-        // Sử dụng đơn vị % tương đối, ngưỡng va chạm ước lượng: X: 5%, Y: 5%
-        const checkLimit = 10;
-        let count = 0;
+        // 5. Cập nhật State
+        // Hit combo cao sẽ có chữ to hơn chút xíu
+        const finalFontSize = isHeal ? fontSize : fontSize + Math.min(10, history.count * 2);
 
-        // Duyệt ngược để ưu tiên text mới nhất
-        for (let i = damagesRef.current.length - 1; i >= 0; i--) {
-            if (count >= checkLimit) break;
-            
-            const existing = damagesRef.current[i];
-            const dx = Math.abs(existing.x - finalX);
-            const dy = Math.abs(existing.y - finalY);
+        const newText: DamageText = { 
+            id, 
+            text, 
+            color, 
+            x: finalX, 
+            y: finalY, 
+            fontSize: finalFontSize 
+        };
 
-            // Nếu quá gần nhau
-            if (dx < 5 && dy < 5) {
-                // Đẩy text mới lên trên text cũ
-                finalY = existing.y - 4; 
-                
-                // Tản ra hai bên
-                if (existing.x > baseX) {
-                     finalX -= 2; 
-                } else {
-                     finalX += 2;
-                }
-            }
-            count++;
-        }
+        setDamages(prev => [...prev, newText]);
 
-        const newText: DamageText = { id, text, color, x: finalX, y: finalY, fontSize };
-
-        // Cập nhật State và Ref
-        setDamages(prev => {
-            const updated = [...prev, newText];
-            damagesRef.current = updated; // Sync ref
-            return updated;
-        });
-
-        // Tự động xóa sau 1.2s
+        // Tự động xóa sau 1s (khớp với thời gian animation CSS)
         setTimeout(() => {
-            setDamages(prev => {
-                const updated = prev.filter(d => d.id !== id);
-                damagesRef.current = updated; // Sync ref
-                return updated;
-            });
-        }, 1200);
+            setDamages(prev => prev.filter(d => d.id !== id));
+        }, 1000);
     }, []);
 
     // --- TRIGGER BATTLE EFFECTS ---
@@ -449,13 +458,24 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
                 .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
                 
-                /* Animation float-up giống stick-game: Bay lên và mờ dần */
-                @keyframes float-up { 
-                    0% { transform: translateY(0) scale(1); opacity: 1; } 
-                    20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-                    100% { transform: translateY(-80px) scale(1); opacity: 0; } 
+                /* Animation damage-pop-up: Nảy to lên rồi bay đi */
+                @keyframes damage-pop-up { 
+                    0% { 
+                        opacity: 0; 
+                        transform: translate(-50%, 0) scale(0.5); 
+                    } 
+                    15% { 
+                        opacity: 1; 
+                        transform: translate(-50%, -20%) scale(1.4); /* Nảy to */
+                    }
+                    100% { 
+                        opacity: 0; 
+                        transform: translate(-50%, -120%) scale(1); /* Bay cao và mờ dần */
+                    } 
                 } 
-                .animate-float-up { animation: float-up 1.2s ease-out forwards; } 
+                .animate-damage { 
+                    animation: damage-pop-up 1s cubic-bezier(0.21, 1.11, 0.81, 0.99) forwards; 
+                } 
 
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } 
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } 
