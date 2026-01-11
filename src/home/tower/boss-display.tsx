@@ -254,15 +254,15 @@ export const BossDisplay = memo(({
                 {/* 
                     HP Bar Boss
                     Vị trí: Dịch lên trên (margin-bottom dương) để tách khỏi đầu Boss
-                    Update: Tăng width (w-48 md:w-72) để thanh máu dài hơn
+                    Update: Điều chỉnh width thành w-40 md:w-60 (trước đó là w-48 md:w-72)
                 */}
-                <div className="w-48 md:w-72 z-20 mb-8 md:mb-12">
+                <div className="w-40 md:w-60 z-20 mb-8 md:mb-12">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
                         colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
                         shadowColor="rgba(220, 38, 38, 0.5)" 
-                        heightClass="h-6 md:h-8" // Tăng độ dày (to hơn) cho Boss
+                        heightClass="h-6 md:h-8" // Giữ nguyên độ dày
                     />
                 </div>
 
