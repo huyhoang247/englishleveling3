@@ -4,11 +4,25 @@ import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
 
 // --- 1. HEALTH BAR COMPONENT (Dùng chung cho cả Hero và Boss) ---
-export const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
+// Update: Thêm prop heightClass để tùy chỉnh độ cao (độ to) của thanh máu
+export const HealthBar = memo(({ 
+    current, 
+    max, 
+    colorGradient, 
+    shadowColor, 
+    heightClass = "h-5 md:h-6" // Default height (dùng cho Hero)
+}: { 
+    current: number, 
+    max: number, 
+    colorGradient: string, 
+    shadowColor: string,
+    heightClass?: string 
+}) => {
     const scale = Math.max(0, current / max);
     return (
         <div className="w-full">
-            <div className="relative w-full h-5 md:h-6 bg-black/60 rounded-full border border-slate-600 p-0.5 shadow-inner overflow-hidden">
+            {/* Sử dụng heightClass thay vì fix cứng h-5 md:h-6 */}
+            <div className={`relative w-full ${heightClass} bg-black/60 rounded-full border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
                 <div
                     className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`}
                     style={{
@@ -17,7 +31,6 @@ export const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { c
                     }}>
                 </div>
                 <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10">
-                    {/* Update: Chỉ hiển thị máu hiện tại, bỏ phần / max */}
                     <span>{Math.ceil(current)}</span>
                 </div>
             </div>
@@ -89,7 +102,8 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                         current={stats.hp} 
                         max={stats.maxHp} 
                         colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
-                        shadowColor="rgba(132, 204, 22, 0.5)" 
+                        shadowColor="rgba(132, 204, 22, 0.5)"
+                        // Hero dùng size mặc định
                     />
                 </div>
 
@@ -240,13 +254,15 @@ export const BossDisplay = memo(({
                 {/* 
                     HP Bar Boss
                     Vị trí: Dịch lên trên (margin-bottom dương) để tách khỏi đầu Boss
+                    Update: Tăng width (w-48 md:w-72) để thanh máu dài hơn
                 */}
-                <div className="w-32 md:w-48 z-20 mb-8 md:mb-12">
+                <div className="w-48 md:w-72 z-20 mb-8 md:mb-12">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
                         colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
                         shadowColor="rgba(220, 38, 38, 0.5)" 
+                        heightClass="h-6 md:h-8" // Tăng độ dày (to hơn) cho Boss
                     />
                 </div>
 
