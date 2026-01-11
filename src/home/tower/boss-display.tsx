@@ -156,10 +156,10 @@ export const BossDisplay = memo(({
 
                 {/* 
                     1. Health Bar (Moved to Top)
-                    FIX: Đổi từ mb-[-10px] thành mb-2 hoặc mb-4.
-                    Điều này tạo khoảng cách dương, đẩy thanh máu lên trên, tách khỏi hình Boss.
+                    FIX: Đã tăng margin-bottom lên (mb-8 và mb-12)
+                    để đẩy thanh máu lên cao hơn, tách xa khỏi đầu Boss.
                 */}
-                <div className="w-32 md:w-48 z-20 mb-2 md:mb-4">
+                <div className="w-32 md:w-48 z-20 mb-8 md:mb-12">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
