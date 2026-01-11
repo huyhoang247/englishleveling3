@@ -25,73 +25,71 @@ const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xml
 
 // --- NEW COMPONENT: HERO DISPLAY (LEFT SIDE) ---
 const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
-    // Ảnh đã resize về 1243x1142
+    // URL ảnh Hero mới (kích thước file thực tế: 1252px x 1178px)
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
 
     /* 
-       LOGIC TÍNH TOÁN SPRITE HERO MỚI (36 frames - Grid 6x6):
-       - Kích thước ảnh: 1243px x 1142px
-       - Số cột (cols): 6
-       - Số hàng (rows): 6
-       - Width 1 frame: 1243 / 6 ≈ 207.16px -> Lấy 207px (chấp nhận sai số nhỏ pixel viền hoặc dùng background-size fit)
-       - Height 1 frame: 1142 / 6 ≈ 190.33px -> Lấy 190px
+       LOGIC TÍNH TOÁN HERO MỚI (Ludo AI):
+       - Grid: 6x6 (36 frames).
+       - File Size: 1252px (W) x 1178px (H).
+       - Frame Width: 1252 / 6 ≈ 208.66px.
+       - Frame Height: 1178 / 6 ≈ 196.33px.
+       - Ground Offset: 1px (Rất nhỏ, coi như sát đáy).
     */
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full" onClick={onStatsClick}>
              <style>{`
                 .hero-sprite-wrapper {
-                    /* Khung chứa frame đơn lẻ */
-                    width: 207px;
-                    height: 190px;
+                    /* Kích thước khung nhìn 1 frame */
+                    width: 209px;  /* 208.66 làm tròn lên */
+                    height: 196px; /* 196.33 làm tròn xuống */
                     overflow: hidden;
                     position: relative;
                     
-                    /* Scale: Frame gốc ~200px hơi nhỏ so với Boss, nên scale lên 1.3 lần (~260px) */
+                    /* Scale logic: Tăng 1.3 lần để cân đối với Boss */
                     transform: scale(1.3);
                     transform-origin: bottom center;
                 }
                 
                 .hero-sprite-sheet {
-                    width: 207px;
-                    height: 190px;
+                    width: 209px;
+                    height: 196px;
                     background-image: url('${spriteUrl}');
                     
-                    /* Kích thước chính xác của file ảnh */
-                    background-size: 1243px 1142px;
+                    /* Kích thước chính xác của file ảnh đã resize */
+                    background-size: 1252px 1178px;
                     background-repeat: no-repeat;
                     
-                    /* Animation Grid 6x6 */
-                    /* X: Chạy hết 1 hàng (6 frames) trong 0.5s */
-                    /* Y: Chạy hết 6 hàng (toàn bộ ảnh) trong 3.0s (0.5s * 6) */
+                    /* Animation 6x6 */
                     animation: 
                         hero-idle-x 0.5s steps(6) infinite,
                         hero-idle-y 3.0s steps(6) infinite;
                         
-                    image-rendering: -webkit-optimize-contrast; /* Giúp ảnh nét hơn khi scale */
+                    image-rendering: -webkit-optimize-contrast;
                 }
 
                 @keyframes hero-idle-x {
                     from { background-position-x: 0px; }
-                    to { background-position-x: -1243px; }
+                    to { background-position-x: -1252px; } /* Tổng chiều rộng ảnh */
                 }
 
                 @keyframes hero-idle-y {
                     from { background-position-y: 0px; }
-                    to { background-position-y: -1142px; }
+                    to { background-position-y: -1178px; } /* Tổng chiều cao ảnh */
                 }
 
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
-                        /* Trên mobile boss nhỏ lại, hero cũng nhỏ lại tương ứng */
+                        /* Mobile thu nhỏ về kích thước chuẩn để đỡ chiếm chỗ */
                         transform: scale(1.0); 
                     }
                 }
             `}</style>
             
             <div className="relative cursor-pointer group flex flex-col items-center">
-                {/* Visual Anchor/Shadow */}
-                <div className="absolute bottom-[5%] w-[90px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+                {/* Visual Anchor/Shadow - Điều chỉnh lại chút cho khớp với hero mới */ }
+                <div className="absolute bottom-[2%] w-[100px] h-[25px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Hero Name Tag */}
                 <div className="relative z-20 mb-[-25px] md:mb-[-35px]">
