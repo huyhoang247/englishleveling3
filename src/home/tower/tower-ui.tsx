@@ -20,6 +20,15 @@ interface BossBattleWrapperProps {
   onFloorComplete: (newFloor: number) => void;
 }
 
+// --- CONSTANTS ---
+// Các vị trí xuất hiện của quả cầu quanh Hero (tránh trùng nhau)
+const ORB_SPAWN_SLOTS = [
+    { left: '15%', top: '30%' }, // Bên trái cao
+    { left: '25%', top: '20%' }, // Ở giữa cao
+    { left: '35%', top: '35%' }, // Bên phải thấp
+    { left: '10%', top: '40%' }, // Bên trái thấp
+];
+
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
@@ -35,14 +44,25 @@ const FloatingText = ({ text, id, colorClass, side }: { text: string, id: number
   );
 };
 
-// --- ENERGY ORB EFFECT COMPONENT ---
-const EnergyOrbEffect = ({ id }: { id: number }) => {
-    // Frame size: 83x76 px | Grid: 6x6 (36 frames) | Sheet: 498x456 px
+// --- ENERGY ORB EFFECT COMPONENT (UPDATED) ---
+interface OrbProps {
+    id: number;
+    delay: number; // Delay để tạo cảm giác luân phiên
+    startPos: { left: string; top: string };
+}
+
+const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-1.webp";
     
+    // Convert style properties for CSS Variables usage
+    const style = {
+        '--start-left': startPos.left,
+        '--start-top': startPos.top,
+        animationDelay: `${delay}ms`, // Trì hoãn xuất hiện
+    } as React.CSSProperties;
+
     return (
-        // animate-orb-sequence: Controls position & scale (3s total)
-        <div key={id} className="absolute z-50 pointer-events-none animate-orb-sequence origin-center">
+        <div key={id} className="absolute z-50 pointer-events-none animate-orb-sequence origin-center" style={style}>
              <div 
                 className="animate-orb-spin"
                 style={{
@@ -210,7 +230,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     } = useBossBattle();
 
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string, side: 'left'|'right' }[]>([]);
-    const [orbEffects, setOrbEffects] = useState<{ id: number }[]>([]);
+    
+    // State lưu danh sách Orb với cấu trúc mở rộng
+    const [orbEffects, setOrbEffects] = useState<OrbProps[]>([]);
     
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -255,14 +277,31 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (!lastTurnEvents) return;
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // Player attacks Boss (Spawn Orb)
+        // Player attacks Boss (Spawn 2 Orbs)
         if (playerDmg > 0) {
-            showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', 'right');
-            const orbId = Date.now() + Math.random();
-            setOrbEffects(prev => [...prev, { id: orbId }]);
-            
-            // Cleanup matches 3s animation duration
-            setTimeout(() => setOrbEffects(prev => prev.filter(e => e.id !== orbId)), 3000);
+            // 1. Chọn ngẫu nhiên 2 vị trí không trùng nhau
+            const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
+            const slot1 = shuffledSlots[0];
+            const slot2 = shuffledSlots[1];
+
+            // 2. Tạo 2 quả cầu
+            const now = Date.now();
+            const orb1: OrbProps = { id: now, delay: 0, startPos: slot1 };
+            const orb2: OrbProps = { id: now + 1, delay: 300, startPos: slot2 }; // Quả 2 trễ 300ms
+
+            setOrbEffects(prev => [...prev, orb1, orb2]);
+
+            // 3. Hiển thị Floating Text khớp với thời điểm va chạm (khoảng 3s)
+            // Vì có 2 quả, ta có thể hiển thị dmg 2 lần hoặc 1 lần lớn.
+            // Để đơn giản và rõ ràng, ta hiển thị 1 lần số dmg tổng khi quả 1 chạm đích.
+            setTimeout(() => {
+                showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', 'right');
+            }, 2900); // 2.3s hover + 0.6s fly ~ 2.9s
+
+            // Cleanup
+            setTimeout(() => {
+                setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id));
+            }, 3500); // Tăng buffer cleanup vì quả 2 delay 300ms
         }
         
         // Player Heals
@@ -324,38 +363,52 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     animation: orb-spin-x 0.4s steps(6) infinite, orb-spin-y 2.4s steps(6) infinite; 
                 }
 
-                /* 2. Fly Sequence (3s TOTAL) */
+                /* 2. Fly Sequence (3s TOTAL: 2.3s Hover + 0.7s Fly) 
+                   Using CSS Variables for Dynamic Start Position */
                 @keyframes orb-sequence {
                     /* --- PHASE 1: CHARGE (0s -> 2.3s) --- */
-                    /* 2.3s is 76.66% of 3s */
                     0% { 
-                        left: 22%; top: 35%; /* Hero Pos */
+                        /* DYNAMIC START */
+                        left: var(--start-left); 
+                        top: var(--start-top); 
                         transform: scale(0); 
                         opacity: 0; 
                     }
                     10% { opacity: 1; }
                     20% { 
-                        left: 22%; top: 35%;
-                        transform: scale(0.8); /* Scale up quickly */
+                        left: var(--start-left); 
+                        top: var(--start-top);
+                        transform: scale(0.8); 
                     }
                     76.66% { 
-                        left: 22%; top: 35%; /* Stay at Hero until 2.3s */
+                        left: var(--start-left); 
+                        top: var(--start-top);
                         transform: scale(0.8); 
                     }
 
                     /* --- PHASE 2: FLY (2.3s -> 3s) --- */
                     95% { opacity: 1; }
                     100% { 
-                        left: 68%; top: 55%; /* Boss Pos */
+                        /* FIXED END (Boss Position) */
+                        left: 68%; top: 55%; 
                         transform: scale(0.8); 
                         opacity: 0; 
                     }
                 }
 
                 .animate-orb-sequence { 
-                    animation: orb-sequence 3s linear forwards; 
+                    animation-name: orb-sequence;
+                    animation-duration: 3s;
+                    animation-timing-function: linear;
+                    animation-fill-mode: forwards;
+                    /* animation-delay is set inline in the component */
+                    
                     will-change: transform, left, top;
                     transform: translateZ(0);
+                    
+                    /* Default Fallback vars */
+                    --start-left: 22%;
+                    --start-top: 35%;
                 }
             `}</style>
       
@@ -440,7 +493,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         {/* EFFECTS LAYER */}
                                         <div className="absolute inset-0 pointer-events-none z-40">
                                             {orbEffects.map(effect => (
-                                                <EnergyOrbEffect key={effect.id} id={effect.id} />
+                                                <EnergyOrbEffect 
+                                                    key={effect.id} 
+                                                    id={effect.id} 
+                                                    delay={effect.delay}
+                                                    startPos={effect.startPos}
+                                                />
                                             ))}
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} side={d.side} />
