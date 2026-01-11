@@ -35,13 +35,13 @@ const FloatingText = ({ text, id, colorClass, side }: { text: string, id: number
   );
 };
 
-// --- ENERGY ORB EFFECT COMPONENT (OPTIMIZED) ---
+// --- ENERGY ORB EFFECT COMPONENT ---
 const EnergyOrbEffect = ({ id }: { id: number }) => {
     // Frame size: 83x76 px | Grid: 6x6 (36 frames) | Sheet: 498x456 px
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-1.webp";
     
     return (
-        // animate-orb-sequence: Controls position & scale (3s)
+        // animate-orb-sequence: Controls position & scale (3s total)
         <div key={id} className="absolute z-50 pointer-events-none animate-orb-sequence origin-center">
              <div 
                 className="animate-orb-spin"
@@ -51,7 +51,7 @@ const EnergyOrbEffect = ({ id }: { id: number }) => {
                     backgroundImage: `url(${spriteUrl})`,
                     backgroundSize: '498px 456px',
                     backgroundRepeat: 'no-repeat',
-                    willChange: 'background-position' // Optimize GPU for sprite sheet
+                    willChange: 'background-position'
                 }}
              />
         </div>
@@ -261,14 +261,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const orbId = Date.now() + Math.random();
             setOrbEffects(prev => [...prev, { id: orbId }]);
             
-            // MODIFICATION: Cleanup after 3000ms (1s spawn + 2s fly)
+            // MODIFICATION: 3000ms cleanup (Matches 2s spawn + 1s fly)
             setTimeout(() => setOrbEffects(prev => prev.filter(e => e.id !== orbId)), 3000);
         }
         
         // Player Heals
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', 'left');
         
-        // Boss attacks Player (Delay logic adjustment suggested in context)
+        // Boss attacks Player
         setTimeout(() => {
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', 'left');
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', 'left');
@@ -318,32 +318,32 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
                 
                 /* --- ENERGY ORB ANIMATIONS --- */
-                /* 1. Xoay tròn Sprite (Grid 6x6) */
+                /* 1. Spin Sprite */
                 @keyframes orb-spin-x { from { background-position-x: 0; } to { background-position-x: -498px; } }
                 @keyframes orb-spin-y { from { background-position-y: 0; } to { background-position-y: -456px; } }
                 .animate-orb-spin { 
                     animation: orb-spin-x 0.4s steps(6) infinite, orb-spin-y 2.4s steps(6) infinite; 
                 }
 
-                /* 2. Đường bay (Sequence: 3s TOTAL) */
+                /* 2. Fly Sequence (3s TOTAL: 2s Hover + 1s Fly) */
                 @keyframes orb-sequence {
-                    /* --- PHASE 1: SPAWN (1s) = 33.33% of 3s --- */
+                    /* --- PHASE 1: HOVER (0s - 2s) = 66.66% --- */
                     0% { 
                         left: 22%; top: 35%; /* Hero Pos */
                         transform: scale(0); 
                         opacity: 0; 
                     }
-                    10% { opacity: 1; } /* Fade in fast */
-                    33.33% { 
-                        left: 22%; top: 35%; /* Stay at Hero */
-                        transform: scale(0.8); /* Reached full size */
+                    10% { opacity: 1; }
+                    20% { 
+                        left: 22%; top: 35%;
+                        transform: scale(0.8); /* Quick growth */
+                    }
+                    66.66% { 
+                        left: 22%; top: 35%; /* Stay */
+                        transform: scale(0.8); 
                     }
 
-                    /* --- PHASE 2: FLY (2s) = Remainder --- */
-                    33.34% {
-                        left: 22%; top: 35%; 
-                        transform: scale(0.8);
-                    }
+                    /* --- PHASE 2: FLY (2s - 3s) --- */
                     95% { opacity: 1; }
                     100% { 
                         left: 68%; top: 55%; /* Boss Pos */
@@ -354,8 +354,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                 .animate-orb-sequence { 
                     animation: orb-sequence 3s linear forwards; 
-                    will-change: transform, left, top; /* Performance Optimization */
-                    transform: translateZ(0); /* Hardware Acceleration */
+                    will-change: transform, left, top;
+                    transform: translateZ(0);
                 }
             `}</style>
       
