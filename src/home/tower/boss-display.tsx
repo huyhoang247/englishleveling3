@@ -21,10 +21,11 @@ export const HealthBar = memo(({
     const scale = Math.max(0, current / max);
     return (
         <div className="w-full">
-            {/* Sử dụng heightClass thay vì fix cứng h-5 md:h-6 */}
-            <div className={`relative w-full ${heightClass} bg-black/60 rounded-full border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
+            {/* Update: Đổi rounded-full thành rounded-lg để giảm độ bo tròn */}
+            <div className={`relative w-full ${heightClass} bg-black/60 rounded-lg border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
                 <div
-                    className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`}
+                    // Update: Đổi rounded-full thành rounded-md để khớp với rounded-lg bên ngoài (trừ đi padding)
+                    className={`h-full rounded-md transition-transform duration-500 ease-out origin-left ${colorGradient}`}
                     style={{
                         transform: `scaleX(${scale})`,
                         boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}`
@@ -91,7 +92,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                 }
             `}</style>
             
-            {/* Update: Giảm translate-x (-translate-x-4 md:-translate-x-10) để dịch sang phải thêm chút nữa */}
+            {/* Giữ nguyên vị trí đã chỉnh sửa: -translate-x-4 md:-translate-x-10 */}
             <div className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10">
                 
                 {/* 
