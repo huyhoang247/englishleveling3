@@ -1,3 +1,4 @@
+// --- START OF FILE tower-ui.tsx ---
 
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
@@ -7,8 +8,6 @@ import EnergyDisplay from '../../ui/display/energy-display.tsx';
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
-
-// --- IMPORT COMPONENT BOSS ĐÃ TÁCH ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
 import BossDisplay from './boss-display.tsx';
 
@@ -20,10 +19,34 @@ interface BossBattleWrapperProps {
 }
 
 // --- UI HELPER COMPONENTS ---
-
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
-
 const WarriorIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={className}> <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 4c1.93 0 3.5 1.57 3.5 3.5S13.93 13 12 13s-3.5-1.57-3.5-3.5S10.07 6 12 6zm0 14c-2.03 0-4.43-.82-6.14-2.88a9.947 9.947 0 0112.28 0C16.43 19.18 14.03 20 12 20z" /> </svg> ));
+
+// --- NEW COMPONENT: HERO SPRITE ---
+const HeroSprite = memo(() => {
+    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
+    return (
+        <div className="relative">
+            {/* Wrapper for scaling */}
+            <div className="hero-sprite-wrapper overflow-hidden transform origin-bottom scale-50 md:scale-75 lg:scale-90">
+                <div 
+                    className="animate-hero-idle"
+                    style={{
+                        width: '518px',
+                        height: '476px',
+                        backgroundImage: `url(${spriteUrl})`,
+                        backgroundRepeat: 'no-repeat',
+                        // Assuming sprite sheet logic. If it's a single frame, steps(1) is fine.
+                        // If it's a strip of 6 frames like bosses:
+                        backgroundSize: '3108px 476px', // 518 * 6
+                    }}
+                />
+            </div>
+            {/* Shadow */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 w-32 h-6 bg-black/40 blur-md rounded-full"></div>
+        </div>
+    );
+});
 
 const PlayerInfoDisplay = memo(({ stats, floor, onAvatarClick }: { stats: CombatStats, floor: string, onAvatarClick: () => void }) => {
     const percentage = Math.max(0, (stats.hp / stats.maxHp) * 100);
@@ -67,189 +90,184 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// --- COMPONENT: SLASHING EFFECT (GRID 6x6 - RESIZED 1483x1454 - SCALED DOWN) ---
+// --- COMPONENT: SLASHING EFFECT ---
 const SlashEffect = ({ id }: { id: number }) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
-    
-    // TÍNH TOÁN KÍCH THƯỚC:
-    // Tổng: 1483 x 1454
-    // Frame Width: 1483/6 = 247.166... px
-    // Frame Height: 1454/6 = 242.333... px
-    
     return (
-        <div key={id} className="absolute top-[30%] left-[10%] z-40 pointer-events-none animate-slash-fly">
+        // MODIFICATION: Moved slash effect to the RIGHT side (where Boss is)
+        // Adjusted 'top' to align with Boss center visually
+        <div key={id} className="absolute top-[40%] right-[15%] md:right-[20%] z-40 pointer-events-none animate-slash-fly">
              <div 
                 className="animate-slash-play"
                 style={{
-                    width: '247.17px',            // Width 1 Frame
-                    height: '242.33px',           // Height 1 Frame
+                    width: '247.17px',
+                    height: '242.33px',
                     backgroundImage: `url(${spriteUrl})`,
-                    backgroundSize: '1483px 1454px', // Kích thước tổng ảnh
+                    backgroundSize: '1483px 1454px',
                     backgroundRepeat: 'no-repeat',
-                    transformOrigin: 'top left',
-                    // --- ĐIỀU CHỈNH KÍCH THƯỚC TẠI ĐÂY ---
-                    transform: 'scale(0.6)', // Giảm xuống 0.6 để nhỏ lại
+                    transformOrigin: 'center center',
+                    transform: 'scale(0.8)', 
                 }}
              />
         </div>
     );
 };
 
+// --- MODALS (CharacterStatsModal, LogModal, RewardsModal, VictoryModal, DefeatModal, SweepRewardsModal) KEPT SAME ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
-  const isPlayer = characterType === 'player';
-  const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
-  const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
-  
-  const StatItem = ({ label, icon, current, max }: { label: string, icon: string, current: number, max?: number }) => {
-    const valueText = max ? String(max) : String(current);
-
-    return (
-      <div className="flex items-center gap-3 w-full">
-        <div className="flex-shrink-0 w-24 h-10 bg-slate-800 rounded-lg flex items-center justify-center gap-2 border border-slate-700 p-2">
-          <img src={icon} alt={label} className="w-6 h-6 object-contain" />
-          <span className="font-bold text-sm text-slate-300 tracking-wider">{label}</span>
+    const isPlayer = characterType === 'player';
+    const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
+    const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
+    
+    const StatItem = ({ label, icon, current, max }: { label: string, icon: string, current: number, max?: number }) => {
+      const valueText = max ? String(max) : String(current);
+      return (
+        <div className="flex items-center gap-3 w-full">
+          <div className="flex-shrink-0 w-24 h-10 bg-slate-800 rounded-lg flex items-center justify-center gap-2 border border-slate-700 p-2">
+            <img src={icon} alt={label} className="w-6 h-6 object-contain" />
+            <span className="font-bold text-sm text-slate-300 tracking-wider">{label}</span>
+          </div>
+          <div className="flex-grow h-10 bg-black/40 rounded-lg flex items-center justify-center border border-slate-700/80">
+            <span className="font-bold text-sm text-white text-shadow-sm tracking-wider">{valueText}</span>
+          </div>
         </div>
-        <div className="flex-grow h-10 bg-black/40 rounded-lg flex items-center justify-center border border-slate-700/80">
-          <span className="font-bold text-sm text-white text-shadow-sm tracking-wider">{valueText}</span>
-        </div>
-      </div>
-    );
-  };
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-      <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-        <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
-        <div className="p-5 flex flex-col gap-4">
-          <StatItem label="HP" icon={uiAssets.statHpIcon} current={character.hp} max={character.maxHp} />
-          <StatItem label="ATK" icon={uiAssets.statAtkIcon} current={character.atk} />
-          <StatItem label="DEF" icon={uiAssets.statDefIcon} current={character.def} />
-        </div>
-      </div>
-    </div>
-  )
-});
-
-const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => {
+      );
+    };
     return (
       <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-        <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
+        <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
           <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-          <div className="p-4 border-b border-slate-700"><h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3></div>
-          <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-            {log.length > 0 ? log.map((entry, index) => (<p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2" dangerouslySetInnerHTML={{__html: entry}}></p>)) : (<p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>)}
+          <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
+          <div className="p-5 flex flex-col gap-4">
+            <StatItem label="HP" icon={uiAssets.statHpIcon} current={character.hp} max={character.maxHp} />
+            <StatItem label="ATK" icon={uiAssets.statAtkIcon} current={character.atk} />
+            <StatItem label="DEF" icon={uiAssets.statDefIcon} current={character.def} />
           </div>
         </div>
       </div>
     )
-});
-
-const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-      <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
-        <div className="p-5 pt-8">
-          <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3>
-          <div className="flex flex-row flex-wrap justify-center gap-3">
-            <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-              <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
-              <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
-            </div>
-            <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-              <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
-              <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
+  });
+  
+  const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => {
+      return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+          <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
+            <div className="p-4 border-b border-slate-700"><h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3></div>
+            <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+              {log.length > 0 ? log.map((entry, index) => (<p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2" dangerouslySetInnerHTML={{__html: entry}}></p>)) : (<p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>)}
             </div>
           </div>
         </div>
-      </div>
-    </div>
-  );
-});
-
-const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
-      <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
-          <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" />
-          <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow" style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>VICTORY</h2>
-          <div className="w-full flex flex-col items-center gap-3">
-              <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
-              <div className="flex flex-row flex-wrap justify-center gap-3">
-                  <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                      <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
-                      <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
-                  </div>
-                  <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                      <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
-                      <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
-                  </div>
-              </div>
-          </div>
-          <hr className="w-full border-t border-yellow-500/20 my-5" />
-          {!isLastBoss ? (
-            <button onClick={onNextFloor} className="w-full px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500 hover:border-blue-400 transition-all duration-200 active:scale-95">Next Floor</button>
-          ) : (
-            <button onClick={onRestart} className="w-full px-8 py-3 bg-yellow-600/50 hover:bg-yellow-600 rounded-lg font-bold text-base text-yellow-50 tracking-wider uppercase border border-yellow-500 hover:border-yellow-400 transition-all duration-200 active:scale-95">Play Again</button>
-          )}
-      </div>
-    </div>
-  );
-});
-
-const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => {
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
-      <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
-          <img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2" />
-          <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2>
-          <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">The darkness has consumed you. Rise again and reclaim your honor.</p>
-          <hr className="w-full border-t border-slate-700/50 my-5" />
-          <button onClick={onRestart} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95">Try Again</button>
-      </div>
-    </div>
-  );
-});
-
-const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => {
-  const title = isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED';
-  const titleColor = isSuccess ? 'text-yellow-300' : 'text-slate-300';
-  const iconSrc = isSuccess 
-    ? bossBattleAssets.victoryIcon
-    : bossBattleAssets.defeatIcon;
-
-  return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-      <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
-        <img src={iconSrc} alt={title} className="w-16 h-16 object-contain mb-2" />
-        <h2 className={`text-3xl font-bold ${titleColor} tracking-widest uppercase mb-4 text-shadow`}>{title}</h2>
-
-        {isSuccess ? (
-          <div className="w-full flex flex-col items-center gap-3">
-            <p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p>
+      )
+  });
+  
+  const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => {
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+        <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
+          <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
+          <div className="p-5 pt-8">
+            <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3>
             <div className="flex flex-row flex-wrap justify-center gap-3">
-              <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
+              <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
+                <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
                 <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
               </div>
-              <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
+              <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
+                <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
                 <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
               </div>
             </div>
           </div>
-        ) : (
-          <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">You were defeated and received no rewards. Try upgrading your stats.</p>
-        )}
-
-        <hr className="w-full border-t border-slate-700/50 my-5" />
-        <button onClick={onClose} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95">
-          Close
-        </button>
+        </div>
       </div>
-    </div>
-  );
-});
+    );
+  });
+  
+  const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => {
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
+        <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+            <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2 drop-shadow-[0_2px_4px_rgba(250,204,21,0.5)]" />
+            <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow" style={{ textShadow: `0 0 10px rgba(252, 211, 77, 0.7)` }}>VICTORY</h2>
+            <div className="w-full flex flex-col items-center gap-3">
+                <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
+                <div className="flex flex-row flex-wrap justify-center gap-3">
+                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                        <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(250,204,21,0.5)]" />
+                        <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
+                    </div>
+                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                        <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6 drop-shadow-[0_1px_2px_rgba(34,211,238,0.5)]" />
+                        <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
+                    </div>
+                </div>
+            </div>
+            <hr className="w-full border-t border-yellow-500/20 my-5" />
+            {!isLastBoss ? (
+              <button onClick={onNextFloor} className="w-full px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500 hover:border-blue-400 transition-all duration-200 active:scale-95">Next Floor</button>
+            ) : (
+              <button onClick={onRestart} className="w-full px-8 py-3 bg-yellow-600/50 hover:bg-yellow-600 rounded-lg font-bold text-base text-yellow-50 tracking-wider uppercase border border-yellow-500 hover:border-yellow-400 transition-all duration-200 active:scale-95">Play Again</button>
+            )}
+        </div>
+      </div>
+    );
+  });
+  
+  const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => {
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
+        <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl shadow-black/30 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+            <img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2" />
+            <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2>
+            <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">The darkness has consumed you. Rise again and reclaim your honor.</p>
+            <hr className="w-full border-t border-slate-700/50 my-5" />
+            <button onClick={onRestart} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95">Try Again</button>
+        </div>
+      </div>
+    );
+  });
+  
+  const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => {
+    const title = isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED';
+    const titleColor = isSuccess ? 'text-yellow-300' : 'text-slate-300';
+    const iconSrc = isSuccess 
+      ? bossBattleAssets.victoryIcon
+      : bossBattleAssets.defeatIcon;
+  
+    return (
+      <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
+        <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+          <img src={iconSrc} alt={title} className="w-16 h-16 object-contain mb-2" />
+          <h2 className={`text-3xl font-bold ${titleColor} tracking-widest uppercase mb-4 text-shadow`}>{title}</h2>
+  
+          {isSuccess ? (
+            <div className="w-full flex flex-col items-center gap-3">
+              <p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p>
+              <div className="flex flex-row flex-wrap justify-center gap-3">
+                <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                  <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
+                  <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
+                </div>
+                <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                  <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
+                  <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">You were defeated and received no rewards. Try upgrading your stats.</p>
+          )}
+  
+          <hr className="w-full border-t border-slate-700/50 my-5" />
+          <button onClick={onClose} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600 hover:border-slate-500 transition-all duration-200 active:scale-95">
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  });
 
 
 // --- MAIN VIEW COMPONENT ---
@@ -300,7 +318,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const showFloatingText = useCallback((text: string, colorClass: string, isPlayerSide: boolean) => {
         const id = Date.now() + Math.random();
-        const position = isPlayerSide ? 'left-[5%]' : 'right-[5%]';
+        // MODIFICATION: Adjusted floating text positions to match new layout
+        // Player is now LEFT (isPlayerSide=true -> Left)
+        // Boss is now RIGHT (isPlayerSide=false -> Right)
+        const position = isPlayerSide ? 'left-[15%] md:left-[20%]' : 'right-[15%] md:right-[20%]';
         setDamages(prev => [...prev, { id, text, colorClass: `${position} ${colorClass}` }]);
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
@@ -312,19 +333,23 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
         if (playerDmg > 0) {
+            // Text floats on Boss (Right side)
             showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', false);
-            // Kích hoạt hiệu ứng Slash khi người chơi gây sát thương
+            
+            // Trigger Slash Effect (Targeting Boss on Right)
             const slashId = Date.now() + Math.random();
             setSlashEffects(prev => [...prev, { id: slashId }]);
-            // Xóa hiệu ứng sau khi animation kết thúc (0.5s)
             setTimeout(() => setSlashEffects(prev => prev.filter(e => e.id !== slashId)), 500);
         }
         
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', true);
         
         setTimeout(() => {
+          // Boss Attacks Player (Left side)
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', true);
-          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', false);
+          // Reflect damage from Boss hitting Player? Or Player hitting Boss? 
+          // Assuming Reflect damage appears on Attacker. If Player attacks, Boss reflects -> Player takes dmg.
+          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', true);
         }, 500);
 
     }, [lastTurnEvents, showFloatingText]);
@@ -370,26 +395,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
 
-                /* --- SLASH EFFECT 6x6 GRID ANIMATION (1483x1454) --- */
-
-                /* Trục X: Chạy hết chiều ngang 1483px */
-                @keyframes slash-x {
+                /* --- HERO ANIMATION --- */
+                /* Assuming 6 frames horizontal strip for now based on typical Ludo exports */
+                @keyframes hero-idle-x {
                     from { background-position-x: 0; }
-                    to { background-position-x: -1483px; } 
+                    to { background-position-x: -3108px; } /* 518 * 6 */
+                }
+                .animate-hero-idle {
+                    animation: hero-idle-x 0.8s steps(6) infinite;
                 }
 
-                /* Trục Y: Chạy hết chiều dọc 1454px */
-                @keyframes slash-y {
-                    from { background-position-y: 0; }
-                    to { background-position-y: -1454px; }
-                }
+                /* --- SLASH EFFECT 6x6 GRID ANIMATION (1483x1454) --- */
+                @keyframes slash-x { from { background-position-x: 0; } to { background-position-x: -1483px; } }
+                @keyframes slash-y { from { background-position-y: 0; } to { background-position-y: -1454px; } }
 
                 .animate-slash-play {
-                    /* 
-                       Logic:
-                       - Trục X: steps(6) infinite chạy trong 0.08333s (0.5s / 6) để quét 1 hàng.
-                       - Trục Y: steps(6) forwards chạy trong 0.5s để nhảy qua 6 hàng.
-                    */
                     animation: 
                         slash-x 0.08333s steps(6) infinite,
                         slash-y 0.5s steps(6) forwards;
@@ -401,11 +421,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     height: 250px;
                 }
                 
+                /* Update Slash Path: Start slightly left of boss and move right */
                 @keyframes slash-fly-path {
-                     0% { left: 10%; top: 35%; opacity: 0; transform: scale(0.8) rotate(-10deg); }
+                     0% { opacity: 0; transform: scale(0.8) rotate(-10deg) translateX(-50px); }
                      15% { opacity: 1; }
                      85% { opacity: 1; }
-                     100% { left: 60%; top: 35%; opacity: 0; transform: scale(1.2) rotate(10deg); }
+                     100% { opacity: 0; transform: scale(1.2) rotate(10deg) translateX(50px); }
                 }
             `}</style>
       
@@ -462,41 +483,51 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {battleState === 'fighting' && !gameOver && (<button onClick={skipBattle} className="font-sans px-4 py-1.5 bg-slate-800/90 hover:bg-slate-700/90 rounded-lg font-semibold text-xs transition-all duration-200 border border-slate-600 hover:border-orange-400 active:scale-95 shadow-md text-orange-300">Skip Battle</button> )}
                                 </div>
     
-                                <main className="w-full h-full flex flex-col justify-start items-center pt-[72px] p-4 relative">
-                                    <div className="w-full max-w-2xl mx-auto mb-4 flex justify-between items-start min-h-[5rem]">
-                                        <div></div>
-                                        <div className="flex flex-col items-end gap-2">
-                                            <div className="w-full flex justify-center gap-2">
-                                                <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
-                                                    <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
-                                                </button>
-                                                <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
-                                                    <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
-                                                </button>
-                                            </div>
-                                        </div>
+                                <main className="w-full h-full flex flex-col justify-between pt-[72px] relative overflow-y-auto overflow-x-hidden">
+                                    
+                                    {/* Action Buttons & History - Keep centered top */}
+                                    <div className="w-full max-w-2xl mx-auto mb-2 flex justify-end px-4 gap-2 z-30">
+                                         <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Last Battle Log">
+                                              <img src={bossBattleAssets.historyIcon} alt="Log" className="w-full h-full object-contain" />
+                                         </button>
+                                         <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-10 h-10 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full transition-all duration-200 border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50 disabled:cursor-not-allowed" title="View Potential Rewards">
+                                              <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
+                                         </button>
                                     </div>
                             
-                                    {/* --- RENDERING SLASH EFFECTS --- */}
-                                    {slashEffects.map(effect => (
-                                        <SlashEffect key={effect.id} id={effect.id} />
-                                    ))}
+                                    {/* --- BATTLE ARENA --- */}
+                                    <div className="flex-grow w-full max-w-7xl mx-auto flex flex-row items-end justify-between px-2 sm:px-10 pb-10 sm:pb-20 relative">
+                                        
+                                        {/* LEFT: PLAYER */}
+                                        <div className="flex flex-col items-center justify-end z-10 w-[45%] md:w-auto">
+                                            <HeroSprite />
+                                        </div>
 
-                                    {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
+                                        {/* RIGHT: BOSS */}
+                                        <div className="flex flex-col items-center justify-end z-10 w-[55%] md:w-auto">
+                                            <BossDisplay 
+                                                bossId={currentBossData.id}
+                                                name={currentBossData.name}
+                                                element={bossElement}
+                                                hp={bossStats.hp}
+                                                maxHp={bossStats.maxHp}
+                                                imgSrc={bossImgSrc}
+                                                onImgError={handleBossImgError}
+                                                onStatsClick={() => setStatsModalTarget('boss')}
+                                            />
+                                        </div>
+
+                                        {/* EFFECTS OVERLAY */}
+                                        {slashEffects.map(effect => (
+                                            <SlashEffect key={effect.id} id={effect.id} />
+                                        ))}
+
+                                        {damages.map(d => (<FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} />))}
+
+                                    </div>
     
-                                    {/* SỬ DỤNG COMPONENT BOSS ĐÃ TÁCH */}
-                                    <BossDisplay 
-                                        bossId={currentBossData.id}
-                                        name={currentBossData.name}
-                                        element={bossElement}
-                                        hp={bossStats.hp}
-                                        maxHp={bossStats.maxHp}
-                                        imgSrc={bossImgSrc}
-                                        onImgError={handleBossImgError}
-                                        onStatsClick={() => setStatsModalTarget('boss')}
-                                    />
-    
-                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4">
+                                    {/* FIGHT BUTTON AREA - CENTER BOTTOM */}
+                                    <div className="w-full flex justify-center pb-8 z-30">
                                         {battleState === 'idle' && (
                                         <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-10 py-2 bg-slate-900/80 rounded-lg text-teal-300 border border-teal-500/40 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.6)] active:scale-95 disabled:bg-slate-800/60 disabled:text-slate-500 disabled:border-slate-700 disabled:cursor-not-allowed disabled:shadow-none">
                                             <div className="flex flex-col items-center gap-0.5">
@@ -505,7 +536,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         </button>
                                         )}
-                                        {/* Đã xóa phần hiển thị combat log ở đây */}
                                     </div>
     
                                     {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
@@ -520,7 +550,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     );
 }
 
-// --- WRAPPER COMPONENT ---
 export default function BossBattle(props: BossBattleWrapperProps) {
     return (
         <BossBattleProvider userId={props.userId}>
