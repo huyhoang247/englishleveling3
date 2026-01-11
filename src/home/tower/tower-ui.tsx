@@ -302,8 +302,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         const id = Date.now() + Math.random();
 
         // 1. Xác định vị trí cơ bản
-        // Player bên trái, Boss bên phải
-        let baseX = target === 'player' ? 25 : 75; 
+        // Player bên trái (dịch sang trái từ 25 xuống 20), Boss bên phải (75)
+        let baseX = target === 'player' ? 20 : 75; 
         const baseY = 55; // Tọa độ Y cơ bản
 
         // 2. Random rộng hơn để tạo độ tản tự nhiên
