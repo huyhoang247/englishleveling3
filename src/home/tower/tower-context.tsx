@@ -376,13 +376,12 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
-          // --- UPDATED TIMER: 3200ms (3.2s) ---
-          // Ensures the 3s animation in UI completes before next turn starts
+          // --- THAY ĐỔI: Tăng lên 3600ms (3.6s) để khớp với UI 2 Orbs ---
           battleIntervalRef.current = setInterval(() => {
               if(savedCallback.current) {
                 savedCallback.current();
               }
-          }, 3200); 
+          }, 3600); 
         }
         return () => {
           if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
