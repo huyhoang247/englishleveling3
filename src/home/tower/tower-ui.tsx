@@ -66,7 +66,7 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// --- COMPONENT: SLASHING EFFECT (GRID 6x6 - RESIZED 1483x1454) ---
+// --- COMPONENT: SLASHING EFFECT (GRID 6x6 - RESIZED 1483x1454 - SCALED DOWN) ---
 const SlashEffect = ({ id }: { id: number }) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
     
@@ -86,7 +86,8 @@ const SlashEffect = ({ id }: { id: number }) => {
                     backgroundSize: '1483px 1454px', // Kích thước tổng ảnh
                     backgroundRepeat: 'no-repeat',
                     transformOrigin: 'top left',
-                    transform: 'scale(1)', // Ảnh đã resize nhỏ nên để scale 1
+                    // --- ĐIỀU CHỈNH KÍCH THƯỚC TẠI ĐÂY ---
+                    transform: 'scale(0.6)', // Giảm xuống 0.6 để nhỏ lại
                 }}
              />
         </div>
