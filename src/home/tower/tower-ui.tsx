@@ -1,4 +1,4 @@
-// --- START OF FILE tower-ui.tsx (UPDATED) ---
+// --- START OF FILE tower-ui.tsx ---
 
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
@@ -82,8 +82,12 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
             
             <div className="relative cursor-pointer group flex flex-col items-center">
                 
-                {/* 1. HP Bar (Đã chuyển lên đầu) */}
-                <div className="w-32 md:w-48 z-20 mb-[-10px]">
+                {/* 
+                    1. HP Bar
+                    FIX: Sử dụng translate-y để đẩy thanh máu xuống thấp hơn, 
+                    lấp vào khoảng trống trong suốt phía trên ảnh sprite của Hero.
+                */}
+                <div className="w-32 md:w-48 z-20 translate-y-10 md:translate-y-12">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
@@ -91,8 +95,6 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                         shadowColor="rgba(132, 204, 22, 0.5)" 
                     />
                 </div>
-
-                {/* (Đã Xóa Name Tag "HERO") */}
 
                 {/* 2. Sprite */}
                 <div className="hero-sprite-wrapper z-10">
@@ -542,4 +544,4 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
-// --- END OF FILE tower-ui.tsx (UPDATED) ---
+// --- END OF FILE tower-ui.tsx ---
