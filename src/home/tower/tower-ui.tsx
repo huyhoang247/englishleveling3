@@ -21,35 +21,42 @@ interface BossBattleWrapperProps {
 }
 
 // --- UI ICONS ---
-const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> ));
+const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> 
+    </svg> 
+));
 
 // --- NEW COMPONENT: HERO DISPLAY (LEFT SIDE) ---
 const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
-    // URL ảnh Hero mới (kích thước file thực tế: 1252px x 1178px)
+    // URL ảnh Hero (Size gốc: 3132x2946 -> Resize: 1252x1178)
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
-
-    /* 
-       LOGIC TÍNH TOÁN HERO MỚI (Ludo AI):
-       - Grid: 6x6 (36 frames).
-       - File Size: 1252px (W) x 1178px (H).
-       - Frame Width: 1252 / 6 ≈ 208.66px.
-       - Frame Height: 1178 / 6 ≈ 196.33px.
-       - Ground Offset: 1px (Rất nhỏ, coi như sát đáy).
-    */
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full" onClick={onStatsClick}>
              <style>{`
                 .hero-sprite-wrapper {
-                    /* Kích thước khung nhìn 1 frame */
-                    width: 209px;  /* 208.66 làm tròn lên */
-                    height: 196px; /* 196.33 làm tròn xuống */
+                    /* 
+                       Tính toán kích thước Frame cho Grid 6x6:
+                       Width: 1252px / 6 = 208.66px -> 209px
+                       Height: 1178px / 6 = 196.33px -> 196px
+                    */
+                    width: 209px;
+                    height: 196px;
                     overflow: hidden;
                     position: relative;
                     
-                    /* Scale logic: Tăng 1.3 lần để cân đối với Boss */
-                    transform: scale(1.3);
+                    /* 
+                       SCALE LOGIC (CÁCH 1):
+                       Giảm Scale từ 1.3 xuống 1.05 để ảnh gần với kích thước thật (pixel 1:1) nhất.
+                       Điều này giúp ảnh không bị mờ do trình duyệt phải kéo giãn (upscale).
+                    */
+                    transform: scale(1.05); 
                     transform-origin: bottom center;
+
+                    /* Tối ưu render để ảnh nét hơn */
+                    image-rendering: -webkit-optimize-contrast;
+                    image-rendering: crisp-edges;
                 }
                 
                 .hero-sprite-sheet {
@@ -57,7 +64,7 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                     height: 196px;
                     background-image: url('${spriteUrl}');
                     
-                    /* Kích thước chính xác của file ảnh đã resize */
+                    /* Kích thước chính xác của file ảnh */
                     background-size: 1252px 1178px;
                     background-repeat: no-repeat;
                     
@@ -65,30 +72,28 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                     animation: 
                         hero-idle-x 0.5s steps(6) infinite,
                         hero-idle-y 3.0s steps(6) infinite;
-                        
-                    image-rendering: -webkit-optimize-contrast;
                 }
 
                 @keyframes hero-idle-x {
                     from { background-position-x: 0px; }
-                    to { background-position-x: -1252px; } /* Tổng chiều rộng ảnh */
+                    to { background-position-x: -1252px; }
                 }
 
                 @keyframes hero-idle-y {
                     from { background-position-y: 0px; }
-                    to { background-position-y: -1178px; } /* Tổng chiều cao ảnh */
+                    to { background-position-y: -1178px; }
                 }
 
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
-                        /* Mobile thu nhỏ về kích thước chuẩn để đỡ chiếm chỗ */
-                        transform: scale(1.0); 
+                        /* Mobile: Giữ nguyên hoặc thu nhỏ nhẹ */
+                        transform: scale(0.9); 
                     }
                 }
             `}</style>
             
             <div className="relative cursor-pointer group flex flex-col items-center">
-                {/* Visual Anchor/Shadow - Điều chỉnh lại chút cho khớp với hero mới */ }
+                {/* Visual Anchor/Shadow */}
                 <div className="absolute bottom-[2%] w-[100px] h-[25px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Hero Name Tag */}
@@ -151,7 +156,8 @@ const SlashEffect = ({ id }: { id: number }) => {
     );
 };
 
-// --- MODALS (Unchanged logic, minor style tweaks) ---
+// --- MODALS ---
+
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -186,12 +192,112 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
   )
 });
 
-// (Other Modals: LogModal, RewardsModal, VictoryModal, DefeatModal, SweepRewardsModal - kept condensed for brevity as they are unchanged functionally)
-const LogModal=memo(({log,onClose}:{log:string[],onClose:()=>void})=>(<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}><div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e)=>e.stopPropagation()}><button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button><div className="p-4 border-b border-slate-700"><h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3></div><div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">{log.length>0?log.map((entry,index)=>(<p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2" dangerouslySetInnerHTML={{__html:entry}}></p>)):(<p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>)}</div></div></div>));
-const RewardsModal=memo(({onClose,rewards}:{onClose:()=>void,rewards:{coins:number,energy:number}})=>(<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}><div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e)=>e.stopPropagation()}><button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button><div className="p-5 pt-8"><h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3><div className="flex flex-row flex-wrap justify-center gap-3"><div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700"><img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6"/><span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span></div><div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700"><img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6"/><span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span></div></div></div></div></div>));
-const VictoryModal=memo(({onRestart,onNextFloor,isLastBoss,rewards}:{onRestart:()=>void,onNextFloor:()=>void,isLastBoss:boolean,rewards:{coins:number,energy:number}})=>(<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in"><div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"><img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2"/><h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow">VICTORY</h2><div className="w-full flex flex-col items-center gap-3"><p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p><div className="flex flex-row flex-wrap justify-center gap-3"><div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700"><img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6"/><span className="text-xl font-bold text-yellow-300">{rewards.coins}</span></div><div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700"><img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6"/><span className="text-xl font-bold text-cyan-300">{rewards.energy}</span></div></div></div><hr className="w-full border-t border-yellow-500/20 my-5"/>{!isLastBoss?(<button onClick={onNextFloor} className="w-full px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500">Next Floor</button>):(<button onClick={onRestart} className="w-full px-8 py-3 bg-yellow-600/50 hover:bg-yellow-600 rounded-lg font-bold text-base text-yellow-50 tracking-wider uppercase border border-yellow-500">Play Again</button>)}</div></div>));
-const DefeatModal=memo(({onRestart}:{onRestart:()=>void})=>(<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in"><div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"><img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2"/><h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2><p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">The darkness has consumed you.</p><hr className="w-full border-t border-slate-700/50 my-5"/><button onClick={onRestart} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600">Try Again</button></div></div>));
-const SweepRewardsModal=memo(({isSuccess,rewards,onClose}:{isSuccess:boolean;rewards:{coins:number;energy:number};onClose:()=>void;})=>(<div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in"><div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center"><img src={isSuccess?bossBattleAssets.victoryIcon:bossBattleAssets.defeatIcon} alt="" className="w-16 h-16 object-contain mb-2"/><h2 className={`text-3xl font-bold ${isSuccess?'text-yellow-300':'text-slate-300'} tracking-widest uppercase mb-4 text-shadow`}>{isSuccess?'SWEEP SUCCESS':'SWEEP FAILED'}</h2>{isSuccess?(<div className="w-full flex flex-col items-center gap-3"><p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p><div className="flex flex-row flex-wrap justify-center gap-3"><div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700"><img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6"/><span className="text-xl font-bold text-yellow-300">{rewards.coins}</span></div><div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700"><img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6"/><span className="text-xl font-bold text-cyan-300">{rewards.energy}</span></div></div></div>):(<p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">Failed.</p>)}<hr className="w-full border-t border-slate-700/50 my-5"/><button onClick={onClose} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600">Close</button></div></div>));
+const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+        <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button>
+            <div className="p-4 border-b border-slate-700">
+                <h3 className="text-xl font-bold text-center text-cyan-300 text-shadow-sm tracking-wide">BATTLE HISTORY</h3>
+            </div>
+            <div className="h-80 overflow-y-auto p-4 flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
+                {log.length > 0 ? log.map((entry, index) => (
+                    <p key={index} className="text-slate-300 mb-2 border-b border-slate-800/50 pb-2" dangerouslySetInnerHTML={{ __html: entry }}></p>
+                )) : (
+                    <p className="text-slate-400 text-center italic">Chưa có lịch sử trận đấu.</p>
+                )}
+            </div>
+        </div>
+    </div>
+));
+
+const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+        <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
+            <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button>
+            <div className="p-5 pt-8">
+                <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3>
+                <div className="flex flex-row flex-wrap justify-center gap-3">
+                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
+                        <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
+                        <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
+                    </div>
+                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
+                        <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
+                        <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+));
+
+const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
+        <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+            <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2" />
+            <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow">VICTORY</h2>
+            <div className="w-full flex flex-col items-center gap-3">
+                <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
+                <div className="flex flex-row flex-wrap justify-center gap-3">
+                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                        <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
+                        <span className="text-xl font-bold text-yellow-300">{rewards.coins}</span>
+                    </div>
+                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                        <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
+                        <span className="text-xl font-bold text-cyan-300">{rewards.energy}</span>
+                    </div>
+                </div>
+            </div>
+            <hr className="w-full border-t border-yellow-500/20 my-5" />
+            {!isLastBoss ? (
+                <button onClick={onNextFloor} className="w-full px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500">Next Floor</button>
+            ) : (
+                <button onClick={onRestart} className="w-full px-8 py-3 bg-yellow-600/50 hover:bg-yellow-600 rounded-lg font-bold text-base text-yellow-50 tracking-wider uppercase border border-yellow-500">Play Again</button>
+            )}
+        </div>
+    </div>
+));
+
+const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
+        <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+            <img src={bossBattleAssets.defeatIcon} alt="Defeat" className="w-16 h-16 object-contain mb-2" />
+            <h2 className="text-4xl font-bold text-slate-300 tracking-widest uppercase mb-3">DEFEAT</h2>
+            <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">The darkness has consumed you.</p>
+            <hr className="w-full border-t border-slate-700/50 my-5" />
+            <button onClick={onRestart} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600">Try Again</button>
+        </div>
+    </div>
+));
+
+const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => (
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
+        <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
+            <img src={isSuccess ? bossBattleAssets.victoryIcon : bossBattleAssets.defeatIcon} alt="" className="w-16 h-16 object-contain mb-2" />
+            <h2 className={`text-3xl font-bold ${isSuccess ? 'text-yellow-300' : 'text-slate-300'} tracking-widest uppercase mb-4 text-shadow`}>{isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED'}</h2>
+            {isSuccess ? (
+                <div className="w-full flex flex-col items-center gap-3">
+                    <p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p>
+                    <div className="flex flex-row flex-wrap justify-center gap-3">
+                        <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                            <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
+                            <span className="text-xl font-bold text-yellow-300">{rewards.coins}</span>
+                        </div>
+                        <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
+                            <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
+                            <span className="text-xl font-bold text-cyan-300">{rewards.energy}</span>
+                        </div>
+                    </div>
+                </div>
+            ) : (
+                <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">Failed.</p>
+            )}
+            <hr className="w-full border-t border-slate-700/50 my-5" />
+            <button onClick={onClose} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600">Close</button>
+        </div>
+    </div>
+));
 
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
