@@ -40,6 +40,7 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                        Tính toán kích thước Frame cho Grid 6x6:
                        Width: 1252px / 6 = 208.66px -> 209px
                        Height: 1178px / 6 = 196.33px -> 196px
+                       (GIỮ NGUYÊN THÔNG SỐ NÀY ĐỂ KHỚP ANIMATION)
                     */
                     width: 209px;
                     height: 196px;
@@ -47,11 +48,10 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                     position: relative;
                     
                     /* 
-                       SCALE LOGIC (CÁCH 1):
-                       Giảm Scale từ 1.3 xuống 1.05 để ảnh gần với kích thước thật (pixel 1:1) nhất.
-                       Điều này giúp ảnh không bị mờ do trình duyệt phải kéo giãn (upscale).
+                       SCALE LOGIC:
+                       Giảm xuống 0.85 để nén điểm ảnh lại -> Hình sẽ sắc nét hơn.
                     */
-                    transform: scale(1.05); 
+                    transform: scale(0.85); 
                     transform-origin: bottom center;
 
                     /* Tối ưu render để ảnh nét hơn */
@@ -86,18 +86,18 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
 
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
-                        /* Mobile: Giữ nguyên hoặc thu nhỏ nhẹ */
-                        transform: scale(0.9); 
+                        /* Mobile: Giảm scale xuống nữa để vừa màn hình và nét hơn */
+                        transform: scale(0.65); 
                     }
                 }
             `}</style>
             
             <div className="relative cursor-pointer group flex flex-col items-center">
                 {/* Visual Anchor/Shadow */}
-                <div className="absolute bottom-[2%] w-[100px] h-[25px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+                <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Hero Name Tag */}
-                <div className="relative z-20 mb-[-25px] md:mb-[-35px]">
+                <div className="relative z-20 mb-[-20px] md:mb-[-30px]">
                     <div className="bg-blue-900/80 border border-blue-500/30 px-3 py-0.5 rounded text-[10px] md:text-xs font-bold text-blue-200 tracking-wider uppercase text-shadow">
                         HERO
                     </div>
@@ -109,7 +109,7 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                 </div>
 
                 {/* HP Bar */}
-                <div className="w-32 md:w-48 z-20 mt-2">
+                <div className="w-32 md:w-48 z-20 mt-[-10px]">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
