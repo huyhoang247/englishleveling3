@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
@@ -419,7 +420,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
 
                                     {/* --- ACTION BAR (Bottom) --- */}
-                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-8 z-50">
+                                    {/* Update: mt-8 -> mt-14 để dịch nút xuống dưới */}
+                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-14 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
                                                 {currentFloor > 0 && (
