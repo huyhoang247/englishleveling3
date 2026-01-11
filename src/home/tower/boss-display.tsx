@@ -2,8 +2,9 @@
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
+import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
 
-// --- MODIFICATION: Exported HealthBar for use in tower-ui.tsx for the Player ---
+// --- 1. HEALTH BAR COMPONENT (Dùng chung cho cả Hero và Boss) ---
 export const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
     const scale = Math.max(0, current / max);
     return (
@@ -24,7 +25,89 @@ export const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { c
     );
 });
 
-// --- COMPONENT SPRITE ANIMATION ---
+// --- 2. HERO DISPLAY COMPONENT (Đã chuyển từ tower-ui sang đây) ---
+export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
+    // URL ảnh Hero (Size gốc: 3132x2946 -> Resize: 1252x1178)
+    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
+
+    return (
+        <div className="flex flex-col items-center justify-end h-full w-full" onClick={onStatsClick}>
+             <style>{`
+                .hero-sprite-wrapper {
+                    /* Frame Size Grid 6x6 */
+                    width: 209px;
+                    height: 196px;
+                    overflow: hidden;
+                    position: relative;
+                    
+                    /* Scale 0.85 để ảnh nhỏ lại và sắc nét */
+                    transform: scale(0.85); 
+                    transform-origin: bottom center;
+
+                    /* Tối ưu render */
+                    image-rendering: -webkit-optimize-contrast;
+                    image-rendering: crisp-edges;
+                }
+                
+                .hero-sprite-sheet {
+                    width: 209px;
+                    height: 196px;
+                    background-image: url('${spriteUrl}');
+                    background-size: 1252px 1178px;
+                    background-repeat: no-repeat;
+                    
+                    animation: 
+                        hero-idle-x 0.5s steps(6) infinite,
+                        hero-idle-y 3.0s steps(6) infinite;
+                }
+
+                @keyframes hero-idle-x {
+                    from { background-position-x: 0px; }
+                    to { background-position-x: -1252px; }
+                }
+
+                @keyframes hero-idle-y {
+                    from { background-position-y: 0px; }
+                    to { background-position-y: -1178px; }
+                }
+
+                @media (max-width: 768px) {
+                    .hero-sprite-wrapper {
+                        transform: scale(0.65); 
+                    }
+                }
+            `}</style>
+            
+            <div className="relative cursor-pointer group flex flex-col items-center">
+                
+                {/* 
+                    HP Bar Hero
+                    Vị trí: Dịch xuống dưới (translate-y dương) để lấp vào khoảng trống trên đầu Sprite
+                */}
+                <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24">
+                     <HealthBar 
+                        current={stats.hp} 
+                        max={stats.maxHp} 
+                        colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
+                        shadowColor="rgba(132, 204, 22, 0.5)" 
+                    />
+                </div>
+
+                {/* Sprite */}
+                <div className="hero-sprite-wrapper z-10">
+                    <div className="hero-sprite-sheet"></div>
+                </div>
+
+                {/* Shadow */}
+                <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+
+            </div>
+        </div>
+    )
+});
+
+
+// --- 3. BOSS SPRITE ANIMATION HELPER ---
 const BossSprite = memo(({ bossId }: { bossId: number }) => {
     const idStr = String(bossId).padStart(2, '0');
     const spritePath = `/images/boss/${idStr}.webp`;
@@ -58,7 +141,7 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
     );
 });
 
-// --- MAIN COMPONENT HIỂN THỊ BOSS ---
+// --- 4. BOSS DISPLAY COMPONENT ---
 interface BossDisplayProps {
     bossId: number;
     name: string;
@@ -155,9 +238,8 @@ export const BossDisplay = memo(({
                 </div>
 
                 {/* 
-                    1. Health Bar (Moved to Top)
-                    FIX: Đã tăng margin-bottom lên (mb-8 và mb-12)
-                    để đẩy thanh máu lên cao hơn, tách xa khỏi đầu Boss.
+                    HP Bar Boss
+                    Vị trí: Dịch lên trên (margin-bottom dương) để tách khỏi đầu Boss
                 */}
                 <div className="w-32 md:w-48 z-20 mb-8 md:mb-12">
                     <HealthBar 
@@ -168,7 +250,7 @@ export const BossDisplay = memo(({
                     />
                 </div>
 
-                {/* 2. Sprite Render */}
+                {/* Sprite Render */}
                 <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
                     {isSpriteBoss ? (
                         <BossSprite bossId={bossId} />
