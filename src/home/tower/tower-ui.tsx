@@ -25,60 +25,88 @@ const HomeIcon = memo(({ className = '' }: { className?: string }) => ( <svg xml
 
 // --- NEW COMPONENT: HERO DISPLAY (LEFT SIDE) ---
 const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
+    // Ảnh đã resize về 1243x1142
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
 
-    // Frame size provided: 518 x 476 px
-    // Assuming a standard 6-frame idle animation based on other sprites in the game.
-    // Total Width = 518 * 6 = 3108px.
+    /* 
+       LOGIC TÍNH TOÁN SPRITE HERO MỚI (36 frames - Grid 6x6):
+       - Kích thước ảnh: 1243px x 1142px
+       - Số cột (cols): 6
+       - Số hàng (rows): 6
+       - Width 1 frame: 1243 / 6 ≈ 207.16px -> Lấy 207px (chấp nhận sai số nhỏ pixel viền hoặc dùng background-size fit)
+       - Height 1 frame: 1142 / 6 ≈ 190.33px -> Lấy 190px
+    */
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full" onClick={onStatsClick}>
              <style>{`
-                .hero-sprite-container {
-                    width: 518px;
-                    height: 476px;
+                .hero-sprite-wrapper {
+                    /* Khung chứa frame đơn lẻ */
+                    width: 207px;
+                    height: 190px;
                     overflow: hidden;
-                    /* Scale down to fit the UI */
+                    position: relative;
+                    
+                    /* Scale: Frame gốc ~200px hơi nhỏ so với Boss, nên scale lên 1.3 lần (~260px) */
+                    transform: scale(1.3);
                     transform-origin: bottom center;
-                    transform: scale(0.45);
                 }
+                
                 .hero-sprite-sheet {
-                    width: 3108px; /* 518 * 6 */
-                    height: 476px;
+                    width: 207px;
+                    height: 190px;
                     background-image: url('${spriteUrl}');
-                    background-size: 3108px 476px;
+                    
+                    /* Kích thước chính xác của file ảnh */
+                    background-size: 1243px 1142px;
                     background-repeat: no-repeat;
-                    animation: hero-idle 0.8s steps(6) infinite;
+                    
+                    /* Animation Grid 6x6 */
+                    /* X: Chạy hết 1 hàng (6 frames) trong 0.5s */
+                    /* Y: Chạy hết 6 hàng (toàn bộ ảnh) trong 3.0s (0.5s * 6) */
+                    animation: 
+                        hero-idle-x 0.5s steps(6) infinite,
+                        hero-idle-y 3.0s steps(6) infinite;
+                        
+                    image-rendering: -webkit-optimize-contrast; /* Giúp ảnh nét hơn khi scale */
                 }
-                @keyframes hero-idle {
-                    from { background-position-x: 0; }
-                    to { background-position-x: -3108px; }
+
+                @keyframes hero-idle-x {
+                    from { background-position-x: 0px; }
+                    to { background-position-x: -1243px; }
                 }
+
+                @keyframes hero-idle-y {
+                    from { background-position-y: 0px; }
+                    to { background-position-y: -1142px; }
+                }
+
                 @media (max-width: 768px) {
-                    .hero-sprite-container {
-                        transform: scale(0.3);
+                    .hero-sprite-wrapper {
+                        /* Trên mobile boss nhỏ lại, hero cũng nhỏ lại tương ứng */
+                        transform: scale(1.0); 
                     }
                 }
             `}</style>
             
             <div className="relative cursor-pointer group flex flex-col items-center">
                 {/* Visual Anchor/Shadow */}
-                <div className="absolute bottom-[5%] w-[100px] h-[25px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+                <div className="absolute bottom-[5%] w-[90px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Hero Name Tag */}
-                <div className="relative z-10 mb-[-30px] md:mb-[-50px]">
+                <div className="relative z-20 mb-[-25px] md:mb-[-35px]">
                     <div className="bg-blue-900/80 border border-blue-500/30 px-3 py-0.5 rounded text-[10px] md:text-xs font-bold text-blue-200 tracking-wider uppercase text-shadow">
                         HERO
                     </div>
                 </div>
 
                 {/* Sprite */}
-                <div className="hero-sprite-container relative z-10">
+                <div className="hero-sprite-wrapper z-10">
                     <div className="hero-sprite-sheet"></div>
                 </div>
 
                 {/* HP Bar */}
-                <div className="w-32 md:w-48 z-20 mt-[-10px]">
+                <div className="w-32 md:w-48 z-20 mt-2">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
