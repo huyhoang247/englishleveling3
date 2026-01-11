@@ -66,13 +66,15 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// --- NEW COMPONENT: SLASHING EFFECT ---
+// --- NEW COMPONENT: SLASHING EFFECT (36 FRAMES) ---
 const SlashEffect = ({ id }: { id: number }) => {
-    // URL Sprite Sheet từ yêu cầu
+    // URL Sprite Sheet
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
     
-    // Frame size: 618x606. Giả định 5 frames (3090px width).
-    // Animation: Di chuyển từ trái (Player side) sang phải (Boss side).
+    // TÍNH TOÁN KÍCH THƯỚC CHÍNH XÁC:
+    // Frame size: 618px (rộng) x 606px (cao)
+    // Tổng số frame: 36
+    // Tổng chiều rộng ảnh = 618 * 36 = 22248px
     
     return (
         <div key={id} className="absolute top-[30%] left-[10%] z-40 pointer-events-none animate-slash-fly">
@@ -82,10 +84,10 @@ const SlashEffect = ({ id }: { id: number }) => {
                     width: '618px',
                     height: '606px',
                     backgroundImage: `url(${spriteUrl})`,
-                    backgroundSize: '3090px 606px', // 618 * 5 frames
+                    backgroundSize: '22248px 606px', // Full width for 36 frames
                     backgroundRepeat: 'no-repeat',
                     transformOrigin: 'top left',
-                    transform: 'scale(0.4)', // Thu nhỏ xuống còn khoảng 250px
+                    transform: 'scale(0.4)', // Thu nhỏ xuống cho vừa màn hình
                 }}
              />
         </div>
@@ -258,6 +260,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     } = useBossBattle();
 
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string }[]>([]);
+    
     // State cho hiệu ứng Slash
     const [slashEffects, setSlashEffects] = useState<{ id: number }[]>([]);
     
@@ -366,13 +369,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
 
-                /* --- SLASH EFFECT ANIMATIONS --- */
+                /* --- SLASH EFFECT ANIMATIONS (CORRECTED FOR 36 FRAMES) --- */
                 @keyframes slash-sprite-run {
                     from { background-position-x: 0; }
-                    to { background-position-x: -3090px; } /* 618px * 5 frames */
+                    to { background-position-x: -22248px; } /* 618px * 36 frames = 22248px */
                 }
                 .animate-slash-play {
-                    animation: slash-sprite-run 0.5s steps(5) forwards;
+                    /* steps(36) ensures all 36 frames are played in 0.5s */
+                    animation: slash-sprite-run 0.5s steps(36) forwards;
                 }
                 @keyframes slash-fly-path {
                      0% { left: 10%; top: 35%; opacity: 0; transform: scale(0.8) rotate(-10deg); }
