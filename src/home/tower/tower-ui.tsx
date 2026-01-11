@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback, useEffect, memo, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
@@ -34,110 +34,31 @@ const FloatingText = ({ text, id, colorClass, side }: { text: string, id: number
   );
 };
 
-// --- HELPER: Generate Random Position above Hero ---
-// Tạo vị trí ngẫu nhiên trong vùng trên đầu Hero để không bị chồng chéo quá nhiều
-const getOrbPosition = (index: number, total: number) => {
-    // Hero Head Area roughly: left 15%->35%, top 20%->40%
-    // Chia lưới hoặc random có kiểm soát
-    const baseTop = 30; // %
-    const baseLeft = 25; // %
-    
-    // Spread orbs out based on index
-    // Ví dụ: Xếp thành hình vòng cung hoặc đám mây
-    const spreadX = (Math.random() - 0.5) * 20; // +/- 10%
-    const spreadY = (Math.random() - 0.5) * 15; // +/- 7.5%
-
-    return {
-        top: `${baseTop + spreadY}%`,
-        left: `${baseLeft + spreadX}%`
-    };
-};
-
-// --- ENERGY ORB EFFECT COMPONENT (ADVANCED) ---
-interface OrbProps {
-    id: number;
-    index: number;
-    totalOrbs: number;
-    startPos: { top: string, left: string };
-    targetPos: { top: string, left: string };
-}
-
-const EnergyOrbEffect = ({ id, index, totalOrbs, startPos, targetPos }: OrbProps) => {
+// --- ENERGY ORB EFFECT COMPONENT (NEW) ---
+const EnergyOrbEffect = ({ id }: { id: number }) => {
+    // Frame size: 83x76 px
+    // Grid: 6x6 (36 frames)
+    // Sheet Size: 498x456 px
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-1.webp";
     
-    // --- TIMING CONFIGURATION ---
-    const spawnDuration = 1000; // 1s để zoom từ 0->1
-    const shootInterval = 500;  // 0.5s khoảng cách giữa các lần bắn
-    const flyDuration = 2000;   // 2s bay từ hero -> boss
-    
-    // Thời điểm bắt đầu spawn của quả này
-    const mySpawnStartTime = index * 1000; 
-    
-    // Thời điểm tất cả quả cầu đã spawn xong (Ready to shoot phase)
-    const allSpawnedTime = totalOrbs * 1000;
-    
-    // Thời điểm quả này bắt đầu bắn (sau khi tất cả đã spawn)
-    // Cộng thêm 0.5s * thứ tự của quả này
-    const myShootStartTime = allSpawnedTime + (index * shootInterval);
-
-    // State điều khiển animation class
-    const [phase, setPhase] = useState<'hidden' | 'appearing' | 'hovering' | 'shooting'>('hidden');
-
-    useEffect(() => {
-        // 1. Start Appearance
-        const t1 = setTimeout(() => {
-            setPhase('appearing');
-        }, mySpawnStartTime);
-
-        // 2. Switch to Hovering (sau khi appear xong 1s)
-        const t2 = setTimeout(() => {
-            setPhase('hovering');
-        }, mySpawnStartTime + spawnDuration);
-
-        // 3. Start Shooting
-        const t3 = setTimeout(() => {
-            setPhase('shooting');
-        }, myShootStartTime);
-
-        return () => {
-            clearTimeout(t1);
-            clearTimeout(t2);
-            clearTimeout(t3);
-        };
-    }, [mySpawnStartTime, myShootStartTime, spawnDuration]);
-
-    // Tính toán style động cho keyframes
-    const style = {
-        top: phase === 'shooting' ? targetPos.top : startPos.top,
-        left: phase === 'shooting' ? targetPos.left : startPos.left,
-        width: '83px',
-        height: '76px',
-        backgroundImage: `url(${spriteUrl})`,
-        backgroundSize: '498px 456px',
-        backgroundRepeat: 'no-repeat',
-        opacity: phase === 'hidden' ? 0 : 1,
-        transform: phase === 'hidden' ? 'scale(0)' : 'scale(1)',
-        transition: phase === 'shooting' 
-            ? `top ${flyDuration}ms ease-in, left ${flyDuration}ms ease-in, transform ${flyDuration}ms ease-in` // Khi bắn: di chuyển chậm
-            : `transform ${spawnDuration}ms cubic-bezier(0.175, 0.885, 0.32, 1.27), opacity 0.5s ease-out` // Khi xuất hiện: zoom nảy
-    };
-
-    // Khi shooting, ta muốn nó nhỏ lại chút khi bay xa hoặc biến mất khi trúng
-    if (phase === 'shooting') {
-        // Có thể thêm logic biến mất ở cuối, nhưng cha sẽ unmount nó
-    }
-
     return (
-        <div 
-            className={`absolute z-50 pointer-events-none origin-center ${phase === 'hovering' ? 'animate-orb-hover' : ''}`}
-            style={style}
-        >
-             <div className="animate-orb-spin w-full h-full" />
+        <div key={id} className="absolute z-50 pointer-events-none animate-orb-fly origin-center">
+             <div 
+                className="animate-orb-spin"
+                style={{
+                    width: '83px',
+                    height: '76px',
+                    backgroundImage: `url(${spriteUrl})`,
+                    backgroundSize: '498px 456px', // 83*6 và 76*6
+                    backgroundRepeat: 'no-repeat',
+                }}
+             />
         </div>
     );
 };
 
-// --- MODALS (Giữ nguyên) ---
+// --- MODALS ---
+
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -284,24 +205,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
         isLoading, error, playerStats, bossStats, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
-        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep, triggerNextTurn
+        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string, side: 'left'|'right' }[]>([]);
+    // Update State: Rename slashEffects to orbEffects
+    const [orbEffects, setOrbEffects] = useState<{ id: number }[]>([]);
     
-    // Quản lý danh sách các quả cầu
-    interface ActiveOrb {
-        id: number;
-        index: number;
-        total: number;
-        startPos: { top: string, left: string };
-        targetPos: { top: string, left: string };
-    }
-    const [activeOrbs, setActiveOrbs] = useState<ActiveOrb[]>([]);
-    
-    // Timer refs to clean up
-    const timersRef = useRef<NodeJS.Timeout[]>([]);
-
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -316,13 +226,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             setBossImgSrc(`/images/boss/${idStr}.webp`);
         }
     }, [currentBossData?.id]);
-
-    useEffect(() => {
-        return () => {
-            timersRef.current.forEach(clearTimeout);
-            timersRef.current = [];
-        };
-    }, [battleState]);
 
     const handleBossImgError = useCallback(() => {
         if (currentBossData) {
@@ -347,73 +250,30 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
 
-    // --- LOGIC ĐIỀU PHỐI BATTLE SEQUENCE ---
+    // --- TRIGGER BATTLE EFFECTS ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // --- CẤU HÌNH SỐ LƯỢNG QUẢ CẦU ---
-        // Ví dụ: Mặc định 10 quả như yêu cầu
-        const ORB_COUNT = 10; 
-        const SPAWN_SPEED = 1000; // 1s
-        const SHOOT_INTERVAL = 500; // 0.5s
-        const FLY_TIME = 2000; // 2s
-
-        // Tính tổng thời gian animation của Player:
-        // T = (Số lượng * 1s spawn) + (Số lượng * 0.5s bắn) + 2s bay
-        // Với 10 quả: 10s spawn + 5s bắn + 2s bay = 17s (Lượt đấu khá dài)
-        // Lưu ý: Quả cuối cùng xuất hiện lúc 9s. Quả cuối cùng bắn lúc 10s + 4.5s = 14.5s. Chạm lúc 16.5s.
-        const LAST_ORB_IMPACT_TIME = (ORB_COUNT * SPAWN_SPEED) + ((ORB_COUNT - 1) * SHOOT_INTERVAL) + FLY_TIME;
-
+        // Player attacks Boss (Spawn Orb)
         if (playerDmg > 0) {
-            const newOrbs: ActiveOrb[] = [];
-            for (let i = 0; i < ORB_COUNT; i++) {
-                newOrbs.push({
-                    id: Date.now() + i,
-                    index: i,
-                    total: ORB_COUNT,
-                    startPos: getOrbPosition(i, ORB_COUNT),
-                    targetPos: { top: '55%', left: '68%' } // Vị trí giữa Boss
-                });
-            }
-            setActiveOrbs(prev => [...prev, ...newOrbs]);
-
-            // 1. Xóa Orb sau khi quả cuối cùng bay xong
-            const tCleanup = setTimeout(() => {
-                setActiveOrbs([]); // Xóa sạch
-            }, LAST_ORB_IMPACT_TIME + 500); // Thêm chút buffer
-            timersRef.current.push(tCleanup);
-
-            // 2. Hiện Damage lên Boss (Ngay khi quả cuối cùng chạm - hoặc chia nhỏ damage nếu muốn)
-            // Hiện tại ta hiện tổng damage 1 lần khi quả cuối cùng chạm cho gọn
-            const tDamage = setTimeout(() => {
-                showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', 'right');
-            }, LAST_ORB_IMPACT_TIME);
-            timersRef.current.push(tDamage);
+            showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', 'right');
+            const orbId = Date.now() + Math.random();
+            setOrbEffects(prev => [...prev, { id: orbId }]);
+            // Remove Orb component after animation completes (approx 0.6s)
+            setTimeout(() => setOrbEffects(prev => prev.filter(e => e.id !== orbId)), 600);
         }
         
-        // Player Heal (Hiện sớm hơn chút)
-        if (playerHeal > 0) {
-            const tHeal = setTimeout(() => {
-                showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', 'left');
-            }, 2000); 
-            timersRef.current.push(tHeal);
-        }
+        // Player Heals
+        if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', 'left');
         
-        // Boss attacks Player (Sau khi Boss nhận damage xong 0.5s)
-        const tBossAttack = setTimeout(() => {
-            if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', 'left');
-            if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', 'left');
-        }, LAST_ORB_IMPACT_TIME + 500);
-        timersRef.current.push(tBossAttack);
+        // Boss attacks Player
+        setTimeout(() => {
+          if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', 'left');
+          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', 'left');
+        }, 500);
 
-        // TRIGGER NEXT TURN (Sau Boss đánh 1.5s)
-        const tNextTurn = setTimeout(() => {
-             triggerNextTurn();
-        }, LAST_ORB_IMPACT_TIME + 2000);
-        timersRef.current.push(tNextTurn);
-
-    }, [lastTurnEvents, showFloatingText, triggerNextTurn]);
+    }, [lastTurnEvents, showFloatingText]);
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
@@ -464,12 +324,26 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     animation: orb-spin-x 0.4s steps(6) infinite, orb-spin-y 2.4s steps(6) infinite; 
                 }
 
-                /* 2. Hiệu ứng Hover nhè nhẹ khi đang chờ bắn */
-                @keyframes orb-hover-anim {
-                    0%, 100% { transform: translateY(0) scale(1); }
-                    50% { transform: translateY(-10px) scale(1.05); }
+                /* 2. Đường bay (Bay từ đầu Hero -> Giữa Boss) */
+                @keyframes orb-fly-path {
+                     0% { 
+                        left: 22%; top: 35%; 
+                        transform: scale(0); 
+                        opacity: 0; 
+                     } /* Trên đầu Hero: Zoom từ 0 */
+                     15% { 
+                        left: 22%; top: 30%; 
+                        transform: scale(1.2); 
+                        opacity: 1; 
+                     } /* Zoom to cực đại, nảy lên xíu */
+                     90% { opacity: 1; }
+                     100% { 
+                        left: 68%; top: 55%; 
+                        transform: scale(0.8); 
+                        opacity: 0; 
+                     } /* Trúng giữa người Boss: Biến mất */
                 }
-                .animate-orb-hover { animation: orb-hover-anim 2s ease-in-out infinite; }
+                .animate-orb-fly { animation: orb-fly-path 0.6s ease-in forwards; }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -491,7 +365,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             </div>
                         ) : (
                             <>
-                                {/* --- HEADER --- */}
+                                {/* --- HEADER (Coins & Energy) --- */}
                                 <header className="fixed top-0 left-0 w-full z-30 p-2 bg-slate-900/90 border-b border-slate-700/50 shadow-lg h-14">
                                     <div className="w-full max-w-6xl mx-auto flex justify-between items-center h-full">
                                         <div className="flex items-center gap-3">
@@ -499,6 +373,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 <HomeIcon className="w-5 h-5 text-slate-300" />
                                                 <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                                             </button>
+                                            
+                                            {/* Floor Badge Moved to Header */}
                                             <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-md border border-slate-700/80 ml-2">
                                                 <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4" />
                                                 <h3 className="font-bold text-xs tracking-widest uppercase text-slate-300 select-none">
@@ -513,7 +389,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
                                 </header>
     
-                                {/* --- UTILITY BUTTONS --- */}
+                                {/* --- UTILITY BUTTONS (Log, Rewards, Sweep) --- */}
                                 <div className="absolute top-16 right-4 z-20 flex flex-col items-end gap-2">
                                      <div className="flex gap-2">
                                         <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-9 h-9 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50" title="History">
@@ -525,15 +401,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                      </div>
                                 </div>
     
+                                {/* Update: justify-end -> justify-center để đưa nội dung lên giữa, xóa pb-12 */}
                                 <main className="w-full h-full flex flex-col justify-center items-center pt-[72px] relative overflow-hidden">
                                     
                                     {/* --- BATTLE STAGE --- */}
+                                    {/* Update: h-[60vh] -> h-auto để chiều cao linh hoạt, thêm flex-grow để đẩy nhẹ buttons xuống */}
                                     <div className="w-full max-w-6xl mx-auto flex flex-row justify-between items-end px-4 md:px-12 h-[50vh] md:h-[60vh] relative">
                                         
+                                        {/* LEFT: HERO (Đã import từ boss-display.tsx) */}
                                         <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
                                             <HeroDisplay stats={playerStats} onStatsClick={() => setStatsModalTarget('player')} />
                                         </div>
 
+                                        {/* RIGHT: BOSS */}
                                         <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
                                             <BossDisplay 
                                                 bossId={currentBossData.id}
@@ -549,16 +429,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                                         {/* EFFECTS LAYER */}
                                         <div className="absolute inset-0 pointer-events-none z-40">
-                                            {/* Render Active Orbs */}
-                                            {activeOrbs.map(orb => (
-                                                <EnergyOrbEffect 
-                                                    key={orb.id} 
-                                                    id={orb.id}
-                                                    index={orb.index}
-                                                    totalOrbs={orb.total}
-                                                    startPos={orb.startPos}
-                                                    targetPos={orb.targetPos}
-                                                />
+                                            {/* Render Energy Orbs */}
+                                            {orbEffects.map(effect => (
+                                                <EnergyOrbEffect key={effect.id} id={effect.id} />
                                             ))}
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} side={d.side} />
@@ -567,7 +440,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                                     </div>
 
-                                    {/* --- ACTION BAR --- */}
+                                    {/* --- ACTION BAR (Bottom) --- */}
+                                    {/* Update: mt-8 -> mt-14 để dịch nút xuống dưới */}
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-14 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
