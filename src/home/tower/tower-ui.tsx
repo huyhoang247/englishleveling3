@@ -428,8 +428,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
               addDamageText(`-${formatDamageText(bossDmg)}`, '#ef4444', 'player', 24);
           }
           if (bossReflectDmg > 0) {
-              // Giảm font size xuống 18
-              addDamageText(`Reflect -${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
+              // REMOVE 'Reflect' TEXT
+              addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
           }
         }, 800); // Tăng delay phản công của boss lên một chút
 
