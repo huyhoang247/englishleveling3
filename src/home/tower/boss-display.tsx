@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
