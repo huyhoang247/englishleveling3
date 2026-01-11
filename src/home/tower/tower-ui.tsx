@@ -1,6 +1,6 @@
 // --- START OF FILE tower-ui.tsx ---
 
-import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, memo, useMemo, useRef } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
@@ -21,12 +21,12 @@ interface BossBattleWrapperProps {
 }
 
 // --- CONSTANTS ---
-// Các vị trí xuất hiện của quả cầu quanh Hero (tránh trùng nhau)
+// Các vị trí xuất hiện của quả cầu
 const ORB_SPAWN_SLOTS = [
-    { left: '15%', top: '30%' }, // Bên trái cao
-    { left: '25%', top: '20%' }, // Ở giữa cao
-    { left: '35%', top: '35%' }, // Bên phải thấp
-    { left: '10%', top: '40%' }, // Bên trái thấp
+    { left: '15%', top: '30%' },
+    { left: '25%', top: '20%' },
+    { left: '35%', top: '35%' },
+    { left: '10%', top: '40%' },
 ];
 
 // --- UI ICONS ---
@@ -54,7 +54,6 @@ interface OrbProps {
 const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-1.webp";
     
-    // Convert style properties for CSS Variables usage
     const style = {
         '--start-left': startPos.left,
         '--start-top': startPos.top,
@@ -78,8 +77,7 @@ const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
     );
 };
 
-// --- MODALS ---
-
+// --- MODALS (Giữ nguyên) ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -114,6 +112,7 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
   )
 });
 
+// (LogModal, RewardsModal, VictoryModal, DefeatModal, SweepRewardsModal giữ nguyên code cũ để tiết kiệm không gian, copy lại y nguyên)
 const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -230,10 +229,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     } = useBossBattle();
 
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string, side: 'left'|'right' }[]>([]);
-    
-    // State lưu danh sách Orb với cấu trúc mở rộng
     const [orbEffects, setOrbEffects] = useState<OrbProps[]>([]);
     
+    // --- NEW: State cho HP hiển thị (Visual HP) ---
+    // Khởi tạo là 0, sẽ được sync khi bossStats load
+    const [visualBossHp, setVisualBossHp] = useState(0);
+
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
@@ -241,6 +242,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [isSweeping, setIsSweeping] = useState(false);
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
+
+    // --- SYNC VISUAL HP KHI VÀO TRẬN HOẶC QUA TẦNG MỚI ---
+    useEffect(() => {
+        if (bossStats && (battleState === 'idle' || visualBossHp === 0)) {
+            setVisualBossHp(bossStats.hp);
+        }
+    }, [bossStats, battleState, currentFloor]);
 
     useEffect(() => {
         if (currentBossData) {
@@ -272,29 +280,50 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
     }, []);
 
-    // --- TRIGGER BATTLE EFFECTS ---
+    // --- TRIGGER BATTLE EFFECTS (RPG STYLE) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // Player attacks Boss (Spawn 2 Orbs)
+        // Player attacks Boss (Spawn 2 Orbs & Split Damage)
         if (playerDmg > 0) {
-            const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
-            const slot1 = shuffledSlots[0];
-            const slot2 = shuffledSlots[1];
+            // 1. Chia damage thành 2 phần
+            const dmg1 = Math.ceil(playerDmg / 2);
+            const dmg2 = playerDmg - dmg1;
 
+            const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
-            const orb1: OrbProps = { id: now, delay: 0, startPos: slot1 };
-            const orb2: OrbProps = { id: now + 1, delay: 300, startPos: slot2 };
+            
+            // Orb 1: Delay 0, Hit time ~2900ms
+            const orb1: OrbProps = { id: now, delay: 0, startPos: shuffledSlots[0] };
+            // Orb 2: Delay 300ms, Hit time ~3200ms
+            const orb2: OrbProps = { id: now + 1, delay: 300, startPos: shuffledSlots[1] };
 
             setOrbEffects(prev => [...prev, orb1, orb2]);
 
+            // HIT 1: Trừ máu & Hiện damage (tại 2.9s)
             setTimeout(() => {
-                showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', 'right');
+                showFloatingText(`-${formatDamageText(dmg1)}`, 'text-red-500', 'right');
+                setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
+            // HIT 2: Trừ máu & Hiện damage (tại 3.2s)
+            setTimeout(() => {
+                showFloatingText(`-${formatDamageText(dmg2)}`, 'text-red-500', 'right');
+                setVisualBossHp(prev => Math.max(0, prev - dmg2));
+            }, 3200);
+
+            // Cleanup Orbs
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id));
+                // Safety sync cuối cùng để đảm bảo không bị lệch số lẻ
+                if (bossStats) {
+                     // Chỉ sync nếu chênh lệch nhỏ (do làm tròn), tránh bug nhảy máu
+                     setVisualBossHp(current => {
+                         if(Math.abs(current - bossStats.hp) < 5) return bossStats.hp;
+                         return current;
+                     });
+                }
             }, 3500);
         }
         
@@ -307,7 +336,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', 'left');
         }, 500);
 
-    }, [lastTurnEvents, showFloatingText]);
+    }, [lastTurnEvents, showFloatingText]); // Bỏ bossStats khỏi deps để tránh loop
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
@@ -350,40 +379,30 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
                 
-                /* --- ENERGY ORB ANIMATIONS --- */
                 @keyframes orb-spin-x { from { background-position-x: 0; } to { background-position-x: -498px; } }
                 @keyframes orb-spin-y { from { background-position-y: 0; } to { background-position-y: -456px; } }
                 .animate-orb-spin { 
                     animation: orb-spin-x 0.4s steps(6) infinite, orb-spin-y 2.4s steps(6) infinite; 
                 }
 
-                /* 2. Fly Sequence (3s TOTAL: 2.3s Hover + 0.7s Fly) */
                 @keyframes orb-sequence {
-                    /* --- PHASE 1: CHARGE (0s -> 2.3s) --- */
                     0% { 
-                        left: var(--start-left); 
-                        top: var(--start-top); 
-                        transform: scale(0); 
-                        opacity: 0; 
+                        left: var(--start-left); top: var(--start-top); 
+                        transform: scale(0); opacity: 0; 
                     }
                     10% { opacity: 1; }
                     20% { 
-                        left: var(--start-left); 
-                        top: var(--start-top);
+                        left: var(--start-left); top: var(--start-top);
                         transform: scale(0.8); 
                     }
                     76.66% { 
-                        left: var(--start-left); 
-                        top: var(--start-top);
+                        left: var(--start-left); top: var(--start-top);
                         transform: scale(0.8); 
                     }
-
-                    /* --- PHASE 2: FLY (2.3s -> 3s) --- */
                     95% { opacity: 1; }
                     100% { 
                         left: 68%; top: 55%; 
-                        transform: scale(0.8); 
-                        opacity: 0; 
+                        transform: scale(0.8); opacity: 0; 
                     }
                 }
 
@@ -391,13 +410,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     animation-name: orb-sequence;
                     animation-duration: 3s;
                     animation-timing-function: linear;
-                    
-                    /* FIXED HERE: use 'both' to apply 0% frame immediately during delay */
-                    animation-fill-mode: both;
-                    
+                    animation-fill-mode: both; /* Fix lỗi hiện trước delay */
                     will-change: transform, left, top;
                     transform: translateZ(0);
-                    
                     --start-left: 22%;
                     --start-top: 35%;
                 }
@@ -473,7 +488,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 bossId={currentBossData.id}
                                                 name={currentBossData.name}
                                                 element={bossElement}
-                                                hp={bossStats.hp}
+                                                // QUAN TRỌNG: Truyền visualBossHp thay vì bossStats.hp
+                                                hp={visualBossHp} 
                                                 maxHp={bossStats.maxHp}
                                                 imgSrc={bossImgSrc}
                                                 onImgError={handleBossImgError}
