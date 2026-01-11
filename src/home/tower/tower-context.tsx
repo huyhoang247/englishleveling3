@@ -24,11 +24,13 @@ export type CombatStats = {
 
 // Dữ liệu sự kiện cho mỗi lượt đánh để UI có thể hiển thị hiệu ứng
 export type TurnEvents = {
-    playerDmg: number;
+    playerDmg: number;      // Tổng sát thương (Hit 1 + Hit 2)
+    playerDmgHit1: number;  // Sát thương quả cầu 1 (100%)
+    playerDmgHit2: number;  // Sát thương quả cầu 2 (50-100% của hit 1)
     playerHeal: number;
     bossDmg: number;
     bossReflectDmg: number;
-    timestamp: number; // Để đảm bảo useEffect luôn chạy
+    timestamp: number;      // Để đảm bảo useEffect luôn chạy
 };
 
 // --- ĐỊNH NGHĨA STATE VÀ ACTIONS CHO CONTEXT ---
@@ -100,8 +102,18 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         let player = { ...currentPlayer };
         let boss = { ...currentBoss };
         let winner: 'win' | 'lose' | null = null;
-        let turnEvents: Omit<TurnEvents, 'timestamp'> = { playerDmg: 0, playerHeal: 0, bossDmg: 0, bossReflectDmg: 0 };
+        
+        // Khởi tạo object sự kiện với đầy đủ trường
+        let turnEvents: Omit<TurnEvents, 'timestamp'> = { 
+            playerDmg: 0, 
+            playerDmgHit1: 0, 
+            playerDmgHit2: 0, 
+            playerHeal: 0, 
+            bossDmg: 0, 
+            bossReflectDmg: 0 
+        };
 
+        // --- 1. TÍNH DAMAGE PLAYER ---
         let atkMods = { boost: 1, armorPen: 0 };
         equippedSkills.forEach(skill => {
             if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
@@ -111,14 +123,28 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
                 if (skill.id === 'armor_penetration') atkMods.armorPen += effect / 100;
             }
         });
-        const playerDmg = calculateDamage(player.atk * atkMods.boost, Math.max(0, boss.def * (1 - atkMods.armorPen)));
-        turnEvents.playerDmg = playerDmg;
-        log(`Bạn tấn công, gây <b class="text-red-400">${playerDmg}</b> sát thương.`);
-        boss.hp -= playerDmg;
 
+        // Hit 1: Sát thương cơ bản (100% công thức cũ)
+        const baseDmg = calculateDamage(player.atk * atkMods.boost, Math.max(0, boss.def * (1 - atkMods.armorPen)));
+        
+        // Hit 2: Random từ 50% đến 100% của Hit 1
+        const bonusFactor = 0.5 + (Math.random() * 0.5); // 0.5 -> 1.0
+        const bonusDmg = Math.floor(baseDmg * bonusFactor);
+
+        const totalPlayerDmg = baseDmg + bonusDmg;
+
+        // Lưu dữ liệu vào turnEvents để UI hiển thị
+        turnEvents.playerDmg = totalPlayerDmg;
+        turnEvents.playerDmgHit1 = baseDmg;
+        turnEvents.playerDmgHit2 = bonusDmg;
+
+        log(`Bạn tấn công liên hoàn, tổng gây <b class="text-red-400">${totalPlayerDmg}</b> sát thương.`);
+        boss.hp -= totalPlayerDmg;
+
+        // --- XỬ LÝ KỸ NĂNG HÚT MÁU (Dựa trên tổng sát thương) ---
         equippedSkills.forEach(skill => {
             if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
-                const healed = Math.ceil(playerDmg * (getSkillEffect(skill) / 100));
+                const healed = Math.ceil(totalPlayerDmg * (getSkillEffect(skill) / 100));
                 const actualHeal = Math.min(healed, player.maxHp - player.hp);
                 if (actualHeal > 0) {
                     turnEvents.playerHeal = actualHeal;
@@ -128,17 +154,20 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
             }
         });
         
+        // --- KIỂM TRA BOSS CHẾT ---
         if (boss.hp <= 0) {
             boss.hp = 0; winner = 'win';
             log(`${currentBossData?.name} đã bị đánh bại!`);
             return { player, boss, turnLogs, winner, turnEvents };
         }
 
+        // --- BOSS TẤN CÔNG LẠI ---
         const bossDmg = calculateDamage(boss.atk, player.def);
         turnEvents.bossDmg = bossDmg;
         log(`${currentBossData?.name} phản công, gây <b class="text-red-400">${bossDmg}</b> sát thương.`);
         player.hp -= bossDmg;
 
+        // --- XỬ LÝ PHẢN ĐÒN ---
         let totalReflectDmg = 0;
         equippedSkills.forEach(skill => {
             if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
@@ -150,6 +179,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         });
         if (totalReflectDmg > 0) turnEvents.bossReflectDmg = totalReflectDmg;
 
+        // --- KIỂM TRA KẾT QUẢ CUỐI CÙNG ---
         if (player.hp <= 0) {
             player.hp = 0; winner = 'lose';
             log("Bạn đã gục ngã... THẤT BẠI!");
@@ -376,7 +406,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
-          // --- THAY ĐỔI: Tăng lên 3600ms (3.6s) để khớp với UI 2 Orbs ---
+          // Time cho phép UI chạy xong animation 2 quả cầu
           battleIntervalRef.current = setInterval(() => {
               if(savedCallback.current) {
                 savedCallback.current();
