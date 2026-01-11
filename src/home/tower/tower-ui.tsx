@@ -36,13 +36,35 @@ const HomeIcon = memo(({ className = '' }: { className?: string }) => (
     </svg> 
 ));
 
-// --- FLOATING TEXT COMPONENT ---
-const FloatingText = ({ text, id, colorClass, side }: { text: string, id: number, colorClass: string, side: 'left' | 'right' }) => {
-  const positionClass = side === 'left' ? 'left-[20%] md:left-[25%]' : 'right-[20%] md:right-[25%]';
+// --- FLOATING TEXT COMPONENT (NEW DESIGN) ---
+// Kiểu dữ liệu cho text sát thương
+interface DamageText {
+    id: number;
+    text: string;
+    color: string; // Hex color hoặc Tailwind class
+    x: number; // Tọa độ % Left
+    y: number; // Tọa độ % Top
+    fontSize: number;
+}
+
+const FloatingText = memo(({ data }: { data: DamageText }) => {
   return (
-    <div key={id} className={`absolute top-1/2 ${positionClass} font-lilita text-2xl animate-float-up pointer-events-none z-50 ${colorClass}`} style={{ textShadow: '2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000, 3px 3px 5px rgba(0,0,0,0.7)' }}>{text}</div>
+    <div 
+        key={data.id} 
+        className="absolute font-lilita animate-float-up pointer-events-none z-50 whitespace-nowrap" 
+        style={{ 
+            left: `${data.x}%`, 
+            top: `${data.y}%`,
+            color: data.color,
+            fontSize: `${data.fontSize}px`,
+            // Mô phỏng style stroke giống Canvas của stick-game
+            textShadow: '2px 2px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000, 3px 3px 5px rgba(0,0,0,0.5)' 
+        }}
+    >
+        {data.text}
+    </div>
   );
-};
+});
 
 // --- ENERGY ORB EFFECT COMPONENT ---
 interface OrbProps {
@@ -77,7 +99,7 @@ const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
     );
 };
 
-// --- MODALS ---
+// --- MODALS (Giữ nguyên) ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -227,11 +249,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
-    const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string, side: 'left'|'right' }[]>([]);
-    const [orbEffects, setOrbEffects] = useState<OrbProps[]>([]);
+    // Sử dụng DamageText mới với tọa độ số
+    const [damages, setDamages] = useState<DamageText[]>([]);
     
-    // --- NEW: State cho HP hiển thị (Visual HP) ---
-    // Khởi tạo là 0, sẽ được sync khi bossStats load
+    // Ref để lưu danh sách damages hiện tại nhằm tính toán va chạm mà không cần dependency state
+    const damagesRef = useRef<DamageText[]>([]);
+
+    const [orbEffects, setOrbEffects] = useState<OrbProps[]>([]);
     const [visualBossHp, setVisualBossHp] = useState(0);
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
@@ -242,7 +266,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
-    // --- SYNC VISUAL HP KHI VÀO TRẬN HOẶC QUA TẦNG MỚI ---
+    // --- SYNC VISUAL HP ---
     useEffect(() => {
         if (bossStats && (battleState === 'idle' || visualBossHp === 0)) {
             setVisualBossHp(bossStats.hp);
@@ -273,56 +297,110 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    const showFloatingText = useCallback((text: string, colorClass: string, side: 'left' | 'right') => {
+    // --- LOGIC HIỂN THỊ DAMAGE CHỐNG ĐÈ (COLLISION DETECTION) ---
+    // Được port từ stick-game.tsx sang React
+    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 24) => {
         const id = Date.now() + Math.random();
-        setDamages(prev => [...prev, { id, text, colorClass, side }]);
-        setTimeout(() => setDamages(prev => prev.filter(d => d.id !== id)), 1500);
+
+        // 1. Xác định vị trí cơ bản
+        // Player bên trái (khoảng 25%), Boss bên phải (khoảng 75%)
+        let baseX = target === 'player' ? 25 : 75; 
+        const baseY = 55; // Tọa độ Y cơ bản (khoảng giữa màn hình)
+
+        // 2. Random nhẹ ban đầu
+        // Random từ -2% đến +2% cho X, Y đẩy lên một chút
+        let finalX = baseX + (Math.random() * 4 - 2);
+        let finalY = baseY + (Math.random() * 5 - 2.5);
+
+        // 3. Logic Heal (Máu bay lên cao hơn chút)
+        const isHeal = text.startsWith('+');
+        if (isHeal) {
+            finalY -= 5; 
+        }
+
+        // 4. KIỂM TRA VA CHẠM (COLLISION CHECK)
+        // Lặp qua danh sách text đang hiện hữu để tránh đè
+        // Sử dụng đơn vị % tương đối, ngưỡng va chạm ước lượng: X: 5%, Y: 5%
+        const checkLimit = 10;
+        let count = 0;
+
+        // Duyệt ngược để ưu tiên text mới nhất
+        for (let i = damagesRef.current.length - 1; i >= 0; i--) {
+            if (count >= checkLimit) break;
+            
+            const existing = damagesRef.current[i];
+            const dx = Math.abs(existing.x - finalX);
+            const dy = Math.abs(existing.y - finalY);
+
+            // Nếu quá gần nhau
+            if (dx < 5 && dy < 5) {
+                // Đẩy text mới lên trên text cũ
+                finalY = existing.y - 4; 
+                
+                // Tản ra hai bên
+                if (existing.x > baseX) {
+                     finalX -= 2; 
+                } else {
+                     finalX += 2;
+                }
+            }
+            count++;
+        }
+
+        const newText: DamageText = { id, text, color, x: finalX, y: finalY, fontSize };
+
+        // Cập nhật State và Ref
+        setDamages(prev => {
+            const updated = [...prev, newText];
+            damagesRef.current = updated; // Sync ref
+            return updated;
+        });
+
+        // Tự động xóa sau 1.2s
+        setTimeout(() => {
+            setDamages(prev => {
+                const updated = prev.filter(d => d.id !== id);
+                damagesRef.current = updated; // Sync ref
+                return updated;
+            });
+        }, 1200);
     }, []);
 
-    // --- TRIGGER BATTLE EFFECTS (RPG STYLE) ---
+    // --- TRIGGER BATTLE EFFECTS ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
-        // Destructure thêm playerDmgHit1 và playerDmgHit2 từ context
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // Player attacks Boss (Spawn 2 Orbs & Split Damage)
+        // Player attacks Boss
         if (playerDmg > 0) {
-            // Lấy giá trị chính xác từ context. 
-            // Fallback (playerDmgHit1 || calc) để an toàn nếu context chưa cập nhật type (mặc dù đã cập nhật)
             const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 2);
             const dmg2 = playerDmgHit2 || (playerDmg - dmg1);
 
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
             
-            // Orb 1: Delay 0, Hit time ~2900ms
             const orb1: OrbProps = { id: now, delay: 0, startPos: shuffledSlots[0] };
-            // Orb 2: Delay 300ms, Hit time ~3200ms
             const orb2: OrbProps = { id: now + 1, delay: 300, startPos: shuffledSlots[1] };
 
             setOrbEffects(prev => [...prev, orb1, orb2]);
 
-            // HIT 1: Trừ máu & Hiện damage (tại 2.9s) -> Sử dụng dmg1 (100% base)
+            // HIT 1
             setTimeout(() => {
-                showFloatingText(`-${formatDamageText(dmg1)}`, 'text-red-500', 'right');
+                addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 32); // Red-500
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
-            // HIT 2: Trừ máu & Hiện damage (tại 3.2s) -> Sử dụng dmg2 (Bonus)
+            // HIT 2
             setTimeout(() => {
-                showFloatingText(`-${formatDamageText(dmg2)}`, 'text-red-500', 'right');
+                addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 36); // To hơn xíu
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
-            // Cleanup Orbs & Sync Final HP
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id));
-                
-                // Safety sync cuối cùng để đảm bảo không bị lệch số lẻ hoặc do timing
                 if (bossStats) {
                      setVisualBossHp(current => {
-                         // Chỉ sync nếu chênh lệch nhỏ (do hiển thị), tránh bug nhảy máu quá lớn
                          if(Math.abs(current - bossStats.hp) < 100) return bossStats.hp;
                          return current;
                      });
@@ -331,15 +409,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
         
         // Player Heals
-        if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', 'left');
+        if (playerHeal > 0) {
+             addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 28); // Green-400
+        }
         
         // Boss attacks Player
         setTimeout(() => {
-          if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', 'left');
-          if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', 'left');
+          if (bossDmg > 0) {
+              addDamageText(`-${formatDamageText(bossDmg)}`, '#ef4444', 'player', 32);
+          }
+          if (bossReflectDmg > 0) {
+              addDamageText(`Reflect -${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 24); // Orange/Amber
+          }
         }, 500);
 
-    }, [lastTurnEvents, showFloatingText]); // Bỏ bossStats khỏi deps để tránh loop
+    }, [lastTurnEvents, addDamageText]); 
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
@@ -364,8 +448,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .font-sans { font-family: sans-serif; } 
                 .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
                 .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
-                @keyframes float-up { 0% { transform: translateY(0); opacity: 1; } 100% { transform: translateY(-80px); opacity: 0; } } 
-                .animate-float-up { animation: float-up 1.5s ease-out forwards; } 
+                
+                /* Animation float-up giống stick-game: Bay lên và mờ dần */
+                @keyframes float-up { 
+                    0% { transform: translateY(0) scale(1); opacity: 1; } 
+                    20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+                    100% { transform: translateY(-80px) scale(1); opacity: 0; } 
+                } 
+                .animate-float-up { animation: float-up 1.2s ease-out forwards; } 
+
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } 
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } 
                 @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } 
@@ -413,7 +504,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     animation-name: orb-sequence;
                     animation-duration: 3s;
                     animation-timing-function: linear;
-                    animation-fill-mode: both; /* Fix lỗi hiện trước delay */
+                    animation-fill-mode: both; 
                     will-change: transform, left, top;
                     transform: translateZ(0);
                     --start-left: 22%;
@@ -510,8 +601,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                     startPos={effect.startPos}
                                                 />
                                             ))}
+                                            {/* Render Damages Text */}
                                             {damages.map(d => (
-                                                <FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} side={d.side} />
+                                                <FloatingText key={d.id} data={d} />
                                             ))}
                                         </div>
 
