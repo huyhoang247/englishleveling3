@@ -2,30 +2,46 @@
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
-import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
+import { CombatStats } from './tower-context.tsx';
 
-// --- 1. HEALTH BAR COMPONENT (Dùng chung cho cả Hero và Boss) ---
+// --- 1. HEALTH BAR COMPONENT (REDESIGNED) ---
 export const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
-    const scale = Math.max(0, current / max);
+    // Tính toán phần trăm máu, giới hạn từ 0% đến 100%
+    const percentage = Math.max(0, Math.min(100, (current / max) * 100));
+    
     return (
-        <div className="w-full">
-            <div className="relative w-full h-5 md:h-6 bg-black/60 rounded-full border border-slate-600 p-0.5 shadow-inner overflow-hidden">
-                <div
-                    className={`h-full rounded-full transition-transform duration-500 ease-out origin-left ${colorGradient}`}
-                    style={{
-                        transform: `scaleX(${scale})`,
-                        boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}`
-                    }}>
+        <div className="w-full select-none pointer-events-none">
+            {/* Khung viền ngoài: Đậm, nổi khối, đổ bóng */}
+            <div className="relative w-full h-4 md:h-5 bg-slate-900 rounded-full border-2 border-slate-600 shadow-[0_2px_4px_rgba(0,0,0,0.8)] overflow-hidden box-border">
+                
+                {/* Background nền (phần máu đã mất) - texture sọc chéo mờ */}
+                <div className="absolute inset-0 bg-slate-800 opacity-50" 
+                     style={{ backgroundImage: 'linear-gradient(45deg, #1e293b 25%, transparent 25%, transparent 50%, #1e293b 50%, #1e293b 75%, transparent 75%, transparent)', backgroundSize: '8px 8px' }}>
                 </div>
-                <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10">
-                    <span>{Math.ceil(current)} / {max}</span>
+
+                {/* Thanh máu chính */}
+                <div
+                    className={`h-full relative transition-all duration-300 ease-out ${colorGradient}`}
+                    style={{
+                        width: `${percentage}%`,
+                        boxShadow: `2px 0 10px ${shadowColor}` // Glow nhẹ ở đầu thanh máu
+                    }}
+                >
+                    {/* Hiệu ứng bóng kính (Glossy effect) - Tạo cảm giác 3D */}
+                    <div className="absolute top-0 left-0 right-0 h-[45%] bg-white/30 rounded-t-full"></div>
+                    
+                    {/* Hiệu ứng tối ở đáy (Depth) */}
+                    <div className="absolute bottom-0 left-0 right-0 h-[20%] bg-black/20 rounded-b-full"></div>
+
+                    {/* Hiệu ứng lấp lánh nhẹ (Shine line) chạy dọc */}
+                    <div className="absolute top-0 bottom-0 right-0 w-[1px] bg-white/40 blur-[1px]"></div>
                 </div>
             </div>
         </div>
     );
 });
 
-// --- 2. HERO DISPLAY COMPONENT (Đã chuyển từ tower-ui sang đây) ---
+// --- 2. HERO DISPLAY COMPONENT ---
 export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
     // URL ảnh Hero (Size gốc: 3132x2946 -> Resize: 1252x1178)
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
@@ -84,12 +100,13 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                     HP Bar Hero
                     Vị trí: Dịch xuống dưới (translate-y dương) để lấp vào khoảng trống trên đầu Sprite
                 */}
-                <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24">
+                <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24 transition-transform duration-200 group-hover:scale-105">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
-                        colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
-                        shadowColor="rgba(132, 204, 22, 0.5)" 
+                        // Sử dụng gradient sáng hơn cho Hero (Xanh lá/Cyan)
+                        colorGradient="bg-gradient-to-r from-emerald-500 via-green-400 to-lime-300" 
+                        shadowColor="rgba(16, 185, 129, 0.6)" 
                     />
                 </div>
 
@@ -241,12 +258,13 @@ export const BossDisplay = memo(({
                     HP Bar Boss
                     Vị trí: Dịch lên trên (margin-bottom dương) để tách khỏi đầu Boss
                 */}
-                <div className="w-32 md:w-48 z-20 mb-8 md:mb-12">
+                <div className="w-32 md:w-48 z-20 mb-8 md:mb-12 transition-transform duration-200 group-hover:scale-105">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
-                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
-                        shadowColor="rgba(220, 38, 38, 0.5)" 
+                        // Gradient màu Đỏ/Cam hung hãn cho Boss
+                        colorGradient="bg-gradient-to-r from-red-600 via-red-500 to-orange-500" 
+                        shadowColor="rgba(239, 68, 68, 0.6)" 
                     />
                 </div>
 
@@ -270,4 +288,3 @@ export const BossDisplay = memo(({
 });
 
 export default BossDisplay;
-// --- END OF FILE boss-display.tsx ---
