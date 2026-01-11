@@ -77,7 +77,7 @@ const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
     );
 };
 
-// --- MODALS (Giữ nguyên) ---
+// --- MODALS ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -112,7 +112,6 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
   )
 });
 
-// (LogModal, RewardsModal, VictoryModal, DefeatModal, SweepRewardsModal giữ nguyên code cũ để tiết kiệm không gian, copy lại y nguyên)
 const LogModal = memo(({ log, onClose }: { log: string[], onClose: () => void }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="relative w-96 max-w-md bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col" onClick={(e) => e.stopPropagation()}>
@@ -283,13 +282,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // --- TRIGGER BATTLE EFFECTS (RPG STYLE) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
-        const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
+        
+        // Destructure thêm playerDmgHit1 và playerDmgHit2 từ context
+        const { playerDmg, playerDmgHit1, playerDmgHit2, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
         // Player attacks Boss (Spawn 2 Orbs & Split Damage)
         if (playerDmg > 0) {
-            // 1. Chia damage thành 2 phần
-            const dmg1 = Math.ceil(playerDmg / 2);
-            const dmg2 = playerDmg - dmg1;
+            // Lấy giá trị chính xác từ context. 
+            // Fallback (playerDmgHit1 || calc) để an toàn nếu context chưa cập nhật type (mặc dù đã cập nhật)
+            const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 2);
+            const dmg2 = playerDmgHit2 || (playerDmg - dmg1);
 
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
@@ -301,26 +303,27 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
             setOrbEffects(prev => [...prev, orb1, orb2]);
 
-            // HIT 1: Trừ máu & Hiện damage (tại 2.9s)
+            // HIT 1: Trừ máu & Hiện damage (tại 2.9s) -> Sử dụng dmg1 (100% base)
             setTimeout(() => {
                 showFloatingText(`-${formatDamageText(dmg1)}`, 'text-red-500', 'right');
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
-            // HIT 2: Trừ máu & Hiện damage (tại 3.2s)
+            // HIT 2: Trừ máu & Hiện damage (tại 3.2s) -> Sử dụng dmg2 (Bonus)
             setTimeout(() => {
                 showFloatingText(`-${formatDamageText(dmg2)}`, 'text-red-500', 'right');
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
-            // Cleanup Orbs
+            // Cleanup Orbs & Sync Final HP
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id));
-                // Safety sync cuối cùng để đảm bảo không bị lệch số lẻ
+                
+                // Safety sync cuối cùng để đảm bảo không bị lệch số lẻ hoặc do timing
                 if (bossStats) {
-                     // Chỉ sync nếu chênh lệch nhỏ (do làm tròn), tránh bug nhảy máu
                      setVisualBossHp(current => {
-                         if(Math.abs(current - bossStats.hp) < 5) return bossStats.hp;
+                         // Chỉ sync nếu chênh lệch nhỏ (do hiển thị), tránh bug nhảy máu quá lớn
+                         if(Math.abs(current - bossStats.hp) < 100) return bossStats.hp;
                          return current;
                      });
                 }
