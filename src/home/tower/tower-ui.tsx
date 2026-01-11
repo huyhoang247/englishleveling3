@@ -10,7 +10,6 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- IMPORT BOSS & ELEMENTS ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
-// Update Import: Lấy cả BossDisplay và HeroDisplay từ file chung
 import BossDisplay, { HeroDisplay } from './boss-display.tsx'; 
 
 interface BossBattleWrapperProps {
@@ -35,21 +34,23 @@ const FloatingText = ({ text, id, colorClass, side }: { text: string, id: number
   );
 };
 
-// --- SLASH EFFECT COMPONENT ---
-const SlashEffect = ({ id }: { id: number }) => {
-    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
+// --- ENERGY ORB EFFECT COMPONENT (NEW) ---
+const EnergyOrbEffect = ({ id }: { id: number }) => {
+    // Frame size: 83x76 px
+    // Grid: 6x6 (36 frames)
+    // Sheet Size: 498x456 px
+    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-1.webp";
+    
     return (
-        <div key={id} className="absolute top-[35%] right-[15%] md:right-[20%] z-40 pointer-events-none animate-slash-fly">
+        <div key={id} className="absolute z-50 pointer-events-none animate-orb-fly origin-center">
              <div 
-                className="animate-slash-play"
+                className="animate-orb-spin"
                 style={{
-                    width: '247.17px',
-                    height: '242.33px',
+                    width: '83px',
+                    height: '76px',
                     backgroundImage: `url(${spriteUrl})`,
-                    backgroundSize: '1483px 1454px',
+                    backgroundSize: '498px 456px', // 83*6 và 76*6
                     backgroundRepeat: 'no-repeat',
-                    transformOrigin: 'center center',
-                    transform: 'scale(0.8)',
                 }}
              />
         </div>
@@ -208,7 +209,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     } = useBossBattle();
 
     const [damages, setDamages] = useState<{ id: number, text: string, colorClass: string, side: 'left'|'right' }[]>([]);
-    const [slashEffects, setSlashEffects] = useState<{ id: number }[]>([]);
+    // Update State: Rename slashEffects to orbEffects
+    const [orbEffects, setOrbEffects] = useState<{ id: number }[]>([]);
     
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -253,18 +255,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (!lastTurnEvents) return;
         const { playerDmg, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // Player attacks Boss (Right side takes damage)
+        // Player attacks Boss (Spawn Orb)
         if (playerDmg > 0) {
             showFloatingText(`-${formatDamageText(playerDmg)}`, 'text-red-500', 'right');
-            const slashId = Date.now() + Math.random();
-            setSlashEffects(prev => [...prev, { id: slashId }]);
-            setTimeout(() => setSlashEffects(prev => prev.filter(e => e.id !== slashId)), 500);
+            const orbId = Date.now() + Math.random();
+            setOrbEffects(prev => [...prev, { id: orbId }]);
+            // Remove Orb component after animation completes (approx 0.6s)
+            setTimeout(() => setOrbEffects(prev => prev.filter(e => e.id !== orbId)), 600);
         }
         
-        // Player Heals (Left side shows green text)
+        // Player Heals
         if (playerHeal > 0) showFloatingText(`+${formatDamageText(playerHeal)}`, 'text-green-400', 'left');
         
-        // Boss attacks Player (Left side takes damage)
+        // Boss attacks Player
         setTimeout(() => {
           if (bossDmg > 0) showFloatingText(`-${formatDamageText(bossDmg)}`, 'text-red-500', 'left');
           if (bossReflectDmg > 0) showFloatingText(`-${formatDamageText(bossReflectDmg)}`, 'text-orange-400', 'left');
@@ -313,17 +316,34 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
                 
-                /* Effect Animations */
-                @keyframes slash-x { from { background-position-x: 0; } to { background-position-x: -1483px; } }
-                @keyframes slash-y { from { background-position-y: 0; } to { background-position-y: -1454px; } }
-                .animate-slash-play { animation: slash-x 0.08333s steps(6) infinite, slash-y 0.5s steps(6) forwards; }
-                .animate-slash-fly { animation: slash-fly-path 0.5s ease-in forwards; width: 250px; height: 250px; }
-                /* Modified Slash Path to land on the Boss (Right Side) */
-                @keyframes slash-fly-path {
-                     0% { transform: scale(0.8) rotate(-20deg); opacity: 0; right: 50%; }
-                     10% { opacity: 1; }
-                     100% { transform: scale(1.2) rotate(10deg); opacity: 0; right: 20%; }
+                /* --- ENERGY ORB ANIMATIONS --- */
+                /* 1. Xoay tròn Sprite (Grid 6x6) */
+                @keyframes orb-spin-x { from { background-position-x: 0; } to { background-position-x: -498px; } }
+                @keyframes orb-spin-y { from { background-position-y: 0; } to { background-position-y: -456px; } }
+                .animate-orb-spin { 
+                    animation: orb-spin-x 0.4s steps(6) infinite, orb-spin-y 2.4s steps(6) infinite; 
                 }
+
+                /* 2. Đường bay (Bay từ đầu Hero -> Giữa Boss) */
+                @keyframes orb-fly-path {
+                     0% { 
+                        left: 22%; top: 35%; 
+                        transform: scale(0); 
+                        opacity: 0; 
+                     } /* Trên đầu Hero: Zoom từ 0 */
+                     15% { 
+                        left: 22%; top: 30%; 
+                        transform: scale(1.2); 
+                        opacity: 1; 
+                     } /* Zoom to cực đại, nảy lên xíu */
+                     90% { opacity: 1; }
+                     100% { 
+                        left: 68%; top: 55%; 
+                        transform: scale(0.8); 
+                        opacity: 0; 
+                     } /* Trúng giữa người Boss: Biến mất */
+                }
+                .animate-orb-fly { animation: orb-fly-path 0.6s ease-in forwards; }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -409,8 +429,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                                         {/* EFFECTS LAYER */}
                                         <div className="absolute inset-0 pointer-events-none z-40">
-                                            {slashEffects.map(effect => (
-                                                <SlashEffect key={effect.id} id={effect.id} />
+                                            {/* Render Energy Orbs */}
+                                            {orbEffects.map(effect => (
+                                                <EnergyOrbEffect key={effect.id} id={effect.id} />
                                             ))}
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} text={d.text} id={d.id} colorClass={d.colorClass} side={d.side} />
