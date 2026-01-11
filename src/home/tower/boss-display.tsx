@@ -1,4 +1,3 @@
-
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
@@ -39,13 +38,14 @@ export const HealthBar = memo(({
     );
 });
 
-// --- 2. HERO DISPLAY COMPONENT (Đã chuyển từ tower-ui sang đây) ---
+// --- 2. HERO DISPLAY COMPONENT (Đã sửa lỗi click full màn hình) ---
 export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
     // URL ảnh Hero (Size gốc: 3132x2946 -> Resize: 1252x1178)
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
 
     return (
-        <div className="flex flex-col items-center justify-end h-full w-full" onClick={onStatsClick}>
+        // LƯU Ý: Đã xóa onClick ở thẻ cha này để tránh click nhầm vào khoảng trống
+        <div className="flex flex-col items-center justify-end h-full w-full">
              <style>{`
                 .hero-sprite-wrapper {
                     /* Frame Size Grid 6x6 */
@@ -92,8 +92,11 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                 }
             `}</style>
             
-            {/* Giữ nguyên vị trí đã chỉnh sửa: -translate-x-4 md:-translate-x-10 */}
-            <div className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10">
+            {/* LƯU Ý: Đã chuyển onClick vào thẻ con này để chỉ click được vào vùng Hero */}
+            <div 
+                className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
+                onClick={onStatsClick}
+            >
                 
                 {/* 
                     HP Bar Hero
