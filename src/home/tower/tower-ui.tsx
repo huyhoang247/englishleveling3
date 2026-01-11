@@ -1,4 +1,3 @@
---- START OF FILE tower-ui.tsx ---
 
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
