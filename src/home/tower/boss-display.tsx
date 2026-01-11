@@ -260,16 +260,16 @@ export const BossDisplay = memo(({
 
                 {/* 
                     HP Bar Boss
-                    Vị trí: Dịch lên trên (margin-bottom dương) để tách khỏi đầu Boss
-                    Update: Giảm margin xuống (mb-2 md:mb-4) để thanh HP gần Boss hơn, 
-                    nhường chỗ phía trên cho Damage Text
+                    Update: 
+                    1. Tăng margin-bottom (mb-6 md:mb-10) để dịch thanh máu LÊN TRÊN.
+                    2. Đổi màu gradient sang Xanh dương đậm -> Xanh da trời.
                 */}
-                <div className="w-40 md:w-60 z-20 mb-2 md:mb-4">
+                <div className="w-40 md:w-60 z-20 mb-6 md:mb-10">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
-                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
-                        shadowColor="rgba(220, 38, 38, 0.5)" 
+                        colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
+                        shadowColor="rgba(56, 189, 248, 0.5)" 
                         heightClass="h-6 md:h-8" // Giữ nguyên độ dày
                     />
                 </div>
