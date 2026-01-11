@@ -84,10 +84,10 @@ const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStats
                 
                 {/* 
                     1. HP Bar
-                    FIX: Sử dụng translate-y để đẩy thanh máu xuống thấp hơn, 
-                    lấp vào khoảng trống trong suốt phía trên ảnh sprite của Hero.
+                    FIX: Tăng translate-y lên (translate-y-16 và translate-y-24) 
+                    để đẩy thanh máu xuống sâu hơn nữa cho sát đầu Hero.
                 */}
-                <div className="w-32 md:w-48 z-20 translate-y-10 md:translate-y-12">
+                <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
