@@ -261,7 +261,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const orbId = Date.now() + Math.random();
             setOrbEffects(prev => [...prev, { id: orbId }]);
             
-            // MODIFICATION: 3000ms cleanup (Matches 2s spawn + 1s fly)
+            // Cleanup matches 3s animation duration
             setTimeout(() => setOrbEffects(prev => prev.filter(e => e.id !== orbId)), 3000);
         }
         
@@ -318,16 +318,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
                 
                 /* --- ENERGY ORB ANIMATIONS --- */
-                /* 1. Spin Sprite */
                 @keyframes orb-spin-x { from { background-position-x: 0; } to { background-position-x: -498px; } }
                 @keyframes orb-spin-y { from { background-position-y: 0; } to { background-position-y: -456px; } }
                 .animate-orb-spin { 
                     animation: orb-spin-x 0.4s steps(6) infinite, orb-spin-y 2.4s steps(6) infinite; 
                 }
 
-                /* 2. Fly Sequence (3s TOTAL: 2s Hover + 1s Fly) */
+                /* 2. Fly Sequence (3s TOTAL) */
                 @keyframes orb-sequence {
-                    /* --- PHASE 1: HOVER (0s - 2s) = 66.66% --- */
+                    /* --- PHASE 1: CHARGE (0s -> 2.3s) --- */
+                    /* 2.3s is 76.66% of 3s */
                     0% { 
                         left: 22%; top: 35%; /* Hero Pos */
                         transform: scale(0); 
@@ -336,14 +336,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     10% { opacity: 1; }
                     20% { 
                         left: 22%; top: 35%;
-                        transform: scale(0.8); /* Quick growth */
+                        transform: scale(0.8); /* Scale up quickly */
                     }
-                    66.66% { 
-                        left: 22%; top: 35%; /* Stay */
+                    76.66% { 
+                        left: 22%; top: 35%; /* Stay at Hero until 2.3s */
                         transform: scale(0.8); 
                     }
 
-                    /* --- PHASE 2: FLY (2s - 3s) --- */
+                    /* --- PHASE 2: FLY (2.3s -> 3s) --- */
                     95% { opacity: 1; }
                     100% { 
                         left: 68%; top: 55%; /* Boss Pos */
