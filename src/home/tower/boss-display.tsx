@@ -91,8 +91,8 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                 }
             `}</style>
             
-            {/* Update: Tăng độ dịch chuyển sang trái lên -translate-x-12 md:-translate-x-20 */}
-            <div className="relative cursor-pointer group flex flex-col items-center -translate-x-12 md:-translate-x-20">
+            {/* Update: Điều chỉnh lại vị trí (-translate-x-8 md:-translate-x-16) cho cân đối hơn */}
+            <div className="relative cursor-pointer group flex flex-col items-center -translate-x-8 md:-translate-x-16">
                 
                 {/* 
                     HP Bar Hero
