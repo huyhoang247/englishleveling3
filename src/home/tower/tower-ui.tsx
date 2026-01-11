@@ -1,3 +1,5 @@
+--- START OF FILE tower-ui.tsx ---
+
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
@@ -504,11 +506,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         </button>
                                         )}
-                                        {battleState !== 'idle' && (
-                                        <div className="mt-2 h-40 w-full bg-slate-900/80 p-4 rounded-lg border border-slate-700 overflow-y-auto flex flex-col-reverse text-sm leading-relaxed scrollbar-thin font-sans">
-                                            {combatLog.map((entry, index) => (<p key={index} className={`mb-1 transition-colors duration-300 ${index === 0 ? 'text-yellow-300 font-bold text-shadow-sm animate-pulse-fast' : 'text-slate-300'}`} dangerouslySetInnerHTML={{__html: entry}}></p>))}
-                                        </div>
-                                        )}
+                                        {/* Đã xóa phần hiển thị combat log ở đây */}
                                     </div>
     
                                     {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
