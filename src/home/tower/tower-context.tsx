@@ -24,9 +24,10 @@ export type CombatStats = {
 
 // Dữ liệu sự kiện cho mỗi lượt đánh để UI có thể hiển thị hiệu ứng
 export type TurnEvents = {
-    playerDmg: number;      // Tổng sát thương (Hit 1 + Hit 2)
+    playerDmg: number;      // Tổng sát thương (Hit 1 + Hit 2 + Hit 3)
     playerDmgHit1: number;  // Sát thương quả cầu 1 (100%)
     playerDmgHit2: number;  // Sát thương quả cầu 2 (50-100% của hit 1)
+    playerDmgHit3: number;  // Sát thương quả cầu 3 (25-50% của hit 1) - NEW
     playerHeal: number;
     bossDmg: number;
     bossReflectDmg: number;
@@ -108,6 +109,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
             playerDmg: 0, 
             playerDmgHit1: 0, 
             playerDmgHit2: 0, 
+            playerDmgHit3: 0, // NEW
             playerHeal: 0, 
             bossDmg: 0, 
             bossReflectDmg: 0 
@@ -128,17 +130,22 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         const baseDmg = calculateDamage(player.atk * atkMods.boost, Math.max(0, boss.def * (1 - atkMods.armorPen)));
         
         // Hit 2: Random từ 50% đến 100% của Hit 1
-        const bonusFactor = 0.5 + (Math.random() * 0.5); // 0.5 -> 1.0
-        const bonusDmg = Math.floor(baseDmg * bonusFactor);
+        const bonusFactor2 = 0.5 + (Math.random() * 0.5); // 0.5 -> 1.0
+        const dmgHit2 = Math.floor(baseDmg * bonusFactor2);
 
-        const totalPlayerDmg = baseDmg + bonusDmg;
+        // Hit 3: Random từ 25% đến 50% của Hit 1 (NEW LOGIC)
+        const bonusFactor3 = 0.25 + (Math.random() * 0.25); // 0.25 -> 0.5
+        const dmgHit3 = Math.floor(baseDmg * bonusFactor3);
+
+        const totalPlayerDmg = baseDmg + dmgHit2 + dmgHit3;
 
         // Lưu dữ liệu vào turnEvents để UI hiển thị
         turnEvents.playerDmg = totalPlayerDmg;
         turnEvents.playerDmgHit1 = baseDmg;
-        turnEvents.playerDmgHit2 = bonusDmg;
+        turnEvents.playerDmgHit2 = dmgHit2;
+        turnEvents.playerDmgHit3 = dmgHit3; // NEW
 
-        log(`Bạn tấn công liên hoàn, tổng gây <b class="text-red-400">${totalPlayerDmg}</b> sát thương.`);
+        log(`Bạn tấn công 3 lần, tổng gây <b class="text-red-400">${totalPlayerDmg}</b> sát thương.`);
         boss.hp -= totalPlayerDmg;
 
         // --- XỬ LÝ KỸ NĂNG HÚT MÁU (Dựa trên tổng sát thương) ---
@@ -406,12 +413,12 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
-          // Time cho phép UI chạy xong animation 2 quả cầu
+          // Time cho phép UI chạy xong animation 3 quả cầu (Đã tăng lên 4200ms)
           battleIntervalRef.current = setInterval(() => {
               if(savedCallback.current) {
                 savedCallback.current();
               }
-          }, 3600); 
+          }, 4200); 
         }
         return () => {
           if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
