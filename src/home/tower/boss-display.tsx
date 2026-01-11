@@ -1,4 +1,4 @@
-// --- START OF FILE boss-display.tsx (UPDATED) ---
+// --- START OF FILE boss-display.tsx ---
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
@@ -83,7 +83,6 @@ export const BossDisplay = memo(({
     const isSpriteBoss = [1, 3, 4, 6, 8, 50].includes(bossId);
 
     return (
-        // --- MODIFICATION: Removed fixed centering margins (mx-auto, my-8) to allow Grid placement ---
         <div className="w-full flex flex-col items-center justify-end h-full">
             <style>{`
                 .boss-render-optimize {
@@ -144,7 +143,7 @@ export const BossDisplay = memo(({
             `}</style>
 
             <div 
-                className="relative bg-transparent flex flex-col items-center gap-2 cursor-pointer group transition-transform duration-300 z-10" 
+                className="relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group transition-transform duration-300 z-10" 
                 onClick={onStatsClick}
             >
                 {/* Visual Anchor/Shadow at feet */}
@@ -155,8 +154,12 @@ export const BossDisplay = memo(({
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* 1. Health Bar (Moved to Top) */}
-                <div className="w-32 md:w-48 z-20 mb-[-10px]">
+                {/* 
+                    1. Health Bar (Moved to Top)
+                    FIX: Đổi từ mb-[-10px] thành mb-2 hoặc mb-4.
+                    Điều này tạo khoảng cách dương, đẩy thanh máu lên trên, tách khỏi hình Boss.
+                */}
+                <div className="w-32 md:w-48 z-20 mb-2 md:mb-4">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
@@ -164,8 +167,6 @@ export const BossDisplay = memo(({
                         shadowColor="rgba(220, 38, 38, 0.5)" 
                     />
                 </div>
-
-                {/* (Deleted Boss Name Tag) */}
 
                 {/* 2. Sprite Render */}
                 <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
@@ -187,4 +188,4 @@ export const BossDisplay = memo(({
 });
 
 export default BossDisplay;
-// --- END OF FILE boss-display.tsx (UPDATED) ---
+// --- END OF FILE boss-display.tsx ---
