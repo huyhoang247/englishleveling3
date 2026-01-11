@@ -66,28 +66,27 @@ const FloatingText = ({ text, id, colorClass }: { text: string, id: number, colo
   );
 };
 
-// --- NEW COMPONENT: SLASHING EFFECT (36 FRAMES) ---
+// --- COMPONENT: SLASHING EFFECT (GRID 6x6 - RESIZED 1483x1454) ---
 const SlashEffect = ({ id }: { id: number }) => {
-    // URL Sprite Sheet
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/slashing-effect.webp";
     
-    // TÍNH TOÁN KÍCH THƯỚC CHÍNH XÁC:
-    // Frame size: 618px (rộng) x 606px (cao)
-    // Tổng số frame: 36
-    // Tổng chiều rộng ảnh = 618 * 36 = 22248px
+    // TÍNH TOÁN KÍCH THƯỚC:
+    // Tổng: 1483 x 1454
+    // Frame Width: 1483/6 = 247.166... px
+    // Frame Height: 1454/6 = 242.333... px
     
     return (
         <div key={id} className="absolute top-[30%] left-[10%] z-40 pointer-events-none animate-slash-fly">
              <div 
                 className="animate-slash-play"
                 style={{
-                    width: '618px',
-                    height: '606px',
+                    width: '247.17px',            // Width 1 Frame
+                    height: '242.33px',           // Height 1 Frame
                     backgroundImage: `url(${spriteUrl})`,
-                    backgroundSize: '22248px 606px', // Full width for 36 frames
+                    backgroundSize: '1483px 1454px', // Kích thước tổng ảnh
                     backgroundRepeat: 'no-repeat',
                     transformOrigin: 'top left',
-                    transform: 'scale(0.4)', // Thu nhỏ xuống cho vừa màn hình
+                    transform: 'scale(1)', // Ảnh đã resize nhỏ nên để scale 1
                 }}
              />
         </div>
@@ -369,25 +368,42 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
 
-                /* --- SLASH EFFECT ANIMATIONS (CORRECTED FOR 36 FRAMES) --- */
-                @keyframes slash-sprite-run {
+                /* --- SLASH EFFECT 6x6 GRID ANIMATION (1483x1454) --- */
+
+                /* Trục X: Chạy hết chiều ngang 1483px */
+                @keyframes slash-x {
                     from { background-position-x: 0; }
-                    to { background-position-x: -22248px; } /* 618px * 36 frames = 22248px */
+                    to { background-position-x: -1483px; } 
                 }
+
+                /* Trục Y: Chạy hết chiều dọc 1454px */
+                @keyframes slash-y {
+                    from { background-position-y: 0; }
+                    to { background-position-y: -1454px; }
+                }
+
                 .animate-slash-play {
-                    /* steps(36) ensures all 36 frames are played in 0.5s */
-                    animation: slash-sprite-run 0.5s steps(36) forwards;
+                    /* 
+                       Logic:
+                       - Trục X: steps(6) infinite chạy trong 0.08333s (0.5s / 6) để quét 1 hàng.
+                       - Trục Y: steps(6) forwards chạy trong 0.5s để nhảy qua 6 hàng.
+                    */
+                    animation: 
+                        slash-x 0.08333s steps(6) infinite,
+                        slash-y 0.5s steps(6) forwards;
                 }
+
+                .animate-slash-fly {
+                    animation: slash-fly-path 0.5s ease-in forwards;
+                    width: 250px;
+                    height: 250px;
+                }
+                
                 @keyframes slash-fly-path {
                      0% { left: 10%; top: 35%; opacity: 0; transform: scale(0.8) rotate(-10deg); }
                      15% { opacity: 1; }
                      85% { opacity: 1; }
                      100% { left: 60%; top: 35%; opacity: 0; transform: scale(1.2) rotate(10deg); }
-                }
-                .animate-slash-fly {
-                    animation: slash-fly-path 0.5s ease-in forwards;
-                    width: 200px; /* Container size */
-                    height: 200px;
                 }
             `}</style>
       
