@@ -57,7 +57,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             top: `${data.y}%`,
             color: data.color,
             fontSize: `${data.fontSize}px`,
-            textShadow: 'none' // Đã loại bỏ shadow
+            textShadow: 'none' // Đã loại bỏ shadow theo yêu cầu
         }}
     >
         {data.text}
@@ -298,7 +298,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     // --- LOGIC HIỂN THỊ DAMAGE CHỐNG ĐÈ (COLLISION DETECTION) ---
     // Được port từ stick-game.tsx sang React
-    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { // Giảm default font size
+    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { // Giảm default font size từ 24 xuống 18
         const id = Date.now() + Math.random();
 
         // 1. Xác định vị trí cơ bản
@@ -369,35 +369,43 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     useEffect(() => {
         if (!lastTurnEvents) return;
         
-        const { playerDmg, playerDmgHit1, playerDmgHit2, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
+        const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
         // Player attacks Boss
         if (playerDmg > 0) {
-            const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 2);
-            const dmg2 = playerDmgHit2 || (playerDmg - dmg1);
+            const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 3);
+            const dmg2 = playerDmgHit2 || Math.ceil(playerDmg / 3);
+            const dmg3 = playerDmgHit3 || (playerDmg - dmg1 - dmg2); // New hit 3
 
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
             
+            // Tạo 3 quả cầu (ORB 3 Added)
             const orb1: OrbProps = { id: now, delay: 0, startPos: shuffledSlots[0] };
             const orb2: OrbProps = { id: now + 1, delay: 300, startPos: shuffledSlots[1] };
-            // Thêm orb 3
-            const orb3: OrbProps = { id: now + 2, delay: 600, startPos: shuffledSlots[2] };
+            const orb3: OrbProps = { id: now + 2, delay: 600, startPos: shuffledSlots[2] }; // New Orb
 
             setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
-            // HIT 1 - Font size 24
+            // HIT 1 - Font 24
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 24); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
-            // HIT 2 - Font size 28
+            // HIT 2 - Font 26
             setTimeout(() => {
-                addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 28); 
+                addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 26); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
+             // HIT 3 - Font 28 (New)
+             setTimeout(() => {
+                addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 28); 
+                setVisualBossHp(prev => Math.max(0, prev - dmg3));
+            }, 3500);
+
+            // Cleanup
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
                 if (bossStats) {
@@ -406,10 +414,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                          return current;
                      });
                 }
-            }, 3800); // Tăng thời gian dọn dẹp lên 3800ms để chờ orb 3
+            }, 3800);
         }
         
-        // Player Heals - Font size 20
+        // Player Heals - Giảm font size xuống 20
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
@@ -417,14 +425,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         // Boss attacks Player
         setTimeout(() => {
           if (bossDmg > 0) {
-              // Font size 24
+              // Giảm font size xuống 24
               addDamageText(`-${formatDamageText(bossDmg)}`, '#ef4444', 'player', 24);
           }
           if (bossReflectDmg > 0) {
-              // Font size 18
+              // Giảm font size xuống 18
               addDamageText(`Reflect -${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
           }
-        }, 500);
+        }, 800); // Tăng delay phản công của boss lên một chút
 
     }, [lastTurnEvents, addDamageText]); 
 
