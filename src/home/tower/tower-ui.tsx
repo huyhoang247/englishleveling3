@@ -1,5 +1,3 @@
-// --- START OF FILE tower-ui.tsx ---
-
 import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
@@ -382,10 +380,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                      </div>
                                 </div>
     
-                                <main className="w-full h-full flex flex-col justify-end items-center pt-[72px] pb-12 relative overflow-hidden">
+                                {/* Update: justify-end -> justify-center để đưa nội dung lên giữa, xóa pb-12 */}
+                                <main className="w-full h-full flex flex-col justify-center items-center pt-[72px] relative overflow-hidden">
                                     
                                     {/* --- BATTLE STAGE --- */}
-                                    <div className="w-full max-w-6xl mx-auto flex flex-row justify-between items-end px-4 md:px-12 h-[60vh] md:h-[70vh] relative">
+                                    {/* Update: h-[60vh] -> h-auto để chiều cao linh hoạt, thêm flex-grow để đẩy nhẹ buttons xuống */}
+                                    <div className="w-full max-w-6xl mx-auto flex flex-row justify-between items-end px-4 md:px-12 h-[50vh] md:h-[60vh] relative">
                                         
                                         {/* LEFT: HERO (Đã import từ boss-display.tsx) */}
                                         <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
@@ -419,7 +419,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
 
                                     {/* --- ACTION BAR (Bottom) --- */}
-                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-4 z-50">
+                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-8 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
                                                 {currentFloor > 0 && (
@@ -463,4 +463,3 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
-// --- END OF FILE tower-ui.tsx ---
