@@ -1,4 +1,3 @@
---- START OF FILE boss-display.tsx ---
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
