@@ -1,8 +1,9 @@
+// --- START OF FILE boss-display.tsx ---
+
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
-// import { bossBattleAssets } from '../../game-assets.ts'; 
 
-// --- COMPONENT THANH MÁU ---
+// --- COMPONENT THANH MÁU (Giữ nguyên) ---
 const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current: number, max: number, colorGradient: string, shadowColor: string }) => {
     const scale = Math.max(0, current / max);
     return (
@@ -23,12 +24,11 @@ const HealthBar = memo(({ current, max, colorGradient, shadowColor }: { current:
     );
 });
 
-// --- COMPONENT SPRITE ANIMATION ---
+// --- COMPONENT SPRITE ANIMATION (Giữ nguyên logic sprite) ---
 const BossSprite = memo(({ bossId }: { bossId: number }) => {
     const idStr = String(bossId).padStart(2, '0');
     const spritePath = `/images/boss/${idStr}.webp`;
 
-    // Xác định class CSS dựa trên Boss ID
     let sizeClass = 'boss-size-default';
     let animClass = 'boss-anim-default';
 
@@ -42,11 +42,9 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
         sizeClass = 'boss-size-04';
         animClass = 'boss-anim-04';
     } else if (bossId === 6) {
-        // --- CẤU HÌNH BOSS 6 ---
         sizeClass = 'boss-size-06';
         animClass = 'boss-anim-06';
     } else if (bossId === 50) {
-        // --- CẤU HÌNH BOSS 50 (GIỐNG BOSS 6) ---
         sizeClass = 'boss-size-50';
         animClass = 'boss-anim-50';
     }
@@ -85,12 +83,12 @@ export const BossDisplay = memo(({
     onImgError,
     onStatsClick
 }: BossDisplayProps) => {
-    // Danh sách các boss sử dụng sprite sheet (Đã thêm 6, 50)
     const isSpriteBoss = [1, 3, 4, 6, 8, 50].includes(bossId);
 
     return (
-        <div className="w-full max-w-4xl flex justify-center items-center my-8">
-            {/* CSS Scoped cho Boss Sprite */}
+        // --- MODIFICATION: Removed 'w-full max-w-4xl mx-auto my-8' to allow flex positioning ---
+        <div className="flex justify-center items-center relative z-10">
+            {/* CSS Scoped cho Boss Sprite (Giữ nguyên) */}
             <style>{`
                 .boss-render-optimize {
                     image-rendering: -webkit-optimize-contrast;
@@ -109,7 +107,7 @@ export const BossDisplay = memo(({
                     transform-origin: bottom center;
                 }
 
-                /* --- THÔNG SỐ BOSS MẶC ĐỊNH --- */
+                /* --- Boss definitions remain unchanged --- */
                 .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
                 .boss-anim-default {
                     width: 2814px; height: 2916px; background-size: 2814px 2916px;
@@ -118,7 +116,6 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* --- BOSS 01 --- */
                 .boss-size-01 { width: 441px; height: 442px; transform: scale(0.6); }
                 .boss-anim-01 {
                     width: 2646px; height: 2652px; background-size: 2646px 2652px;
@@ -127,7 +124,6 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -2646px; } }
                 @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -2652px; } }
 
-                /* --- BOSS 03 --- */
                 .boss-size-03 { width: 513px; height: 399px; transform: scale(0.55); }
                 .boss-anim-03 {
                     width: 3078px; height: 2394px; background-size: 3078px 2394px;
@@ -136,7 +132,6 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
 
-                /* --- BOSS 04 (Đã tối ưu 1803x1992) --- */
                 .boss-size-04 { width: 300.5px; height: 332px; transform: scale(0.9); }
                 .boss-anim-04 {
                     width: 1803px; height: 1992px; background-size: 1803px 1992px;
@@ -146,12 +141,7 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
                 @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
 
-                /* --- BOSS 06 (ĐÃ TỐI ƯU: 1596x1380) --- */
-                .boss-size-06 {
-                    width: 266px; 
-                    height: 230px;
-                    transform: scale(1.1); 
-                }
+                .boss-size-06 { width: 266px; height: 230px; transform: scale(1.1); }
                 .boss-anim-06 {
                     width: 1596px; height: 1380px; background-size: 1596px 1380px;
                     will-change: background-position;
@@ -160,12 +150,7 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
                 @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -1380px; } }
 
-                /* --- BOSS 50 (GIỐNG BOSS 6) --- */
-                .boss-size-50 {
-                    width: 266px; 
-                    height: 230px;
-                    transform: scale(1.1); 
-                }
+                .boss-size-50 { width: 266px; height: 230px; transform: scale(1.1); }
                 .boss-anim-50 {
                     width: 1596px; height: 1380px; background-size: 1596px 1380px;
                     will-change: background-position;
@@ -174,13 +159,11 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-50 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
                 @keyframes boss-y-50 { from { background-position-y: 0; } to { background-position-y: -1380px; } }
 
-
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.4); }
                     .boss-size-03 { transform: scale(0.35); }
                     .boss-size-04 { transform: scale(0.6); }
-                    /* Mobile scale cho boss 6 và 50 */
                     .boss-size-06, .boss-size-50 { transform: scale(0.7); }
                 }
             `}</style>
@@ -194,7 +177,7 @@ export const BossDisplay = memo(({
                     <MagicCircle elementKey={element} />
                 </div>
 
-                <div className="relative z-10 flex flex-col items-center gap-3 w-full">
+                <div className="relative z-10 flex flex-col items-center gap-3 w-64 md:w-80">
                     <div className="relative group flex flex-col items-center">
                         <h2 className="text-2xl font-bold text-red-400 text-shadow">BOSS</h2>
                         <div className="absolute bottom-full mb-2 w-max px-3 py-1.5 bg-slate-900 text-xs text-white rounded-md opacity-0 group-hover:opacity-100 transition-opacity border border-slate-700">
@@ -202,7 +185,7 @@ export const BossDisplay = memo(({
                         </div>
                     </div>
 
-                    <div className="w-40 h-40 md:w-80 md:h-80 relative mb-4 flex items-center justify-center">
+                    <div className="w-full h-40 md:h-64 relative mb-4 flex items-center justify-center">
                         {isSpriteBoss ? (
                             <BossSprite bossId={bossId} />
                         ) : (
