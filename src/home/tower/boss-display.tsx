@@ -148,21 +148,26 @@ export const BossDisplay = memo(({
                 onClick={onStatsClick}
             >
                 {/* Visual Anchor/Shadow at feet */}
-                <div className="absolute bottom-[5%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+                <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Magic Circle - Positioned behind boss */}
-                <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
+                <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* Boss Name Tag */}
-                <div className="relative z-10 mb-[-20px] md:mb-[-40px] opacity-90">
-                    <div className="bg-red-900/80 border border-red-500/30 px-3 py-0.5 rounded text-[10px] md:text-xs font-bold text-red-200 tracking-wider uppercase text-shadow">
-                        {name}
-                    </div>
+                {/* 1. Health Bar (Moved to Top) */}
+                <div className="w-32 md:w-48 z-20 mb-[-10px]">
+                    <HealthBar 
+                        current={hp} 
+                        max={maxHp} 
+                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
+                        shadowColor="rgba(220, 38, 38, 0.5)" 
+                    />
                 </div>
 
-                {/* Sprite Render */}
+                {/* (Deleted Boss Name Tag) */}
+
+                {/* 2. Sprite Render */}
                 <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
                     {isSpriteBoss ? (
                         <BossSprite bossId={bossId} />
@@ -176,18 +181,10 @@ export const BossDisplay = memo(({
                     )}
                 </div>
                 
-                {/* Health Bar */}
-                <div className="w-32 md:w-48 z-20 mt-2">
-                    <HealthBar 
-                        current={hp} 
-                        max={maxHp} 
-                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
-                        shadowColor="rgba(220, 38, 38, 0.5)" 
-                    />
-                </div>
             </div>
         </div>
     );
 });
 
 export default BossDisplay;
+// --- END OF FILE boss-display.tsx (UPDATED) ---
