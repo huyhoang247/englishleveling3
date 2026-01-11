@@ -297,30 +297,29 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
     // --- LOGIC HIỂN THỊ DAMAGE CHỐNG ĐÈ (COLLISION DETECTION) ---
-    // Được port từ stick-game.tsx sang React
-    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { // Giảm default font size từ 24 xuống 18
+    // Update logic: Tăng spread (độ tản ra) để tránh dồn cục
+    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { 
         const id = Date.now() + Math.random();
 
         // 1. Xác định vị trí cơ bản
-        // Player bên trái (khoảng 25%), Boss bên phải (khoảng 75%)
+        // Player bên trái, Boss bên phải
         let baseX = target === 'player' ? 25 : 75; 
-        const baseY = 55; // Tọa độ Y cơ bản (khoảng giữa màn hình)
+        const baseY = 55; // Tọa độ Y cơ bản
 
-        // 2. Random nhẹ ban đầu
-        // Random từ -2% đến +2% cho X, Y đẩy lên một chút
-        let finalX = baseX + (Math.random() * 4 - 2);
-        let finalY = baseY + (Math.random() * 5 - 2.5);
+        // 2. Random rộng hơn để tạo độ tản tự nhiên
+        // Random từ -6% đến +6% cho X (trước là 2%)
+        // Random từ -5% đến +5% cho Y (trước là 2.5%)
+        let finalX = baseX + (Math.random() * 12 - 6);
+        let finalY = baseY + (Math.random() * 10 - 5);
 
         // 3. Logic Heal (Máu bay lên cao hơn chút)
         const isHeal = text.startsWith('+');
         if (isHeal) {
-            finalY -= 5; 
+            finalY -= 8; // Bay cao hẳn lên
         }
 
         // 4. KIỂM TRA VA CHẠM (COLLISION CHECK)
-        // Lặp qua danh sách text đang hiện hữu để tránh đè
-        // Sử dụng đơn vị % tương đối, ngưỡng va chạm ước lượng: X: 5%, Y: 5%
-        const checkLimit = 10;
+        const checkLimit = 15; // Tăng limit check
         let count = 0;
 
         // Duyệt ngược để ưu tiên text mới nhất
@@ -331,16 +330,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const dx = Math.abs(existing.x - finalX);
             const dy = Math.abs(existing.y - finalY);
 
-            // Nếu quá gần nhau
-            if (dx < 5 && dy < 5) {
-                // Đẩy text mới lên trên text cũ
-                finalY = existing.y - 4; 
+            // Nếu quá gần nhau (ngưỡng 8% cho an toàn)
+            if (dx < 8 && dy < 8) {
+                // Đẩy text mới lên trên text cũ xa hơn (6-8%)
+                finalY = existing.y - (6 + Math.random() * 2); 
                 
-                // Tản ra hai bên
-                if (existing.x > baseX) {
-                     finalX -= 2; 
+                // Đẩy sang hai bên mạnh hơn (4-6%)
+                if (finalX > existing.x) {
+                     finalX += (4 + Math.random() * 2); 
                 } else {
-                     finalX += 2;
+                     finalX -= (4 + Math.random() * 2);
                 }
             }
             count++;
