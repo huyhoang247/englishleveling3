@@ -1,3 +1,4 @@
+
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
@@ -252,7 +253,8 @@ export const BossDisplay = memo(({
                 <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
                 {/* Magic Circle - Positioned behind boss */}
-                <div className="absolute bottom-[-5%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
+                {/* Update: bottom-[-5%] -> bottom-[-18%] để dịch vòng tròn xuống dưới */}
+                <div className="absolute bottom-[-18%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
 
