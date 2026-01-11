@@ -57,7 +57,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             top: `${data.y}%`,
             color: data.color,
             fontSize: `${data.fontSize}px`,
-            textShadow: 'none' // Đã loại bỏ shadow theo yêu cầu
+            textShadow: 'none' // Đã loại bỏ shadow
         }}
     >
         {data.text}
@@ -298,7 +298,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     // --- LOGIC HIỂN THỊ DAMAGE CHỐNG ĐÈ (COLLISION DETECTION) ---
     // Được port từ stick-game.tsx sang React
-    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { // Giảm default font size từ 24 xuống 18
+    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { // Giảm default font size
         const id = Date.now() + Math.random();
 
         // 1. Xác định vị trí cơ bản
@@ -381,33 +381,35 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             
             const orb1: OrbProps = { id: now, delay: 0, startPos: shuffledSlots[0] };
             const orb2: OrbProps = { id: now + 1, delay: 300, startPos: shuffledSlots[1] };
+            // Thêm orb 3
+            const orb3: OrbProps = { id: now + 2, delay: 600, startPos: shuffledSlots[2] };
 
-            setOrbEffects(prev => [...prev, orb1, orb2]);
+            setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
-            // HIT 1 - Giảm font size xuống 24
+            // HIT 1 - Font size 24
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 24); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
-            // HIT 2 - Giảm font size xuống 28
+            // HIT 2 - Font size 28
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 28); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
             setTimeout(() => {
-                setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id));
+                setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
                 if (bossStats) {
                      setVisualBossHp(current => {
                          if(Math.abs(current - bossStats.hp) < 100) return bossStats.hp;
                          return current;
                      });
                 }
-            }, 3500);
+            }, 3800); // Tăng thời gian dọn dẹp lên 3800ms để chờ orb 3
         }
         
-        // Player Heals - Giảm font size xuống 20
+        // Player Heals - Font size 20
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
@@ -415,11 +417,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         // Boss attacks Player
         setTimeout(() => {
           if (bossDmg > 0) {
-              // Giảm font size xuống 24
+              // Font size 24
               addDamageText(`-${formatDamageText(bossDmg)}`, '#ef4444', 'player', 24);
           }
           if (bossReflectDmg > 0) {
-              // Giảm font size xuống 18
+              // Font size 18
               addDamageText(`Reflect -${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
           }
         }, 500);
