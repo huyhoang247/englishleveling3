@@ -38,6 +38,7 @@ const BOSS_ORB_SPAWN_SLOTS = [
 
 const SKIP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/skip-battle.webp";
 const SWEEP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/sweep-battle.webp";
+const FIGHT_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fight.webp";
 
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
@@ -505,7 +506,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 </header>
     
                                 {/* --- LEFT SIDE UTILITIES (Floor + Sweep) --- */}
-                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
+                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-1 items-start">
                                     {/* Floor Indicator */}
                                     <div className="flex items-center gap-2 bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-600 shadow-md h-9 backdrop-blur-sm">
                                         <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4 opacity-80" />
@@ -522,7 +523,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             className="transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group rounded-full"
                                             title="Sweep"
                                         >
-                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-36 h-auto object-contain drop-shadow-md" />
+                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-28 h-auto object-contain drop-shadow-md" />
                                             {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
                                         </button>
                                     )}
@@ -589,10 +590,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-24 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
-                                                <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-12 py-3 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg text-teal-300 border border-teal-500/50 shadow-lg shadow-teal-900/20 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.4)] active:scale-95 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-700 disabled:shadow-none">
-                                                    <div className="flex flex-col items-center gap-0.5">
-                                                        <span className="font-bold text-xl tracking-widest uppercase text-shadow-sm">FIGHT</span>
-                                                        <div className="flex items-center gap-1 text-xs font-semibold text-cyan-400/80"><span>10</span><img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/></div>
+                                                <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="transition-all active:scale-95 hover:scale-105 rounded-full relative group">
+                                                    <img src={FIGHT_ICON} alt="Fight" className="w-36 h-auto object-contain" />
+                                                    <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 text-xs font-bold text-cyan-300 bg-black/60 px-2 py-0.5 rounded-full border border-slate-600/50 backdrop-blur-sm">
+                                                        <span>10</span>
+                                                        <img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/>
                                                     </div>
                                                 </button>
                                             </div>
