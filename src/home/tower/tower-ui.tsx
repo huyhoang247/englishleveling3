@@ -588,7 +588,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         ) : (
                                             !gameOver && (
-                                                <button onClick={skipBattle} className="w-20 h-20 transition-all active:scale-95 hover:scale-105 filter hover:brightness-125 drop-shadow-[0_0_10px_rgba(251,146,60,0.5)]" title="Skip Battle">
+                                                <button onClick={skipBattle} className="w-24 h-24 transition-all active:scale-95 hover:scale-105" title="Skip Battle">
                                                     <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-full h-full object-contain" />
                                                 </button>
                                             )
