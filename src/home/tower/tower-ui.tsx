@@ -301,6 +301,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
     const [isSweeping, setIsSweeping] = useState(false);
     
+    // --- STATE CHO HIỆU ỨNG NHÁY SÁNG KHI BỊ ĐÁNH ---
+    const [isHeroHit, setIsHeroHit] = useState(false);
+    const [isBossHit, setIsBossHit] = useState(false);
+    
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
     // --- SYNC VISUAL HP ---
@@ -334,11 +338,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
+    // --- HELPER KÍCH HOẠT HIỆU ỨNG NHÁY SÁNG ---
+    const triggerHit = useCallback((target: 'player' | 'boss') => {
+        if (target === 'player') {
+            setIsHeroHit(true);
+            setTimeout(() => setIsHeroHit(false), 300); // 300ms khớp với animation css
+        } else {
+            setIsBossHit(true);
+            setTimeout(() => setIsBossHit(false), 300);
+        }
+    }, []);
+
     // --- LOGIC HIỂN THỊ DAMAGE ---
     const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { 
         const id = Date.now() + Math.random();
         
-        // --- CHỈNH SỬA Ở ĐÂY: Dịch chuyển text Player từ 20% về 15% ---
         let baseX = target === 'player' ? 15 : 75; 
         
         const baseY = 55;
@@ -401,18 +415,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 24); 
+                triggerHit('boss'); // Kích hoạt nháy sáng Boss
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
             // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 26); 
+                triggerHit('boss'); // Kích hoạt nháy sáng Boss
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
              // Hit 3
              setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 28); 
+                triggerHit('boss'); // Kích hoạt nháy sáng Boss
                 setVisualBossHp(prev => Math.max(0, prev - dmg3));
             }, 3500);
 
@@ -459,16 +476,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             // Hit 1 (Animation duration is ~3s)
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 24); 
+                triggerHit('player'); // Kích hoạt nháy sáng Player
             }, bossStartDelay + 2900);
 
             // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 26);
+                triggerHit('player'); // Kích hoạt nháy sáng Player
             }, bossStartDelay + 3200);
 
             // Hit 3
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 28);
+                triggerHit('player'); // Kích hoạt nháy sáng Player
             }, bossStartDelay + 3500);
 
             // Cleanup Boss Orbs
@@ -481,10 +501,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (bossReflectDmg > 0) {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
+                triggerHit('player'); // Phản đòn cũng gây nháy sáng
             }, 3000); 
         }
 
-    }, [lastTurnEvents, addDamageText]); 
+    }, [lastTurnEvents, addDamageText, triggerHit]); 
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
@@ -610,6 +631,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     will-change: transform, left, top;
                     transform: translateZ(0);
                 }
+
+                /* HIT FLASH ANIMATION */
+                @keyframes hit-shake-red {
+                    0%, 100% { filter: none; transform: translateX(0); }
+                    25% { filter: sepia(1) hue-rotate(-50deg) saturate(3) brightness(1.2); transform: translateX(-5px); }
+                    75% { filter: sepia(1) hue-rotate(-50deg) saturate(3) brightness(1.2); transform: translateX(5px); }
+                }
+                .hit-effect {
+                    animation: hit-shake-red 0.3s ease-in-out;
+                }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -672,12 +703,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     <div className="w-full max-w-6xl mx-auto flex flex-row justify-between items-end px-4 md:px-12 h-[50vh] md:h-[60vh] relative">
                                         
                                         {/* LEFT: HERO */}
-                                        <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
+                                        <div className={`w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10 ${isHeroHit ? 'hit-effect' : ''}`}>
                                             <HeroDisplay stats={playerStats} onStatsClick={() => setStatsModalTarget('player')} />
                                         </div>
 
                                         {/* RIGHT: BOSS */}
-                                        <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
+                                        <div className={`w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10 ${isBossHit ? 'hit-effect' : ''}`}>
                                             <BossDisplay 
                                                 bossId={currentBossData.id}
                                                 name={currentBossData.name}
