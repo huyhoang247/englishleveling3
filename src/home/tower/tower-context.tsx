@@ -413,6 +413,11 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
+          // --- ĐÃ SỬA: Chạy lượt đầu tiên ngay lập tức ---
+          if(savedCallback.current) {
+            savedCallback.current();
+          }
+
           // Time cho phép UI chạy xong animation 3 quả cầu (Đã tăng lên 4200ms)
           battleIntervalRef.current = setInterval(() => {
               if(savedCallback.current) {
