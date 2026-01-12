@@ -116,6 +116,8 @@ const UPGRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishl
 const MERGE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/merge.webp";
 // URL ICON STATS - MỚI
 const STATS_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats.webp";
+// URL BACKGROUND - MỚI
+const EQUIPMENT_BG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-equipment.webp";
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
@@ -656,7 +658,13 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
     const showEffect = isCraftingAnimation; 
 
     return (
-        <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
+        <div 
+            className="main-bg relative w-full min-h-screen font-sans text-white overflow-hidden bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${EQUIPMENT_BG_URL})` }}
+        >
+            {/* Overlay nền đen 25% */}
+            <div className="absolute inset-0 bg-black/25 pointer-events-none z-0" />
+
             <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } 
             
             /* Thêm hiệu ứng nảy nhẹ nhàng (Đã chỉnh xuống 4px) */
