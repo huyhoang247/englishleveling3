@@ -36,6 +36,8 @@ const BOSS_ORB_SPAWN_SLOTS = [
     { left: '72%', top: '34%' },
 ];
 
+const SKIP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/skip-battle.webp";
+
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
@@ -493,8 +495,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 <HomeIcon className="w-5 h-5 text-slate-300" />
                                                 <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                                             </button>
-                                            
-                                            {/* REMOVED FLOOR INDICATOR FROM HERE */}
                                         </div>
                                         <div className="flex items-center gap-2 font-sans">
                                             <EnergyDisplay currentEnergy={animatedEnergy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false} />
@@ -571,7 +571,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
 
                                     {/* --- ACTION BAR --- */}
-                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-14 z-50">
+                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-24 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
                                                 {currentFloor > 0 && (
@@ -588,8 +588,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         ) : (
                                             !gameOver && (
-                                                <button onClick={skipBattle} className="font-sans px-8 py-2 bg-orange-900/80 hover:bg-orange-800 rounded-lg font-bold text-orange-200 border border-orange-500 transition-all active:scale-95 shadow-lg">
-                                                    SKIP BATTLE
+                                                <button onClick={skipBattle} className="w-20 h-20 transition-all active:scale-95 hover:scale-105 filter hover:brightness-125 drop-shadow-[0_0_10px_rgba(251,146,60,0.5)]" title="Skip Battle">
+                                                    <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-full h-full object-contain" />
                                                 </button>
                                             )
                                         )}
