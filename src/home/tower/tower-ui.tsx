@@ -32,10 +32,10 @@ const ORB_SPAWN_SLOTS = [
 // Boss orb spawn positions (Right side - Above Boss Head)
 // Đã điều chỉnh: Dịch toàn bộ lên cao (giảm top) khoảng 7-10% để tránh che thanh máu
 const BOSS_ORB_SPAWN_SLOTS = [
-    { left: '68%', top: '25%' }, // Cao hơn vị trí cũ (32%)
-    { left: '76%', top: '10%' }, // Cao hơn vị trí cũ (18%)
-    { left: '82%', top: '22%' }, // Cao hơn vị trí cũ (30%)
-    { left: '72%', top: '34%' }, // Cao hơn vị trí cũ (42%) - Đây là quả hay che thanh máu nhất
+    { left: '68%', top: '25%' }, 
+    { left: '76%', top: '10%' }, 
+    { left: '82%', top: '22%' }, 
+    { left: '72%', top: '34%' }, 
 ];
 
 // --- UI ICONS ---
@@ -342,7 +342,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const triggerHit = useCallback((target: 'player' | 'boss') => {
         if (target === 'player') {
             setIsHeroHit(true);
-            setTimeout(() => setIsHeroHit(false), 150); // Giảm xuống 150ms để đủ thời gian reset cho hit kế tiếp
+            setTimeout(() => setIsHeroHit(false), 150); 
         } else {
             setIsBossHit(true);
             setTimeout(() => setIsBossHit(false), 150);
@@ -415,21 +415,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 24); 
-                triggerHit('boss'); // Kích hoạt nháy sáng Boss
+                triggerHit('boss'); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
             // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 26); 
-                triggerHit('boss'); // Kích hoạt nháy sáng Boss
+                triggerHit('boss'); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
              // Hit 3
              setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 28); 
-                triggerHit('boss'); // Kích hoạt nháy sáng Boss
+                triggerHit('boss'); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg3));
             }, 3500);
 
@@ -449,59 +449,52 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
         
-        // --- BOSS ATTACK SEQUENCE (Starts after player is roughly done) ---
-        // Player animation finishes hits around 3500ms.
-        // Let's start Boss wind-up around 4000ms.
+        // --- BOSS ATTACK SEQUENCE ---
         const bossStartDelay = 4000;
         
         if (bossDmg > 0) {
             const shuffledBossSlots = [...BOSS_ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now() + 100; // unique ID offset
 
-            // We create 3 boss orbs visually to match the "like player" requirement
             const bOrb1: OrbProps = { id: now + 10, delay: 0, startPos: shuffledBossSlots[0] };
             const bOrb2: OrbProps = { id: now + 11, delay: 300, startPos: shuffledBossSlots[1] };
             const bOrb3: OrbProps = { id: now + 12, delay: 600, startPos: shuffledBossSlots[2] };
 
-            // Split damage for display purposes (even though logic is 1 hit in context, we show 3 numbers)
             const bDmg1 = Math.floor(bossDmg * 0.3);
             const bDmg2 = Math.floor(bossDmg * 0.3);
             const bDmg3 = bossDmg - bDmg1 - bDmg2;
 
-            // Trigger visual orbs
             setTimeout(() => {
                 setBossOrbEffects(prev => [...prev, bOrb1, bOrb2, bOrb3]);
             }, bossStartDelay);
 
-            // Hit 1 (Animation duration is ~3s)
+            // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 24); 
-                triggerHit('player'); // Kích hoạt nháy sáng Player
+                triggerHit('player'); 
             }, bossStartDelay + 2900);
 
             // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 26);
-                triggerHit('player'); // Kích hoạt nháy sáng Player
+                triggerHit('player'); 
             }, bossStartDelay + 3200);
 
             // Hit 3
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 28);
-                triggerHit('player'); // Kích hoạt nháy sáng Player
+                triggerHit('player'); 
             }, bossStartDelay + 3500);
 
-            // Cleanup Boss Orbs
             setTimeout(() => {
                  setBossOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
             }, bossStartDelay + 3800);
         }
 
-        // Reflect damage usually happens instantly when player hits, but we delay it to not clutter
         if (bossReflectDmg > 0) {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
-                triggerHit('player'); // Phản đòn cũng gây nháy sáng
+                triggerHit('player'); 
             }, 3000); 
         }
 
@@ -593,8 +586,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     --start-top: 35%;
                 }
 
-                /* BOSS ORB ANIMATIONS (NEW) */
-                /* Frame 66x59, Sheet 396x354 (6x6) */
+                /* BOSS ORB ANIMATIONS */
                 @keyframes boss-orb-spin-x { from { background-position-x: 0; } to { background-position-x: -396px; } }
                 @keyframes boss-orb-spin-y { from { background-position-y: 0; } to { background-position-y: -354px; } }
                 .animate-boss-orb-spin { 
@@ -617,7 +609,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     }
                     95% { opacity: 1; }
                     100% { 
-                        /* Target Player Position */
                         left: 25%; top: 60%; 
                         transform: scale(0.4); opacity: 0; 
                     }
@@ -630,20 +621,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     animation-fill-mode: both; 
                     will-change: transform, left, top;
                     transform: translateZ(0);
-                }
-
-                /* HIT FLASH ANIMATION - GENTLE WHITE & SHAKE */
-                @keyframes hit-shake-white {
-                    0% { filter: brightness(1); transform: translateX(0); }
-                    25% { filter: brightness(2) contrast(0.8); transform: translateX(-2px); } /* Lắc nhẹ 2px */
-                    50% { filter: brightness(1); transform: translateX(0); }
-                    75% { filter: brightness(2) contrast(0.8); transform: translateX(2px); } /* Lắc nhẹ 2px */
-                    100% { filter: brightness(1); transform: translateX(0); }
-                }
-                
-                /* Selector này nhắm cụ thể vào thẻ img bên trong div có class hit-effect */
-                .hit-effect img {
-                    animation: hit-shake-white 0.2s ease-in-out;
                 }
             `}</style>
       
@@ -707,12 +684,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     <div className="w-full max-w-6xl mx-auto flex flex-row justify-between items-end px-4 md:px-12 h-[50vh] md:h-[60vh] relative">
                                         
                                         {/* LEFT: HERO */}
-                                        <div className={`w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10 ${isHeroHit ? 'hit-effect' : ''}`}>
-                                            <HeroDisplay stats={playerStats} onStatsClick={() => setStatsModalTarget('player')} />
+                                        <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
+                                            {/* Truyền prop isHit vào */}
+                                            <HeroDisplay stats={playerStats} onStatsClick={() => setStatsModalTarget('player')} isHit={isHeroHit} />
                                         </div>
 
                                         {/* RIGHT: BOSS */}
-                                        <div className={`w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10 ${isBossHit ? 'hit-effect' : ''}`}>
+                                        <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
+                                            {/* Truyền prop isHit vào */}
                                             <BossDisplay 
                                                 bossId={currentBossData.id}
                                                 name={currentBossData.name}
@@ -722,6 +701,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 imgSrc={bossImgSrc}
                                                 onImgError={handleBossImgError}
                                                 onStatsClick={() => setStatsModalTarget('boss')}
+                                                isHit={isBossHit}
                                             />
                                         </div>
 
