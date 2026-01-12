@@ -521,7 +521,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 {/* --- LEFT SIDE UTILITIES (Floor + Sweep) --- */}
                                 <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
                                     {/* Floor Indicator */}
-                                    <div className="flex items-center gap-2 bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-600 shadow-md h-9 backdrop-blur-sm">
+                                    <div className="flex items-center gap-2 bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-600 shadow-md h-9 backdrop-blur-sm opacity-50">
                                         <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4 opacity-80" />
                                         <h3 className="font-bold text-sm tracking-widest uppercase text-slate-200 select-none shadow-black drop-shadow-sm">
                                             {currentBossData.floor}
