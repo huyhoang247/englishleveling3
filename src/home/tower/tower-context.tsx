@@ -418,12 +418,13 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
             savedCallback.current();
           }
 
-          // Time cho phép UI chạy xong animation 3 quả cầu (Đã tăng lên 4200ms)
+          // Update Time: 8000ms. 
+          // Cho phép Player animation (~3.5s) + Boss animation (~3.5s) chạy hết trước khi sang lượt mới.
           battleIntervalRef.current = setInterval(() => {
               if(savedCallback.current) {
                 savedCallback.current();
               }
-          }, 4200); 
+          }, 8000); 
         }
         return () => {
           if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
