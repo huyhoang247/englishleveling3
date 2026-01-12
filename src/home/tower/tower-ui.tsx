@@ -30,12 +30,12 @@ const ORB_SPAWN_SLOTS = [
 ];
 
 // Boss orb spawn positions (Right side - Above Boss Head)
-// Đã điều chỉnh: Gom gọn lại gần Boss hơn và kéo quả cầu ngoài rìa vào để không bị mất hình
+// Đã điều chỉnh: Dịch toàn bộ lên cao (giảm top) khoảng 7-10% để tránh che thanh máu
 const BOSS_ORB_SPAWN_SLOTS = [
-    { left: '68%', top: '32%' }, // Phía trước mặt boss (gần hơn chút)
-    { left: '76%', top: '18%' }, // Ngay trên đỉnh đầu
-    { left: '82%', top: '30%' }, // Bên phải (đã giảm từ 88% xuống 82% để ko bị lẹm)
-    { left: '72%', top: '42%' }, // Thấp xuống dưới ngực/bụng
+    { left: '68%', top: '25%' }, // Cao hơn vị trí cũ (32%)
+    { left: '76%', top: '10%' }, // Cao hơn vị trí cũ (18%)
+    { left: '82%', top: '22%' }, // Cao hơn vị trí cũ (30%)
+    { left: '72%', top: '34%' }, // Cao hơn vị trí cũ (42%) - Đây là quả hay che thanh máu nhất
 ];
 
 // --- UI ICONS ---
