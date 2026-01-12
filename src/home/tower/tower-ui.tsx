@@ -519,7 +519,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         <button 
                                             onClick={handleSweepClick} 
                                             disabled={(playerStats.energy || 0) < 10 || isSweeping} 
-                                            className="w-12 h-12 transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group"
+                                            className="w-28 h-28 transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group"
                                             title="Sweep"
                                         >
                                             <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-full h-full object-contain drop-shadow-md" />
@@ -598,7 +598,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         ) : (
                                             !gameOver && (
-                                                <button onClick={skipBattle} className="w-28 h-28 transition-all active:scale-95 hover:scale-105" title="Skip Battle">
+                                                <button onClick={skipBattle} className="w-32 h-32 transition-all active:scale-95 hover:scale-105" title="Skip Battle">
                                                     <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-full h-full object-contain" />
                                                 </button>
                                             )
