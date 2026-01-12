@@ -476,17 +476,26 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
             {showRewardsModal && currentBossData && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
-            <div 
-                className="main-bg relative w-full min-h-screen flex flex-col items-center font-lilita text-white overflow-hidden bg-cover bg-center bg-no-repeat"
-                style={{ backgroundImage: `url(${BACKGROUND_IMAGE})` }}
-            >
+            <div className="relative w-full min-h-screen flex flex-col items-center font-lilita text-white overflow-hidden">
                 
+                {/* --- BACKGROUND LAYER --- */}
+                <div className="absolute inset-0 z-0">
+                    <div 
+                        className="absolute inset-0 bg-cover bg-no-repeat bg-slate-900"
+                        style={{ 
+                            backgroundImage: `url(${BACKGROUND_IMAGE})`,
+                            backgroundPosition: 'center 30px'
+                        }}
+                    />
+                    <div className="absolute inset-0 bg-black/70" />
+                </div>
+
                 {isLoading ? (
                     <div className="absolute inset-0 z-50">
                         <BossBattleLoader />
                     </div>
                 ) : (
-                    <div className="w-full h-full flex flex-col relative">
+                    <div className="w-full h-full flex flex-col relative z-10">
                         {(!playerStats || !bossStats || !currentBossData) ? (
                             <div className="flex-grow flex items-center justify-center">
                                 <p>Missing required data.</p>
