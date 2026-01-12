@@ -39,6 +39,7 @@ const BOSS_ORB_SPAWN_SLOTS = [
 const SKIP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/skip-battle.webp";
 const SWEEP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/sweep-battle.webp";
 const FIGHT_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fight.webp";
+const BACKGROUND_IMAGE = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-tower.webp";
 
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
@@ -475,7 +476,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             {showLogModal && <LogModal log={previousCombatLog} onClose={() => setShowLogModal(false)} />}
             {showRewardsModal && currentBossData && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
-            <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] flex flex-col items-center font-lilita text-white overflow-hidden">
+            <div 
+                className="main-bg relative w-full min-h-screen flex flex-col items-center font-lilita text-white overflow-hidden bg-cover bg-center bg-no-repeat"
+                style={{ backgroundImage: `url(${BACKGROUND_IMAGE})` }}
+            >
                 
                 {isLoading ? (
                     <div className="absolute inset-0 z-50">
