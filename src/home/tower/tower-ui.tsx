@@ -519,10 +519,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         <button 
                                             onClick={handleSweepClick} 
                                             disabled={(playerStats.energy || 0) < 10 || isSweeping} 
-                                            className="w-28 h-28 transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group"
+                                            className="transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group rounded-full"
                                             title="Sweep"
                                         >
-                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-full h-full object-contain drop-shadow-md" />
+                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-36 h-auto object-contain drop-shadow-md" />
                                             {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
                                         </button>
                                     )}
@@ -598,8 +598,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         ) : (
                                             !gameOver && (
-                                                <button onClick={skipBattle} className="w-32 h-32 transition-all active:scale-95 hover:scale-105" title="Skip Battle">
-                                                    <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-full h-full object-contain" />
+                                                <button onClick={skipBattle} className="transition-all active:scale-95 hover:scale-105 rounded-full" title="Skip Battle">
+                                                    <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-36 h-auto object-contain" />
                                                 </button>
                                             )
                                         )}
