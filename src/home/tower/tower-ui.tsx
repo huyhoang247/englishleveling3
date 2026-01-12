@@ -583,17 +583,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     10% { opacity: 1; }
                     20% { 
                         left: var(--start-left); top: var(--start-top);
-                        transform: scale(1); 
+                        transform: scale(0.7); 
                     }
                     76.66% { 
                         left: var(--start-left); top: var(--start-top);
-                        transform: scale(1); 
+                        transform: scale(0.7); 
                     }
                     95% { opacity: 1; }
                     100% { 
                         /* Target Player Position */
                         left: 25%; top: 60%; 
-                        transform: scale(0.5); opacity: 0; 
+                        transform: scale(0.4); opacity: 0; 
                     }
                 }
 
