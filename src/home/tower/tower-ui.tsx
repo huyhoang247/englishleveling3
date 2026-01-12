@@ -506,7 +506,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 </header>
     
                                 {/* --- LEFT SIDE UTILITIES (Floor + Sweep) --- */}
-                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-1 items-start">
+                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
                                     {/* Floor Indicator */}
                                     <div className="flex items-center gap-2 bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-600 shadow-md h-9 backdrop-blur-sm">
                                         <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4 opacity-80" />
@@ -523,7 +523,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             className="transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group rounded-full"
                                             title="Sweep"
                                         >
-                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-28 h-auto object-contain drop-shadow-md" />
+                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
                                             {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
                                         </button>
                                     )}
