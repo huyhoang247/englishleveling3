@@ -30,12 +30,12 @@ const ORB_SPAWN_SLOTS = [
 ];
 
 // Boss orb spawn positions (Right side - Above Boss Head)
-// Đã điều chỉnh tọa độ để thoáng hơn, không bị dính chùm
+// Đã điều chỉnh: Gom gọn lại gần Boss hơn và kéo quả cầu ngoài rìa vào để không bị mất hình
 const BOSS_ORB_SPAWN_SLOTS = [
-    { left: '60%', top: '30%' }, // Xa về phía người chơi
-    { left: '75%', top: '15%' }, // Cao hẳn lên trên
-    { left: '88%', top: '35%' }, // Sát lề phải
-    { left: '70%', top: '45%' }, // Thấp xuống dưới
+    { left: '68%', top: '32%' }, // Phía trước mặt boss (gần hơn chút)
+    { left: '76%', top: '18%' }, // Ngay trên đỉnh đầu
+    { left: '82%', top: '30%' }, // Bên phải (đã giảm từ 88% xuống 82% để ko bị lẹm)
+    { left: '72%', top: '42%' }, // Thấp xuống dưới ngực/bụng
 ];
 
 // --- UI ICONS ---
