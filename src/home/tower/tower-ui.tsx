@@ -21,12 +21,19 @@ interface BossBattleWrapperProps {
 }
 
 // --- CONSTANTS ---
-// Các vị trí xuất hiện của quả cầu
+// Player orb spawn positions (Left side)
 const ORB_SPAWN_SLOTS = [
     { left: '15%', top: '30%' },
     { left: '25%', top: '20%' },
     { left: '35%', top: '35%' },
     { left: '10%', top: '40%' },
+];
+
+// Boss orb spawn positions (Right side - Above Boss Head)
+const BOSS_ORB_SPAWN_SLOTS = [
+    { left: '75%', top: '25%' },
+    { left: '65%', top: '20%' },
+    { left: '80%', top: '30%' },
 ];
 
 // --- UI ICONS ---
@@ -36,14 +43,13 @@ const HomeIcon = memo(({ className = '' }: { className?: string }) => (
     </svg> 
 ));
 
-// --- FLOATING TEXT COMPONENT (NEW DESIGN) ---
-// Kiểu dữ liệu cho text sát thương
+// --- FLOATING TEXT COMPONENT ---
 interface DamageText {
     id: number;
     text: string;
-    color: string; // Hex color hoặc Tailwind class
-    x: number; // Tọa độ % Left
-    y: number; // Tọa độ % Top
+    color: string;
+    x: number;
+    y: number;
     fontSize: number;
 }
 
@@ -57,7 +63,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             top: `${data.y}%`,
             color: data.color,
             fontSize: `${data.fontSize}px`,
-            textShadow: 'none' // Đã loại bỏ shadow theo yêu cầu
+            textShadow: 'none'
         }}
     >
         {data.text}
@@ -65,7 +71,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
   );
 });
 
-// --- ENERGY ORB EFFECT COMPONENT ---
+// --- PLAYER ENERGY ORB EFFECT ---
 interface OrbProps {
     id: number;
     delay: number;
@@ -90,6 +96,34 @@ const EnergyOrbEffect = ({ id, delay, startPos }: OrbProps) => {
                     height: '76px',
                     backgroundImage: `url(${spriteUrl})`,
                     backgroundSize: '498px 456px',
+                    backgroundRepeat: 'no-repeat',
+                    willChange: 'background-position'
+                }}
+             />
+        </div>
+    );
+};
+
+// --- BOSS SKILL EFFECT (NEW) ---
+const BossSkillEffect = ({ id, delay, startPos }: OrbProps) => {
+    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-2.webp";
+    
+    // Frame size: 66x59. Grid 6x6 -> Sheet: 396x354
+    const style = {
+        '--start-left': startPos.left,
+        '--start-top': startPos.top,
+        animationDelay: `${delay}ms`, 
+    } as React.CSSProperties;
+
+    return (
+        <div key={id} className="absolute z-50 pointer-events-none animate-boss-orb-sequence origin-center" style={style}>
+             <div 
+                className="animate-boss-orb-spin"
+                style={{
+                    width: '66px',
+                    height: '59px',
+                    backgroundImage: `url(${spriteUrl})`,
+                    backgroundSize: '396px 354px',
                     backgroundRepeat: 'no-repeat',
                     willChange: 'background-position'
                 }}
@@ -248,13 +282,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
-    // Sử dụng DamageText mới với tọa độ số
     const [damages, setDamages] = useState<DamageText[]>([]);
-    
-    // Ref để lưu danh sách damages hiện tại nhằm tính toán va chạm mà không cần dependency state
     const damagesRef = useRef<DamageText[]>([]);
-
+    
+    // Player Orbs
     const [orbEffects, setOrbEffects] = useState<OrbProps[]>([]);
+    
+    // Boss Orbs
+    const [bossOrbEffects, setBossOrbEffects] = useState<OrbProps[]>([]);
+
     const [visualBossHp, setVisualBossHp] = useState(0);
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
@@ -296,69 +332,41 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    // --- LOGIC HIỂN THỊ DAMAGE CHỐNG ĐÈ (COLLISION DETECTION) ---
-    // Update logic: Tăng spread (độ tản ra) để tránh dồn cục
+    // --- LOGIC HIỂN THỊ DAMAGE ---
     const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { 
         const id = Date.now() + Math.random();
-
-        // 1. Xác định vị trí cơ bản
-        // Player bên trái (dịch sang trái từ 25 xuống 20), Boss bên phải (75)
         let baseX = target === 'player' ? 20 : 75; 
-        const baseY = 55; // Tọa độ Y cơ bản
-
-        // 2. Random rộng hơn để tạo độ tản tự nhiên
-        // Random từ -6% đến +6% cho X (trước là 2%)
-        // Random từ -5% đến +5% cho Y (trước là 2.5%)
+        const baseY = 55;
         let finalX = baseX + (Math.random() * 12 - 6);
         let finalY = baseY + (Math.random() * 10 - 5);
-
-        // 3. Logic Heal (Máu bay lên cao hơn chút)
         const isHeal = text.startsWith('+');
-        if (isHeal) {
-            finalY -= 8; // Bay cao hẳn lên
-        }
+        if (isHeal) finalY -= 8;
 
-        // 4. KIỂM TRA VA CHẠM (COLLISION CHECK)
-        const checkLimit = 15; // Tăng limit check
+        const checkLimit = 15;
         let count = 0;
-
-        // Duyệt ngược để ưu tiên text mới nhất
         for (let i = damagesRef.current.length - 1; i >= 0; i--) {
             if (count >= checkLimit) break;
-            
             const existing = damagesRef.current[i];
             const dx = Math.abs(existing.x - finalX);
             const dy = Math.abs(existing.y - finalY);
-
-            // Nếu quá gần nhau (ngưỡng 8% cho an toàn)
             if (dx < 8 && dy < 8) {
-                // Đẩy text mới lên trên text cũ xa hơn (6-8%)
                 finalY = existing.y - (6 + Math.random() * 2); 
-                
-                // Đẩy sang hai bên mạnh hơn (4-6%)
-                if (finalX > existing.x) {
-                     finalX += (4 + Math.random() * 2); 
-                } else {
-                     finalX -= (4 + Math.random() * 2);
-                }
+                if (finalX > existing.x) finalX += (4 + Math.random() * 2); 
+                else finalX -= (4 + Math.random() * 2);
             }
             count++;
         }
 
         const newText: DamageText = { id, text, color, x: finalX, y: finalY, fontSize };
-
-        // Cập nhật State và Ref
         setDamages(prev => {
             const updated = [...prev, newText];
-            damagesRef.current = updated; // Sync ref
+            damagesRef.current = updated;
             return updated;
         });
-
-        // Tự động xóa sau 1.2s
         setTimeout(() => {
             setDamages(prev => {
                 const updated = prev.filter(d => d.id !== id);
-                damagesRef.current = updated; // Sync ref
+                damagesRef.current = updated;
                 return updated;
             });
         }, 1200);
@@ -370,41 +378,40 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // Player attacks Boss
+        // --- PLAYER ATTACK SEQUENCE (Starts at ~0ms) ---
         if (playerDmg > 0) {
             const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 3);
             const dmg2 = playerDmgHit2 || Math.ceil(playerDmg / 3);
-            const dmg3 = playerDmgHit3 || (playerDmg - dmg1 - dmg2); // New hit 3
+            const dmg3 = playerDmgHit3 || (playerDmg - dmg1 - dmg2);
 
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
             
-            // Tạo 3 quả cầu (ORB 3 Added)
             const orb1: OrbProps = { id: now, delay: 0, startPos: shuffledSlots[0] };
             const orb2: OrbProps = { id: now + 1, delay: 300, startPos: shuffledSlots[1] };
-            const orb3: OrbProps = { id: now + 2, delay: 600, startPos: shuffledSlots[2] }; // New Orb
+            const orb3: OrbProps = { id: now + 2, delay: 600, startPos: shuffledSlots[2] };
 
             setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
-            // HIT 1 - Font 24
+            // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 24); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
             }, 2900);
 
-            // HIT 2 - Font 26
+            // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 26); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
             }, 3200);
 
-             // HIT 3 - Font 28 (New)
+             // Hit 3
              setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 28); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg3));
             }, 3500);
 
-            // Cleanup
+            // Cleanup Player Orbs
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
                 if (bossStats) {
@@ -416,22 +423,61 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, 3800);
         }
         
-        // Player Heals - Giảm font size xuống 20
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
         
-        // Boss attacks Player
-        setTimeout(() => {
-          if (bossDmg > 0) {
-              // Giảm font size xuống 24
-              addDamageText(`-${formatDamageText(bossDmg)}`, '#ef4444', 'player', 24);
-          }
-          if (bossReflectDmg > 0) {
-              // REMOVE 'Reflect' TEXT
-              addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
-          }
-        }, 800); // Tăng delay phản công của boss lên một chút
+        // --- BOSS ATTACK SEQUENCE (Starts after player is roughly done) ---
+        // Player animation finishes hits around 3500ms.
+        // Let's start Boss wind-up around 4000ms.
+        const bossStartDelay = 4000;
+        
+        if (bossDmg > 0) {
+            const shuffledBossSlots = [...BOSS_ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
+            const now = Date.now() + 100; // unique ID offset
+
+            // We create 3 boss orbs visually to match the "like player" requirement
+            const bOrb1: OrbProps = { id: now + 10, delay: 0, startPos: shuffledBossSlots[0] };
+            const bOrb2: OrbProps = { id: now + 11, delay: 300, startPos: shuffledBossSlots[1] };
+            const bOrb3: OrbProps = { id: now + 12, delay: 600, startPos: shuffledBossSlots[2] };
+
+            // Split damage for display purposes (even though logic is 1 hit in context, we show 3 numbers)
+            const bDmg1 = Math.floor(bossDmg * 0.3);
+            const bDmg2 = Math.floor(bossDmg * 0.3);
+            const bDmg3 = bossDmg - bDmg1 - bDmg2;
+
+            // Trigger visual orbs
+            setTimeout(() => {
+                setBossOrbEffects(prev => [...prev, bOrb1, bOrb2, bOrb3]);
+            }, bossStartDelay);
+
+            // Hit 1 (Animation duration is ~3s)
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 24); 
+            }, bossStartDelay + 2900);
+
+            // Hit 2
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 26);
+            }, bossStartDelay + 3200);
+
+            // Hit 3
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 28);
+            }, bossStartDelay + 3500);
+
+            // Cleanup Boss Orbs
+            setTimeout(() => {
+                 setBossOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
+            }, bossStartDelay + 3800);
+        }
+
+        // Reflect damage usually happens instantly when player hits, but we delay it to not clutter
+        if (bossReflectDmg > 0) {
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
+            }, 3000); 
+        }
 
     }, [lastTurnEvents, addDamageText]); 
 
@@ -459,7 +505,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
                 .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
                 
-                /* Animation float-up giống stick-game: Bay lên và mờ dần */
                 @keyframes float-up { 
                     0% { transform: translateY(0) scale(1); opacity: 1; } 
                     20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
@@ -483,6 +528,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
                 
+                /* PLAYER ORB ANIMATIONS */
                 @keyframes orb-spin-x { from { background-position-x: 0; } to { background-position-x: -498px; } }
                 @keyframes orb-spin-y { from { background-position-y: 0; } to { background-position-y: -456px; } }
                 .animate-orb-spin { 
@@ -519,6 +565,45 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     transform: translateZ(0);
                     --start-left: 22%;
                     --start-top: 35%;
+                }
+
+                /* BOSS ORB ANIMATIONS (NEW) */
+                /* Frame 66x59, Sheet 396x354 (6x6) */
+                @keyframes boss-orb-spin-x { from { background-position-x: 0; } to { background-position-x: -396px; } }
+                @keyframes boss-orb-spin-y { from { background-position-y: 0; } to { background-position-y: -354px; } }
+                .animate-boss-orb-spin { 
+                    animation: boss-orb-spin-x 0.4s steps(6) infinite, boss-orb-spin-y 2.4s steps(6) infinite; 
+                }
+
+                @keyframes boss-orb-sequence {
+                    0% { 
+                        left: var(--start-left); top: var(--start-top); 
+                        transform: scale(0); opacity: 0; 
+                    }
+                    10% { opacity: 1; }
+                    20% { 
+                        left: var(--start-left); top: var(--start-top);
+                        transform: scale(1); 
+                    }
+                    76.66% { 
+                        left: var(--start-left); top: var(--start-top);
+                        transform: scale(1); 
+                    }
+                    95% { opacity: 1; }
+                    100% { 
+                        /* Target Player Position */
+                        left: 25%; top: 60%; 
+                        transform: scale(0.5); opacity: 0; 
+                    }
+                }
+
+                .animate-boss-orb-sequence { 
+                    animation-name: boss-orb-sequence;
+                    animation-duration: 3s;
+                    animation-timing-function: linear;
+                    animation-fill-mode: both; 
+                    will-change: transform, left, top;
+                    transform: translateZ(0);
                 }
             `}</style>
       
@@ -592,7 +677,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 bossId={currentBossData.id}
                                                 name={currentBossData.name}
                                                 element={bossElement}
-                                                // QUAN TRỌNG: Truyền visualBossHp thay vì bossStats.hp
                                                 hp={visualBossHp} 
                                                 maxHp={bossStats.maxHp}
                                                 imgSrc={bossImgSrc}
@@ -605,6 +689,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         <div className="absolute inset-0 pointer-events-none z-40">
                                             {orbEffects.map(effect => (
                                                 <EnergyOrbEffect 
+                                                    key={effect.id} 
+                                                    id={effect.id} 
+                                                    delay={effect.delay}
+                                                    startPos={effect.startPos}
+                                                />
+                                            ))}
+                                            {bossOrbEffects.map(effect => (
+                                                <BossSkillEffect 
                                                     key={effect.id} 
                                                     id={effect.id} 
                                                     delay={effect.delay}
