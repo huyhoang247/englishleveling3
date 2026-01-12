@@ -1,5 +1,3 @@
-// --- START OF FILE tower-ui.tsx ---
-
 import React, { useState, useCallback, useEffect, memo, useMemo, useRef } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
@@ -73,7 +71,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
   );
 });
 
-// --- MODALS (Giữ nguyên - Rút gọn để tập trung vào logic chính) ---
+// --- MODALS ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -496,12 +494,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 <span className="hidden sm:inline text-sm font-semibold text-slate-300 font-sans">Home</span>
                                             </button>
                                             
-                                            <div className="flex items-center gap-1.5 bg-black/40 px-3 py-1 rounded-md border border-slate-700/80 ml-2">
-                                                <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4" />
-                                                <h3 className="font-bold text-xs tracking-widest uppercase text-slate-300 select-none">
-                                                    {currentBossData.floor}
-                                                </h3>
-                                            </div>
+                                            {/* REMOVED FLOOR INDICATOR FROM HERE */}
                                         </div>
                                         <div className="flex items-center gap-2 font-sans">
                                             <EnergyDisplay currentEnergy={animatedEnergy} maxEnergy={playerStats.maxEnergy} isStatsFullscreen={false} />
@@ -510,7 +503,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
                                 </header>
     
-                                {/* --- UTILITY BUTTONS --- */}
+                                {/* --- FLOOR INDICATOR (LEFT) --- */}
+                                <div className="absolute top-16 left-4 z-20 flex items-center">
+                                    <div className="flex items-center gap-2 bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-600 shadow-md h-9 backdrop-blur-sm">
+                                        <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4 opacity-80" />
+                                        <h3 className="font-bold text-sm tracking-widest uppercase text-slate-200 select-none shadow-black drop-shadow-sm">
+                                            {currentBossData.floor}
+                                        </h3>
+                                    </div>
+                                </div>
+
+                                {/* --- UTILITY BUTTONS (RIGHT) --- */}
                                 <div className="absolute top-16 right-4 z-20 flex flex-col items-end gap-2">
                                      <div className="flex gap-2">
                                         <button onClick={() => setShowLogModal(true)} disabled={!previousCombatLog.length || battleState !== 'idle'} className="w-9 h-9 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full border border-slate-600 hover:border-cyan-400 active:scale-95 shadow-md disabled:opacity-50" title="History">
