@@ -2,16 +2,32 @@
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
-import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
+import { CombatStats } from './tower-context.tsx';
 
-// --- 1. HEALTH BAR COMPONENT (Dùng chung cho cả Hero và Boss) ---
-// Update: Thêm prop heightClass để tùy chỉnh độ cao (độ to) của thanh máu
+// --- STYLE DEFINITION (Hiệu ứng nháy trắng + lắc nhẹ) ---
+// Định nghĩa keyframes toàn cục để dùng chung cho cả Hero và Boss
+const HIT_EFFECT_STYLE = `
+    @keyframes hit-flash-shake {
+        0% { filter: brightness(1); transform: translateX(0); }
+        25% { filter: brightness(5) contrast(0.5); transform: translateX(-3px); } /* Nháy thật sáng (trắng) & lắc trái */
+        50% { filter: brightness(5) contrast(0.5); transform: translateX(3px); }  /* Nháy thật sáng (trắng) & lắc phải */
+        75% { filter: brightness(2); transform: translateX(-2px); } /* Giảm sáng & lắc nhẹ */
+        100% { filter: brightness(1); transform: translateX(0); }
+    }
+    
+    /* Class này sẽ được thêm vào thẻ IMG hoặc Sprite Sheet */
+    .animate-hit {
+        animation: hit-flash-shake 0.15s ease-in-out forwards; /* Thời gian ngắn 0.15s để kịp nháy theo nhịp đạn */
+    }
+`;
+
+// --- 1. HEALTH BAR COMPONENT ---
 export const HealthBar = memo(({ 
     current, 
     max, 
     colorGradient, 
     shadowColor, 
-    heightClass = "h-5 md:h-6" // Default height (dùng cho Hero)
+    heightClass = "h-5 md:h-6" 
 }: { 
     current: number, 
     max: number, 
@@ -22,10 +38,8 @@ export const HealthBar = memo(({
     const scale = Math.max(0, current / max);
     return (
         <div className="w-full">
-            {/* Update: Đổi rounded-full thành rounded-lg để giảm độ bo tròn */}
             <div className={`relative w-full ${heightClass} bg-black/60 rounded-lg border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
                 <div
-                    // Update: Đổi rounded-full thành rounded-md để khớp với rounded-lg bên ngoài (trừ đi padding)
                     className={`h-full rounded-md transition-transform duration-500 ease-out origin-left ${colorGradient}`}
                     style={{
                         transform: `scaleX(${scale})`,
@@ -40,27 +54,29 @@ export const HealthBar = memo(({
     );
 });
 
-// --- 2. HERO DISPLAY COMPONENT (Đã sửa lỗi click full màn hình) ---
-export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
-    // URL ảnh Hero (Size gốc: 3132x2946 -> Resize: 1252x1178)
+// --- 2. HERO DISPLAY COMPONENT ---
+export const HeroDisplay = memo(({ 
+    stats, 
+    onStatsClick, 
+    isHit 
+}: { 
+    stats: CombatStats, 
+    onStatsClick: () => void, 
+    isHit?: boolean 
+}) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
 
     return (
-        // LƯU Ý: Đã xóa onClick ở thẻ cha này để tránh click nhầm vào khoảng trống
         <div className="flex flex-col items-center justify-end h-full w-full">
              <style>{`
+                ${HIT_EFFECT_STYLE}
                 .hero-sprite-wrapper {
-                    /* Frame Size Grid 6x6 */
                     width: 209px;
                     height: 196px;
                     overflow: hidden;
                     position: relative;
-                    
-                    /* Scale 0.85 để ảnh nhỏ lại và sắc nét */
                     transform: scale(0.85); 
                     transform-origin: bottom center;
-
-                    /* Tối ưu render */
                     image-rendering: -webkit-optimize-contrast;
                     image-rendering: crisp-edges;
                 }
@@ -71,7 +87,6 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                     background-image: url('${spriteUrl}');
                     background-size: 1252px 1178px;
                     background-repeat: no-repeat;
-                    
                     animation: 
                         hero-idle-x 0.5s steps(6) infinite,
                         hero-idle-y 3.0s steps(6) infinite;
@@ -94,34 +109,28 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                 }
             `}</style>
             
-            {/* LƯU Ý: Đã chuyển onClick vào thẻ con này để chỉ click được vào vùng Hero */}
             <div 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                
-                {/* 
-                    HP Bar Hero
-                    Vị trí: Dịch xuống dưới (translate-y dương) để lấp vào khoảng trống trên đầu Sprite
-                */}
+                {/* HP Bar - Nằm ngoài Wrapper Sprite nên sẽ không bị lắc */}
                 <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
                         colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
                         shadowColor="rgba(132, 204, 22, 0.5)"
-                        // Hero dùng size mặc định
                     />
                 </div>
 
-                {/* Sprite */}
+                {/* Sprite Wrapper */}
                 <div className="hero-sprite-wrapper z-10">
-                    <div className="hero-sprite-sheet"></div>
+                    {/* Áp dụng class animate-hit vào Sprite Sheet */}
+                    <div className={`hero-sprite-sheet ${isHit ? 'animate-hit' : ''}`}></div>
                 </div>
 
                 {/* Shadow */}
                 <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
-
             </div>
         </div>
     )
@@ -129,7 +138,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
 
 
 // --- 3. BOSS SPRITE ANIMATION HELPER ---
-const BossSprite = memo(({ bossId }: { bossId: number }) => {
+const BossSprite = memo(({ bossId, isHit }: { bossId: number, isHit?: boolean }) => {
     const idStr = String(bossId).padStart(2, '0');
     const spritePath = `/images/boss/${idStr}.webp`;
 
@@ -153,8 +162,9 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
     return (
         <div className="boss-sprite-wrapper">
             <div className={`boss-sprite-container boss-render-optimize ${sizeClass}`}>
+                {/* Áp dụng class animate-hit vào Sprite Sheet của Boss */}
                 <div
-                    className={`boss-sprite-sheet ${animClass}`}
+                    className={`boss-sprite-sheet ${animClass} ${isHit ? 'animate-hit' : ''}`}
                     style={{ backgroundImage: `url(${spritePath})` }}
                 />
             </div>
@@ -172,6 +182,7 @@ interface BossDisplayProps {
     imgSrc: string;
     onImgError: () => void;
     onStatsClick: () => void;
+    isHit?: boolean; // Prop nhận trạng thái bị đánh
 }
 
 export const BossDisplay = memo(({
@@ -182,13 +193,16 @@ export const BossDisplay = memo(({
     maxHp,
     imgSrc,
     onImgError,
-    onStatsClick
+    onStatsClick,
+    isHit
 }: BossDisplayProps) => {
     const isSpriteBoss = [1, 3, 4, 6, 8, 50].includes(bossId);
 
     return (
         <div className="w-full flex flex-col items-center justify-end h-full">
             <style>{`
+                ${HIT_EFFECT_STYLE}
+
                 .boss-render-optimize {
                     image-rendering: -webkit-optimize-contrast;
                     transform: translateZ(0);
@@ -258,39 +272,35 @@ export const BossDisplay = memo(({
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* 
-                    HP Bar Boss
-                    Update: 
-                    1. Tăng margin-bottom (mb-6 md:mb-10) để dịch thanh máu LÊN TRÊN.
-                    2. Đổi màu gradient sang Xanh dương đậm -> Xanh da trời.
-                */}
+                {/* HP Bar Boss */}
                 <div className="w-40 md:w-60 z-20 mb-6 md:mb-10">
                     <HealthBar 
                         current={hp} 
                         max={maxHp} 
                         colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
                         shadowColor="rgba(56, 189, 248, 0.5)" 
-                        heightClass="h-6 md:h-8" // Giữ nguyên độ dày
+                        heightClass="h-6 md:h-8"
                     />
                 </div>
 
-                {/* Sprite Render */}
+                {/* Sprite/Image Render */}
                 <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
                     {isSpriteBoss ? (
-                        <BossSprite bossId={bossId} />
+                        <BossSprite bossId={bossId} isHit={isHit} />
                     ) : (
                         <img 
                             src={imgSrc} 
                             alt={name} 
                             onError={onImgError}
-                            className="max-w-full max-h-full object-contain drop-shadow-2xl boss-render-optimize animate-pulse-slow" 
+                            // Áp dụng class animate-hit trực tiếp vào thẻ IMG
+                            className={`max-w-full max-h-full object-contain drop-shadow-2xl boss-render-optimize animate-pulse-slow ${isHit ? 'animate-hit' : ''}`} 
                         />
                     )}
                 </div>
-                
             </div>
         </div>
     );
 });
 
 export default BossDisplay;
+// --- END OF FILE boss-display.tsx ---
