@@ -37,6 +37,7 @@ const BOSS_ORB_SPAWN_SLOTS = [
 ];
 
 const SKIP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/skip-battle.webp";
+const SWEEP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/sweep-battle.webp";
 
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
@@ -503,14 +504,28 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
                                 </header>
     
-                                {/* --- FLOOR INDICATOR (LEFT) --- */}
-                                <div className="absolute top-16 left-4 z-20 flex items-center">
+                                {/* --- LEFT SIDE UTILITIES (Floor + Sweep) --- */}
+                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
+                                    {/* Floor Indicator */}
                                     <div className="flex items-center gap-2 bg-slate-800/90 px-4 py-1.5 rounded-full border border-slate-600 shadow-md h-9 backdrop-blur-sm">
                                         <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-4 h-4 opacity-80" />
                                         <h3 className="font-bold text-sm tracking-widest uppercase text-slate-200 select-none shadow-black drop-shadow-sm">
                                             {currentBossData.floor}
                                         </h3>
                                     </div>
+
+                                    {/* Sweep Button */}
+                                    {currentFloor > 0 && battleState === 'idle' && (
+                                        <button 
+                                            onClick={handleSweepClick} 
+                                            disabled={(playerStats.energy || 0) < 10 || isSweeping} 
+                                            className="w-12 h-12 transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group"
+                                            title="Sweep"
+                                        >
+                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-full h-full object-contain drop-shadow-md" />
+                                            {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
+                                        </button>
+                                    )}
                                 </div>
 
                                 {/* --- UTILITY BUTTONS (RIGHT) --- */}
@@ -574,11 +589,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-24 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
-                                                {currentFloor > 0 && (
-                                                    <button onClick={handleSweepClick} disabled={(playerStats.energy || 0) < 10 || isSweeping} className="font-sans px-4 py-2 bg-purple-900/80 hover:bg-purple-800 rounded-lg font-bold text-sm text-purple-200 border border-purple-500 disabled:opacity-50 disabled:grayscale transition-all">
-                                                        {isSweeping ? 'Sweeping...' : 'Sweep'}
-                                                    </button>
-                                                )}
                                                 <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="btn-shine relative overflow-hidden px-12 py-3 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg text-teal-300 border border-teal-500/50 shadow-lg shadow-teal-900/20 transition-all duration-300 hover:text-white hover:border-teal-400 hover:shadow-[0_0_20px_theme(colors.teal.500/0.4)] active:scale-95 disabled:bg-slate-800 disabled:text-slate-600 disabled:border-slate-700 disabled:shadow-none">
                                                     <div className="flex flex-col items-center gap-0.5">
                                                         <span className="font-bold text-xl tracking-widest uppercase text-shadow-sm">FIGHT</span>
@@ -588,7 +598,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             </div>
                                         ) : (
                                             !gameOver && (
-                                                <button onClick={skipBattle} className="w-24 h-24 transition-all active:scale-95 hover:scale-105" title="Skip Battle">
+                                                <button onClick={skipBattle} className="w-28 h-28 transition-all active:scale-95 hover:scale-105" title="Skip Battle">
                                                     <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-full h-full object-contain" />
                                                 </button>
                                             )
