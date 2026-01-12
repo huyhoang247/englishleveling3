@@ -337,7 +337,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // --- LOGIC HIỂN THỊ DAMAGE ---
     const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { 
         const id = Date.now() + Math.random();
-        let baseX = target === 'player' ? 20 : 75; 
+        
+        // --- CHỈNH SỬA Ở ĐÂY: Dịch chuyển text Player từ 20% về 15% ---
+        let baseX = target === 'player' ? 15 : 75; 
+        
         const baseY = 55;
         let finalX = baseX + (Math.random() * 12 - 6);
         let finalY = baseY + (Math.random() * 10 - 5);
