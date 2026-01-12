@@ -342,10 +342,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const triggerHit = useCallback((target: 'player' | 'boss') => {
         if (target === 'player') {
             setIsHeroHit(true);
-            setTimeout(() => setIsHeroHit(false), 300); // 300ms khớp với animation css
+            setTimeout(() => setIsHeroHit(false), 150); // Giảm xuống 150ms để đủ thời gian reset cho hit kế tiếp
         } else {
             setIsBossHit(true);
-            setTimeout(() => setIsBossHit(false), 300);
+            setTimeout(() => setIsBossHit(false), 150);
         }
     }, []);
 
@@ -632,14 +632,18 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     transform: translateZ(0);
                 }
 
-                /* HIT FLASH ANIMATION */
-                @keyframes hit-shake-red {
-                    0%, 100% { filter: none; transform: translateX(0); }
-                    25% { filter: sepia(1) hue-rotate(-50deg) saturate(3) brightness(1.2); transform: translateX(-5px); }
-                    75% { filter: sepia(1) hue-rotate(-50deg) saturate(3) brightness(1.2); transform: translateX(5px); }
+                /* HIT FLASH ANIMATION - GENTLE WHITE & SHAKE */
+                @keyframes hit-shake-white {
+                    0% { filter: brightness(1); transform: translateX(0); }
+                    25% { filter: brightness(2) contrast(0.8); transform: translateX(-2px); } /* Lắc nhẹ 2px */
+                    50% { filter: brightness(1); transform: translateX(0); }
+                    75% { filter: brightness(2) contrast(0.8); transform: translateX(2px); } /* Lắc nhẹ 2px */
+                    100% { filter: brightness(1); transform: translateX(0); }
                 }
-                .hit-effect {
-                    animation: hit-shake-red 0.3s ease-in-out;
+                
+                /* Selector này nhắm cụ thể vào thẻ img bên trong div có class hit-effect */
+                .hit-effect img {
+                    animation: hit-shake-white 0.2s ease-in-out;
                 }
             `}</style>
       
