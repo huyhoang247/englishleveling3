@@ -380,7 +380,7 @@ function SkillScreenContent() {
             style={{ backgroundImage: `url(${SKILL_BG_URL})` }}
         >
             {/* Overlay nền đen 75% giống Equipment */}
-            <div className="absolute inset-0 bg-black/75 pointer-events-none z-0" />
+            <div className="absolute inset-0 bg-black/85 pointer-events-none z-0" />
 
             <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
 
