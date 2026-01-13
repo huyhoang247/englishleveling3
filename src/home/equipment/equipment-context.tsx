@@ -1,4 +1,3 @@
-
 import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
     getItemDefinition, 
@@ -14,8 +13,8 @@ import type { OwnedItem, EquippedItems, EquipmentSlotType } from './equipment-ui
 import { useGame } from '../../GameContext.tsx'; 
 import { auth } from '../../firebase.js';
 
-// --- IMPORT TYPE TỪ SKILL DATA ---
-import type { OwnedSkill } from '../skill-game/skill-data.tsx';
+// Import Types từ Modal Thương Hội
+import type { ResourceType, TradeOption } from './trade-association-modal.tsx';
 
 // --- ĐỊNH NGHĨA ĐÁ CƯỜNG HOÁ ---
 export type StoneTier = 'low' | 'medium' | 'high';
@@ -129,10 +128,9 @@ interface EquipmentContextType {
     isUpgradeModalOpen: boolean;
     stoneCounts: Record<StoneTier, number>;
 
-    // State cho Skill Embedding
-    availableSkillsForEmbedding: OwnedSkill[];
-    handleEmbedSkill: (targetItem: OwnedItem, skillId: string) => Promise<void>;
-    handleUnembedSkill: (targetItem: OwnedItem, skillId: string) => Promise<void>;
+    // --- MỚI: State cho Thương Hội ---
+    isTradeModalOpen: boolean;
+    userResources: Record<ResourceType, number>; // Wood, Leather, Ore, Cloth
 
     // Derived State
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
@@ -151,6 +149,11 @@ interface EquipmentContextType {
     
     handleForgeItems: (group: ForgeGroup) => Promise<void>;
     
+    // --- MỚI: Handler Thương Hội ---
+    handleExchangeResources: (option: TradeOption) => Promise<void>;
+    handleOpenTradeModal: () => void;
+    handleCloseTradeModal: () => void;
+
     // UI Handlers
     handleSelectItem: (item: OwnedItem) => void;
     handleSelectSlot: (slot: EquipmentSlotType) => void;
@@ -179,18 +182,25 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         equippedItems,
         isLoading: isGameDataLoading,
         userStatsValue,
-        // Lấy thêm dữ liệu Skill từ GameContext để xử lý khảm
-        ownedSkills: userOwnedSkills,
-        equippedSkillIds: userEquippedSkillIds
+        // --- MỚI: Lấy tài nguyên từ GameContext ---
+        // Lưu ý: Đảm bảo GameContext của bạn export các biến này. 
+        // Nếu tên biến trong GameContext khác, hãy alias lại (ví dụ: woodAmount: wood)
+        wood = 0,    
+        leather = 0,
+        ore = 0,     
+        cloth = 0,   
     } = useGame();
+
+    // Map tài nguyên vào object để tiện sử dụng
+    const userResources = useMemo<Record<ResourceType, number>>(() => ({
+        wood, leather, ore, cloth
+    }), [wood, leather, ore, cloth]);
 
     const ownedItems = useMemo(() => {
         if (!rawOwnedItems) return [];
         return rawOwnedItems.map(item => ({
             ...item,
-            stats: item.stats || {},
-            // Đảm bảo trường embeddedSkillIds luôn tồn tại (khởi tạo mảng rỗng nếu chưa có)
-            embeddedSkillIds: item.embeddedSkillIds || [] 
+            stats: item.stats || {}
         }));
     }, [rawOwnedItems]);
 
@@ -203,6 +213,9 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     // State cho Upgrade Modal
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [itemToUpgrade, setItemToUpgrade] = useState<OwnedItem | null>(null);
+
+    // State cho Trade Modal
+    const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
     // Mock Data Stone Counts (Bạn có thể thay thế bằng dữ liệu thật từ DB)
     const stoneCounts = useMemo<Record<StoneTier, number>>(() => ({
@@ -224,11 +237,13 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     }, []);
 
     // Hàm cập nhật xuống Firestore
+    // Đã cập nhật để nhận thêm resourceChanges
     const performInventoryUpdate = useCallback(async (updates: { 
         newOwned: OwnedItem[]; 
         newEquipped: EquippedItems; 
         goldChange: number; 
         piecesChange: number;
+        resourceChanges?: Record<string, number>; // Thêm field này
     }) => {
         const userId = auth.currentUser?.uid;
         if (!userId) {
@@ -264,90 +279,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             });
     }, [ownedItems, equippedItems]);
 
-    // --- LOGIC TÍNH TOÁN SKILL KHẢM ---
-    
-    // Tính toán danh sách các Skill CÓ THỂ khảm
-    // Điều kiện:
-    // 1. Nằm trong kho skill của user (userOwnedSkills)
-    // 2. Không đang được user trang bị (userEquippedSkillIds)
-    // 3. Không đang được khảm vào item khác (duyệt qua ownedItems để check)
-    const availableSkillsForEmbedding = useMemo(() => {
-        if (!userOwnedSkills) return [];
-
-        // Tập hợp tất cả skill ID đang được khảm ở TẤT CẢ trang bị
-        const allEmbeddedSkillIds = new Set<string>();
-        ownedItems.forEach(item => {
-            if (item.embeddedSkillIds) {
-                item.embeddedSkillIds.forEach(id => allEmbeddedSkillIds.add(id));
-            }
-        });
-
-        // Tập hợp skill đang trang bị trên người
-        const equippedOnPlayerIds = new Set(userEquippedSkillIds.filter(id => id !== null) as string[]);
-
-        return userOwnedSkills.filter(skill => {
-            return !equippedOnPlayerIds.has(skill.id) && !allEmbeddedSkillIds.has(skill.id);
-        });
-
-    }, [userOwnedSkills, userEquippedSkillIds, ownedItems]);
-
-    // Handler: Khảm Skill vào Item
-    const handleEmbedSkill = useCallback(async (targetItem: OwnedItem, skillId: string) => {
-        if (isProcessing) return;
-        
-        const currentEmbedded = targetItem.embeddedSkillIds || [];
-        const itemDef = getItemDefinition(targetItem.itemId);
-        
-        // Check slot limit
-        const rankSlots: Record<ItemRank, number> = { E: 0, D: 1, B: 2, A: 3, S: 4, SR: 5, SSR: 6 };
-        const maxSlots = itemDef ? rankSlots[itemDef.rarity] : 0;
-        
-        if (currentEmbedded.length >= maxSlots) {
-            showMessage("Trang bị đã hết ô khảm.");
-            return;
-        }
-
-        const updatedItem = {
-            ...targetItem,
-            embeddedSkillIds: [...currentEmbedded, skillId]
-        };
-
-        const newOwnedList = ownedItems.map(item => item.id === targetItem.id ? updatedItem : item);
-
-        try {
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 });
-            // Cập nhật selectedItem để UI refresh ngay lập tức
-            setSelectedItem(updatedItem); 
-            showMessage("Khảm kỹ năng thành công!");
-        } catch (e) {
-            console.error(e);
-        }
-
-    }, [isProcessing, ownedItems, equippedItems, performInventoryUpdate, showMessage]);
-
-    // Handler: Gỡ Skill khỏi Item
-    const handleUnembedSkill = useCallback(async (targetItem: OwnedItem, skillId: string) => {
-        if (isProcessing) return;
-
-        const updatedItem = {
-            ...targetItem,
-            embeddedSkillIds: (targetItem.embeddedSkillIds || []).filter(id => id !== skillId)
-        };
-
-        const newOwnedList = ownedItems.map(item => item.id === targetItem.id ? updatedItem : item);
-
-        try {
-            await performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 });
-             // Cập nhật selectedItem để UI refresh ngay lập tức
-             setSelectedItem(updatedItem);
-            showMessage("Đã gỡ kỹ năng.");
-        } catch (e) {
-            console.error(e);
-        }
-    }, [isProcessing, ownedItems, equippedItems, performInventoryUpdate, showMessage]);
-
-
-    // --- HANDLERS CŨ ---
+    // --- HANDLERS ---
 
     const handleEquipItem = useCallback(async (itemToEquip: OwnedItem) => {
         if (isProcessing) return;
@@ -391,8 +323,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
                 id: `owned-${Date.now()}-${finalItemDef.id}-${Math.random()}`, 
                 itemId: finalItemDef.id, 
                 level: 1,
-                stats: finalItemDef.stats || {},
-                embeddedSkillIds: [] // Mặc định không có skill khi craft
+                stats: finalItemDef.stats || {}
             };
             const newOwnedList = [...ownedItems, newOwnedItem];
             
@@ -404,9 +335,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleDismantleItem = useCallback(async (itemToDismantle: OwnedItem) => {
         if (isProcessing) return;
         if (Object.values(equippedItems).includes(itemToDismantle.id)) { showMessage("Không thể phân rã trang bị đang mặc."); return; }
-        
-        // Lưu ý: Khi phân rã, các skill đang khảm sẽ tự động được "giải phóng" 
-        // vì item chứa chúng bị xóa và hàm availableSkillsForEmbedding sẽ không thấy chúng nữa.
         
         const itemDef = getItemDefinition(itemToDismantle.itemId)!;
         const goldToReturn = getTotalUpgradeCost(itemDef, itemToDismantle.level);
@@ -427,12 +355,14 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         const stone = ENHANCEMENT_STONES[stoneTier];
         const isSuccess = Math.random() < stone.successRate;
 
+        // 1. Trường hợp Thất bại
         if (!isSuccess) {
             performInventoryUpdate({ newOwned: ownedItems, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
                 .catch(err => console.error("Sync failed:", err));
             return false;
         }
 
+        // 2. Trường hợp Thành công
         const newStats = { ...item.stats };
         let hasUpgradableStats = false;
 
@@ -450,17 +380,18 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             return false;
         }
         
-        // Giữ nguyên embeddedSkillIds khi nâng cấp
         const updatedItem = { ...item, level: item.level + 1, stats: newStats };
         const newOwnedList = ownedItems.map(s => s.id === item.id ? updatedItem : s);
 
+        // 3. Cập nhật UI ngay lập tức
         setItemToUpgrade(updatedItem); 
         if (selectedItem?.id === item.id) setSelectedItem(updatedItem);
 
+        // 4. Gọi Firestore chạy ngầm
         performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
             .catch(err => console.error("Sync upgrade failed:", err));
 
-        return true;
+        return true; 
 
     }, [ownedItems, equippedItems, performInventoryUpdate, selectedItem, showMessage, isProcessing]);
 
@@ -471,8 +402,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         const itemsToConsume = group.items.slice(0, 3);
         const itemIdsToConsume = itemsToConsume.map(s => s.id);
         
-        // Lưu ý: Tương tự Dismantle, các skill trong itemsToConsume sẽ tự động được giải phóng
-        
         try {
             const baseItemDef = getItemDefinition(itemsToConsume[0].itemId)!;
             const { level: finalLevel, refundGold } = calculateForgeResult(itemsToConsume, baseItemDef);
@@ -482,8 +411,7 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
                 id: `owned-${Date.now()}-${upgradedItemDef.id}`, 
                 itemId: upgradedItemDef.id, 
                 level: finalLevel,
-                stats: upgradedItemDef.stats || {},
-                embeddedSkillIds: [] // Item mới được tạo ra sẽ có 0 skill khảm (skill cũ trả về kho)
+                stats: upgradedItemDef.stats || {}
             };
             const newOwnedList = ownedItems.filter(s => !itemIdsToConsume.includes(s.id)).concat(newForgedItem);
             
@@ -495,6 +423,43 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             setIsForgeModalOpen(false);
         } catch (error) { console.error(`Forge failed:`, error); }
     }, [ownedItems, equippedItems, performInventoryUpdate, showMessage, isProcessing]);
+
+    // --- MỚI: HANDLER THƯƠNG HỘI (EXCHANGE RESOURCES) ---
+    const handleExchangeResources = useCallback(async (option: TradeOption) => {
+        if (isProcessing) return;
+
+        // 1. Kiểm tra đủ tài nguyên không
+        const currentResAmount = userResources[option.resourceType];
+        if (currentResAmount < option.resourceCost) {
+            showMessage(`Không đủ ${option.resourceName}. Cần ${option.resourceCost}.`);
+            return;
+        }
+
+        try {
+            // 2. Gọi update DB
+            // Truyền resourceChanges để equipment-service xử lý trừ tài nguyên
+            await performInventoryUpdate({ 
+                newOwned: ownedItems, 
+                newEquipped: equippedItems, 
+                goldChange: 0, 
+                piecesChange: option.receiveAmount,
+                resourceChanges: {
+                    [option.resourceType]: -option.resourceCost
+                }
+            });
+
+            // 3. Thông báo thành công
+            setDismantleSuccessToast({ show: true, message: `Đã đổi thành công ${option.receiveAmount} Mảnh.` });
+            setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 3000);
+
+        } catch (error) {
+            console.error("Trade failed:", error);
+        }
+    }, [isProcessing, userResources, ownedItems, equippedItems, performInventoryUpdate, showMessage]);
+
+    const handleOpenTradeModal = useCallback(() => setIsTradeModalOpen(true), []);
+    const handleCloseTradeModal = useCallback(() => setIsTradeModalOpen(false), []);
+
 
     const equippedItemsMap = useMemo(() => {
         const map: { [key in EquipmentSlotType]: OwnedItem | null } = { weapon: null, armor: null, Helmet: null };
@@ -549,13 +514,14 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal, handleOpenStatsModal, handleCloseStatsModal,
         itemToUpgrade, isUpgradeModalOpen, handleOpenUpgradeModal, handleCloseUpgradeModal,
         stoneCounts, 
-        
-        // Export logic Skill Embedding
-        availableSkillsForEmbedding,
-        handleEmbedSkill,
-        handleUnembedSkill,
-
         MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
+
+        // --- MỚI: EXPORT CÁC GIÁ TRỊ THƯƠNG HỘI ---
+        isTradeModalOpen,
+        userResources,
+        handleExchangeResources,
+        handleOpenTradeModal,
+        handleCloseTradeModal,
     };
 
     return (
