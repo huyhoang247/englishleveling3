@@ -260,7 +260,7 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: MÀU KHỚP VỚI UPGRADE MODAL) ---
+// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: OPACITY 85%) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
     ownedItem: OwnedItem, 
     onClose: () => void, 
@@ -306,9 +306,9 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     // Nút Style Compact & Tinh tế
     const commonBtnClasses = "flex-1 py-2.5 rounded-xl font-lilita text-base tracking-wide shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase";
     
-    // MÀU NỀN CỦA UPGRADE MODAL:
-    // Màu sáng: #1a1c2e (Dùng cho Description, Stats Wrapper)
-    // Màu tối: #0f111a (Dùng cho Item Image, Stats Row)
+    // OPACITY 85% CHO MÀU NỀN
+    // #1a1c2e/85
+    // #0f111a/85
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
@@ -327,9 +327,9 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
                 <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 pb-2">
                     <div className="flex flex-col items-center text-center gap-4">
-                        {/* Wrapper chứa Icon trang bị - Dùng màu #0f111a (Màu tối) */}
+                        {/* Wrapper chứa Icon trang bị - Màu tối + Opacity 85% */}
                         <div className="relative">
-                            <div className={`w-32 h-32 flex items-center justify-center bg-[#0f111a] rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
+                            <div className={`w-32 h-32 flex items-center justify-center bg-[#0f111a]/85 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
                                  <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
                             </div>
                             
@@ -350,14 +350,14 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                             )}
                         </div>
 
-                        {/* Ô chứa Mô tả - Dùng màu #1a1c2e (Màu sáng hơn, chủ đạo) */}
-                        <div className="w-full p-4 bg-[#1a1c2e] rounded-lg border border-slate-700 text-left">
+                        {/* Ô chứa Mô tả - Màu sáng chủ đạo + Opacity 85% */}
+                        <div className="w-full p-4 bg-[#1a1c2e]/85 rounded-lg border border-slate-700 text-left">
                             <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
                         </div>
                         
                         {hasStats && (
-                            /* Wrapper Stats - Dùng màu #1a1c2e */
-                            <div className="w-full bg-[#1a1c2e] rounded-lg overflow-hidden p-3 space-y-2">
+                            /* Wrapper Stats - Màu sáng + Opacity 85% */
+                            <div className="w-full bg-[#1a1c2e]/85 rounded-lg overflow-hidden p-3 space-y-2">
                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left">Stats</h4>
                                 {sortedStats.map(([key, value]) => { 
                                     const config = STAT_CONFIG[key.toLowerCase()]; 
@@ -365,10 +365,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     let bonus = 0; 
                                     if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
                                     return (
-                                        /* Row Stats - Dùng màu #0f111a (Tối hơn để nổi bật chữ) */
-                                        <div key={key} className="flex items-center gap-2 bg-[#0f111a] p-1.5 rounded-lg">
-                                            {/* Icon Stats - Dùng màu nền #1a1c2e để đồng bộ */}
-                                            {config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-[#1a1c2e] ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}
+                                        /* Row Stats - Màu tối + Opacity 85% */
+                                        <div key={key} className="flex items-center gap-2 bg-[#0f111a]/85 p-1.5 rounded-lg">
+                                            {/* Icon Stats - Màu sáng + Opacity 85% */}
+                                            {config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-[#1a1c2e]/85 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}
                                             <div className="flex flex-1 items-center justify-between">
                                                 <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
                                                 <span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span>
