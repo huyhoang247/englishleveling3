@@ -1,4 +1,3 @@
---- START OF FILE skill-ui.tsx.txt ---
 
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
