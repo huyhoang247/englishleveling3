@@ -32,9 +32,14 @@ interface IGameContext {
     equippedSkillIds: (string | null)[];
     totalVocabCollected: number;
     cardCapacity: number;
+    
+    // Equipment Data
     equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
+    // CẬP NHẬT: Thêm Stones vào Context
+    stones: { low: number; medium: number; high: number };
+
     totalEquipmentStats: { hp: number; atk: number; def: number; };
     totalPlayerStats: { hp: number; atk: number; def: number; };
     loginStreak: number;
@@ -135,9 +140,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [equippedSkillIds, setEquippedSkillIds] = useState<(string | null)[]>([null, null, null]);
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
+  
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
+  // CẬP NHẬT: State mới cho Stones
+  const [stones, setStones] = useState({ low: 0, medium: 0, high: 0 });
+
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
 
@@ -183,17 +192,21 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setMasteryCards(gameData.masteryCards);
       setPickaxes(gameData.pickaxes);
       setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
-      setUserStatsLevel(gameData.stats_level || { hp: 0, atk: 0, def: 0 });
-      setUserStatsValue(gameData.stats_value || { hp: 0, atk: 0, def: 0 });
+      setUserStatsLevel(gameData.stats?.hp ? gameData.stats : (gameData as any).stats_level || { hp: 0, atk: 0, def: 0 });
+      setUserStatsValue((gameData as any).stats_value || { hp: 0, atk: 0, def: 0 }); // Fallback if stats structure differs
       setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
       setAncientBooks(gameData.ancientBooks);
       setOwnedSkills(gameData.skills.owned);
       setEquippedSkillIds(gameData.skills.equipped);
       setTotalVocabCollected(gameData.totalVocabCollected);
       setCardCapacity(gameData.cardCapacity);
+      
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
       setEquippedItems(gameData.equipment.equipped);
+      // CẬP NHẬT: Load Stones
+      setStones(gameData.equipment.stones || { low: 0, medium: 0, high: 0 });
+
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
       
@@ -229,17 +242,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setMasteryCards(gameData.masteryCards ?? 0);
                 setPickaxes(gameData.pickaxes ?? 50);
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
-                setUserStatsLevel(gameData.stats_level ?? { hp: 0, atk: 0, def: 0 });
+                
+                // Handle naming variations in stats if any
+                setUserStatsLevel(gameData.stats_level ?? gameData.stats ?? { hp: 0, atk: 0, def: 0 });
                 setUserStatsValue(gameData.stats_value ?? { hp: 0, atk: 0, def: 0 });
+                
                 setBossBattleHighestFloor(gameData.bossBattleHighestFloor ?? 0);
                 setAncientBooks(gameData.ancientBooks ?? 0);
                 setOwnedSkills(gameData.skills?.owned ?? []);
                 setEquippedSkillIds(gameData.skills?.equipped ?? [null, null, null]);
                 setTotalVocabCollected(gameData.totalVocabCollected ?? 0);
                 setCardCapacity(gameData.cardCapacity ?? 100);
+                
                 setEquipmentPieces(gameData.equipment?.pieces ?? 0);
                 setOwnedItems(gameData.equipment?.owned ?? []);
                 setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
+                // CẬP NHẬT: Real-time update stones
+                setStones(gameData.equipment?.stones || { low: 0, medium: 0, high: 0 });
+
                 setLoginStreak(gameData.loginStreak ?? 0);
                 setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
                 
@@ -266,14 +286,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         }
 
       } else {
+        // --- LOGOUT RESET ---
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); 
         setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
         setUserStatsValue({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0); setAncientBooks(0);
-        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); setEquipmentPieces(0); setOwnedItems([]); setLoginStreak(0); setLastCheckIn(null);
-        setEquippedItems({ weapon: null, armor: null, Helmet: null }); setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
+        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); 
+        
+        setEquipmentPieces(0); 
+        setOwnedItems([]); 
+        setEquippedItems({ weapon: null, armor: null, Helmet: null }); 
+        // CẬP NHẬT: Reset Stones
+        setStones({ low: 0, medium: 0, high: 0 });
+
+        setLoginStreak(0); setLastCheckIn(null);
+        setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
         
         // Reset VIP status
@@ -503,7 +532,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     userStatsLevel, 
     userStatsValue,
     jackpotPool,
-    bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, equipmentPieces, ownedItems, equippedItems,
+    bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
+    
+    // Equipment & Stones
+    equipmentPieces, 
+    ownedItems, 
+    equippedItems,
+    stones, // Exported to context consumers
+
     totalEquipmentStats,
     totalPlayerStats,
     loginStreak, lastCheckIn, 
@@ -544,3 +580,4 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
+// --- END OF FILE GameContext.tsx ---
