@@ -9,7 +9,7 @@ import {
 import { localDB, ICompletedWord, ICompletedMultiWord, VocabularyItem } from '../local-data/local-vocab-db.ts'; 
 
 // Import dữ liệu local khác
-import quizData from './multiple-choice/multiple-data.ts'; 
+// ĐÃ XÓA: import quizData from './multiple-choice/multiple-data.ts'; (Không còn sử dụng)
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
 
@@ -275,12 +275,9 @@ export const fetchPracticeListProgress = async (
       const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
 
       if (selectedType === 'tracNghiem') {
-          const questionToUserVocab = new Map<any, string[]>();
-          quizData.forEach(question => {
-              const matches = question.question.match(vocabRegex);
-              if (matches) questionToUserVocab.set(question, [...new Set(matches.map(w => w.toLowerCase()))]);
-          });
+          // XỬ LÝ LOGIC MỚI CHO TRẮC NGHIỆM: Không dùng quizData tĩnh nữa
           
+          // Chuẩn bị dữ liệu cho các bài tập dựa trên câu ví dụ (Practice 2, 3, 5)
           const wordToRelevantExampleSentences = new Map<string, any[]>();
           exampleData.forEach(sentence => {
               const matches = sentence.english.match(vocabRegex);
@@ -291,24 +288,43 @@ export const fetchPracticeListProgress = async (
           });
 
           const allModes = Array.from({ length: MAX_PREVIEWS + 1 }, (_, i) => i === 0 ? [1, 2, 3, 4, 5] : [1, 2, 3, 4, 5].map(n => i*100+n)).flat();
-          const totalP1 = questionToUserVocab.size;
-          const totalP2_P3_P5 = wordToRelevantExampleSentences.size;
-          const totalP4 = userVocabSet.size;
+          
+          // Tính tổng số lượng câu hỏi cho từng loại bài tập
+          const totalP1 = userVocabSet.size; // Practice 1: Mỗi từ vựng là 1 câu hỏi
+          const totalP2_P3_P5 = wordToRelevantExampleSentences.size; // Các bài tập câu dựa trên từ có ví dụ
+          const totalP4 = userVocabSet.size; // Practice 4 (Audio): Mỗi từ vựng là 1 câu hỏi
 
           allModes.forEach(num => {
               const modeId = `quiz-${num}`;
               const baseNum = num % 100;
               const completedSet = completedWordsByGameMode[modeId] || new Set();
+              
               if (baseNum === 1) {
+                  // Practice 1: Hỏi nghĩa từ
+                  // Tính số lượng từ đã mở mà người dùng đã hoàn thành trong mode này
                   let completedCount = 0;
-                  questionToUserVocab.forEach(words => { if (words.some(w => completedSet.has(w))) completedCount++; });
+                  userVocabSet.forEach(word => {
+                      if (completedSet.has(word)) {
+                          completedCount++;
+                      }
+                  });
                   newProgressData[num] = { completed: completedCount, total: totalP1 };
               } else if (baseNum === 2 || baseNum === 3 || baseNum === 5) {
+                  // Practice 2, 3, 5: Điền từ vào câu / Ghép câu / Audio câu
                   let completedCount = 0;
-                  for (const word of wordToRelevantExampleSentences.keys()) { if (completedSet.has(word)) completedCount++; }
+                  for (const word of wordToRelevantExampleSentences.keys()) { 
+                      if (completedSet.has(word)) completedCount++; 
+                  }
                   newProgressData[num] = { completed: completedCount, total: totalP2_P3_P5 };
               } else if (baseNum === 4) {
-                  newProgressData[num] = { completed: completedSet.size, total: totalP4 };
+                  // Practice 4: Nghe từ chọn từ
+                  let completedCount = 0;
+                  userVocabSet.forEach(word => {
+                    if (completedSet.has(word)) {
+                        completedCount++;
+                    }
+                  });
+                  newProgressData[num] = { completed: completedCount, total: totalP4 };
               }
           });
       } 
