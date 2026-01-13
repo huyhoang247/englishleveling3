@@ -56,7 +56,7 @@ const CRAFTING_COST = 50;
 const DISMANTLE_RETURN_PIECES = 25;
 const MAX_ITEMS_IN_STORAGE = 50;
 
-// Hàm tính giá trị nâng cấp (dùng cho logic cũ hoặc tính vàng hoàn trả)
+// Hàm tính giá trị nâng cấp
 const getBaseUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
     const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
     const baseCost = 50;
@@ -128,9 +128,9 @@ interface EquipmentContextType {
     isUpgradeModalOpen: boolean;
     stoneCounts: Record<StoneTier, number>;
 
-    // --- MỚI: State cho Thương Hội ---
+    // State cho Thương Hội
     isTradeModalOpen: boolean;
-    userResources: Record<ResourceType, number>; // Wood, Leather, Ore, Cloth
+    userResources: Record<ResourceType, number>; 
 
     // Derived State
     equippedItemsMap: { [key in EquipmentSlotType]: OwnedItem | null };
@@ -143,13 +143,10 @@ interface EquipmentContextType {
     handleUnequipItem: (item: OwnedItem) => Promise<void>;
     handleCraftItem: () => Promise<void>;
     handleDismantleItem: (item: OwnedItem) => Promise<void>;
-    
-    // HANDLER NÂNG CẤP (OPTIMISTIC)
     handleUpgradeItem: (item: OwnedItem, stoneTier: StoneTier) => Promise<boolean>;
-    
     handleForgeItems: (group: ForgeGroup) => Promise<void>;
     
-    // --- MỚI: Handler Thương Hội ---
+    // Handler Thương Hội
     handleExchangeResources: (option: TradeOption) => Promise<void>;
     handleOpenTradeModal: () => void;
     handleCloseTradeModal: () => void;
@@ -182,16 +179,13 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         equippedItems,
         isLoading: isGameDataLoading,
         userStatsValue,
-        // --- MỚI: Lấy tài nguyên từ GameContext ---
-        // Lưu ý: Đảm bảo GameContext của bạn export các biến này. 
-        // Nếu tên biến trong GameContext khác, hãy alias lại (ví dụ: woodAmount: wood)
+        // Lấy tài nguyên từ GameContext
         wood = 0,    
         leather = 0,
         ore = 0,     
         cloth = 0,   
     } = useGame();
 
-    // Map tài nguyên vào object để tiện sử dụng
     const userResources = useMemo<Record<ResourceType, number>>(() => ({
         wood, leather, ore, cloth
     }), [wood, leather, ore, cloth]);
@@ -209,15 +203,11 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const [newlyCraftedItem, setNewlyCraftedItem] = useState<OwnedItem | null>(null);
     const [isForgeModalOpen, setIsForgeModalOpen] = useState(false);
     const [isStatsModalOpen, setIsStatsModalOpen] = useState(false);
-    
-    // State cho Upgrade Modal
     const [isUpgradeModalOpen, setIsUpgradeModalOpen] = useState(false);
     const [itemToUpgrade, setItemToUpgrade] = useState<OwnedItem | null>(null);
-
-    // State cho Trade Modal
     const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
-    // Mock Data Stone Counts (Bạn có thể thay thế bằng dữ liệu thật từ DB)
+    // Mock Data Stone Counts
     const stoneCounts = useMemo<Record<StoneTier, number>>(() => ({
         low: 20,
         medium: 12,
@@ -237,13 +227,12 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     }, []);
 
     // Hàm cập nhật xuống Firestore
-    // Đã cập nhật để nhận thêm resourceChanges
     const performInventoryUpdate = useCallback(async (updates: { 
         newOwned: OwnedItem[]; 
         newEquipped: EquippedItems; 
         goldChange: number; 
         piecesChange: number;
-        resourceChanges?: Record<string, number>; // Thêm field này
+        resourceChanges?: Record<string, number>; 
     }) => {
         const userId = auth.currentUser?.uid;
         if (!userId) {
@@ -348,21 +337,18 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         } catch(error) { console.error(`Dismantle failed:`, error); }
     }, [equippedItems, ownedItems, performInventoryUpdate, showMessage, isProcessing]);
 
-    // --- LOGIC NÂNG CẤP MỚI: OPTIMISTIC UPDATE ---
     const handleUpgradeItem = useCallback(async (item: OwnedItem, stoneTier: StoneTier): Promise<boolean> => {
         if (isProcessing) return false;
 
         const stone = ENHANCEMENT_STONES[stoneTier];
         const isSuccess = Math.random() < stone.successRate;
 
-        // 1. Trường hợp Thất bại
         if (!isSuccess) {
             performInventoryUpdate({ newOwned: ownedItems, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
                 .catch(err => console.error("Sync failed:", err));
             return false;
         }
 
-        // 2. Trường hợp Thành công
         const newStats = { ...item.stats };
         let hasUpgradableStats = false;
 
@@ -383,11 +369,9 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         const updatedItem = { ...item, level: item.level + 1, stats: newStats };
         const newOwnedList = ownedItems.map(s => s.id === item.id ? updatedItem : s);
 
-        // 3. Cập nhật UI ngay lập tức
         setItemToUpgrade(updatedItem); 
         if (selectedItem?.id === item.id) setSelectedItem(updatedItem);
 
-        // 4. Gọi Firestore chạy ngầm
         performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
             .catch(err => console.error("Sync upgrade failed:", err));
 
@@ -424,32 +408,42 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         } catch (error) { console.error(`Forge failed:`, error); }
     }, [ownedItems, equippedItems, performInventoryUpdate, showMessage, isProcessing]);
 
-    // --- MỚI: HANDLER THƯƠNG HỘI (EXCHANGE RESOURCES) ---
+    // --- MỚI: HANDLER THƯƠNG HỘI (LOGIC GỘP NHIỀU TÀI NGUYÊN) ---
     const handleExchangeResources = useCallback(async (option: TradeOption) => {
         if (isProcessing) return;
 
-        // 1. Kiểm tra đủ tài nguyên không
-        const currentResAmount = userResources[option.resourceType];
-        if (currentResAmount < option.resourceCost) {
-            showMessage(`Không đủ ${option.resourceName}. Cần ${option.resourceCost}.`);
+        // 1. Kiểm tra đủ TẤT CẢ tài nguyên trong công thức
+        let missingIngredients: string[] = [];
+        for (const ingredient of option.ingredients) {
+             const userHas = userResources[ingredient.type];
+             if (userHas < ingredient.amount) {
+                 missingIngredients.push(ingredient.name);
+             }
+        }
+
+        if (missingIngredients.length > 0) {
+            showMessage(`Thiếu tài nguyên: ${missingIngredients.join(', ')}.`);
             return;
         }
 
         try {
-            // 2. Gọi update DB
-            // Truyền resourceChanges để equipment-service xử lý trừ tài nguyên
+            // 2. Tạo object changes chứa tất cả nguyên liệu cần trừ
+            const resourceChanges: Record<string, number> = {};
+            for (const ingredient of option.ingredients) {
+                resourceChanges[ingredient.type] = -ingredient.amount;
+            }
+
+            // 3. Gọi update DB
             await performInventoryUpdate({ 
                 newOwned: ownedItems, 
                 newEquipped: equippedItems, 
                 goldChange: 0, 
                 piecesChange: option.receiveAmount,
-                resourceChanges: {
-                    [option.resourceType]: -option.resourceCost
-                }
+                resourceChanges: resourceChanges
             });
 
-            // 3. Thông báo thành công
-            setDismantleSuccessToast({ show: true, message: `Đã đổi thành công ${option.receiveAmount} Mảnh.` });
+            // 4. Thông báo thành công
+            setDismantleSuccessToast({ show: true, message: `Đổi thành công ${option.receiveAmount} Mảnh Trang Bị.` });
             setTimeout(() => setDismantleSuccessToast(prev => ({ ...prev, show: false })), 3000);
 
         } catch (error) {
@@ -494,7 +488,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const handleOpenStatsModal = useCallback(() => setIsStatsModalOpen(true), []);
     const handleCloseStatsModal = useCallback(() => setIsStatsModalOpen(false), []);
 
-    // Handlers cho Upgrade Modal
     const handleOpenUpgradeModal = useCallback((item: OwnedItem) => {
         setSelectedItem(null); 
         setItemToUpgrade(item);
@@ -516,7 +509,6 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         stoneCounts, 
         MAX_ITEMS_IN_STORAGE, CRAFTING_COST,
 
-        // --- MỚI: EXPORT CÁC GIÁ TRỊ THƯƠNG HỘI ---
         isTradeModalOpen,
         userResources,
         handleExchangeResources,
