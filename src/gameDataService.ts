@@ -5,25 +5,39 @@ import {
   doc, getDoc, setDoc, runTransaction, 
   collection, getDocs, writeBatch,
   query, where, orderBy, onSnapshot, Timestamp, serverTimestamp, addDoc,
-  updateDoc, increment, Unsubscribe // --- THÊM CÁC IMPORT CẦN THIẾT ---
+  updateDoc, increment, Unsubscribe 
 } from 'firebase/firestore';
 
-// Các interface này nên được định nghĩa ở một nơi tập trung (ví dụ: types.ts) và import vào
-// Tuy nhiên, để file này tự chứa, tôi sẽ định nghĩa chúng ở đây.
-export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
-export interface OwnedSkill { id: string; skillId: string; level: number; rarity: Rarity; }
+// --- ĐỊNH NGHĨA TYPES ---
 
-// Sửa lại interface OwnedItem và EquippedItems để khớp với equipment.tsx
+export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR' | 'SSR';
+
+export interface OwnedSkill { 
+    id: string; 
+    skillId: string; 
+    level: number; 
+    rarity: Rarity; 
+}
+
 export interface OwnedItem {
     id: string;
     itemId: number;
     level: number;
     stats: { [key: string]: any };
 }
+
 export type EquipmentSlotType = 'weapon' | 'armor' | 'Helmet';
+
 export type EquippedItems = {
     [key in EquipmentSlotType]: string | null;
 };
+
+// Định nghĩa Stones (Đá cường hoá)
+export interface EnhancementStones {
+    low: number;
+    medium: number;
+    high: number;
+}
 
 export interface UserGameData {
   coins: number;
@@ -37,9 +51,19 @@ export interface UserGameData {
   skills: { owned: OwnedSkill[]; equipped: (string | null)[] };
   totalVocabCollected: number;
   cardCapacity: number;
-  equipment: { pieces: number; owned: OwnedItem[]; equipped: EquippedItems };
+  // CẬP NHẬT: Thêm stones vào equipment
+  equipment: { 
+      pieces: number; 
+      owned: OwnedItem[]; 
+      equipped: EquippedItems; 
+      stones: EnhancementStones; // <-- MỚI: Đá cường hoá
+  };
   lastCheckIn?: Timestamp;
   loginStreak?: number;
+  // Các trường cho VIP
+  accountType?: string; 
+  vipExpiresAt?: Timestamp | null;
+  vipLuckySpinClaims?: number;
 }
 
 
@@ -56,14 +80,27 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
   if (docSnap.exists()) {
     const data = docSnap.data();
+    
     // Đảm bảo dữ liệu skills có cấu trúc đúng
     const skillsData = data.skills || { owned: [], equipped: [null, null, null] };
     if (!Array.isArray(skillsData.equipped) || skillsData.equipped.length !== 3) {
       skillsData.equipped = [null, null, null];
     }
 
-    const defaultEquipment = { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } };
-    const equipmentData = { ...defaultEquipment, ...(data.equipment || {}) };
+    // Cấu trúc mặc định cho Equipment và Stones
+    const defaultEquipment = { 
+        pieces: 100, 
+        owned: [], 
+        equipped: { weapon: null, armor: null, Helmet: null },
+        stones: { low: 0, medium: 0, high: 0 } 
+    };
+    
+    // Merge dữ liệu cũ với default để tránh lỗi nếu user cũ chưa có field stones
+    const equipmentData = { 
+        ...defaultEquipment, 
+        ...(data.equipment || {}),
+        stones: { ...defaultEquipment.stones, ...(data.equipment?.stones || {}) }
+    };
 
     return {
       coins: data.coins || 0,
@@ -77,24 +114,36 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       skills: skillsData,
       totalVocabCollected: data.totalVocabCollected || 0,
       cardCapacity: data.cardCapacity || 100,
-      equipment: equipmentData,
+      equipment: equipmentData, // Đã bao gồm stones
       lastCheckIn: data.lastCheckIn || null,
       loginStreak: data.loginStreak || 0,
-    };
+      accountType: data.accountType || 'Normal',
+      vipExpiresAt: data.vipExpiresAt || null,
+      vipLuckySpinClaims: data.vipLuckySpinClaims || 0,
+    } as UserGameData;
   } else {
+    // Tạo user mới hoàn toàn
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
       coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
       minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
       totalVocabCollected: 0, cardCapacity: 100,
-      equipment: { pieces: 100, owned: [], equipped: { weapon: null, armor: null, Helmet: null } },
+      equipment: { 
+          pieces: 100, 
+          owned: [], 
+          equipped: { weapon: null, armor: null, Helmet: null },
+          stones: { low: 0, medium: 0, high: 0 } // Khởi tạo đá = 0
+      },
       lastCheckIn: null,
       loginStreak: 0,
       createdAt: new Date(),
       claimedDailyGoals: {},
       claimedVocabMilestones: [],
-      claimedQuizRewards: {}
+      claimedQuizRewards: {},
+      accountType: 'Normal',
+      vipExpiresAt: null,
+      vipLuckySpinClaims: 0
     };
     await setDoc(userDocRef, newUserData);
     return newUserData;
@@ -303,7 +352,7 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
 
 /**
  * Cập nhật nhiều trường dữ liệu của người dùng cùng lúc cho mục đích quản trị.
- * Hàm này sử dụng dot notation cho các object lồng nhau (vd: 'stats.hp').
+ * Hàm này sử dụng dot notation cho các object lồng nhau (vd: 'stats.hp', 'equipment.stones.low').
  * @param userId - ID của người dùng cần cập nhật.
  * @param updates - Object chứa các trường và giá trị cần thay đổi (giá trị là số lượng cộng thêm/trừ đi).
  * @returns {Promise<UserGameData>} Dữ liệu mới nhất của người dùng sau khi cập nhật.
@@ -340,12 +389,15 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
     
     t.update(userDocRef, updatePayload);
     
+    // Tạo object trả về đã được cập nhật (để UI phản hồi ngay lập tức)
     const updatedData = JSON.parse(JSON.stringify(data));
     for(const key in updatePayload){
         if (key.includes('.')) {
             const keys = key.split('.');
             let temp = updatedData;
             for (let i = 0; i < keys.length - 1; i++) {
+                // Tạo object nếu chưa tồn tại trong cấu trúc local
+                if (!temp[keys[i]]) temp[keys[i]] = {}; 
                 temp = temp[keys[i]];
             }
             temp[keys[keys.length - 1]] = updatePayload[key];
