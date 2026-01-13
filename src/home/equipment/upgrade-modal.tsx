@@ -1,3 +1,5 @@
+--- START OF FILE upgrade-modal.tsx ---
+
 import React, { useState, useEffect, memo } from 'react';
 import { 
     getItemDefinition 
@@ -190,6 +192,11 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             {Object.entries(item.stats).map(([key, value]) => {
                                 if (typeof value !== 'number') return null;
                                 const config = STAT_CONFIG[key.toLowerCase()];
+                                
+                                // Tính toán giá trị dự kiến (Tăng 1%, tối thiểu +1)
+                                const increase = Math.max(1, Math.round(value * 0.01));
+                                const nextValue = value + increase;
+
                                 return (
                                     <div key={key} className="flex justify-between items-center bg-black/30 px-3 py-3 rounded-lg border border-slate-700/50">
                                         <div className="flex items-center gap-3">
@@ -198,7 +205,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-white text-lg font-lilita">{value}</span>
-                                            <span className="text-xs text-green-500 font-lilita">➜ ?</span>
+                                            <span className="text-xs text-green-500 font-lilita">➜ {nextValue}</span>
                                         </div>
                                     </div>
                                 );
