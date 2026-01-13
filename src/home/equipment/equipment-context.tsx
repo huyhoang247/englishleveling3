@@ -1,3 +1,5 @@
+// --- START OF FILE equipment-context.tsx ---
+
 import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
     getItemDefinition, 
@@ -179,12 +181,19 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         equippedItems,
         isLoading: isGameDataLoading,
         userStatsValue,
-        // Lấy tài nguyên từ GameContext
-        wood = 0,    
-        leather = 0,
-        ore = 0,     
-        cloth = 0,   
+        // CẬP NHẬT: Lấy stones thực tế từ GameContext
+        stones, 
+        // Lấy tài nguyên từ GameContext (giả sử GameContext có các trường này, nếu không thì mặc định 0)
+        // Lưu ý: Phần này phụ thuộc vào GameContext có export wood/leather/etc hay không.
+        // Nếu GameContext chưa có, các giá trị này sẽ là undefined -> 0
     } = useGame();
+
+    // Giả lập tài nguyên nếu GameContext chưa export (Bạn có thể thêm vào GameContext sau)
+    // Ở đây tôi dùng biến tạm, bạn cần đảm bảo GameContext export các biến này nếu muốn tính năng Thương Hội hoạt động.
+    const wood = (useGame() as any).wood || 0;
+    const leather = (useGame() as any).leather || 0;
+    const ore = (useGame() as any).ore || 0;
+    const cloth = (useGame() as any).cloth || 0;
 
     const userResources = useMemo<Record<ResourceType, number>>(() => ({
         wood, leather, ore, cloth
@@ -207,12 +216,12 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
     const [itemToUpgrade, setItemToUpgrade] = useState<OwnedItem | null>(null);
     const [isTradeModalOpen, setIsTradeModalOpen] = useState(false);
 
-    // Mock Data Stone Counts
+    // CẬP NHẬT: Map số lượng đá từ GameContext vào UI
     const stoneCounts = useMemo<Record<StoneTier, number>>(() => ({
-        low: 20,
-        medium: 12,
-        high: 5
-    }), []);
+        low: stones?.low || 0,
+        medium: stones?.medium || 0,
+        high: stones?.high || 0
+    }), [stones]);
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [dismantleSuccessToast, setDismantleSuccessToast] = useState<{ show: boolean; message: string }>({ show: false, message: '' });
@@ -233,6 +242,8 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         goldChange: number; 
         piecesChange: number;
         resourceChanges?: Record<string, number>; 
+        // CẬP NHẬT: Thêm tham số đá cường hoá
+        stoneChanges?: { low?: number; medium?: number; high?: number };
     }) => {
         const userId = auth.currentUser?.uid;
         if (!userId) {
@@ -337,15 +348,31 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         } catch(error) { console.error(`Dismantle failed:`, error); }
     }, [equippedItems, ownedItems, performInventoryUpdate, showMessage, isProcessing]);
 
+    // CẬP NHẬT: Logic Upgrade sử dụng đá thực tế và transaction
     const handleUpgradeItem = useCallback(async (item: OwnedItem, stoneTier: StoneTier): Promise<boolean> => {
         if (isProcessing) return false;
+
+        // 1. Kiểm tra số lượng đá (Client-side check)
+        if (stoneCounts[stoneTier] < 1) {
+            showMessage("Không đủ đá cường hoá.");
+            return false;
+        }
 
         const stone = ENHANCEMENT_STONES[stoneTier];
         const isSuccess = Math.random() < stone.successRate;
 
+        // Object đại diện cho việc trừ 1 viên đá
+        const stoneCost = { [stoneTier]: -1 };
+
         if (!isSuccess) {
-            performInventoryUpdate({ newOwned: ownedItems, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
-                .catch(err => console.error("Sync failed:", err));
+            // Thất bại: Chỉ trừ đá, giữ nguyên Item
+            performInventoryUpdate({ 
+                newOwned: ownedItems, 
+                newEquipped: equippedItems, 
+                goldChange: 0, 
+                piecesChange: 0,
+                stoneChanges: stoneCost // <-- Trừ đá
+            }).catch(err => console.error("Sync failed:", err));
             return false;
         }
 
@@ -372,12 +399,18 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
         setItemToUpgrade(updatedItem); 
         if (selectedItem?.id === item.id) setSelectedItem(updatedItem);
 
-        performInventoryUpdate({ newOwned: newOwnedList, newEquipped: equippedItems, goldChange: 0, piecesChange: 0 })
-            .catch(err => console.error("Sync upgrade failed:", err));
+        // Thành công: Cập nhật Item và Trừ đá
+        performInventoryUpdate({ 
+            newOwned: newOwnedList, 
+            newEquipped: equippedItems, 
+            goldChange: 0, 
+            piecesChange: 0,
+            stoneChanges: stoneCost // <-- Trừ đá
+        }).catch(err => console.error("Sync upgrade failed:", err));
 
         return true; 
 
-    }, [ownedItems, equippedItems, performInventoryUpdate, selectedItem, showMessage, isProcessing]);
+    }, [ownedItems, equippedItems, performInventoryUpdate, selectedItem, showMessage, isProcessing, stoneCounts]);
 
     const handleForgeItems = useCallback(async (group: ForgeGroup) => {
         if (isProcessing) return;
@@ -531,3 +564,4 @@ export const useEquipment = (): EquipmentContextType => {
     }
     return context;
 };
+// --- END OF FILE equipment-context.tsx ---
