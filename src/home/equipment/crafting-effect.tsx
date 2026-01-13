@@ -144,8 +144,8 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                     const dHeight = FRAME_HEIGHT * displayScale;
 
                     // *** ĐIỀU CHỈNH VỊ TRÍ Ở ĐÂY ***
-                    // Thêm +30px để dịch toàn bộ sprite sang phải
-                    const xOffset = 30; 
+                    // Giảm từ 30 xuống 12 để dịch lại sang trái một chút
+                    const xOffset = 12; 
 
                     ctx.shadowBlur = 35;
                     ctx.shadowColor = 'rgba(255, 100, 0, 0.5)';
@@ -153,7 +153,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                     ctx.drawImage(
                         img, 
                         sx, sy, FRAME_WIDTH, FRAME_HEIGHT, 
-                        cx - dWidth / 2 + xOffset, // Đã cộng thêm offset
+                        cx - dWidth / 2 + xOffset, // Áp dụng offset mới
                         cy - dHeight / 2, 
                         dWidth, dHeight
                     );
@@ -176,7 +176,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     if (!isActive) return null;
 
     return (
-        // Overlay nền đen 80% (không dùng blur để tiết kiệm GPU)
+        // Overlay nền đen 80%
         <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/80">
             <canvas ref={canvasRef} className="absolute inset-0" />
         </div>
