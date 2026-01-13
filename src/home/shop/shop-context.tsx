@@ -15,6 +15,41 @@ const sampleItemsNonWeapons = [
   { id: 2001, name: 'Card Capacity', type: 'Item', rarity: 'A', price: 100, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_000000006160622f8a01c95a4a8eb982.png', description: 'Tăng giới hạn số lượng thẻ từ vựng có thể sở hữu. Giá được tính trên mỗi đơn vị sức chứa.', stackable: true, quantityOptions: [50, 100, 200] },
   { id: 2002, name: 'Equipment Piece', type: 'Item', rarity: 'B', price: 10, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-piece.webp', description: 'Nguyên liệu cốt lõi dùng để chế tạo và hợp nhất trang bị.', stackable: true, quantityOptions: [10, 50, 100] },
   { id: 2003, name: 'Pickaxe', type: 'Item', rarity: 'B', price: 50, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/pickaxe-icon.webp', description: 'Dùng để khai thác tài nguyên và khoáng sản.', stackable: true, quantityOptions: [10, 50, 100], },
+  
+  // --- THÊM 3 LOẠI ĐÁ CƯỜNG HOÁ ---
+  { 
+      id: 2004, 
+      name: 'Đá Sơ Cấp', 
+      type: 'Item', 
+      rarity: 'D', 
+      price: 10, 
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/basic-stone.webp', 
+      description: 'Đá cường hoá cấp thấp, dùng để nâng cấp trang bị ở giai đoạn đầu. Tỉ lệ thành công 30%.', 
+      stackable: true, 
+      quantityOptions: [1, 5, 10] 
+  },
+  { 
+      id: 2005, 
+      name: 'Đá Trung Cấp', 
+      type: 'Item', 
+      rarity: 'B', 
+      price: 50, 
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/intermediate-stone.webp', 
+      description: 'Đá cường hoá cấp trung, giúp tăng chỉ số trang bị mạnh mẽ hơn. Tỉ lệ thành công 60%.', 
+      stackable: true, 
+      quantityOptions: [1, 5, 10] 
+  },
+  { 
+      id: 2006, 
+      name: 'Đá Cao Cấp', 
+      type: 'Item', 
+      rarity: 'S', 
+      price: 100, 
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/advanced-stone.webp', 
+      description: 'Đá cường hoá cấp cao quý hiếm. Tỉ lệ thành công lên tới 90%.', 
+      stackable: true, 
+      quantityOptions: [1, 5, 10] 
+  },
 ];
 
 // --- Type Definitions ---
@@ -70,14 +105,38 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
   const handlePurchaseItem = async (item: any, quantity: number) => {
     if (!currentUser) { triggerToast("Mua thất bại: Người dùng chưa đăng nhập.", true); throw new Error("User not authenticated."); }
     if (!item || typeof item.price !== 'number' || !item.id || typeof quantity !== 'number' || quantity <= 0) { throw new Error("Dữ liệu vật phẩm hoặc số lượng không hợp lệ."); }
+    
     setIsSyncingData(true);
     try {
-      const { newCoins, newBooks, newCapacity, newPieces } = await processShopPurchase(currentUser.uid, item, quantity);
-      const updates: { coins?: number; ancientBooks?: number; cardCapacity?: number; equipmentPieces?: number; } = { coins: newCoins };
-      if (item.id === 1009) { updates.ancientBooks = newBooks; } else if (item.id === 2001) { updates.cardCapacity = newCapacity; } else if (item.id === 2002) { updates.equipmentPieces = newPieces; }
-      updateUserCurrency(updates);
+      // Gọi service, giờ đây service trả về cả stones
+      const { newCoins, newBooks, newCapacity, newPieces, newStones } = await processShopPurchase(currentUser.uid, item, quantity);
+      
+      const updates: { 
+          coins?: number; 
+          ancientBooks?: number; 
+          cardCapacity?: number; 
+          equipmentPieces?: number; 
+          stones?: any; // Thêm stones vào type
+      } = { coins: newCoins };
+      
+      if (item.id === 1009) { updates.ancientBooks = newBooks; } 
+      else if (item.id === 2001) { updates.cardCapacity = newCapacity; } 
+      else if (item.id === 2002) { updates.equipmentPieces = newPieces; }
+      // Các ID đá cường hoá
+      else if ([2004, 2005, 2006].includes(item.id)) { updates.stones = newStones; }
+
+      // Cập nhật lên GameContext (Lưu ý: GameContext cần hỗ trợ nhận stones trong hàm này, nếu chưa thì nó sẽ bỏ qua nhưng DB đã update)
+      updateUserCurrency(updates as any); 
+      
       triggerToast(`Mua thành công x${quantity} ${item.name}!`, false);
-    } catch (error) { const errorMessage = error instanceof Error ? error.message : String(error); console.error("Shop purchase failed:", error); triggerToast(`Mua thất bại: ${errorMessage}`, true); throw error; } finally { setIsSyncingData(false); }
+    } catch (error) { 
+        const errorMessage = error instanceof Error ? error.message : String(error); 
+        console.error("Shop purchase failed:", error); 
+        triggerToast(`Mua thất bại: ${errorMessage}`, true); 
+        throw error; 
+    } finally { 
+        setIsSyncingData(false); 
+    }
   };
   
   const handleGemExchange = async (pkg: any) => {
