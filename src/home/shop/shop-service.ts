@@ -61,6 +61,10 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         let newCapacity = data.cardCapacity || 100;
         let newPieces = data.equipment?.pieces || 0;
         let newPickaxes = data.pickaxes || 0;
+        
+        // Lấy stones hiện tại, xử lý trường hợp chưa có field này
+        const currentStones = data.equipment?.stones || { low: 0, medium: 0, high: 0 };
+        const newStones = { ...currentStones }; // Clone object
 
         switch (item.id) {
             case 1009: // Ancient Book
@@ -79,6 +83,21 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
                 newPickaxes += quantity;
                 updates.pickaxes = newPickaxes;
                 break;
+            
+            // --- XỬ LÝ ĐÁ CƯỜNG HOÁ ---
+            case 2004: // Đá Sơ Cấp (Low)
+                newStones.low = (newStones.low || 0) + quantity;
+                updates['equipment.stones'] = newStones;
+                break;
+            case 2005: // Đá Trung Cấp (Medium)
+                newStones.medium = (newStones.medium || 0) + quantity;
+                updates['equipment.stones'] = newStones;
+                break;
+            case 2006: // Đá Cao Cấp (High)
+                newStones.high = (newStones.high || 0) + quantity;
+                updates['equipment.stones'] = newStones;
+                break;
+
             default:
                 break;
         }
@@ -90,7 +109,8 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
             newBooks, 
             newCapacity,
             newPieces,
-            newPickaxes
+            newPickaxes,
+            newStones // Trả về object stones mới
         };
     });
 };
@@ -99,10 +119,9 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
  * Tạo một bản ghi giao dịch nạp Gem.
  */
 export const createGemTransaction = async (userId: string, userEmail: string | null, pkg: any) => {
-    // --- THAY ĐỔI: Rút ngắn ID giao dịch xuống còn 10 ký tự ---
-    const timestampPart = Date.now().toString().slice(-4); // Lấy 4 số cuối của timestamp
-    const randomPart = Math.random().toString(36).substring(2, 6); // Lấy 4 ký tự ngẫu nhiên
-    const transactionId = `EL${timestampPart}${randomPart}`.toUpperCase(); // Ghép lại: EL + 4 + 4 = 10 ký tự
+    const timestampPart = Date.now().toString().slice(-4); 
+    const randomPart = Math.random().toString(36).substring(2, 6);
+    const transactionId = `EL${timestampPart}${randomPart}`.toUpperCase();
     
     const transactionData = {
         transactionId,
@@ -111,7 +130,7 @@ export const createGemTransaction = async (userId: string, userEmail: string | n
         gemPackageId: pkg.id,
         gems: pkg.gems,
         amount: pkg.price,
-        status: 'pending', // 'pending', 'user_confirmed', 'completed', 'failed'
+        status: 'pending', 
         createdAt: serverTimestamp(),
         userConfirmedAt: null,
         processedAt: null,
