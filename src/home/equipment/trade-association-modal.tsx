@@ -1,42 +1,59 @@
-import React, { memo, useState } from 'react';
-import { uiAssets, equipmentUiAssets } from '../../game-assets.ts'; // Giả định bạn có assets, nếu không sẽ dùng placeholder
+import React, { memo } from 'react';
+import { equipmentUiAssets } from '../../game-assets.ts'; 
 
-// Định nghĩa kiểu dữ liệu cho tài nguyên
+// Định nghĩa các loại tài nguyên
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
 
-// Định nghĩa thông tin gói đổi
-export interface TradeOption {
-    id: string;
-    resourceType: ResourceType;
-    resourceName: string;
-    resourceCost: number;
-    receiveType: 'equipmentPiece'; // Sau này có thể thêm các loại khác
-    receiveAmount: number;
-    iconColor: string; // Màu đại diện cho tài nguyên
+// Định nghĩa 1 thành phần nguyên liệu
+export interface TradeIngredient {
+    type: ResourceType;
+    name: string;
+    amount: number;
+    color: string; // class màu background cho icon
 }
 
-// Cấu hình các gói đổi (Hardcode theo yêu cầu)
+// Định nghĩa gói đổi (cập nhật để hỗ trợ nhiều nguyên liệu)
+export interface TradeOption {
+    id: string;
+    ingredients: TradeIngredient[]; // Mảng các nguyên liệu cần
+    receiveType: 'equipmentPiece';
+    receiveAmount: number;
+}
+
+// --- CẤU HÌNH CÔNG THỨC ĐỔI THEO YÊU CẦU ---
 const TRADE_OPTIONS: TradeOption[] = [
-    { id: 'trade_wood', resourceType: 'wood', resourceName: 'Gỗ', resourceCost: 10, receiveType: 'equipmentPiece', receiveAmount: 1, iconColor: 'bg-amber-700' },
-    { id: 'trade_leather', resourceType: 'leather', resourceName: 'Da', resourceCost: 10, receiveType: 'equipmentPiece', receiveAmount: 1, iconColor: 'bg-orange-600' },
-    { id: 'trade_ore', resourceType: 'ore', resourceName: 'Quặng', resourceCost: 10, receiveType: 'equipmentPiece', receiveAmount: 1, iconColor: 'bg-slate-500' },
-    { id: 'trade_cloth', resourceType: 'cloth', resourceName: 'Vải', resourceCost: 10, receiveType: 'equipmentPiece', receiveAmount: 1, iconColor: 'bg-indigo-300' },
+    { 
+        id: 'combine_wood_leather', 
+        ingredients: [
+            { type: 'wood', name: 'Gỗ', amount: 10, color: 'bg-amber-700' },
+            { type: 'leather', name: 'Da', amount: 10, color: 'bg-orange-600' }
+        ],
+        receiveType: 'equipmentPiece', 
+        receiveAmount: 1
+    },
+    { 
+        id: 'combine_ore_cloth', 
+        ingredients: [
+            { type: 'ore', name: 'Quặng', amount: 10, color: 'bg-slate-500' },
+            { type: 'cloth', name: 'Vải', amount: 10, color: 'bg-indigo-400' }
+        ],
+        receiveType: 'equipmentPiece', 
+        receiveAmount: 1
+    },
 ];
 
 interface TradeAssociationModalProps {
     isOpen: boolean;
     onClose: () => void;
     resources: Record<ResourceType, number>; // Số lượng tài nguyên hiện có
-    onExchange: (option: TradeOption) => Promise<void>; // Hàm xử lý đổi
+    onExchange: (option: TradeOption) => Promise<void>; 
     isProcessing: boolean;
 }
 
-// Icon Mảnh trang bị (Lấy từ component cũ hoặc dùng ảnh)
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
     <img src={equipmentUiAssets.equipmentPieceIcon} alt="Piece" className={className} />
 );
 
-// Icon đóng
 const CloseIcon = ({ className = '' }: { className?: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className={className}>
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -56,7 +73,6 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                 {/* Header */}
                 <div className="flex-shrink-0 border-b border-[#8b5a2b]/50 pb-4 mb-4 flex justify-between items-center">
                     <div className="flex items-center gap-3">
-                        {/* Icon Thương Hội giả lập */}
                         <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-yellow-600 to-yellow-400 border-2 border-yellow-200 shadow-lg flex items-center justify-center">
                             <span className="text-2xl">⚖️</span>
                         </div>
@@ -74,51 +90,64 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
 
                 {/* Subtitle */}
                 <p className="text-sm text-[#bca388] mb-4 text-center italic">
-                    "Quy đổi tài nguyên dư thừa lấy Mảnh Trang Bị quý giá."
+                    "Thu thập đủ nguyên liệu để đổi lấy Mảnh Trang Bị."
                 </p>
 
                 {/* List Options */}
                 <div className="flex-1 overflow-y-auto hide-scrollbar space-y-3 pr-1">
                     {TRADE_OPTIONS.map((option) => {
-                        const currentAmount = resources[option.resourceType] || 0;
-                        const canAfford = currentAmount >= option.resourceCost;
-
+                        // Kiểm tra xem user có đủ TẤT CẢ nguyên liệu trong công thức không
+                        let canAffordAll = true;
+                        
                         return (
                             <div key={option.id} className="bg-[#2a201c]/80 border border-[#5c4033] rounded-xl p-3 flex items-center justify-between shadow-inner group transition-all hover:bg-[#382b26]">
-                                {/* Left: Cost */}
-                                <div className="flex items-center gap-3 w-1/3">
-                                    <div className={`w-10 h-10 rounded-lg ${option.iconColor} border border-white/20 shadow-md flex items-center justify-center text-xs font-bold text-white`}>
-                                        {/* Placeholder Icon cho Resource */}
-                                        {option.resourceName[0]}
-                                    </div>
-                                    <div className="flex flex-col">
-                                        <span className="text-[#e6cfa3] font-bold text-sm">{option.resourceName}</span>
-                                        <span className={`text-xs ${canAfford ? 'text-green-400' : 'text-red-400'}`}>
-                                            {currentAmount}/{option.resourceCost}
-                                        </span>
-                                    </div>
+                                
+                                {/* Left: Ingredients List */}
+                                <div className="flex flex-col gap-2 w-3/5">
+                                    {option.ingredients.map((ing, index) => {
+                                        const userHas = resources[ing.type] || 0;
+                                        const isEnough = userHas >= ing.amount;
+                                        if (!isEnough) canAffordAll = false;
+
+                                        return (
+                                            <div key={ing.type} className="flex items-center gap-2">
+                                                {/* Dấu cộng nếu không phải dòng đầu */}
+                                                {index > 0 && <span className="text-[#8b5a2b] text-xs font-bold">+</span>}
+                                                
+                                                <div className={`w-6 h-6 rounded ${ing.color} border border-white/20 flex items-center justify-center text-[10px] font-bold text-white shadow-sm`}>
+                                                    {ing.name[0]}
+                                                </div>
+                                                <div className="flex items-baseline gap-1">
+                                                    <span className="text-[#e6cfa3] text-sm font-semibold">{ing.name}</span>
+                                                    <span className={`text-xs ${isEnough ? 'text-green-400' : 'text-red-400'}`}>
+                                                        ({userHas}/{ing.amount})
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
 
                                 {/* Center: Arrow */}
                                 <div className="text-[#8b5a2b]">
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 animate-pulse" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                                     </svg>
                                 </div>
 
-                                {/* Right: Receive & Action */}
-                                <div className="flex items-center justify-end gap-3 w-5/12">
-                                    <div className="flex items-center gap-1 bg-black/30 px-2 py-1 rounded-md border border-[#5c4033]">
-                                        <span className="text-white font-bold">{option.receiveAmount}</span>
-                                        <EquipmentPieceIcon className="w-6 h-6" />
+                                {/* Right: Result & Button */}
+                                <div className="flex flex-col items-end gap-2 w-1/4">
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-white font-bold text-lg">{option.receiveAmount}</span>
+                                        <EquipmentPieceIcon className="w-8 h-8 drop-shadow-md" />
                                     </div>
                                     
                                     <button
                                         onClick={() => onExchange(option)}
-                                        disabled={!canAfford || isProcessing}
+                                        disabled={!canAffordAll || isProcessing}
                                         className={`
-                                            px-4 py-2 rounded-lg font-bold text-xs uppercase tracking-wide shadow-md transition-all
-                                            ${canAfford 
+                                            w-full py-1.5 rounded-lg font-bold text-xs uppercase tracking-wide shadow-md transition-all
+                                            ${canAffordAll 
                                                 ? 'bg-gradient-to-r from-yellow-600 to-orange-600 text-white hover:scale-105 active:scale-95' 
                                                 : 'bg-gray-700 text-gray-400 cursor-not-allowed grayscale'
                                             }
