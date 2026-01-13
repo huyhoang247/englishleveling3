@@ -260,7 +260,7 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: OPACITY 85%) ---
+// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: GIAO DIỆN STATS GIỐNG UPGRADE MODAL) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
     ownedItem: OwnedItem, 
     onClose: () => void, 
@@ -356,22 +356,36 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                         </div>
                         
                         {hasStats && (
-                            /* Wrapper Stats - Màu sáng + Opacity 85% */
-                            <div className="w-full bg-[#1a1c2e]/85 rounded-lg overflow-hidden p-3 space-y-2">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left">Stats</h4>
+                            /* Wrapper Stats - XÓA NỀN CŨ ĐỂ CÁC ROW TỰ ĐỨNG */
+                            <div className="w-full space-y-2">
+                                {/* Không dùng bg-[#1a1c2e] nữa để các thẻ row tự hiển thị đẹp hơn */}
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left px-1">Stats</h4>
+                                
                                 {sortedStats.map(([key, value]) => { 
                                     const config = STAT_CONFIG[key.toLowerCase()]; 
                                     const baseStat = itemDef.stats?.[key]; 
                                     let bonus = 0; 
                                     if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
+                                    
                                     return (
-                                        /* Row Stats - Màu tối + Opacity 85% */
-                                        <div key={key} className="flex items-center gap-2 bg-[#0f111a]/85 p-1.5 rounded-lg">
-                                            {/* Icon Stats - Màu sáng + Opacity 85% */}
-                                            {config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-[#1a1c2e]/85 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}
-                                            <div className="flex flex-1 items-center justify-between">
-                                                <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
-                                                <span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span>
+                                        /* Row Stats - STYLE GIỐNG UPGRADE MODAL */
+                                        <div key={key} className="flex justify-between items-center bg-[#0f111a]/60 px-4 py-3 rounded-lg border border-slate-700/50 shadow-sm">
+                                            {/* Trái: Icon và Tên Chỉ Số */}
+                                            <div className="flex items-center gap-3">
+                                                {config?.Icon && <config.Icon className="w-6 h-6 drop-shadow-md" />}
+                                                <span className="text-base text-slate-300 uppercase font-lilita tracking-wider">{config?.name || key}</span>
+                                            </div>
+                                            
+                                            {/* Phải: Giá Trị */}
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-white text-lg font-lilita drop-shadow-sm">
+                                                    {typeof value === 'number' ? value.toLocaleString() : value}
+                                                </span>
+                                                {bonus > 0 && (
+                                                    <span className="text-green-400 text-sm font-lilita ml-1">
+                                                        (+{bonus.toLocaleString()})
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     ); 
