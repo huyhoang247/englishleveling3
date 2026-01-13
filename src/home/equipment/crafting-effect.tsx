@@ -19,7 +19,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     const frameRef = useRef<number>(0);
     const spriteRef = useRef<HTMLImageElement | null>(null);
 
-    // 1. Preload hình ảnh ngay khi component được mount (để tránh bị nháy khi bật hiệu ứng)
+    // 1. Preload hình ảnh ngay khi component mount (để tránh bị nháy khi bật hiệu ứng)
     useEffect(() => {
         const img = new Image();
         img.src = SPRITE_URL;
@@ -159,8 +159,8 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
                     const sy = row * FRAME_HEIGHT;
 
                     // Tỷ lệ hiển thị trên màn hình (Scale)
-                    // 1.0 = kích thước gốc (379px). Chỉnh nhỏ hơn hoặc lớn hơn nếu cần.
-                    const displayScale = 1.0; 
+                    // Đã giảm từ 1.0 xuống 0.8 cho nhỏ hơn một chút
+                    const displayScale = 0.8; 
                     const dWidth = FRAME_WIDTH * displayScale;
                     const dHeight = FRAME_HEIGHT * displayScale;
 
@@ -198,11 +198,7 @@ const CraftingEffectCanvas = memo(({ isActive }: { isActive: boolean }) => {
     return (
         <div className="fixed inset-0 z-[90] flex flex-col items-center justify-center animate-fade-in pointer-events-none bg-black/70 backdrop-blur-sm">
             <canvas ref={canvasRef} className="absolute inset-0" />
-            
-            {/* Dòng chữ Loading phía dưới - Có thể xóa nếu không thích */}
-            <div className="absolute top-[70%] text-transparent bg-clip-text bg-gradient-to-r from-orange-400 to-red-500 font-black tracking-[0.2em] text-2xl animate-pulse uppercase drop-shadow-sm border-orange-500">
-                Crafting...
-            </div>
+            {/* Đã xóa dòng chữ Crafting... */}
         </div>
     );
 });
