@@ -1,4 +1,4 @@
-// --- FILE: src/home/skill-game/skill-ui.tsx ---
+--- START OF FILE skill-ui.tsx.txt ---
 
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
@@ -23,6 +23,9 @@ import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 // --- IMPORT MỚI: Component hiệu ứng Rank & Crafting Effect ---
 import ItemRankBorder from '../equipment/item-rank-border.tsx'; 
 import CraftingEffectCanvas from '../equipment/crafting-effect.tsx';
+
+// --- URL BACKGROUND - MỚI ---
+const SKILL_BG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-skill.webp";
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
 const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
@@ -373,7 +376,13 @@ function SkillScreenContent() {
     const showEffect = isCraftingAnimation;
 
     return (
-        <div className="main-bg relative w-full min-h-screen bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-sans text-white overflow-hidden">
+        <div 
+            className="main-bg relative w-full min-h-screen font-sans text-white overflow-hidden bg-cover bg-center bg-no-repeat"
+            style={{ backgroundImage: `url(${SKILL_BG_URL})` }}
+        >
+            {/* Overlay nền đen 75% giống Equipment */}
+            <div className="absolute inset-0 bg-black/75 pointer-events-none z-0" />
+
             <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
 
             {/* --- COMPONENT HIỆU ỨNG CANVAS --- */}
