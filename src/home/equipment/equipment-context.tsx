@@ -1,3 +1,5 @@
+--- START OF FILE equipment-context.tsx ---
+
 import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
     getItemDefinition, 
@@ -339,21 +341,26 @@ export const EquipmentProvider: FC<EquipmentProviderProps> = ({ children }) => {
             return false; // Trả về false ngay để hiện animation thất bại
         }
 
-        // 2. Trường hợp Thành công: Tính toán chỉ số ngay tại Client
-        const upgradableStats = Object.keys(item.stats).filter(k => typeof item.stats[k] === 'number');
-        if (upgradableStats.length === 0) {
+        // 2. Trường hợp Thành công: Tăng tất cả chỉ số thêm 1%
+        const newStats = { ...item.stats };
+        let hasUpgradableStats = false;
+
+        Object.keys(newStats).forEach(key => {
+            if (typeof newStats[key] === 'number') {
+                const currentValue = newStats[key];
+                // Tăng 1%, tối thiểu là 1 điểm
+                const increase = Math.max(1, Math.round(currentValue * 0.01));
+                newStats[key] = currentValue + increase;
+                hasUpgradableStats = true;
+            }
+        });
+
+        if (!hasUpgradableStats) {
             showMessage("Trang bị không có chỉ số để nâng cấp.");
             return false;
         }
         
-        const statKey = upgradableStats[Math.floor(Math.random() * upgradableStats.length)];
-        const currentValue = item.stats[statKey];
-        const increasePercent = 0.02 + Math.random() * 0.04; 
-        const increase = Math.max(1, Math.round(currentValue * increasePercent));
-        
-        const newStats = { ...item.stats, [statKey]: currentValue + increase };
         const updatedItem = { ...item, level: item.level + 1, stats: newStats };
-        
         const newOwnedList = ownedItems.map(s => s.id === item.id ? updatedItem : s);
 
         // 3. Cập nhật UI ngay lập tức (Optimistic UI)
