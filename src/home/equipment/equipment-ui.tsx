@@ -260,7 +260,7 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: ICON DỊCH TRÁI, NẢY 4PX) ---
+// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: NỀN ĐẶC - KHÔNG OPACITY) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
     ownedItem: OwnedItem, 
     onClose: () => void, 
@@ -323,37 +323,37 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 
                 <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 pb-2">
                     <div className="flex flex-col items-center text-center gap-4">
-                        {/* Wrapper chứa Icon trang bị và Nút nâng cấp (icon búa) */}
+                        {/* Wrapper chứa Icon trang bị và Nút nâng cấp (icon búa) - Thay nền bg-black/30 bằng bg-slate-950 (ĐẶC) */}
                         <div className="relative">
-                            <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
+                            <div className={`w-32 h-32 flex items-center justify-center bg-slate-950 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
                                  <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
                             </div>
                             
-                            {/* Nút mở Popup Cường Hoá (Dạng Icon bên phải, không glow, nảy nhẹ) */}
+                            {/* Nút mở Popup Cường Hoá */}
                             {isUpgradable && (
                                 <button 
                                     onClick={() => onOpenUpgrade(ownedItem)}
                                     disabled={actionDisabled}
                                     title="Enhance Equipment"
-                                    // Điều chỉnh từ -right-20 thành -right-16 để dịch trái 1 tí
                                     className="absolute top-1/2 -right-16 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
                                 >
                                     <img 
                                         src={UPGRADE_ICON_URL} 
                                         alt="Enhance" 
-                                        // Animate bounce
                                         className="w-full h-full object-contain animate-subtle-bounce" 
                                     />
                                 </button>
                             )}
                         </div>
 
-                        <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
+                        {/* Ô chứa Mô tả - Thay nền bg-black/20 bằng bg-slate-900 (ĐẶC) */}
+                        <div className="w-full p-4 bg-slate-900 rounded-lg border border-slate-700 text-left">
                             <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
                         </div>
                         
                         {hasStats && (
-                            <div className="w-full bg-black/20 rounded-lg overflow-hidden p-3 space-y-2">
+                            /* Wrapper Stats - Thay nền bg-black/20 bằng bg-slate-900 (ĐẶC) */
+                            <div className="w-full bg-slate-900 rounded-lg overflow-hidden p-3 space-y-2">
                                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left">Stats</h4>
                                 {sortedStats.map(([key, value]) => { 
                                     const config = STAT_CONFIG[key.toLowerCase()]; 
@@ -361,8 +361,10 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                                     let bonus = 0; 
                                     if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
                                     return (
-                                        <div key={key} className="flex items-center gap-2 bg-slate-900/50 p-1.5 rounded-lg">
-                                            {config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black/30 ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}
+                                        /* Row Stats - Thay nền bg-slate-900/50 bằng bg-slate-800 (ĐẶC) */
+                                        <div key={key} className="flex items-center gap-2 bg-slate-800 p-1.5 rounded-lg">
+                                            {/* Icon Stats - Thay nền bg-black/30 bằng bg-black (ĐẶC) */}
+                                            {config?.Icon && (<div className={`flex-shrink-0 w-7 h-7 flex items-center justify-center rounded-md bg-black ${config.color}`}><config.Icon className="w-4 h-4" /></div>)}
                                             <div className="flex flex-1 items-center justify-between">
                                                 <span className="text-xs font-semibold text-slate-300 capitalize">{config?.name || key}</span>
                                                 <span className="font-bold text-sm text-white">{typeof value === 'number' ? value.toLocaleString() : value}{bonus > 0 && (<span className="text-green-400 ml-2 font-normal text-xs">(+{bonus.toLocaleString()})</span>)}</span>
