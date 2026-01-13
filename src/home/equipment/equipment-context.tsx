@@ -1,4 +1,3 @@
---- START OF FILE equipment-context.tsx ---
 
 import React, { createContext, useState, useMemo, useCallback, useContext, type ReactNode, type FC } from 'react';
 import { 
