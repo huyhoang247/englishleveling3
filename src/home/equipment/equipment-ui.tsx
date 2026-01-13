@@ -1,3 +1,5 @@
+--- START OF FILE equipment-ui.tsx (5).txt ---
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
@@ -23,6 +25,10 @@ import CraftingEffectCanvas from './crafting-effect.tsx';
 // IMPORT COMPONENT MỚI TÁCH RA
 import UpgradeModal from './upgrade-modal.tsx';
 
+// IMPORT TỪ SKILL MODULE
+import { ALL_SKILLS, type OwnedSkill, getRarityColor as getSkillRarityColor, getRarityTextColor as getSkillRarityTextColor } from '../skill-game/skill-data.tsx';
+import { useGame } from '../../GameContext.tsx'; // Dùng để lấy skill details nếu cần
+
 // --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
 export interface OwnedItem {
@@ -30,6 +36,8 @@ export interface OwnedItem {
     itemId: number;
     level: number;
     stats: { [key: string]: any };
+    // Thêm trường chứa skill đã khảm
+    embeddedSkillIds?: string[];
 }
 
 export type EquipmentSlotType = 'weapon' | 'armor' | 'Helmet';
@@ -92,6 +100,17 @@ const getNextRank = (rank: ItemRank): ItemRank | null => {
     return RARITY_ORDER[currentIndex + 1];
 };
 
+// --- Config Số Slot theo Rank ---
+const SKILL_SLOTS_BY_RANK: Record<ItemRank, number> = {
+    E: 0,
+    D: 1,
+    B: 2,
+    A: 3,
+    S: 4,
+    SR: 5,
+    SSR: 6,
+};
+
 // --- Các Icon Giao Diện ---
 const CloseIcon = ({ className = '' }: { className?: string }) => ( <img src={uiAssets.closeIcon} alt="Đóng" className={className} /> );
 const GoldIcon = ({ className = '' }: { className?: string }) => ( <img src={equipmentUiAssets.goldIcon} alt="Vàng" className={className} /> );
@@ -142,10 +161,9 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
     if (ownedItem && !itemDef) {
-        console.error(`Không tìm thấy định nghĩa cho vật phẩm trang bị với ID: ${ownedItem.itemId}`, ownedItem);
         return (
             <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-red-500 flex items-center justify-center text-center text-red-400 text-xs p-2">
-                Lỗi Vật Phẩm (ID: {ownedItem.itemId})
+                Lỗi Vật Phẩm
             </div>
         );
     }
@@ -220,10 +238,9 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
 
     if (ownedItem && !itemDef) {
-        console.error(`Không tìm thấy định nghĩa cho vật phẩm trong kho với ID: ${ownedItem.itemId}`, ownedItem);
         return (
             <div className="relative aspect-square rounded-lg border-2 border-dashed border-red-500 flex items-center justify-center text-center text-red-400 text-[10px] p-1">
-                Lỗi ID: {ownedItem.itemId}
+                Lỗi ID
             </div>
         );
     }
@@ -260,7 +277,88 @@ const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: O
     );
 });
 
-// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: GIAO DIỆN STATS GIỐNG UPGRADE MODAL) ---
+// --- COMPONENT: SKILL SLOT ---
+const ItemSkillSlot = ({ 
+    skillId, 
+    onClick 
+}: { 
+    skillId: string | null;
+    onClick: () => void;
+}) => {
+    const { ownedSkills } = useGame();
+    // Vì skillId là unique ID của OwnedSkill, ta cần tìm trong ownedSkills (từ GameContext)
+    const skillData = skillId ? ownedSkills.find(s => s.id === skillId) : null;
+    const skillBlueprint = skillData ? ALL_SKILLS.find(s => s.id === skillData.skillId) : null;
+
+    return (
+        <div 
+            onClick={onClick}
+            className={`
+                relative w-16 h-16 rounded-lg border-2 flex items-center justify-center cursor-pointer transition-all
+                ${skillData 
+                    ? `${getSkillRarityColor(skillData.rarity)} bg-slate-900` 
+                    : 'border-slate-700 bg-slate-800/50 border-dashed hover:border-slate-500 hover:bg-slate-800'}
+            `}
+        >
+            {skillBlueprint && skillData ? (
+                <>
+                    <skillBlueprint.icon className={`w-10 h-10 ${getSkillRarityTextColor(skillData.rarity)}`} />
+                    <span className="absolute -bottom-2 -right-2 text-[10px] font-bold bg-black/80 px-1 rounded border border-slate-700">Lv.{skillData.level}</span>
+                </>
+            ) : (
+                <span className="text-3xl text-slate-600">+</span>
+            )}
+        </div>
+    );
+};
+
+// --- COMPONENT: SKILL SELECT MODAL ---
+const SkillSelectModal = ({ 
+    isOpen, 
+    onClose, 
+    onSelect 
+}: { 
+    isOpen: boolean; 
+    onClose: () => void; 
+    onSelect: (skillId: string) => void;
+}) => {
+    const { availableSkillsForEmbedding } = useEquipment();
+    
+    if (!isOpen) return null;
+
+    return (
+        <div className="absolute inset-0 z-[60] bg-black/90 flex flex-col rounded-xl overflow-hidden">
+            <div className="flex justify-between items-center p-3 border-b border-slate-700 bg-slate-800">
+                <h4 className="text-white font-bold">Select Skill</h4>
+                <button onClick={onClose} className="text-slate-400 hover:text-white"><CloseIcon className="w-5 h-5"/></button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 grid grid-cols-4 gap-2">
+                {availableSkillsForEmbedding.length > 0 ? (
+                    availableSkillsForEmbedding.map(skill => {
+                        const blueprint = ALL_SKILLS.find(b => b.id === skill.skillId);
+                        if(!blueprint) return null;
+                        return (
+                            <div 
+                                key={skill.id} 
+                                onClick={() => onSelect(skill.id)}
+                                className={`aspect-square rounded border ${getSkillRarityColor(skill.rarity)} bg-slate-900/80 flex items-center justify-center cursor-pointer hover:scale-105 transition-transform`}
+                            >
+                                <blueprint.icon className={`w-8 h-8 ${getSkillRarityTextColor(skill.rarity)}`} />
+                            </div>
+                        );
+                    })
+                ) : (
+                    <div className="col-span-4 text-center text-slate-500 text-sm py-4">
+                        Không có kỹ năng khả dụng trong kho.
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
+// --- ITEM DETAIL MODAL (ĐÃ CẬP NHẬT: TABS & SKILLS) ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
     ownedItem: OwnedItem, 
     onClose: () => void, 
@@ -271,17 +369,16 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
     isEquipped: boolean, 
     isProcessing: boolean 
 }) => {
+    const { handleEmbedSkill, handleUnembedSkill } = useEquipment();
     const itemDef = getItemDefinition(ownedItem.itemId);
-    useEffect(() => {
-        if (!itemDef) {
-            console.error(`Không thể mở modal chi tiết cho vật phẩm không tồn tại với ID: ${ownedItem.itemId}`);
-            onClose();
-        }
-    }, [itemDef, ownedItem.itemId, onClose]);
+    const [activeTab, setActiveTab] = useState<'stats' | 'skills'>('stats');
+    const [isSkillSelectOpen, setIsSkillSelectOpen] = useState(false);
 
-    if (!itemDef) {
-        return null;
-    }
+    useEffect(() => {
+        if (!itemDef) onClose();
+    }, [itemDef, onClose]);
+
+    if (!itemDef) return null;
     
     const sortedStats = useMemo(() => {
         const order = ['hp', 'atk', 'def'];
@@ -298,22 +395,40 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
         return orderedEntries;
     }, [ownedItem.stats]);
     
-    // Kiểm tra xem item có nâng cấp được không
     const isUpgradable = !!itemDef.stats && sortedStats.some(([_, value]) => typeof value === 'number');
     const hasStats = sortedStats.length > 0;
     const actionDisabled = isProcessing;
     
-    // Nút Style Compact & Tinh tế
     const commonBtnClasses = "flex-1 py-2.5 rounded-xl font-lilita text-base tracking-wide shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase";
     
-    // OPACITY 85% CHO MÀU NỀN
-    // #1a1c2e/85
-    // #0f111a/85
+    // Skill Slot Logic
+    const maxSlots = SKILL_SLOTS_BY_RANK[itemDef.rarity] || 0;
+    const currentSkills = ownedItem.embeddedSkillIds || [];
+    
+    const handleSlotClick = (index: number) => {
+        const existingSkillId = currentSkills[index];
+        if (existingSkillId) {
+            // Unembed logic
+            if(confirm("Gỡ bỏ kỹ năng này khỏi trang bị?")) {
+                handleUnembedSkill(ownedItem, existingSkillId);
+            }
+        } else {
+            // Embed logic
+            setIsSkillSelectOpen(true);
+        }
+    };
+
+    const onSkillSelected = (skillId: string) => {
+        handleEmbedSkill(ownedItem, skillId);
+        setIsSkillSelectOpen(false);
+    };
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80" onClick={onClose} />
-            <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
+            <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col overflow-hidden`}>
+                
+                {/* Header */}
                 <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
                     <div className="flex justify-between items-start mb-2">
                         <h3 className={`text-2xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
@@ -325,76 +440,119 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
                     </div>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 pb-2">
+                {/* --- TABS --- */}
+                <div className="flex mb-4 bg-slate-900/50 p-1 rounded-lg">
+                    <button 
+                        onClick={() => setActiveTab('stats')}
+                        className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-colors ${activeTab === 'stats' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                    >
+                        Stats
+                    </button>
+                    <button 
+                        onClick={() => setActiveTab('skills')}
+                        className={`flex-1 py-1.5 rounded-md text-sm font-bold transition-colors ${activeTab === 'skills' ? 'bg-slate-700 text-white shadow' : 'text-slate-400 hover:text-slate-200'}`}
+                    >
+                        Skills <span className="text-xs bg-black/50 px-1.5 rounded ml-1">{currentSkills.length}/{maxSlots}</span>
+                    </button>
+                </div>
+
+                {/* Content Area */}
+                <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 pb-2 relative">
+                    
+                    {/* Skill Selector Overlay */}
+                    <SkillSelectModal 
+                        isOpen={isSkillSelectOpen} 
+                        onClose={() => setIsSkillSelectOpen(false)}
+                        onSelect={onSkillSelected}
+                    />
+
                     <div className="flex flex-col items-center text-center gap-4">
-                        {/* Wrapper chứa Icon trang bị - Màu tối + Opacity 85% */}
+                        {/* Item Icon & Upgrade Button (Always Visible) */}
                         <div className="relative">
                             <div className={`w-32 h-32 flex items-center justify-center bg-[#0f111a]/85 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
                                  <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
                             </div>
-                            
-                            {/* Nút mở Popup Cường Hoá */}
                             {isUpgradable && (
                                 <button 
                                     onClick={() => onOpenUpgrade(ownedItem)}
                                     disabled={actionDisabled}
-                                    title="Enhance Equipment"
                                     className="absolute top-1/2 -right-16 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
                                 >
-                                    <img 
-                                        src={UPGRADE_ICON_URL} 
-                                        alt="Enhance" 
-                                        className="w-full h-full object-contain animate-subtle-bounce" 
-                                    />
+                                    <img src={UPGRADE_ICON_URL} alt="Enhance" className="w-full h-full object-contain animate-subtle-bounce" />
                                 </button>
                             )}
                         </div>
 
-                        {/* Ô chứa Mô tả - Màu sáng chủ đạo + Opacity 85% */}
-                        <div className="w-full p-4 bg-[#1a1c2e]/85 rounded-lg border border-slate-700 text-left">
-                            <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
-                        </div>
-                        
-                        {hasStats && (
-                            /* Wrapper Stats - XÓA NỀN CŨ ĐỂ CÁC ROW TỰ ĐỨNG */
-                            <div className="w-full space-y-2">
-                                {/* Không dùng bg-[#1a1c2e] nữa để các thẻ row tự hiển thị đẹp hơn */}
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left px-1">Stats</h4>
-                                
-                                {sortedStats.map(([key, value]) => { 
-                                    const config = STAT_CONFIG[key.toLowerCase()]; 
-                                    const baseStat = itemDef.stats?.[key]; 
-                                    let bonus = 0; 
-                                    if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
-                                    
-                                    return (
-                                        /* Row Stats - STYLE GIỐNG UPGRADE MODAL */
-                                        <div key={key} className="flex justify-between items-center bg-[#0f111a]/60 px-4 py-3 rounded-lg border border-slate-700/50 shadow-sm">
-                                            {/* Trái: Icon và Tên Chỉ Số */}
-                                            <div className="flex items-center gap-3">
-                                                {config?.Icon && <config.Icon className="w-6 h-6 drop-shadow-md" />}
-                                                <span className="text-base text-slate-300 uppercase font-lilita tracking-wider">{config?.name || key}</span>
-                                            </div>
+                        {/* TAB CONTENT: STATS */}
+                        {activeTab === 'stats' && (
+                            <>
+                                <div className="w-full p-4 bg-[#1a1c2e]/85 rounded-lg border border-slate-700 text-left">
+                                    <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
+                                </div>
+                                {hasStats && (
+                                    <div className="w-full space-y-2">
+                                        <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left px-1">Attributes</h4>
+                                        {sortedStats.map(([key, value]) => { 
+                                            const config = STAT_CONFIG[key.toLowerCase()]; 
+                                            const baseStat = itemDef.stats?.[key]; 
+                                            let bonus = 0; 
+                                            if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
                                             
-                                            {/* Phải: Giá Trị */}
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-white text-lg font-lilita drop-shadow-sm">
-                                                    {typeof value === 'number' ? value.toLocaleString() : value}
-                                                </span>
-                                                {bonus > 0 && (
-                                                    <span className="text-green-400 text-sm font-lilita ml-1">
-                                                        (+{bonus.toLocaleString()})
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ); 
-                                })}
+                                            return (
+                                                <div key={key} className="flex justify-between items-center bg-[#0f111a]/60 px-4 py-3 rounded-lg border border-slate-700/50 shadow-sm">
+                                                    <div className="flex items-center gap-3">
+                                                        {config?.Icon && <config.Icon className="w-6 h-6 drop-shadow-md" />}
+                                                        <span className="text-base text-slate-300 uppercase font-lilita tracking-wider">{config?.name || key}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-2">
+                                                        <span className="text-white text-lg font-lilita drop-shadow-sm">
+                                                            {typeof value === 'number' ? value.toLocaleString() : value}
+                                                        </span>
+                                                        {bonus > 0 && <span className="text-green-400 text-sm font-lilita ml-1">(+{bonus.toLocaleString()})</span>}
+                                                    </div>
+                                                </div>
+                                            ); 
+                                        })}
+                                    </div>
+                                )}
+                            </>
+                        )}
+
+                        {/* TAB CONTENT: SKILLS */}
+                        {activeTab === 'skills' && (
+                            <div className="w-full bg-[#1a1c2e]/85 rounded-lg border border-slate-700 p-4 min-h-[200px]">
+                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-4 border-b border-slate-700 pb-1 text-left">
+                                    Embedded Skills ({currentSkills.length}/{maxSlots})
+                                </h4>
+                                
+                                {maxSlots > 0 ? (
+                                    <div className="flex flex-wrap justify-center gap-4">
+                                        {Array.from({ length: maxSlots }).map((_, index) => {
+                                            const skillId = currentSkills[index] || null;
+                                            return (
+                                                <ItemSkillSlot 
+                                                    key={index} 
+                                                    skillId={skillId} 
+                                                    onClick={() => handleSlotClick(index)}
+                                                />
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <p className="text-slate-500 text-sm mt-8 italic">
+                                        Trang bị hạng {itemDef.rarity} không có ô chứa kỹ năng.
+                                    </p>
+                                )}
+                                
+                                <p className="text-xs text-slate-500 mt-6 text-center">
+                                    Nhấn vào ô trống để khảm kỹ năng. Nhấn vào kỹ năng đã khảm để gỡ bỏ.
+                                </p>
                             </div>
                         )}
                     </div>
                 </div>
                 
+                {/* Footer Actions */}
                 <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
                     <div className="flex items-center gap-3">
                         <button 
