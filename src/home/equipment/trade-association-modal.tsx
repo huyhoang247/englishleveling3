@@ -45,7 +45,7 @@ const TRADE_OPTIONS: TradeOption[] = [
     },
 ];
 
-// --- SVG & IMAGE ICONS ---
+// --- IMAGE ICONS ---
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
     switch (type) {
         case 'wood': 
@@ -73,7 +73,13 @@ const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, cla
                 /> 
             );
         case 'cloth': 
-            return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-indigo-400`}><path d="M16 5l-1-3-3 1.5L9 2 8 5H2v16h20V5h-6zm-4-1.5L13.5 5h-3L12 3.5zM20 19H4V7h16v12z"/><path d="M6 9h12v2H6zm0 4h12v2H6z" opacity="0.6"/></svg> );
+            return ( 
+                <img 
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp" 
+                    alt="Cloth" 
+                    className={`${className} object-contain`} 
+                /> 
+            );
         default: return null;
     }
 };
@@ -169,7 +175,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                         <span className="text-[10px] text-slate-500 italic">{option.description}</span>
                                     </div>
 
-                                    {/* Card Body - Updated for Horizontal Ingredients */}
+                                    {/* Card Body */}
                                     <div className="p-4 flex flex-col sm:flex-row items-center gap-6">
                                         
                                         {/* Inputs */}
@@ -184,7 +190,6 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                                         <div className="flex flex-col items-center gap-1.5 min-w-[60px]">
                                                             <div className={`relative p-2 rounded-lg border-2 transition-colors ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-8 h-8 drop-shadow-md" />
-                                                                {/* Badge số lượng yêu cầu ở góc icon */}
                                                                 <div className="absolute -top-2 -right-2 bg-amber-600 text-white text-[9px] font-bold px-1 rounded shadow-sm border border-amber-400">
                                                                     {ing.amount}
                                                                 </div>
@@ -196,7 +201,6 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                                             </div>
                                                         </div>
                                                         
-                                                        {/* Dấu + ngăn cách giữa các nguyên liệu */}
                                                         {idx < option.ingredients.length - 1 && (
                                                             <div className="text-slate-600 font-bold text-lg opacity-40">+</div>
                                                         )}
