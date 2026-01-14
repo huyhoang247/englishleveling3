@@ -1,3 +1,5 @@
+// --- START OF FILE equipment-ui.tsx ---
+
 import React, { useState, useMemo, useCallback, memo, useEffect } from 'react';
 import { 
     getItemDefinition, 
@@ -20,11 +22,10 @@ import TotalStatsModal from './total-stats-modal.tsx';
 import ItemRankBorder from './item-rank-border.tsx';
 import CraftingEffectCanvas from './crafting-effect.tsx'; 
 
-// IMPORT COMPONENT MỚI TÁCH RA
+// Import các Modal thành phần
 import UpgradeModal from './upgrade-modal.tsx';
-import TradeAssociationModal from './trade-association-modal.tsx';
 
-// --- Bắt đầu: Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
+// --- Định nghĩa dữ liệu và các hàm tiện ích cho trang bị ---
 
 export interface OwnedItem {
     id: string;
@@ -47,7 +48,6 @@ export interface EquipmentScreenExitData {
     equippedItems: EquippedItems;
 }
 
-// 5. Các hàm tiện ích cho Rarity (Export để dùng lại nếu cần)
 export const getRarityColor = (rank: ItemRank): string => {
     switch (rank) {
         case 'SSR': return 'border-red-500';
@@ -109,13 +109,10 @@ const STAT_CONFIG: { [key: string]: { name: string; Icon: (props: any) => JSX.El
     def: { name: 'DEF', Icon: DefIcon, color: 'text-blue-400' },
 };
 
-// URL ICON
 const UPGRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-equipment.webp";
 const MERGE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/merge.webp";
 const STATS_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stats.webp";
 const EQUIPMENT_BG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-equipment.webp";
-// URL ICON THƯƠNG HỘI (Ví dụ dùng icon Shop)
-const TRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shop-icon.webp"; 
 
 // --- CÁC COMPONENT CON ---
 const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) => {
@@ -123,7 +120,7 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
     return (
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-0">
-                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại" title="Quay lại">
+                <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors">
                     <HomeIcon className="w-5 h-5 text-slate-300" />
                     <span className="hidden sm:inline text-sm font-semibold text-slate-300">Trang Chính</span>
                 </button>
@@ -135,19 +132,8 @@ const Header = memo(({ gold, onClose }: { gold: number; onClose: () => void; }) 
     );
 });
 
-// --- EQUIPMENT SLOT ---
 const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { slotType: EquipmentSlotType, ownedItem: OwnedItem | null, onClick: () => void, isProcessing: boolean }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
-
-    if (ownedItem && !itemDef) {
-        console.error(`Không tìm thấy định nghĩa cho vật phẩm trang bị với ID: ${ownedItem.itemId}`, ownedItem);
-        return (
-            <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl border-2 border-dashed border-red-500 flex items-center justify-center text-center text-red-400 text-xs p-2">
-                Lỗi Vật Phẩm (ID: {ownedItem.itemId})
-            </div>
-        );
-    }
-
     const sizeClasses = "w-24 h-24 sm:w-28 sm:h-28";
     const interactivity = isProcessing ? 'cursor-wait' : 'cursor-pointer';
 
@@ -155,247 +141,100 @@ const EquipmentSlot = memo(({ slotType, ownedItem, onClick, isProcessing }: { sl
         <>
             {ownedItem && itemDef ? (
                 <>
-                    <img 
-                        src={itemDef.icon} 
-                        alt={itemDef.name} 
-                        className="w-12 h-12 sm:w-14 sm:h-14 object-contain transition-all duration-300 group-hover:scale-110 relative z-10 drop-shadow-md" 
-                    />
-                    <span className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20 shadow-sm">
-                        Lv.{ownedItem.level}
-                    </span>
+                    <img src={itemDef.icon} alt={itemDef.name} className="w-12 h-12 sm:w-14 sm:h-14 object-contain relative z-10 drop-shadow-md" />
+                    <span className="absolute top-2 right-2 px-1.5 py-0.5 text-xs font-bold bg-black/80 text-white rounded-md border border-slate-600 z-20">Lv.{ownedItem.level}</span>
                     <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent rounded-xl pointer-events-none z-0" />
                 </>
             ) : (
                 <div className="flex flex-col items-center justify-center text-slate-600 group-hover:text-slate-400 transition-colors text-center relative z-10">
-                    {(() => {
-                        const iconMap = {
-                            weapon: equipmentUiAssets.weaponIcon,
-                            armor: equipmentUiAssets.armorIcon,
-                            Helmet: equipmentUiAssets.helmetIcon,
-                        };
-                        const iconSrc = iconMap[slotType];
-                        if (iconSrc) {
-                            return <img src={iconSrc} alt={`${slotType} slot`} className="h-10 w-10 opacity-40 group-hover:opacity-60 transition-opacity" />;
-                        }
-                        return (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v12M6 12h12" />
-                            </svg>
-                        );
-                    })()}
+                    {slotType === 'weapon' && <img src={equipmentUiAssets.weaponIcon} className="h-10 w-10 opacity-40" />}
+                    {slotType === 'armor' && <img src={equipmentUiAssets.armorIcon} className="h-10 w-10 opacity-40" />}
+                    {slotType === 'Helmet' && <img src={equipmentUiAssets.helmetIcon} className="h-10 w-10 opacity-40" />}
                     <span className="text-xs font-semibold uppercase mt-1 opacity-70">{slotType}</span>
                 </div>
             )}
         </>
     );
 
-    if (ownedItem && itemDef) {
-        return (
-            <div 
-                className={`relative ${sizeClasses} rounded-xl transition-all duration-300 group ${interactivity} active:scale-95`}
-                onClick={!isProcessing ? onClick : undefined}
-                title={`${itemDef.name} - Lv.${ownedItem.level}`}
-            >
-                <ItemRankBorder rank={itemDef.rarity} className="w-full h-full shadow-lg shadow-black/50">
-                    {renderContent()}
-                </ItemRankBorder>
-            </div>
-        );
-    }
-
     return (
-        <div 
-            className={`relative ${sizeClasses} rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60 transition-all duration-300 flex items-center justify-center group ${interactivity}`}
-            onClick={!isProcessing ? onClick : undefined}
-            title={`Ô ${slotType}`}
-        >
-            {renderContent()}
+        <div className={`relative ${sizeClasses} rounded-xl ${ownedItem ? '' : 'border-2 border-dashed border-slate-700 bg-slate-900/40'} flex items-center justify-center group ${interactivity}`} onClick={!isProcessing ? onClick : undefined}>
+            {ownedItem && itemDef ? (
+                <ItemRankBorder rank={itemDef.rarity} className="w-full h-full shadow-lg">{renderContent()}</ItemRankBorder>
+            ) : renderContent()}
         </div>
     );
 });
 
 const InventorySlot = memo(({ ownedItem, onClick, isProcessing }: { ownedItem: OwnedItem | undefined; onClick: (item: OwnedItem) => void; isProcessing: boolean; }) => {
     const itemDef = ownedItem ? getItemDefinition(ownedItem.itemId) : null;
-
-    if (ownedItem && !itemDef) {
-        console.error(`Không tìm thấy định nghĩa cho vật phẩm trong kho với ID: ${ownedItem.itemId}`, ownedItem);
-        return (
-            <div className="relative aspect-square rounded-lg border-2 border-dashed border-red-500 flex items-center justify-center text-center text-red-400 text-[10px] p-1">
-                Lỗi ID: {ownedItem.itemId}
-            </div>
-        );
-    }
-    
-    const baseClasses = "relative aspect-square rounded-lg border-2 transition-all duration-200 flex items-center justify-center group";
-    const interactivity = isProcessing ? 'cursor-wait' : (ownedItem ? 'cursor-pointer hover:scale-105 hover:shadow-lg' : 'cursor-default');
-    const borderStyle = itemDef ? getRarityColor(itemDef.rarity) : 'border-slate-800 border-dashed';
-    const backgroundStyle = itemDef ? 'bg-slate-900/80' : 'bg-slate-900/30';
-    const shadowRarity = itemDef ? getRarityColor(itemDef.rarity).replace('border-', '') : 'transparent';
-    const shadowColorStyle = itemDef ? { '--tw-shadow-color': `var(--tw-color-${shadowRarity})` } as React.CSSProperties : {};
+    if (!ownedItem || !itemDef) return <div className="relative aspect-square rounded-lg border-2 border-slate-800 border-dashed bg-slate-900/30" />;
     
     return (
-        <div 
-            className={`${baseClasses} ${borderStyle} ${backgroundStyle} ${interactivity}`} 
-            onClick={ownedItem && !isProcessing ? () => onClick(ownedItem) : undefined}
-            style={shadowColorStyle}
-        >
-            {ownedItem && itemDef ? (
-                <>
-                    <img 
-                        src={itemDef.icon} 
-                        alt={itemDef.name} 
-                        className="w-3/4 h-3/4 object-contain transition-transform duration-200 group-hover:scale-110"
-                        title={`${itemDef.name} - Lv.${ownedItem.level}`}
-                    />
-                    <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">
-                        Lv.{ownedItem.level}
-                    </span>
-                </>
-            ) : (
-                <div className="w-2 h-2 bg-slate-700 rounded-full" />
-            )}
+        <div className={`relative aspect-square rounded-lg border-2 ${getRarityColor(itemDef.rarity)} bg-slate-900/80 transition-all duration-200 flex items-center justify-center group ${isProcessing ? 'cursor-wait' : 'cursor-pointer hover:scale-105'}`} onClick={!isProcessing ? () => onClick(ownedItem) : undefined}>
+            <img src={itemDef.icon} alt={itemDef.name} className="w-3/4 h-3/4 object-contain" />
+            <span className="absolute top-0.5 right-0.5 px-1.5 text-[10px] font-bold bg-black/70 text-white rounded-md border border-slate-600">Lv.{ownedItem.level}</span>
         </div>
     );
 });
 
-// --- ITEM DETAIL MODAL ---
 const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDismantle, onOpenUpgrade, isEquipped, isProcessing }: { 
-    ownedItem: OwnedItem, 
-    onClose: () => void, 
-    onEquip: (item: OwnedItem) => void, 
-    onUnequip: (item: OwnedItem) => void, 
-    onDismantle: (item: OwnedItem) => void, 
-    onOpenUpgrade: (item: OwnedItem) => void,
-    isEquipped: boolean, 
-    isProcessing: boolean 
+    ownedItem: OwnedItem, onClose: () => void, onEquip: (item: OwnedItem) => void, onUnequip: (item: OwnedItem) => void, onDismantle: (item: OwnedItem) => void, onOpenUpgrade: (item: OwnedItem) => void, isEquipped: boolean, isProcessing: boolean 
 }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
-    useEffect(() => {
-        if (!itemDef) {
-            console.error(`Không thể mở modal chi tiết cho vật phẩm không tồn tại với ID: ${ownedItem.itemId}`);
-            onClose();
-        }
-    }, [itemDef, ownedItem.itemId, onClose]);
-
-    if (!itemDef) {
-        return null;
-    }
-    
-    const sortedStats = useMemo(() => {
+    if (!itemDef) return null;
+    const sortedStats = Object.entries(ownedItem.stats || {}).sort((a, b) => {
         const order = ['hp', 'atk', 'def'];
-        const stats = ownedItem.stats || {};
-        const orderedEntries: [string, any][] = [];
-        const remainingEntries = { ...stats };
-        for (const key of order) {
-            if (stats.hasOwnProperty(key)) {
-                orderedEntries.push([key, stats[key]]);
-                delete remainingEntries[key];
-            }
-        }
-        orderedEntries.push(...Object.entries(remainingEntries));
-        return orderedEntries;
-    }, [ownedItem.stats]);
-    
-    const isUpgradable = !!itemDef.stats && sortedStats.some(([_, value]) => typeof value === 'number');
-    const hasStats = sortedStats.length > 0;
-    const actionDisabled = isProcessing;
-    
-    const commonBtnClasses = "flex-1 py-2.5 rounded-xl font-lilita text-base tracking-wide shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase";
+        return order.indexOf(a[0]) - order.indexOf(b[0]);
+    });
     
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80" onClick={onClose} />
             <div className={`relative bg-gradient-to-br ${getRarityGradient(itemDef.rarity)} p-5 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
-                <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
-                    <div className="flex justify-between items-start mb-2">
+                <div className="flex justify-between items-start mb-4 border-b border-gray-700/50 pb-4">
+                    <div>
                         <h3 className={`text-2xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
-                        <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
+                        <div className="flex gap-2 mt-1">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)}`}>{itemDef.rarity} Rank</span>
+                            <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full">Level {ownedItem.level}</span>
+                        </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(itemDef.rarity)} bg-gray-800/70 border ${getRarityColor(itemDef.rarity)}`}>{`${itemDef.rarity} Rank`}</span>
-                        <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedItem.level}</span>
-                    </div>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white"><CloseIcon className="w-6 h-6" /></button>
                 </div>
 
-                <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 pb-2">
-                    <div className="flex flex-col items-center text-center gap-4">
-                        <div className="relative">
-                            <div className={`w-32 h-32 flex items-center justify-center bg-[#0f111a]/85 rounded-lg border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
-                                 <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
-                            </div>
-                            
-                            {isUpgradable && (
-                                <button 
-                                    onClick={() => onOpenUpgrade(ownedItem)}
-                                    disabled={actionDisabled}
-                                    title="Enhance Equipment"
-                                    className="absolute top-1/2 -right-16 -translate-y-1/2 w-12 h-12 transition-transform hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed focus:outline-none"
-                                >
-                                    <img 
-                                        src={UPGRADE_ICON_URL} 
-                                        alt="Enhance" 
-                                        className="w-full h-full object-contain animate-subtle-bounce" 
-                                    />
-                                </button>
-                            )}
+                <div className="flex-1 overflow-y-auto hide-scrollbar text-center flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <div className={`w-32 h-32 flex items-center justify-center bg-black/40 rounded-lg border-2 ${getRarityColor(itemDef.rarity)}`}>
+                             <img src={itemDef.icon} className="w-24 h-24 object-contain" />
                         </div>
+                        <button onClick={() => onOpenUpgrade(ownedItem)} disabled={isProcessing} className="absolute top-1/2 -right-16 -translate-y-1/2 w-12 h-12 hover:scale-110 active:scale-95 disabled:opacity-50 transition-transform">
+                            <img src={UPGRADE_ICON_URL} className="w-full h-full object-contain animate-subtle-bounce" />
+                        </button>
+                    </div>
 
-                        <div className="w-full p-4 bg-[#1a1c2e]/85 rounded-lg border border-slate-700 text-left">
-                            <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
-                        </div>
-                        
-                        {hasStats && (
-                            <div className="w-full space-y-2">
-                                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-700 pb-1 text-left px-1">Stats</h4>
-                                
-                                {sortedStats.map(([key, value]) => { 
-                                    const config = STAT_CONFIG[key.toLowerCase()]; 
-                                    const baseStat = itemDef.stats?.[key]; 
-                                    let bonus = 0; 
-                                    if (typeof value === 'number' && typeof baseStat === 'number' && itemDef.level === 1) { bonus = value - baseStat; } 
-                                    
-                                    return (
-                                        <div key={key} className="flex justify-between items-center bg-[#0f111a]/60 px-4 py-3 rounded-lg border border-slate-700/50 shadow-sm">
-                                            <div className="flex items-center gap-3">
-                                                {config?.Icon && <config.Icon className="w-6 h-6 drop-shadow-md" />}
-                                                <span className="text-base text-slate-300 uppercase font-lilita tracking-wider">{config?.name || key}</span>
-                                            </div>
-                                            
-                                            <div className="flex items-center gap-2">
-                                                <span className="text-white text-lg font-lilita drop-shadow-sm">
-                                                    {typeof value === 'number' ? value.toLocaleString() : value}
-                                                </span>
-                                                {bonus > 0 && (
-                                                    <span className="text-green-400 text-sm font-lilita ml-1">
-                                                        (+{bonus.toLocaleString()})
-                                                    </span>
-                                                )}
-                                            </div>
-                                        </div>
-                                    ); 
-                                })}
-                            </div>
-                        )}
+                    <div className="w-full p-4 bg-black/30 rounded-lg border border-slate-700 text-left text-slate-300 text-sm">{itemDef.description}</div>
+                    
+                    <div className="w-full space-y-2">
+                        {sortedStats.map(([key, value]) => { 
+                            const config = STAT_CONFIG[key.toLowerCase()]; 
+                            return (
+                                <div key={key} className="flex justify-between items-center bg-black/40 px-4 py-3 rounded-lg border border-slate-700/50">
+                                    <div className="flex items-center gap-3">
+                                        {config?.Icon && <config.Icon className="w-6 h-6" />}
+                                        <span className="text-slate-300 font-lilita uppercase">{config?.name || key}</span>
+                                    </div>
+                                    <span className="text-white text-lg font-lilita">{value.toLocaleString()}</span>
+                                </div>
+                            ); 
+                        })}
                     </div>
                 </div>
                 
-                <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
-                    <div className="flex items-center gap-3">
-                        <button 
-                            onClick={() => isEquipped ? onUnequip(ownedItem) : onEquip(ownedItem)} 
-                            disabled={actionDisabled} 
-                            className={`${commonBtnClasses} ${isEquipped ? 'bg-gradient-to-r from-rose-800 to-red-900 text-slate-200' : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white'}`}
-                        >
-                            {isEquipped ? 'Unequip' : 'Equip'}
-                        </button>
-                        <button 
-                            onClick={() => onDismantle(ownedItem)} 
-                            disabled={isEquipped || actionDisabled} 
-                            className={`${commonBtnClasses} bg-slate-700 text-slate-300 hover:bg-slate-600`}
-                        >
-                            Recycle
-                        </button>
-                    </div>
+                <div className="mt-6 flex gap-3 border-t border-gray-700/50 pt-4">
+                    <button onClick={() => isEquipped ? onUnequip(ownedItem) : onEquip(ownedItem)} disabled={isProcessing} className={`flex-1 py-3 rounded-xl font-lilita uppercase ${isEquipped ? 'bg-rose-900 text-slate-200' : 'bg-blue-600 text-white shadow-lg'}`}>
+                        {isEquipped ? 'Unequip' : 'Equip'}
+                    </button>
+                    <button onClick={() => onDismantle(ownedItem)} disabled={isEquipped || isProcessing} className="flex-1 py-3 rounded-xl font-lilita uppercase bg-slate-700 text-slate-300">Recycle</button>
                 </div>
             </div>
         </div>
@@ -405,434 +244,182 @@ const ItemDetailModal = memo(({ ownedItem, onClose, onEquip, onUnequip, onDisman
 const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: OwnedItem, onClose: () => void }) => {
     const itemDef = getItemDefinition(ownedItem.itemId);
     if (!itemDef) return null;
-    
-    const rarityTextColor = getRarityTextColor(itemDef.rarity);
-    const rarityColor = getRarityColor(itemDef.rarity).replace('border-', ''); 
-    const shadowStyle = { boxShadow: `0 0 25px -5px var(--tw-color-${rarityColor}), 0 0 15px -10px var(--tw-color-${rarityColor})` };
-
     return ( 
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
-            <div className="fixed inset-0 bg-black/80" onClick={onClose}></div> 
-            <div className="relative w-full max-w-sm"> 
-                <div className="absolute inset-0.5 animate-spin-slow-360"> 
-                    <div className={`absolute -inset-2 bg-gradient-to-r ${getRarityGradient(itemDef.rarity)} opacity-50 rounded-full blur-2xl`}></div> 
-                </div> 
-                <div 
-                    className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`} 
-                    style={shadowStyle}
-                > 
-                    <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
-                    
-                    <div className={`w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 ${getRarityColor(itemDef.rarity)} shadow-inner`}>
-                        <img src={itemDef.icon} alt={itemDef.name} className="w-24 h-24 object-contain" />
-                    </div>
-                    
-                    <div className="w-full p-4 bg-black/25 rounded-lg border border-slate-700/50 text-center flex flex-col gap-2">
-                        <div>
-                            <h3 className={`text-xl font-bold ${rarityTextColor}`}>{itemDef.name}</h3>
-                            <p className={`font-semibold ${rarityTextColor} opacity-80 capitalize text-sm`}>{itemDef.rarity} Rank</p>
-                        </div>
-                        <hr className="border-slate-700/50 my-1" />
-                        <p className="text-sm text-slate-300 leading-relaxed">{itemDef.description}</p>
-                    </div>
-
-                </div> 
+            <div className="fixed inset-0 bg-black/80" onClick={onClose} />
+            <div className={`relative bg-gradient-to-b ${getRarityGradient(itemDef.rarity)} p-6 rounded-2xl border-2 ${getRarityColor(itemDef.rarity)} text-center flex flex-col items-center gap-4`}> 
+                <h2 className="text-lg font-semibold tracking-wider uppercase text-white title-glow">Chế Tạo Thành Công</h2> 
+                <div className="w-28 h-28 flex items-center justify-center bg-black/40 rounded-xl border-2 border-white/20"><img src={itemDef.icon} className="w-24 h-24 object-contain" /></div>
+                <div className="text-center">
+                    <h3 className={`text-xl font-bold ${getRarityTextColor(itemDef.rarity)}`}>{itemDef.name}</h3>
+                    <p className="text-sm text-slate-300 mt-2">{itemDef.description}</p>
+                </div>
             </div> 
         </div> 
     );
 });
 
-interface ForgeResult { level: number; refundGold: number; }
-interface ForgeGroup { 
-    blueprint: ItemBlueprint;
-    rarity: ItemRank; 
-    items: OwnedItem[]; 
-    nextRank: ItemRank | null; 
-    estimatedResult: ForgeResult; 
-}
-
-const calculateForgeResult = (itemsToForge: OwnedItem[], definition: ItemDefinition): ForgeResult => {
-    // Helper function copy từ context để tính toán display
-    const getBaseUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
-        const rarityMultiplier = { E: 1, D: 1.5, B: 2.5, A: 4, S: 7, SR: 12, SSR: 20 };
-        return Math.floor(50 * Math.pow(level, 1.2) * rarityMultiplier[itemDef.rarity]);
-    };
-    const getTotalUpgradeCost = (itemDef: ItemDefinition, level: number): number => {
-        let total = 0;
-        for (let i = 1; i < level; i++) {
-            total += getBaseUpgradeCost(itemDef, i);
-        }
-        return total;
-    };
-    
-    if (itemsToForge.length < 3) return { level: 1, refundGold: 0 };
-    const totalInvestedGold = itemsToForge.reduce((total, item) => total + getTotalUpgradeCost(definition, item.level), 0);
-    let finalLevel = 1, remainingGold = totalInvestedGold;
-    while (true) {
-        const costForNextLevel = getBaseUpgradeCost(definition, finalLevel);
-        if (remainingGold >= costForNextLevel) { remainingGold -= costForNextLevel; finalLevel++; } else { break; }
-    }
-    return { level: finalLevel, refundGold: remainingGold };
-};
-
-const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, equippedItemIds }: { isOpen: boolean; onClose: () => void; ownedItems: OwnedItem[]; onForge: (group: ForgeGroup) => void; isProcessing: boolean; equippedItemIds: (string | null)[] }) => {
-    const forgeableGroups = useMemo<ForgeGroup[]>(() => {
+const ForgeModal = memo(({ isOpen, onClose, ownedItems, onForge, isProcessing, equippedItemIds }: { isOpen: boolean; onClose: () => void; ownedItems: OwnedItem[]; onForge: (group: any) => void; isProcessing: boolean; equippedItemIds: (string | null)[] }) => {
+    const forgeableGroups = useMemo(() => {
         if (!isOpen) return [];
-        const unequippedItems = ownedItems.filter(s => !equippedItemIds.includes(s.id));
-        
         const groups: Record<string, OwnedItem[]> = {};
-        for (const item of unequippedItems) {
-            const definition = getItemDefinition(item.itemId);
-            if (!definition || !definition.baseId) continue;
-
-            const key = `${definition.baseId}-${definition.rarity}`;
+        ownedItems.filter(s => !equippedItemIds.includes(s.id)).forEach(item => {
+            const def = getItemDefinition(item.itemId);
+            if (!def || !def.baseId) return;
+            const key = `${def.baseId}-${def.rarity}`;
             if (!groups[key]) groups[key] = [];
             groups[key].push(item);
-        }
+        });
 
-        return Object.values(groups)
-            .filter(group => group.length >= 3)
-            .map(group => {
-                const firstItemDef = getItemDefinition(group[0].itemId)!;
-                const blueprint = getBlueprintByName(firstItemDef.name)!;
-                const nextRank = getNextRank(firstItemDef.rarity);
-                const sortedItems = [...group].sort((a, b) => b.level - a.level);
-                const top3Items = sortedItems.slice(0, 3);
-                const estimatedResult = calculateForgeResult(top3Items, firstItemDef);
-                
-                return { blueprint, rarity: firstItemDef.rarity, items: sortedItems, nextRank, estimatedResult };
-            })
-            .filter(group => group.nextRank !== null)
-            .sort((a, b) => a.blueprint.name.localeCompare(b.blueprint.name));
+        return Object.values(groups).filter(g => g.length >= 3).map(group => {
+            const first = getItemDefinition(group[0].itemId)!;
+            const blueprint = getBlueprintByName(first.name)!;
+            const nextRank = getNextRank(first.rarity);
+            return { blueprint, rarity: first.rarity, items: group.sort((a,b) => b.level - a.level), nextRank };
+        }).filter(g => g.nextRank !== null);
     }, [isOpen, ownedItems, equippedItemIds]);
 
     if (!isOpen) return null;
-
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
             <div className="fixed inset-0 bg-black/80" onClick={onClose} />
-            <div className="relative bg-gradient-to-br from-gray-900 to-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
-                <div className="flex-shrink-0 border-b border-slate-700/50 pb-4 mb-4">
-                    <div className="flex justify-between items-center mb-2">
-                        <div className="flex items-center gap-3">
-                            <MergeIcon className="w-7 h-7 text-purple-400" />
-                            <h3 className="text-xl font-black uppercase tracking-wider bg-gradient-to-r from-purple-400 to-cyan-400 bg-clip-text text-transparent">Hợp nhất trang bị</h3>
-                        </div>
-                        <button onClick={onClose} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><CloseIcon className="w-5 h-5" /></button>
-                    </div>
-                    <p className="text-sm text-slate-400 mt-2">Hợp nhất 3 trang bị <span className="font-bold text-white">cùng loại, cùng hạng</span> để tạo 1 trang bị hạng cao hơn. Hệ thống sẽ ưu tiên các trang bị cấp cao nhất.</p>
+            <div className="relative bg-slate-900 p-5 rounded-xl border-2 border-slate-700 shadow-2xl w-full max-w-md max-h-[90vh] z-50 flex flex-col">
+                <div className="flex justify-between items-center mb-4 border-b border-slate-700/50 pb-4">
+                    <h3 className="text-xl font-black uppercase text-purple-400">Hợp nhất trang bị</h3>
+                    <button onClick={onClose} className="text-gray-500 hover:text-white"><CloseIcon className="w-6 h-6" /></button>
                 </div>
-                <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2 space-y-4">
-                    {forgeableGroups.length > 0 ? (
-                        forgeableGroups.map(group => (
-                            <div key={`${group.blueprint.baseId}-${group.rarity}`} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between gap-4">
-                                <div className="flex flex-1 items-center justify-center gap-4 sm:gap-6">
-                                    <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30`}>
-                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
-                                        <span className="absolute -top-2 -right-2 bg-cyan-600 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">3/{group.items.length}</span>
-                                    </div>
-                                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-purple-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3"><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
-                                    <div className={`relative w-16 h-16 flex items-center justify-center rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30`}>
-                                        <img src={group.blueprint.icon} className="w-12 h-12 object-contain" />
-                                        <span className="absolute -top-2 -right-2 bg-slate-800 text-white text-[11px] font-bold px-2 py-0.5 rounded-full shadow-md border-2 border-slate-700">Lv.{group.estimatedResult.level}</span>
-                                    </div>
+                <div className="flex-1 overflow-y-auto pr-2 space-y-4">
+                    {forgeableGroups.length > 0 ? forgeableGroups.map(group => (
+                        <div key={group.rarity + group.blueprint.name} className="bg-slate-800/50 border border-slate-700 rounded-lg p-4 flex items-center justify-between">
+                            <div className="flex items-center gap-4">
+                                <div className={`relative w-14 h-14 rounded-md border-2 ${getRarityColor(group.rarity)} bg-black/30 flex items-center justify-center`}>
+                                    <img src={group.blueprint.icon} className="w-10 h-10 object-contain" />
+                                    <span className="absolute -top-2 -right-2 bg-cyan-600 text-[10px] px-1.5 rounded-full">3/{group.items.length}</span>
                                 </div>
-                                <button onClick={() => onForge(group)} disabled={isProcessing} title="Merge" className="flex-shrink-0 bg-gradient-to-r from-purple-500 to-indigo-500 text-white font-semibold text-sm h-8 px-4 rounded-md shadow-md hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-wait flex items-center justify-center">Merge</button>
+                                <span className="text-slate-500">→</span>
+                                <div className={`w-14 h-14 rounded-md border-2 ${getRarityColor(group.nextRank!)} bg-black/30 flex items-center justify-center`}>
+                                    <img src={group.blueprint.icon} className="w-10 h-10 object-contain" />
+                                </div>
                             </div>
-                        ))
-                    ) : ( <div className="flex items-center justify-center h-full text-slate-500 text-center py-10"><p>Không có trang bị nào có thể hợp nhất.</p></div> )}
+                            <button onClick={() => onForge(group)} disabled={isProcessing} className="bg-purple-600 px-4 py-2 rounded-lg font-bold text-xs">MERGE</button>
+                        </div>
+                    )) : <div className="text-slate-500 text-center py-10">Không có trang bị có thể hợp nhất.</div>}
                 </div>
             </div>
         </div>
     );
 });
 
-// --- COMPONENT HIỂN THỊ CHÍNH ---
 function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenExitData) => void }) {
     const {
-        gold,
-        equipmentPieces,
-        ownedItems,
-        equippedItems,
-        selectedItem,
-        newlyCraftedItem,
-        isForgeModalOpen,
-        isStatsModalOpen, 
-        isProcessing,
-        dismantleSuccessToast,
-        equippedItemsMap,
-        unequippedItemsSorted,
-        totalEquippedStats,
-        userStatsValue, 
-        isLoading,
-        handleEquipItem,
-        handleUnequipItem,
-        handleCraftItem,
-        handleDismantleItem,
-        handleUpgradeItem,
-        handleForgeItems,
-        handleSelectItem,
-        handleSelectSlot,
-        handleCloseDetailModal,
-        handleCloseCraftSuccessModal,
-        handleOpenForgeModal,
-        handleCloseForgeModal,
-        handleOpenStatsModal,
-        handleCloseStatsModal,
-        // --- UPGRADE MODAL HANDLERS & STATE ---
-        itemToUpgrade,
-        isUpgradeModalOpen,
-        handleOpenUpgradeModal,
-        handleCloseUpgradeModal,
-        stoneCounts,
-        
-        // --- MỚI: TRADE MODAL HANDLERS & STATE ---
-        isTradeModalOpen,
-        userResources,
-        handleExchangeResources,
-        handleOpenTradeModal,
-        handleCloseTradeModal,
-        
-        MAX_ITEMS_IN_STORAGE,
-        CRAFTING_COST
+        gold, equipmentPieces, ownedItems, equippedItems, selectedItem, newlyCraftedItem, isForgeModalOpen, isStatsModalOpen, isProcessing, dismantleSuccessToast,
+        equippedItemsMap, unequippedItemsSorted, totalEquippedStats, userStatsValue, isLoading,
+        handleEquipItem, handleUnequipItem, handleCraftItem, handleDismantleItem, handleUpgradeItem, handleForgeItems,
+        handleSelectItem, handleSelectSlot, handleCloseDetailModal, handleCloseCraftSuccessModal, handleOpenForgeModal, handleCloseForgeModal, handleOpenStatsModal, handleCloseStatsModal,
+        itemToUpgrade, isUpgradeModalOpen, handleOpenUpgradeModal, handleCloseUpgradeModal, stoneCounts,
+        MAX_ITEMS_IN_STORAGE, CRAFTING_COST
     } = useEquipment();
     
-    // --- START: STATE VÀ LOGIC CHO HIỆU ỨNG CRAFTING ---
     const [isCraftingAnimation, setIsCraftingAnimation] = useState(false);
     const [minTimeElapsed, setMinTimeElapsed] = useState(true);
-
-    const CRAFT_DURATION = 3000; 
 
     const onCraftClick = useCallback(() => {
         setIsCraftingAnimation(true);
         setMinTimeElapsed(false);
         handleCraftItem();
-        setTimeout(() => {
-            setMinTimeElapsed(true);
-        }, CRAFT_DURATION);
+        setTimeout(() => setMinTimeElapsed(true), 3000);
     }, [handleCraftItem]);
 
     useEffect(() => {
         if (!isProcessing && minTimeElapsed) {
-            const timer = setTimeout(() => {
-                setIsCraftingAnimation(false);
-            }, 200);
-            return () => clearTimeout(timer);
+            setTimeout(() => setIsCraftingAnimation(false), 200);
         }
     }, [isProcessing, minTimeElapsed]);
 
-    useEffect(() => {
-        if (isCraftingAnimation) {
-            document.body.style.overflow = 'hidden';
-            document.body.style.touchAction = 'none'; 
-        } else {
-            document.body.style.overflow = 'unset';
-            document.body.style.touchAction = 'auto';
-        }
-        return () => {
-            document.body.style.overflow = 'unset';
-            document.body.style.touchAction = 'auto';
-        };
-    }, [isCraftingAnimation]);
-    // --- END: LOGIC HIỆU ỨNG CRAFTING ---
-
     const handleClose = useCallback(() => {
-        onClose({
-            gold,
-            equipmentPieces,
-            ownedItems,
-            equippedItems
-        });
+        onClose({ gold, equipmentPieces, ownedItems, equippedItems });
     }, [onClose, gold, equipmentPieces, ownedItems, equippedItems]);
 
-    const displayGold = isLoading ? 0 : gold;
-
-    const showEffect = isCraftingAnimation; 
-
     return (
-        <div 
-            className="main-bg relative w-full min-h-screen font-sans text-white overflow-hidden bg-cover bg-center bg-no-repeat"
-            style={{ backgroundImage: `url(${EQUIPMENT_BG_URL})` }}
-        >
-            <div className="absolute inset-0 bg-black/75 pointer-events-none z-0" />
-
-            <style>{`.title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } 
-            @keyframes subtle-bounce {
-              0%, 100% { transform: translateY(0); }
-              50% { transform: translateY(-4px); }
-            }
-            .animate-subtle-bounce {
-              animation: subtle-bounce 2s infinite ease-in-out;
-            }
-            `}</style>
+        <div className="main-bg relative w-full h-screen font-sans text-white overflow-hidden bg-cover bg-center" style={{ backgroundImage: `url(${EQUIPMENT_BG_URL})` }}>
+            <div className="absolute inset-0 bg-black/75 z-0" />
+            <CraftingEffectCanvas isActive={isCraftingAnimation} />
+            <RateLimitToast show={dismantleSuccessToast.show} message={dismantleSuccessToast.message} />
             
-            <CraftingEffectCanvas isActive={showEffect} />
-
-            <RateLimitToast show={dismantleSuccessToast.show} message={dismantleSuccessToast.message} showIcon={false} />
-            
-            {!isCraftingAnimation && selectedItem && (
+            {selectedItem && (
                 <ItemDetailModal 
-                    ownedItem={selectedItem} 
-                    onClose={handleCloseDetailModal} 
-                    onEquip={handleEquipItem} 
-                    onUnequip={handleUnequipItem} 
-                    onDismantle={handleDismantleItem} 
-                    onOpenUpgrade={handleOpenUpgradeModal} 
-                    isEquipped={Object.values(equippedItems).includes(selectedItem.id)} 
-                    isProcessing={isProcessing}
+                    ownedItem={selectedItem} onClose={handleCloseDetailModal} onEquip={handleEquipItem} onUnequip={handleUnequipItem} 
+                    onDismantle={handleDismantleItem} onOpenUpgrade={handleOpenUpgradeModal} isEquipped={Object.values(equippedItems).includes(selectedItem.id)} isProcessing={isProcessing}
                 />
             )}
             
             <UpgradeModal 
-                isOpen={isUpgradeModalOpen}
-                onClose={handleCloseUpgradeModal}
-                item={itemToUpgrade}
-                onUpgrade={handleUpgradeItem}
-                isProcessing={isProcessing}
-                stoneCounts={stoneCounts}
+                isOpen={isUpgradeModalOpen} onClose={handleCloseUpgradeModal} item={itemToUpgrade} onUpgrade={handleUpgradeItem} isProcessing={isProcessing} stoneCounts={stoneCounts}
             />
 
-            {/* --- MỚI: MODAL THƯƠNG HỘI --- */}
-            <TradeAssociationModal 
-                isOpen={isTradeModalOpen}
-                onClose={handleCloseTradeModal}
-                resources={userResources}
-                onExchange={handleExchangeResources}
-                isProcessing={isProcessing}
-            />
-
-            {!isCraftingAnimation && newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
-            
+            {newlyCraftedItem && <CraftingSuccessModal ownedItem={newlyCraftedItem} onClose={handleCloseCraftSuccessModal} />}
             <ForgeModal isOpen={isForgeModalOpen} onClose={handleCloseForgeModal} ownedItems={ownedItems} onForge={handleForgeItems} isProcessing={isProcessing} equippedItemIds={Object.values(equippedItems)} />
-            <TotalStatsModal 
-                isOpen={isStatsModalOpen} 
-                onClose={handleCloseStatsModal} 
-                equipmentStats={totalEquippedStats}
-                upgradeStats={userStatsValue}
-            />
+            <TotalStatsModal isOpen={isStatsModalOpen} onClose={handleCloseStatsModal} equipmentStats={totalEquippedStats} upgradeStats={userStatsValue} />
 
-            <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
-                <EquipmentScreenSkeleton />
-            </div>
+            <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}><EquipmentScreenSkeleton /></div>
             
-            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'hidden' : ''} ${isCraftingAnimation ? 'pointer-events-none select-none' : ''}`}>
-                <Header gold={displayGold} onClose={handleClose} />
-                <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
-                    <section className="flex-shrink-0 py-4">
-                        <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
-                            {EQUIPMENT_SLOT_TYPES.map(slotType => <EquipmentSlot key={slotType} slotType={slotType} ownedItem={equippedItemsMap[slotType]} onClick={() => handleSelectSlot(slotType)} isProcessing={isProcessing} />)}
-                        </div>
+            <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'hidden' : ''} ${isCraftingAnimation ? 'pointer-events-none' : ''}`}>
+                <Header gold={gold} onClose={handleClose} />
+                <main className="flex-1 max-w-5xl mx-auto flex flex-col w-full p-4 sm:p-8 gap-4 overflow-hidden">
+                    <section className="flex justify-center gap-4 py-4">
+                        {EQUIPMENT_SLOT_TYPES.map(slot => <EquipmentSlot key={slot} slotType={slot} ownedItem={equippedItemsMap[slot]} onClick={() => handleSelectSlot(slot)} isProcessing={isProcessing} />)}
                     </section>
-                    <section className="flex-shrink-0 p-3 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
+
+                    <section className="p-4 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <EquipmentPieceIcon className="w-10 h-10" />
                             <div className="flex items-baseline gap-1">
-                                <span className="text-xl font-bold text-white">{equipmentPieces.toLocaleString()}</span>
-                                <span className="text-base text-slate-400">/ {CRAFTING_COST}</span>
+                                <span className="text-xl font-bold">{equipmentPieces.toLocaleString()}</span>
+                                <span className="text-slate-400 text-sm">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
-                        <button 
-                            onClick={onCraftClick} 
-                            className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-lilita uppercase text-lg tracking-wider py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" 
-                            disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE}
-                        >
-                            Craft
-                        </button>
+                        <button onClick={onCraftClick} disabled={equipmentPieces < CRAFTING_COST || isProcessing || ownedItems.length >= MAX_ITEMS_IN_STORAGE} className="bg-blue-600 px-8 py-2 rounded-lg font-lilita uppercase text-lg shadow-lg hover:bg-blue-500 disabled:opacity-50">Craft</button>
                     </section>
                     
-                    <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
-                        <div className="flex justify-between items-center mb-4 flex-shrink-0">
-                            <div className="flex items-center justify-center px-4 py-1.5 bg-slate-950/80 rounded-lg border border-slate-700 shadow-sm transition-colors hover:border-slate-500 hover:bg-slate-900">
-                                <div className="flex items-baseline text-sm font-mono">
-                                    <span className="text-white font-bold">{unequippedItemsSorted.length}</span>
-                                    <span className="text-slate-500 mx-0.5">/</span>
-                                    <span className="text-slate-400 text-xs font-semibold">{MAX_ITEMS_IN_STORAGE}</span>
-                                </div>
+                    <section className="flex-1 bg-black/40 rounded-xl border border-slate-800 p-4 flex flex-col overflow-hidden">
+                        <div className="flex justify-between items-center mb-4">
+                            <div className="bg-slate-950 px-4 py-1.5 rounded-lg border border-slate-700 text-sm font-mono">
+                                <span className="text-white font-bold">{unequippedItemsSorted.length}</span>
+                                <span className="text-slate-500"> / {MAX_ITEMS_IN_STORAGE}</span>
                             </div>
                             
-                            <div className="flex items-center gap-12"> 
-                                {/* NÚT STATS (Trái) */}
-                                <button 
-                                    onClick={handleOpenStatsModal} 
-                                    className="relative w-10 h-10 group disabled:opacity-50 disabled:cursor-not-allowed" 
-                                    disabled={isProcessing}
-                                    title="View Stats"
-                                >
-                                    <img 
-                                        src={STATS_ICON_URL} 
-                                        alt="Stats" 
-                                        className="absolute top-1/2 left-[10%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
-                                    />
+                            <div className="flex gap-12 items-center">
+                                <button onClick={handleOpenStatsModal} className="group transition-transform hover:scale-110 active:scale-95">
+                                    <img src={STATS_ICON_URL} className="w-12 h-12 object-contain" />
                                 </button>
-
-                                {/* --- MỚI: NÚT THƯƠNG HỘI (Giữa) --- */}
-                                <button 
-                                    onClick={handleOpenTradeModal} 
-                                    className="relative w-10 h-10 group disabled:opacity-50 disabled:cursor-not-allowed" 
-                                    disabled={isProcessing}
-                                    title="Trade Association"
-                                >
-                                    <img 
-                                        src={TRADE_ICON_URL}
-                                        alt="Trade" 
-                                        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-16 h-16 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
-                                        onError={(e) => {
-                                            e.currentTarget.style.display = 'none';
-                                            e.currentTarget.parentElement!.innerHTML = `<div class="w-10 h-10 bg-yellow-600 rounded-full border-2 border-yellow-300 flex items-center justify-center text-xl shadow-lg">⚖️</div>`;
-                                        }}
-                                    />
-                                </button>
-
-                                {/* NÚT MERGE (Phải) */}
-                                <button 
-                                    onClick={handleOpenForgeModal} 
-                                    className="relative w-10 h-10 group disabled:opacity-50 disabled:cursor-not-allowed" 
-                                    disabled={isProcessing}
-                                    title="Merge Equipment"
-                                >
-                                    <img 
-                                        src={MERGE_ICON_URL} 
-                                        alt="Merge" 
-                                        className="absolute top-1/2 left-[15%] -translate-x-1/2 -translate-y-1/2 w-20 h-20 max-w-none object-contain filter drop-shadow-md transition-transform group-hover:scale-110 active:scale-95" 
-                                    />
+                                <button onClick={handleOpenForgeModal} className="group transition-transform hover:scale-110 active:scale-95">
+                                    <img src={MERGE_ICON_URL} className="w-12 h-12 object-contain" />
                                 </button>
                             </div>
                         </div>
-                        <div className="flex-grow min-h-0 overflow-y-auto hide-scrollbar -m-1 p-1">
+
+                        <div className="flex-1 overflow-y-auto hide-scrollbar">
                             {unequippedItemsSorted.length > 0 ? (
-                                <div className="grid grid-cols-5 sm:grid-cols-6 md:grid-cols-8 gap-2">
-                                    {unequippedItemsSorted.map((ownedItem) => (
-                                        <InventorySlot
-                                            key={ownedItem.id}
-                                            ownedItem={ownedItem}
-                                            onClick={handleSelectItem}
-                                            isProcessing={isProcessing}
-                                        />
-                                    ))}
+                                <div className="grid grid-cols-5 sm:grid-cols-8 gap-2">
+                                    {unequippedItemsSorted.map(item => <InventorySlot key={item.id} ownedItem={item} onClick={handleSelectItem} isProcessing={isProcessing} />)}
                                 </div>
-                            ) : (
-                                <div className="flex items-center justify-center h-full text-slate-500">
-                                    <p>Kho chứa trống.</p>
-                                </div>
-                            )}
+                            ) : <div className="h-full flex items-center justify-center text-slate-500">Kho chứa trống.</div>}
                         </div>
                     </section>
                 </main>
             </div>
+            <style>{`
+                .animate-subtle-bounce { animation: bounce 2s infinite; }
+                @keyframes bounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .title-glow { text-shadow: 0 0 10px rgba(107, 229, 255, 0.7); }
+            `}</style>
         </div>
     );
 }
 
-// --- COMPONENT CHA WRAPPER ---
-interface EquipmentScreenProps {
-    onClose: (data: EquipmentScreenExitData) => void;
-    userId: string;
+export default function EquipmentScreen({ onClose, userId }: { onClose: (data: EquipmentScreenExitData) => void; userId: string }) {
+    return <EquipmentProvider><EquipmentScreenContent onClose={onClose} /></EquipmentProvider>;
 }
 
-export default function EquipmentScreen({ onClose, userId }: EquipmentScreenProps) {
-    return (
-        <EquipmentProvider>
-            <EquipmentScreenContent onClose={onClose} />
-        </EquipmentProvider>
-    );
-}
+// --- END OF FILE equipment-ui.tsx ---
