@@ -36,7 +36,7 @@ import TradeAssociationModalV2 from './home/trade-association-modal-v2.tsx';
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 
 // URL ICON CHO NÚT THƯƠNG HỘI
-const TRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shop-icon.webp";
+const TRADE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/trade-association.webp";
 
 interface GemIconProps { size?: number; color?: string; className?: string; [key: string]: any; }
 const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', className = '', ...props }) => (
