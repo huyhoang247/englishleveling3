@@ -60,9 +60,24 @@
     <div id="root"></div>
 
     <!-- ====================================================== -->
-    <!-- SCRIPT ĐĂNG KÝ SERVICE WORKER (BẮT BUỘC ĐỂ HIỆN NÚT CÀI ĐẶT) -->
+    <!-- SCRIPT QUAN TRỌNG: BẮT SỰ KIỆN CÀI ĐẶT & SERVICE WORKER -->
     <!-- ====================================================== -->
     <script>
+      // 1. Khởi tạo biến toàn cục để lưu sự kiện cài đặt
+      window.deferredPrompt = null;
+
+      // 2. Lắng nghe sự kiện ngay lập tức khi trang tải
+      window.addEventListener('beforeinstallprompt', (e) => {
+        // Ngăn Chrome hiển thị thanh thông báo cài đặt mặc định bên dưới màn hình
+        e.preventDefault();
+        
+        // Lưu sự kiện lại vào biến window để React Component (profile.tsx) dùng sau
+        window.deferredPrompt = e;
+        
+        console.log('✅ PWA Install Prompt captured successfully in index.html');
+      });
+
+      // 3. Đăng ký Service Worker (Bắt buộc cho PWA)
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', function() {
           navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
