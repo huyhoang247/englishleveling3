@@ -65,7 +65,13 @@ const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, cla
                 /> 
             );
         case 'ore': 
-            return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-slate-400`}><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22 14.86 20.57 16.29 22 18.43 19.86 22 16.29l-1.43-1.43z"/></svg> );
+            return ( 
+                <img 
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ore.webp" 
+                    alt="Ore" 
+                    className={`${className} object-contain`} 
+                /> 
+            );
         case 'cloth': 
             return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-indigo-400`}><path d="M16 5l-1-3-3 1.5L9 2 8 5H2v16h20V5h-6zm-4-1.5L13.5 5h-3L12 3.5zM20 19H4V7h16v12z"/><path d="M6 9h12v2H6zm0 4h12v2H6z" opacity="0.6"/></svg> );
         default: return null;
@@ -166,7 +172,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                     {/* Card Body - Updated for Horizontal Ingredients */}
                                     <div className="p-4 flex flex-col sm:flex-row items-center gap-6">
                                         
-                                        {/* Inputs: Tinh chỉnh thành 1 hàng ngang, bỏ chữ, tập trung vào icon */}
+                                        {/* Inputs */}
                                         <div className="flex-1 w-full flex items-center justify-center sm:justify-start gap-4 bg-black/30 p-3 rounded-xl border border-slate-800 shadow-inner">
                                             {option.ingredients.map((ing, idx) => {
                                                 const userHas = resources[ing.type] || 0;
