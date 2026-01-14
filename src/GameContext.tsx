@@ -37,8 +37,8 @@ interface IGameContext {
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
     stones: { low: number; medium: number; high: number };
-    
-    // Resources (New for Trade Association)
+
+    // Resources Data (New for Trade Association)
     wood: number;
     leather: number;
     ore: number;
@@ -50,9 +50,9 @@ interface IGameContext {
     lastCheckIn: Date | null;
     
     // --- VIP FIELDS ---
-    accountType: string;
-    vipExpiresAt: Date | null;
-    vipLuckySpinClaims: number;
+    accountType: string;         // 'Normal' | 'VIP'
+    vipExpiresAt: Date | null;   // Thời hạn VIP
+    vipLuckySpinClaims: number;  // Số lượt đã nhận x2 trong ngày (Max 5)
 
     // UI States
     isBackgroundPaused: boolean;
@@ -73,7 +73,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    isTradeAssociationOpen: boolean; // REPLACED 777
+    isTradeAssociationOpen: boolean; // Thay thế 777Game
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -83,7 +83,7 @@ interface IGameContext {
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
-    handleVipLuckySpinClaim: () => Promise<boolean>;
+    handleVipLuckySpinClaim: () => Promise<boolean>; // Hàm xử lý nhận thưởng VIP
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -110,7 +110,7 @@ interface IGameContext {
     toggleCheckIn: () => void;
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
-    toggleTradeAssociation: () => void; // REPLACED 777
+    toggleTradeAssociation: () => void; // Thay thế toggle777Game
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -149,7 +149,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
   const [stones, setStones] = useState({ low: 0, medium: 0, high: 0 });
-  
+
   // Resources States
   const [wood, setWood] = useState(0);
   const [leather, setLeather] = useState(0);
@@ -181,14 +181,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
-  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false); // New state
+  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false); // Thay thế 777
   
+  // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
   
   const refreshUserData = useCallback(async () => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
+    console.log("Refreshing all user data triggered...");
     setIsLoadingUserData(true);
     try {
       const gameData = await fetchOrCreateUserGameData(userId);
@@ -213,7 +215,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setEquippedItems(gameData.equipment.equipped);
       setStones(gameData.equipment.stones || { low: 0, medium: 0, high: 0 });
 
-      // Load resources if they exist in gameData
+      // Load Resources
       setWood(gameData.resources?.wood || 0);
       setLeather(gameData.resources?.leather || 0);
       setOre(gameData.resources?.ore || 0);
@@ -222,6 +224,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
       
+      // Update VIP data
       setAccountType(gameData.accountType || 'Normal');
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
       setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
@@ -238,12 +241,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
       if (user) {
         setIsLoadingUserData(true);
+        
         const userDocRef = doc(db, 'users', user.uid);
         
         unsubscribeFromUserDoc = onSnapshot(userDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 const gameData = docSnap.data();
-                
+                console.log("Real-time data received from Firestore, updating context state.");
+
                 setCoins(gameData.coins ?? 0);
                 setGems(gameData.gems ?? 0);
                 setMasteryCards(gameData.masteryCards ?? 0);
@@ -265,7 +270,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
                 setStones(gameData.equipment?.stones || { low: 0, medium: 0, high: 0 });
 
-                // Realtime Resources
+                // Update Resources
                 setWood(gameData.resources?.wood || 0);
                 setLeather(gameData.resources?.leather || 0);
                 setOre(gameData.resources?.ore || 0);
@@ -279,6 +284,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setVipLuckySpinClaims(gameData.vipLuckySpinClaims ?? 0);
 
             } else {
+                console.warn("User document not found, attempting to create one.");
                 fetchOrCreateUserGameData(user.uid);
             }
             setIsLoadingUserData(false);
@@ -290,9 +296,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         try {
             const jackpotData = await fetchJackpotPool();
             setJackpotPool(jackpotData);
-        } catch(error) { console.error("Error fetching initial jackpot data:", error); }
+        } catch(error) {
+             console.error("Error fetching initial jackpot data:", error);
+        }
 
       } else {
+        // --- LOGOUT RESET ---
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); 
@@ -305,12 +314,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setOwnedItems([]); 
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); 
         setStones({ low: 0, medium: 0, high: 0 });
+
+        // Reset Resources
         setWood(0); setLeather(0); setOre(0); setCloth(0);
 
         setLoginStreak(0); setLastCheckIn(null);
         setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
-        setAccountType('Normal'); setVipExpiresAt(null); setVipLuckySpinClaims(0);
+        setIsTradeAssociationOpen(false);
+        
+        setAccountType('Normal');
+        setVipExpiresAt(null);
+        setVipLuckySpinClaims(0);
       }
     });
 
@@ -327,6 +342,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   }, []);
   
   useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
+  // Note: Optimistic update sets displayedCoins directly, this effect ensures sync if coins changes via other means (like snapshot)
   useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins, displayedCoins]);
   
   const totalEquipmentStats = useMemo(() => {
@@ -356,14 +372,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, [userStatsValue, totalEquipmentStats]);
     
+  // --- OPTIMISTIC UPDATE COINS ---
   const updateCoins = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
+
     const previousCoins = coins;
     const optimisticCoins = previousCoins + amount;
     setCoins(optimisticCoins);
     setDisplayedCoins(optimisticCoins); 
+
     setIsSyncingData(true);
+
     try {
       const serverConfirmedCoins = await updateUserCoins(userId, amount);
       setCoins(serverConfirmedCoins);
@@ -410,18 +430,28 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setJackpotPool(await updateJackpotPool(amount, reset));
   };
 
+  // --- NEW: Handle VIP Claim Logic ---
   const handleVipLuckySpinClaim = async (): Promise<boolean> => {
       const userId = auth.currentUser?.uid;
+      // Chỉ cho phép nếu là VIP và chưa hết hạn
       if (!userId || accountType !== 'VIP') return false;
+      
+      // Kiểm tra giới hạn (5 lần/ngày)
       if (vipLuckySpinClaims >= 5) return false;
+
+      // Optimistic Update
       const oldVal = vipLuckySpinClaims;
       setVipLuckySpinClaims(oldVal + 1);
+
       try {
           const userDocRef = doc(db, 'users', userId);
-          await updateDoc(userDocRef, { vipLuckySpinClaims: oldVal + 1 });
+          await updateDoc(userDocRef, {
+              vipLuckySpinClaims: oldVal + 1
+          });
           return true;
       } catch (error) {
-          setVipLuckySpinClaims(oldVal);
+          console.error("Error updating VIP claim:", error);
+          setVipLuckySpinClaims(oldVal); // Rollback
           return false;
       }
   };
@@ -442,6 +472,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const getPlayerBattleStats = () => {
     const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
+    
     return { 
         maxHp: BASE_HP + totalPlayerStats.hp, 
         hp: BASE_HP + totalPlayerStats.hp, 
@@ -476,9 +507,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen); // New toggle
+  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen);
   
-  const handleSkillScreenClose = (dataUpdated: boolean) => { toggleSkillScreen(); };
+  const handleSkillScreenClose = (dataUpdated: boolean) => {
+    toggleSkillScreen();
+  };
 
   const updateSkillsState = (data: SkillScreenExitData) => {
     setCoins(data.gold);
@@ -489,11 +522,22 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   };
 
   const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
-    if (updates.coins !== undefined) { setCoins(updates.coins); setDisplayedCoins(updates.coins); }
-    if (updates.gems !== undefined) setGems(updates.gems);
-    if (updates.equipmentPieces !== undefined) setEquipmentPieces(updates.equipmentPieces);
-    if (updates.ancientBooks !== undefined) setAncientBooks(updates.ancientBooks);
-    if (updates.cardCapacity !== undefined) setCardCapacity(updates.cardCapacity);
+    if (updates.coins !== undefined) {
+        setCoins(updates.coins);
+        setDisplayedCoins(updates.coins);
+    }
+    if (updates.gems !== undefined) {
+        setGems(updates.gems);
+    }
+    if (updates.equipmentPieces !== undefined) {
+        setEquipmentPieces(updates.equipmentPieces);
+    }
+    if (updates.ancientBooks !== undefined) {
+        setAncientBooks(updates.ancientBooks);
+    }
+    if (updates.cardCapacity !== undefined) {
+        setCardCapacity(updates.cardCapacity);
+    }
   };
 
   const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen || isTradeAssociationOpen;
@@ -507,11 +551,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
     
+    // Equipment & Stones
     equipmentPieces, 
     ownedItems, 
     equippedItems,
     stones, 
-    
+
     // Resources
     wood, leather, ore, cloth,
 
@@ -519,6 +564,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     totalPlayerStats,
     loginStreak, lastCheckIn, 
     
+    // VIP Values
     accountType, vipExpiresAt, vipLuckySpinClaims,
 
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
@@ -529,7 +575,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isTradeAssociationOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
-    handleVipLuckySpinClaim, 
+    handleVipLuckySpinClaim,
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
     updateUserCurrency,
     updateCoins,
