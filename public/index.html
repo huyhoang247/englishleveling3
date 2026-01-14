@@ -2,13 +2,35 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="theme-color" content="#000000" />
-    <script src="https://cdn.tailwindcss.com"></script>
-    <title>My Flashcards App</title>
+    <!-- Cập nhật viewport: Chặn zoom (user-scalable=no) để tạo cảm giác giống App native -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    
+    <!-- Màu thanh trạng thái trình duyệt trên mobile (trùng với màu nền app) -->
+    <meta name="theme-color" content="#0f172a" />
+    <meta name="description" content="Level up your English skills in this RPG gamified learning app." />
 
     <!-- ====================================================== -->
-    <!-- START: TẢI FONT CHỮ LILITA ONE TOÀN CỤC (ĐÃ THÊM) -->
+    <!-- PWA CONFIGURATION (CẤU HÌNH CÀI ĐẶT APP) -->
+    <!-- ====================================================== -->
+    <!-- 1. File Manifest chứa thông tin app -->
+    <link rel="manifest" href="/manifest.json" />
+    
+    <!-- 2. Icon hiển thị trên tab và màn hình chính -->
+    <link rel="icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" href="/logo192.png" />
+    
+    <!-- 3. Cấu hình riêng cho iOS (iPhone/iPad) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="EngLeveling">
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <title>English Leveling RPG</title>
+
+    <!-- ====================================================== -->
+    <!-- START: TẢI FONT CHỮ LILITA ONE TOÀN CỤC -->
     <!-- ====================================================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -23,21 +45,33 @@
         margin: 0;
         padding: 0;
         height: 100%;
-        overflow: hidden; /* Đây là dòng quan trọng nhất, ngăn chặn mọi hành vi cuộn */
+        overflow: hidden; /* Quan trọng: Ngăn cuộn trang body */
+        background-color: #0f172a; /* Màu nền mặc định để tránh nháy trắng khi load */
+        -webkit-tap-highlight-color: transparent; /* Bỏ màu highlight xanh khi bấm nút trên mobile */
       }
     </style>
-    <!-- Nếu có favicon, để file trong public và uncomment -->
-    <!-- <link rel="icon" href="%PUBLIC_URL%/favicon.ico" /> -->
-    <!-- Nếu bạn dùng CRA, biến %PUBLIC_URL% sẽ tự thay thành đường dẫn gốc -->
   </head>
   <body>
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
+    
     <!-- React sẽ mount vào div này -->
     <div id="root"></div>
 
-    <!-- Nếu bạn dùng CRA, script bundle sẽ được inject tự động ở đây khi build -->
-    <!-- <script src="%PUBLIC_URL%/static/js/main.[hash].js"></script> -->
+    <!-- ====================================================== -->
+    <!-- SCRIPT ĐĂNG KÝ SERVICE WORKER (BẮT BUỘC ĐỂ HIỆN NÚT CÀI ĐẶT) -->
+    <!-- ====================================================== -->
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
+            console.log('ServiceWorker registration successful with scope: ', registration.scope);
+          }, function(err) {
+            console.log('ServiceWorker registration failed: ', err);
+          });
+        });
+      }
+    </script>
   </body>
 </html>
