@@ -4,7 +4,8 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { 
     updateProfileInfo, 
     updateAvatar, 
-    performVipUpgrade, 
+    performVipUpgrade,
+    submitReferralCode 
 } from './profileService.ts'; 
 import { auth } from '../firebase'; 
 import { useGame } from '../GameContext.tsx'; 
@@ -33,7 +34,6 @@ const exitFullScreen = async () => {
   } catch (error) { console.warn("Failed to exit full-screen mode:", error); }
 };
 
-// Helper function để định dạng bytes
 const formatBytes = (bytes: number, decimals = 2): string => {
   if (!+bytes) return '0 Bytes';
   const k = 1024;
@@ -58,8 +58,6 @@ const ICONS = {
   shield: "M12 1.09375l-9 4.5v6.09375c0 4.57812 3.82812 8.42188 9 9.28125c5.17188-0.85937 9-4.70313 9-9.28125v-6.09375l-9-4.5zM12 3.92188l6.75 3.375v4.40624c0 3.23438-2.67187 5.90625-6.75 6.64063c-4.07812-0.73438-6.75-3.40625-6.75-6.64063v-4.40624z",
   potion: "M15 3c-0.828 0-1.5 0.672-1.5 1.5v1.5h-3v-1.5c0-0.828-0.672-1.5-1.5-1.5s-1.5 0.672-1.5 1.5v1.5h-1.5c-0.828 0-1.5 0.672-1.5 1.5s0.672 1.5 1.5 1.5h1.5v10.5c0 0.828 0.672 1.5 1.5 1.5h6c0.828 0 1.5-0.672 1.5-1.5v-10.5h1.5c0.828 0 1.5-0.672 1.5-1.5v-10.5h1.5c0.828 0 1.5-0.672 1.5-1.5s-0.672-1.5-1.5-1.5h-1.5v-1.5c0-0.828-0.672-1.5-1.5-1.5zM9 19.5v-10.5h6v10.5z",
   chest: "M5.25 5.25c-0.828 0-1.5 0.672-1.5 1.5v1.5h15v-1.5c0-0.828-0.672-1.5-1.5-1.5zM3.75 9.75v7.5c0 0.828 0.672 1.5 1.5 1.5h13.5c0.828 0 1.5-0.672 1.5-1.5v-7.5h-16.5zM11.25 12.75h1.5v3h-1.5z",
-  cog: "M12 8.25c-2.078 0-3.75 1.672-3.75 3.75s1.672 3.75 3.75 3.75 3.75-1.672 3.75-3.75-1.672-3.75-3.75-3.75zM12 14.25c-1.25 0-2.25-1-2.25-2.25s1-2.25 2.25-2.25 2.25 1 2.25 2.25-1 2.25-2.25 2.25zM22.5 12.75h-1.781c-0.141 0.703-0.375 1.359-0.656 1.969l1.266 1.266c0.234 0.234 0.352 0.516 0.352 0.844s-0.117 0.609-0.352 0.844l-1.063 1.063c-0.234 0.234-0.516 0.352-0.844 0.352s-0.609-0.117-0.844-0.352l-1.266-1.266c-0.609 0.281-1.266 0.516-1.969 0.656v1.781c0 0.828-0.672 1.5-1.5 1.5h-1.5c-0.828 0-1.5-0.672-1.5-1.5v-1.781c-0.703-0.141-1.359-0.375-1.969-0.656l-1.266 1.266c-0.234 0.234-0.516-0.352-0.844-0.352s-0.609-0.117-0.844-0.352l-1.063-1.063c-0.234 0.234-0.352-0.516-0.352-0.844s0.117-0.609 0.352-0.844l1.266-1.266c-0.281-0.609-0.516-1.266-0.656-1.969h-1.781c-0.828 0 1.5 0.672 1.5 1.5v1.5c0 0.828-0.672 1.5-1.5 1.5z",
-  map: "M12 0c-4.148 0-7.5 3.352-7.5 7.5c0 4.148 7.5 16.5 7.5 16.5s7.5-12.352 7.5-16.5c0-4.148-3.352-7.5-7.5-7.5zM12 11.25c-2.078 0-3.75-1.672-3.75-3.75s1.672-3.75 3.75-3.75 3.75 1.672 3.75 3.75-1.672 3.75-3.75 3.75z",
   camera: "M6 6c-1.657 0-3 1.343-3 3v9c0 1.657 1.343 3 3 3h12c1.657 0 3-1.343 3-3v-9c0-1.657-1.343-3-3-3h-2.25l-1.5-1.5h-4.5l-1.5 1.5h-2.25zm6 12c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5-2.015 4.5-4.5 4.5z",
   close: "M6.46875 4.96875l-1.5 1.5 5.53125 5.53125-5.53125 5.53125 1.5 1.5 5.53125-5.53125 5.53125 5.53125 1.5-1.5-5.53125-5.53125 5.53125-5.53125-1.5-1.5-5.53125 5.53125z",
   gem: "M12 0.75l-4.5 4.5h9zM12 23.25l4.5-4.5h-9zM6 6l-5.25 5.25v1.5l5.25 5.25h12l5.25-5.25v-1.5l-5.25-5.25z",
@@ -70,6 +68,9 @@ const ICONS = {
   warning: "M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z",
   checkCircle: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z",
   dumbbell: "M4 9h3v6H4V9zM1 10v4a1 1 0 0 0 1 1h2v-6H2a1 1 0 0 0-1 1zm15-5v14a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V5a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1zm8-1a1 1 0 0 0-1-1h-2v14h2a1 1 0 0 0 1-1V5zM9 4v16a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1z",
+  share: "M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.66 0 1.61 1.31 2.92 2.92 2.92 1.61 0 2.92-1.31 2.92-2.92s-1.31-2.92-2.92-2.92z",
+  copy: "M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z",
+  gift: "M20 12h-2V7.79A2.998 2.998 0 0 0 19.5 2c-1.25 0-2.33.8-2.82 1.95L12 11.97l-4.68-8.02A2.997 2.997 0 0 0 2.5 2C.56 2-1 3.56-1 5.5c0 1.37.93 2.52 2.18 2.89L2 12H0v10h22V12h-2zm-9.33-4.03L12 10.3l1.33-2.33c.78-1.37 2.07-3.79 3.67-3.79C17.84 4.18 18.5 4.84 18.5 5.5c0 .66-.66 1.32-1.5 1.32-.97 0-2.26-.95-3.33-2.85zM4.5 5.5c0-.66.66-1.32 1.5-1.32 1.6 0 2.89 2.42 3.67 3.79l1.33 2.33-1.33-2.33c-1.07-1.9-2.36-2.85-3.33-2.85-.84 0-1.5.66-1.5 1.32zM2 14h8v6H2v-6zm10 0h8v6h-8v-6z"
 };
 
 const StatBar = ({ label, value, maxValue, icon }) => {
@@ -103,23 +104,16 @@ const StatBar = ({ label, value, maxValue, icon }) => {
         </div>
     );
 };
-const MenuItem = ({ icon, label, hasToggle }) => {
-  const [toggle, setToggle] = useState(false);
+const MenuItem = ({ icon, label, onClick }) => {
   return (
-    <div className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 hover:bg-slate-700/70 hover:border-purple-500 transition-all duration-300 cursor-pointer shadow-lg">
+    <div onClick={onClick} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-lg border-2 border-slate-700 hover:bg-slate-700/70 hover:border-purple-500 transition-all duration-300 cursor-pointer shadow-lg group">
       <div className="flex items-center space-x-4">
-        <div className="text-purple-400">
+        <div className="text-purple-400 group-hover:text-purple-300 transition-colors">
           <Icon path={icon} />
         </div>
-        <span className="text-slate-200 font-semibold">{label}</span>
+        <span className="text-slate-200 font-semibold group-hover:text-white transition-colors">{label}</span>
       </div>
-      {hasToggle ? (
-        <div onClick={() => setToggle(!toggle)} className={`w-14 h-7 flex items-center rounded-full p-1 cursor-pointer transition-colors duration-300 ${toggle ? 'bg-green-500' : 'bg-slate-600'}`}>
-          <div className={`bg-white w-5 h-5 rounded-full shadow-md transform transition-transform duration-300 ${toggle ? 'translate-x-7' : ''}`}></div>
-        </div>
-      ) : (
-        <Icon path="M8.25 4.5l7.5 7.5-7.5 7.5" className="w-5 h-5 text-slate-500" />
-      )}
+      <Icon path="M8.25 4.5l7.5 7.5-7.5 7.5" className="w-5 h-5 text-slate-500 group-hover:translate-x-1 transition-transform" />
     </div>
   );
 };
@@ -211,18 +205,15 @@ const AvatarModal = ({ isOpen, onClose, onSelectAvatar, avatars, currentAvatar }
   );
 };
 
-// --- EDIT PROFILE MODAL (REMOVED TITLE EDIT) ---
 const EditProfileModal = ({ isOpen, onClose, onSave, currentPlayerInfo }) => {
   const [name, setName] = useState(currentPlayerInfo.name);
   
-  // Reset name when modal opens
   useEffect(() => { 
       if (isOpen) setName(currentPlayerInfo.name); 
   }, [currentPlayerInfo.name, isOpen]);
 
   const handleSave = (e) => { 
       e.preventDefault(); 
-      // Pass the name and keep the existing title
       onSave({ ...currentPlayerInfo, name: name }); 
       onClose(); 
   };
@@ -270,7 +261,6 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
         if (currentGems >= pkg.cost) {
             setProcessingId(pkg.id);
             try {
-                // Call the confirm function with cost and days
                 await onConfirm(pkg.cost, pkg.days);
                 setStatus('success');
                 setTimeout(() => {
@@ -298,7 +288,6 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
         <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4" onClick={onClose}>
             <div className="bg-slate-900 rounded-3xl shadow-2xl w-full max-w-md overflow-hidden relative" onClick={e => e.stopPropagation()}>
                 
-                {/* Header Decoration */}
                 <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-yellow-500/20 to-transparent pointer-events-none"></div>
 
                 <div className="p-6 text-center relative z-10">
@@ -379,6 +368,137 @@ const UpgradeModal = ({ isOpen, onClose, onConfirm, currentGems }) => {
     );
 };
 
+// --- NEW REFERRAL MODAL ---
+const ReferralModal = ({ isOpen, onClose, referralCode, referralEarnings = 0, referralCount = 0 }) => {
+    const [friendCode, setFriendCode] = useState('');
+    const [status, setStatus] = useState(''); // '', 'copySuccess', 'error', 'submitSuccess'
+    const [loading, setLoading] = useState(false);
+
+    const handleCopy = () => {
+        navigator.clipboard.writeText(referralCode).then(() => {
+            setStatus('copySuccess');
+            setTimeout(() => setStatus(''), 2000);
+        });
+    };
+
+    const handleSubmitCode = async (e) => {
+        e.preventDefault();
+        if (!friendCode.trim()) return;
+        setLoading(true);
+        setStatus('');
+        
+        try {
+            const user = auth.currentUser;
+            if(user) {
+                await submitReferralCode(user.uid, friendCode.trim());
+                setStatus('submitSuccess');
+                setFriendCode('');
+            }
+        } catch (error: any) {
+            setStatus('error');
+            console.error(error);
+            // Display error message inside the component if needed, 
+            // for now we use status to show generic error or alert
+            alert(error.message || "Invalid Code");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    if (!isOpen) return null;
+
+    return (
+        <div className="fixed inset-0 bg-black/90 flex justify-center items-center z-50 p-4" onClick={onClose}>
+            <div className="bg-slate-900 rounded-3xl shadow-[0_0_50px_rgba(139,92,246,0.3)] w-full max-w-md overflow-hidden relative border border-slate-700" onClick={e => e.stopPropagation()}>
+                
+                {/* Decorative Background */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-blue-600/10 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2"></div>
+
+                <div className="p-6 relative z-10">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-2xl font-lilita text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-400 tracking-wide">
+                            REFERRAL PROGRAM
+                        </h2>
+                        <button onClick={onClose} className="text-slate-500 hover:text-white transition-colors bg-slate-800 rounded-full p-1"><Icon path={ICONS.close} /></button>
+                    </div>
+
+                    {/* Stats Card */}
+                    <div className="grid grid-cols-2 gap-3 mb-6">
+                        <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700 text-center">
+                            <div className="text-slate-400 text-xs uppercase font-bold mb-1">Total Earned</div>
+                            <div className="flex items-center justify-center space-x-1">
+                                <Icon path={ICONS.gem} className="w-4 h-4 text-cyan-400" />
+                                <span className="text-xl font-mono font-bold text-white">{referralEarnings}</span>
+                            </div>
+                        </div>
+                        <div className="bg-slate-800/50 p-3 rounded-xl border border-slate-700 text-center">
+                            <div className="text-slate-400 text-xs uppercase font-bold mb-1">Friends Invited</div>
+                            <div className="flex items-center justify-center space-x-1">
+                                <Icon path={ICONS.users} className="w-4 h-4 text-purple-400" />
+                                <span className="text-xl font-mono font-bold text-white">{referralCount}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Offer */}
+                    <div className="bg-gradient-to-r from-indigo-900/60 to-purple-900/60 rounded-xl p-4 mb-6 border border-indigo-500/30 relative overflow-hidden">
+                        <div className="flex items-start space-x-3 relative z-10">
+                            <div className="bg-indigo-500 p-2 rounded-lg shadow-lg">
+                                <Icon path={ICONS.gift} className="w-6 h-6 text-white" />
+                            </div>
+                            <div>
+                                <h3 className="font-bold text-indigo-200">Earn 20% Commission!</h3>
+                                <p className="text-xs text-indigo-300 mt-1 leading-relaxed">
+                                    Invite friends using your unique code. You'll receive <span className="text-yellow-400 font-bold">20% Gems</span> whenever they make a purchase!
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Copy Code Section */}
+                    <div className="mb-6 space-y-2">
+                        <label className="text-xs text-slate-400 font-bold uppercase ml-1">Your Unique Code</label>
+                        <div className="flex space-x-2">
+                            <div className="flex-grow bg-slate-950 border-2 border-slate-700 rounded-lg flex items-center justify-center py-3 px-4">
+                                <span className="font-mono text-xl font-bold tracking-widest text-purple-300">{referralCode}</span>
+                            </div>
+                            <button 
+                                onClick={handleCopy}
+                                className={`px-4 rounded-lg font-bold transition-all shadow-lg flex items-center justify-center ${status === 'copySuccess' ? 'bg-green-500 text-white' : 'bg-slate-700 text-slate-200 hover:bg-slate-600'}`}
+                            >
+                                {status === 'copySuccess' ? <Icon path={ICONS.checkCircle} /> : <Icon path={ICONS.copy} />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Enter Code Section */}
+                    <div className="border-t border-slate-800 pt-5">
+                        <label className="text-xs text-slate-400 font-bold uppercase ml-1 mb-2 block">Enter Friend's Code</label>
+                        <form onSubmit={handleSubmitCode} className="flex space-x-2">
+                            <input 
+                                type="text" 
+                                value={friendCode}
+                                onChange={(e) => setFriendCode(e.target.value)}
+                                placeholder="Enter code here..."
+                                className="flex-grow bg-slate-800 border border-slate-600 rounded-lg px-4 py-2.5 text-white placeholder-slate-500 focus:outline-none focus:border-purple-500 transition-colors"
+                            />
+                            <button 
+                                type="submit"
+                                disabled={loading || !friendCode}
+                                className={`px-4 py-2 rounded-lg font-bold text-sm shadow-lg transition-all ${status === 'submitSuccess' ? 'bg-green-600 text-white' : 'bg-purple-600 text-white hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed'}`}
+                            >
+                                {loading ? '...' : status === 'submitSuccess' ? 'Linked!' : 'Submit'}
+                            </button>
+                        </form>
+                        {status === 'submitSuccess' && <p className="text-green-400 text-xs mt-2 ml-1">Referral code linked successfully!</p>}
+                    </div>
+                </div>
+            </div>
+        </div>
+    );
+};
+
 const SystemModal = ({ isOpen, onClose, icon, iconColor, title, children, actions }) => {
   if (!isOpen) return null;
 
@@ -417,7 +537,7 @@ export default function GameProfile() {
   const avatarOptions = [ 'https://robohash.org/Cyber.png?set=set2&bgset=bg1', 'https://robohash.org/Warrior.png?set=set4&bgset=bg2', 'https://robohash.org/Glitch.png?set=set3&bgset=bg1', 'https://robohash.org/Sentinel.png?set=set1&bgset=bg2', 'https://robohash.org/Phantom.png?set=set4&bgset=bg1', 'https://robohash.org/Jester.png?set=set2&bgset=bg2' ];
 
   // Component-specific UI state
-  const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false });
+  const [modals, setModals] = useState({ avatar: false, edit: false, upgrade: false, referral: false });
   const [systemModal, setSystemModal] = useState({ isOpen: false, title: '', icon: null, iconColor: '', message: '', actions: [] });
   const [displayMode, setDisplayMode] = useState<DisplayMode>('normal');
   const [cacheInfo, setCacheInfo] = useState({ usage: 0, quota: 0 });
@@ -452,7 +572,7 @@ export default function GameProfile() {
     if (!user) return;
     try {
         await performVipUpgrade(user.uid, cost, days);
-        await game.refreshUserData(); // Refresh to update VIP status in Context
+        await game.refreshUserData(); 
     } catch (error)
     {
         console.error("Upgrade failed:", error);
@@ -466,21 +586,14 @@ export default function GameProfile() {
       if (newMode === 'fullscreen') { enterFullScreen(); } else { exitFullScreen(); }
   };
   const closeSystemModal = () => setSystemModal(prev => ({ ...prev, isOpen: false }));
+  
   const clearAppCache = async () => {
-    if (!('caches' in window)) {
-      console.warn("Cache API is not supported.");
-      throw new Error("Your browser does not support automatic cache clearing.");
-    }
-    try {
-      const cacheKeys = await caches.keys();
-      const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX));
-      await Promise.all(cachesToDelete.map(key => caches.delete(key)));
-      console.log("All application caches have been deleted:", cachesToDelete);
-    } catch (error) {
-      console.error("Error while clearing cache:", error);
-      throw new Error("An error occurred while trying to clear the cache.");
-    }
+    if (!('caches' in window)) throw new Error("Browser not supported");
+    const cacheKeys = await caches.keys();
+    const cachesToDelete = cacheKeys.filter(key => key.startsWith(ASSET_CACHE_PREFIX));
+    await Promise.all(cachesToDelete.map(key => caches.delete(key)));
   };
+
   const fetchCacheData = useCallback(async () => {
     setIsCacheLoading(true);
     if ('storage' in navigator && 'estimate' in navigator.storage) {
@@ -489,77 +602,59 @@ export default function GameProfile() {
         setCacheInfo({ usage: estimate.usage || 0, quota: estimate.quota || 0 });
       } catch (error) {
         console.error("Could not retrieve storage estimate:", error);
-        setCacheInfo({ usage: 0, quota: 0 });
       }
-    } else {
-      console.warn("StorageManager API is not supported in this browser.");
     }
     setIsCacheLoading(false);
   }, []);
+  
   useEffect(() => { fetchCacheData(); }, [fetchCacheData]);
+  
   const executeCacheClear = async () => {
     setSystemModal({
       isOpen: true,
       title: 'Deleting Cache',
       icon: ICONS.trash,
       iconColor: 'text-blue-400 animate-pulse',
-      message: 'Please wait a moment while the system cleans up downloaded data...',
+      message: 'Please wait...',
       actions: []
     });
-    
     try {
       await clearAppCache();
       await fetchCacheData();
-      
       setSystemModal({
         isOpen: true,
         title: 'Success!',
         icon: ICONS.checkCircle,
         iconColor: 'text-green-400',
-        message: 'All application cache has been cleared successfully.',
-        actions: [{
-          text: 'Close',
-          onClick: closeSystemModal,
-          className: 'bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-500 transition-colors w-full'
-        }]
+        message: 'Cache cleared.',
+        actions: [{ text: 'Close', onClick: closeSystemModal, className: 'bg-green-600 text-white font-bold py-2 px-6 rounded-lg' }]
       });
-
     } catch (error) {
       setSystemModal({
         isOpen: true,
-        title: 'An Error Occurred',
+        title: 'Error',
         icon: ICONS.warning,
         iconColor: 'text-red-400',
-        message: 'Could not complete the cache clearing process. Please try again later.',
-        actions: [{
-          text: 'Close',
-          onClick: closeSystemModal,
-          className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors w-full'
-        }]
+        message: 'Failed to clear cache.',
+        actions: [{ text: 'Close', onClick: closeSystemModal, className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg' }]
       });
     }
   };
+
   const handleClearCache = () => {
     setSystemModal({
       isOpen: true,
-      title: 'Confirm Cache Deletion',
+      title: 'Confirm Delete',
       icon: ICONS.warning,
       iconColor: 'text-yellow-400',
-      message: 'Bạn có chắc chắn muốn xóa tất cả dữ liệu trò chơi đã lưu trong bộ nhớ đệm không? Hành động này không thể hoàn tác và sẽ yêu cầu tải lại toàn bộ vào lần truy cập tiếp theo.',
+      message: 'Delete all game cache? This will require redownloading assets.',
       actions: [
-        {
-          text: 'Cancel',
-          onClick: closeSystemModal,
-          className: 'bg-slate-700 text-slate-200 font-bold py-2 px-6 rounded-lg hover:bg-slate-600 transition-colors'
-        },
-        {
-          text: 'Confirm',
-          onClick: executeCacheClear,
-          className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-500 transition-colors'
-        }
+        { text: 'Cancel', onClick: closeSystemModal, className: 'bg-slate-700 text-slate-200 font-bold py-2 px-6 rounded-lg' },
+        { text: 'Confirm', onClick: executeCacheClear, className: 'bg-red-600 text-white font-bold py-2 px-6 rounded-lg' }
       ]
     });
   };
+
   useEffect(() => {
       const savedMode = localStorage.getItem('displayMode') as DisplayMode;
       if (savedMode) setDisplayMode(savedMode);
@@ -573,7 +668,6 @@ export default function GameProfile() {
       return <div className="bg-slate-900 w-full h-full flex items-center justify-center text-white p-8 text-center">Please log in to view your profile.</div>;
   }
   
-  // --- LOGIC KIỂM TRA VIP ---
   const now = new Date();
   const isVip = game.accountType === 'VIP' && game.vipExpiresAt && new Date(game.vipExpiresAt) > now;
   
@@ -583,10 +677,9 @@ export default function GameProfile() {
       vipDaysLeft = Math.ceil(diffTime / (1000 * 60 * 60 * 24)); 
   }
   
-  // --- LOGIC TÍNH LEVEL TỪ MASTERY ---
   const currentLevel = Math.floor((game.masteryCards || 0) / 50) + 1;
-
   const gameData = game as any;
+  
   const playerInfo = {
     name: gameData.username || user.displayName || 'CyberWarrior',
     title: `Lv. ${currentLevel}`, 
@@ -595,6 +688,10 @@ export default function GameProfile() {
     gems: game.gems,
     masteryPoints: game.masteryCards,
     maxMasteryPoints: 1000, 
+    // Data for Referral
+    referralCode: gameData.referralCode || user.uid.slice(0, 6).toUpperCase(), // Fallback if DB doesn't have it yet
+    referralEarnings: gameData.referralEarnings || 0,
+    referralCount: gameData.referralCount || 0
   };
 
   return (
@@ -616,7 +713,6 @@ export default function GameProfile() {
            <div className="relative">
               <div className="flex items-center space-x-4">
                 <div className="relative flex-shrink-0">
-                  {/* VIP Avatar: Static Gold Border with Glow */}
                   <div className={`rounded-full ${isVip ? 'p-[3px] bg-gradient-to-b from-yellow-300 via-amber-500 to-yellow-600 shadow-[0_0_20px_rgba(251,191,36,0.4)]' : 'p-1 bg-transparent'}`}>
                     <img src={playerInfo.avatarUrl} alt="Player Avatar" className={`w-20 h-20 rounded-full border-4 ${isVip ? 'border-transparent' : 'border-purple-500'} shadow-lg object-cover bg-slate-800`}/>
                   </div>
@@ -626,7 +722,6 @@ export default function GameProfile() {
                 </div>
                 <div className="flex-grow">
                   <div className="flex items-center space-x-2 mb-1">
-                      {/* Name styling for VIP: Gold Gradient */}
                       <h1 className={`text-xl font-bold font-lilita tracking-wider ${isVip ? 'text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 to-yellow-600' : 'text-slate-100'}`}>
                           {playerInfo.name}
                       </h1>
@@ -635,22 +730,17 @@ export default function GameProfile() {
                       </button>
                   </div>
                   
-                  {/* LEVEL BADGE - MOVED UP */}
                   <div className="mb-2">
                      <div className="inline-flex items-baseline bg-slate-800/80 border border-slate-700 rounded-md px-2 py-0.5 shadow-sm">
-                        {/* Lv. increased from text-xs to text-sm */}
                         <span className="text-sm text-cyan-500 font-lilita mr-1 leading-none">Lv.</span>
-                        {/* Number decreased from text-lg to text-base */}
                         <span className="text-base text-white font-lilita tracking-wide leading-none">
                             {currentLevel}
                         </span>
                      </div>
                   </div>
                    
-                   {/* HEADER STATUS SECTION (VIP/NORMAL) - MOVED DOWN */}
                    <div className="flex items-center space-x-2">
                         {isVip ? (
-                            // VIP STATUS DISPLAY
                             <div className="flex items-center space-x-2">
                                 <div className="relative">
                                     <div className="absolute inset-0 bg-yellow-500 blur-sm opacity-50"></div>
@@ -659,22 +749,14 @@ export default function GameProfile() {
                                     </div>
                                 </div>
                                 <span className="text-xs text-yellow-500 font-mono">{vipDaysLeft} days left</span>
-                                <button 
-                                    onClick={() => handleModal('upgrade', true)} 
-                                    className="bg-slate-800 text-yellow-500 p-1 rounded-full hover:bg-slate-700 border border-slate-600"
-                                    title="Extend VIP"
-                                >
+                                <button onClick={() => handleModal('upgrade', true)} className="bg-slate-800 text-yellow-500 p-1 rounded-full hover:bg-slate-700 border border-slate-600">
                                     <Icon path={ICONS.trendingUp} className="w-3 h-3"/>
                                 </button>
                             </div>
                         ) : (
-                            // NORMAL STATUS & UPGRADE BUTTON
                             <div className="flex items-center space-x-2">
                                 <span className="text-xs bg-slate-600/50 text-slate-300 px-2 py-0.5 rounded-full border border-slate-500 font-bold">Normal</span>
-                                <button 
-                                    onClick={() => handleModal('upgrade', true)} 
-                                    className="group flex items-center space-x-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-lg shadow-purple-500/20 transform transition-all duration-300 ease-in-out hover:scale-105 hover:from-indigo-500 hover:to-purple-500 ring-1 ring-white/20"
-                                >
+                                <button onClick={() => handleModal('upgrade', true)} className="group flex items-center space-x-1.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold text-xs pl-2 pr-3 py-1 rounded-full shadow-lg shadow-purple-500/20 transform transition-all duration-300 ease-in-out hover:scale-105 hover:from-indigo-500 hover:to-purple-500 ring-1 ring-white/20">
                                     <div className="bg-white/20 rounded-full p-0.5 group-hover:animate-pulse">
                                         <Icon path={ICONS.star} className="w-3 h-3 text-yellow-300" />
                                     </div>
@@ -683,7 +765,6 @@ export default function GameProfile() {
                             </div>
                         )}
                    </div>
-                   
                 </div>
               </div>
               <div className="mt-6">
@@ -694,18 +775,17 @@ export default function GameProfile() {
 
         <div className="p-4 pb-24 space-y-3 overflow-y-auto flex-grow no-scrollbar">
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2">Inventory</h2>
-            <MenuItem icon={ICONS.sword} label="Equipment & Items" />
-            <MenuItem icon={ICONS.shield} label="Achievements" />
-            <MenuItem icon={ICONS.potion} label="Store" />
+            <MenuItem icon={ICONS.sword} label="Equipment & Items" onClick={() => {}} />
+            <MenuItem icon={ICONS.shield} label="Achievements" onClick={() => {}} />
+            <MenuItem icon={ICONS.potion} label="Store" onClick={() => {}} />
 
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Habit</h2>
-            <div onClick={() => setIsWorkoutOpen(true)}>
-                <MenuItem icon={ICONS.dumbbell} label="Workout" />
-            </div>
+            <MenuItem icon={ICONS.dumbbell} label="Workout" onClick={() => setIsWorkoutOpen(true)} />
             
-            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Guild & Friends</h2>
-            <MenuItem icon={ICONS.users} label="Friends List" />
-            <MenuItem icon={ICONS.shield} label="My Guild" />
+            <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">Community</h2>
+            <MenuItem icon={ICONS.users} label="Friends List" onClick={() => {}} />
+            {/* ADDED REFERRAL ITEM */}
+            <MenuItem icon={ICONS.share} label="Referral Program" onClick={() => handleModal('referral', true)} />
             
             <h2 className="text-slate-400 text-sm font-bold uppercase tracking-wider px-2 pt-3">System</h2>
             
@@ -717,17 +797,23 @@ export default function GameProfile() {
             />
             
             <DisplayModeSelector currentMode={displayMode} onModeChange={handleModeChange} />
-            <MenuItem icon={ICONS.map} label="Adventure Log" />
-            <MenuItem icon={ICONS.cog} label="Sound" hasToggle={true} />
-            <MenuItem icon={ICONS.map} label="Logout" />
+            {/* REMOVED: Adventure Log & Sound */}
+            <MenuItem icon={ICONS.close} label="Logout" onClick={() => {}} />
         </div>
       </main>
 
       <AvatarModal isOpen={modals.avatar} onClose={() => handleModal('avatar', false)} onSelectAvatar={handleSelectAvatar} avatars={avatarOptions} currentAvatar={playerInfo.avatarUrl}/>
       <EditProfileModal isOpen={modals.edit} onClose={() => handleModal('edit', false)} onSave={handleSaveProfile} currentPlayerInfo={playerInfo}/>
-      
-      {/* Updated Upgrade Modal with Props */}
       <UpgradeModal isOpen={modals.upgrade} onClose={() => handleModal('upgrade', false)} onConfirm={handleUpgrade} currentGems={playerInfo.gems}/>
+      
+      {/* NEW REFERRAL MODAL */}
+      <ReferralModal 
+        isOpen={modals.referral} 
+        onClose={() => handleModal('referral', false)} 
+        referralCode={playerInfo.referralCode}
+        referralEarnings={playerInfo.referralEarnings}
+        referralCount={playerInfo.referralCount}
+      />
       
       <SystemModal
         isOpen={systemModal.isOpen}
