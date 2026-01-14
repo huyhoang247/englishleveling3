@@ -2,29 +2,14 @@
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { auth, db } from './firebase.js'; 
-import { doc, onSnapshot, updateDoc, increment } from 'firebase/firestore'; 
+import { doc, onSnapshot, updateDoc } from 'firebase/firestore'; 
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
-  fetchOrCreateUserGameData, updateUserCoins, fetchJackpotPool, updateJackpotPool,
+  fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
-
-// Định nghĩa interface cho Trade (Thương Hội)
-export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
-export interface TradeIngredient {
-    type: ResourceType;
-    name: string;
-    amount: number;
-}
-export interface TradeOption {
-    id: string;
-    title: string;
-    ingredients: TradeIngredient[];
-    receiveType: 'equipmentPiece';
-    receiveAmount: number;
-}
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -47,13 +32,13 @@ interface IGameContext {
     totalVocabCollected: number;
     cardCapacity: number;
     
-    // Equipment & Materials
+    // Equipment Data
     equipmentPieces: number;
     ownedItems: OwnedItem[];
     equippedItems: EquippedItems;
     stones: { low: number; medium: number; high: number };
     
-    // Resource Materials (Thương Hội)
+    // Resources (New for Trade Association)
     wood: number;
     leather: number;
     ore: number;
@@ -64,10 +49,10 @@ interface IGameContext {
     loginStreak: number;
     lastCheckIn: Date | null;
     
-    // VIP FIELDS
-    accountType: string;         
-    vipExpiresAt: Date | null;   
-    vipLuckySpinClaims: number;  
+    // --- VIP FIELDS ---
+    accountType: string;
+    vipExpiresAt: Date | null;
+    vipLuckySpinClaims: number;
 
     // UI States
     isBackgroundPaused: boolean;
@@ -88,8 +73,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    is777GameOpen: boolean;
-    isTradeModalOpen: boolean; // Mới
+    isTradeAssociationOpen: boolean; // REPLACED 777
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -108,9 +92,6 @@ interface IGameContext {
     updateSkillsState: (data: SkillScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
     updateCoins: (amount: number) => Promise<void>;
-    
-    // Thương hội function
-    handleExchangeResources: (option: TradeOption) => Promise<void>;
 
     // Toggles
     toggleRank: () => void;
@@ -129,8 +110,7 @@ interface IGameContext {
     toggleCheckIn: () => void;
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
-    toggle777Game: () => void;
-    toggleTradeModal: () => void; // Mới
+    toggleTradeAssociation: () => void; // REPLACED 777
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -165,13 +145,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
   
-  // Equipment
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
   const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
   const [stones, setStones] = useState({ low: 0, medium: 0, high: 0 });
-
-  // Resource Materials (Thương Hội)
+  
+  // Resources States
   const [wood, setWood] = useState(0);
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
@@ -180,12 +159,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
 
-  // VIP
+  // --- VIP STATES ---
   const [accountType, setAccountType] = useState<string>('Normal');
   const [vipExpiresAt, setVipExpiresAt] = useState<Date | null>(null);
   const [vipLuckySpinClaims, setVipLuckySpinClaims] = useState(0);
 
-  // Overlay Visibility States
+  // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
   const [isLuckyGameOpen, setIsLuckyGameOpen] = useState(false);
@@ -202,8 +181,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
-  const [is777GameOpen, setIs777GameOpen] = useState(false);
-  const [isTradeModalOpen, setIsTradeModalOpen] = useState(false); // Mới
+  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false); // New state
   
   const [isSyncingData, setIsSyncingData] = useState(false);
   const [showRateLimitToast, setShowRateLimitToast] = useState(false);
@@ -214,43 +192,42 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setIsLoadingUserData(true);
     try {
       const gameData = await fetchOrCreateUserGameData(userId);
+      
       setCoins(gameData.coins);
       setDisplayedCoins(gameData.coins);
       setGems(gameData.gems);
       setMasteryCards(gameData.masteryCards);
       setPickaxes(gameData.pickaxes);
       setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
-      setUserStatsLevel(gameData.stats_level || gameData.stats || { hp: 0, atk: 0, def: 0 });
-      setUserStatsValue((gameData as any).stats_value || { hp: 0, atk: 0, def: 0 });
+      setUserStatsLevel(gameData.stats?.hp ? gameData.stats : (gameData as any).stats_level || { hp: 0, atk: 0, def: 0 });
+      setUserStatsValue((gameData as any).stats_value || { hp: 0, atk: 0, def: 0 }); 
       setBossBattleHighestFloor(gameData.bossBattleHighestFloor);
       setAncientBooks(gameData.ancientBooks);
-      setOwnedSkills(gameData.skills?.owned || []);
-      setEquippedSkillIds(gameData.skills?.equipped || [null, null, null]);
+      setOwnedSkills(gameData.skills.owned);
+      setEquippedSkillIds(gameData.skills.equipped);
       setTotalVocabCollected(gameData.totalVocabCollected);
       setCardCapacity(gameData.cardCapacity);
       
-      setEquipmentPieces(gameData.equipment?.pieces || 0);
-      setOwnedItems(gameData.equipment?.owned || []);
-      setEquippedItems(gameData.equipment?.equipped || { weapon: null, armor: null, Helmet: null });
-      setStones(gameData.equipment?.stones || { low: 0, medium: 0, high: 0 });
+      setEquipmentPieces(gameData.equipment.pieces);
+      setOwnedItems(gameData.equipment.owned);
+      setEquippedItems(gameData.equipment.equipped);
+      setStones(gameData.equipment.stones || { low: 0, medium: 0, high: 0 });
 
-      // Load Materials
-      setWood(gameData.wood || 0);
-      setLeather(gameData.leather || 0);
-      setOre(gameData.ore || 0);
-      setCloth(gameData.cloth || 0);
+      // Load resources if they exist in gameData
+      setWood(gameData.resources?.wood || 0);
+      setLeather(gameData.resources?.leather || 0);
+      setOre(gameData.resources?.ore || 0);
+      setCloth(gameData.resources?.cloth || 0);
 
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
+      
       setAccountType(gameData.accountType || 'Normal');
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
       setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
 
-    } catch (error) { 
-        console.error("Error refreshing user data:", error);
-    } finally { 
-        setIsLoadingUserData(false); 
-    }
+    } catch (error) { console.error("Error refreshing user data:", error);
+    } finally { setIsLoadingUserData(false); }
   }, []);
 
   useEffect(() => {
@@ -266,51 +243,81 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         unsubscribeFromUserDoc = onSnapshot(userDocRef, (docSnap) => {
             if (docSnap.exists()) {
                 const gameData = docSnap.data();
+                
                 setCoins(gameData.coins ?? 0);
                 setGems(gameData.gems ?? 0);
                 setMasteryCards(gameData.masteryCards ?? 0);
                 setPickaxes(gameData.pickaxes ?? 50);
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
+                
                 setUserStatsLevel(gameData.stats_level ?? gameData.stats ?? { hp: 0, atk: 0, def: 0 });
                 setUserStatsValue(gameData.stats_value ?? { hp: 0, atk: 0, def: 0 });
+                
                 setBossBattleHighestFloor(gameData.bossBattleHighestFloor ?? 0);
                 setAncientBooks(gameData.ancientBooks ?? 0);
                 setOwnedSkills(gameData.skills?.owned ?? []);
                 setEquippedSkillIds(gameData.skills?.equipped ?? [null, null, null]);
                 setTotalVocabCollected(gameData.totalVocabCollected ?? 0);
                 setCardCapacity(gameData.cardCapacity ?? 100);
+                
                 setEquipmentPieces(gameData.equipment?.pieces ?? 0);
                 setOwnedItems(gameData.equipment?.owned ?? []);
                 setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
                 setStones(gameData.equipment?.stones || { low: 0, medium: 0, high: 0 });
 
-                // Sync Materials Realtime
-                setWood(gameData.wood ?? 0);
-                setLeather(gameData.leather ?? 0);
-                setOre(gameData.ore ?? 0);
-                setCloth(gameData.cloth ?? 0);
+                // Realtime Resources
+                setWood(gameData.resources?.wood || 0);
+                setLeather(gameData.resources?.leather || 0);
+                setOre(gameData.resources?.ore || 0);
+                setCloth(gameData.resources?.cloth || 0);
 
                 setLoginStreak(gameData.loginStreak ?? 0);
                 setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
+                
                 setAccountType(gameData.accountType ?? 'Normal');
                 setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
                 setVipLuckySpinClaims(gameData.vipLuckySpinClaims ?? 0);
+
+            } else {
+                fetchOrCreateUserGameData(user.uid);
             }
+            setIsLoadingUserData(false);
+        }, (error) => {
+            console.error("Error listening to user document:", error);
             setIsLoadingUserData(false);
         });
         
-        fetchJackpotPool().then(setJackpotPool).catch(console.error);
+        try {
+            const jackpotData = await fetchJackpotPool();
+            setJackpotPool(jackpotData);
+        } catch(error) { console.error("Error fetching initial jackpot data:", error); }
 
       } else {
-        // Reset state on logout
-        setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
-        setPickaxes(0); setUserStatsLevel({ hp: 0, atk: 0, def: 0 });
+        setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
+        setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
+        setPickaxes(0); setMinerChallengeHighestFloor(0); 
+        setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
+        setUserStatsValue({ hp: 0, atk: 0, def: 0 });
+        setBossBattleHighestFloor(0); setAncientBooks(0);
+        setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); 
+        
+        setEquipmentPieces(0); 
+        setOwnedItems([]); 
+        setEquippedItems({ weapon: null, armor: null, Helmet: null }); 
+        setStones({ low: 0, medium: 0, high: 0 });
         setWood(0); setLeather(0); setOre(0); setCloth(0);
-        setIsLoadingUserData(true);
+
+        setLoginStreak(0); setLastCheckIn(null);
+        setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
+        setIsMailboxOpen(false);
+        setAccountType('Normal'); setVipExpiresAt(null); setVipLuckySpinClaims(0);
       }
     });
 
-    return () => { unsubscribeFromAuth(); unsubscribeFromUserDoc(); };
+    return () => {
+      unsubscribeFromAuth();
+      unsubscribeFromUserDoc();
+    };
   }, []);
 
   useEffect(() => {
@@ -324,10 +331,13 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   const totalEquipmentStats = useMemo(() => {
     const totals = { hp: 0, atk: 0, def: 0 };
-    if (!ownedItems || !equippedItems) return totals;
+    if (!ownedItems || !equippedItems) {
+      return totals;
+    }
+    const safeOwnedItems = ownedItems.map(item => ({ ...item, stats: item.stats || {} }));
     Object.values(equippedItems).forEach(itemId => { 
         if(itemId){
-            const item = ownedItems.find(i => i.id === itemId);
+            const item = safeOwnedItems.find(i => i.id === itemId);
             if (item && item.stats) { 
                 totals.hp += item.stats.hp || 0; 
                 totals.atk += item.stats.atk || 0; 
@@ -350,35 +360,50 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
     const previousCoins = coins;
-    setCoins(prev => prev + amount);
-    setDisplayedCoins(prev => prev + amount); 
+    const optimisticCoins = previousCoins + amount;
+    setCoins(optimisticCoins);
+    setDisplayedCoins(optimisticCoins); 
     setIsSyncingData(true);
     try {
       const serverConfirmedCoins = await updateUserCoins(userId, amount);
       setCoins(serverConfirmedCoins);
     } catch (error) {
-      setCoins(previousCoins); setDisplayedCoins(previousCoins);
-    } finally { setIsSyncingData(false); }
+      console.error("Failed to update coins via context (Rolling back):", error);
+      setCoins(previousCoins);
+      setDisplayedCoins(previousCoins);
+    } finally {
+      setIsSyncingData(false);
+    }
   };
 
   const handleBossFloorUpdate = async (newFloor: number) => {
     const userId = auth.currentUser?.uid;
-    if (!userId) return;
-    try { await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor); } catch (error) { console.error(error); }
+    if (!userId) { console.error("Cannot update boss floor: User not authenticated."); return; }
+    try {
+        await updateUserBossFloor(userId, newFloor, bossBattleHighestFloor);
+    } catch (error) { console.error("Firestore update failed for boss floor via service: ", error); }
   };
   
-  const handleMinerChallengeEnd = (result: any) => {
+  const handleMinerChallengeEnd = (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => {
+    if (result.finalPickaxes === pickaxes && result.coinsEarned === 0 && result.highestFloorCompleted <= minerChallengeHighestFloor) return;
     const newCoins = coins + result.coinsEarned;
+    const newPickaxes = result.finalPickaxes;
+    const newHighestFloor = Math.max(minerChallengeHighestFloor, result.highestFloorCompleted);
     setCoins(newCoins);
-    setPickaxes(result.finalPickaxes);
-    setMinerChallengeHighestFloor(Math.max(minerChallengeHighestFloor, result.highestFloorCompleted));
+    setPickaxes(newPickaxes);
+    setMinerChallengeHighestFloor(newHighestFloor);
   };
 
   const handleUpdatePickaxes = async (amountToAdd: number) => {
     const userId = auth.currentUser?.uid; if (!userId) return;
     const originalPickaxes = pickaxes;
     setPickaxes(prev => prev + amountToAdd);
-    try { await updateUserPickaxes(userId, originalPickaxes + amountToAdd); } catch(error) { setPickaxes(originalPickaxes); }
+    try {
+        await updateUserPickaxes(userId, originalPickaxes + amountToAdd);
+    } catch(error) {
+        console.error("Failed to update pickaxes on server:", error);
+        setPickaxes(originalPickaxes);
+    }
   };
   
   const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
@@ -387,39 +412,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const handleVipLuckySpinClaim = async (): Promise<boolean> => {
       const userId = auth.currentUser?.uid;
-      if (!userId || accountType !== 'VIP' || vipLuckySpinClaims >= 5) return false;
+      if (!userId || accountType !== 'VIP') return false;
+      if (vipLuckySpinClaims >= 5) return false;
       const oldVal = vipLuckySpinClaims;
       setVipLuckySpinClaims(oldVal + 1);
       try {
-          await updateDoc(doc(db, 'users', userId), { vipLuckySpinClaims: oldVal + 1 });
+          const userDocRef = doc(db, 'users', userId);
+          await updateDoc(userDocRef, { vipLuckySpinClaims: oldVal + 1 });
           return true;
-      } catch (error) { setVipLuckySpinClaims(oldVal); return false; }
-  };
-
-  // --- LOGIC THƯƠNG HỘI ---
-  const handleExchangeResources = async (option: TradeOption) => {
-    const userId = auth.currentUser?.uid;
-    if (!userId) return;
-
-    setIsSyncingData(true);
-    try {
-        const userDocRef = doc(db, 'users', userId);
-        const updates: any = {};
-        
-        // Trừ các nguyên liệu trong công thức
-        option.ingredients.forEach(ing => {
-            updates[ing.type] = increment(-ing.amount);
-        });
-        
-        // Cộng Mảnh Trang Bị
-        updates['equipment.pieces'] = increment(option.receiveAmount);
-
-        await updateDoc(userDocRef, updates);
-    } catch (error) {
-        console.error("Trade transaction failed:", error);
-    } finally {
-        setIsSyncingData(false);
-    }
+      } catch (error) {
+          setVipLuckySpinClaims(oldVal);
+          return false;
+      }
   };
   
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
@@ -430,30 +434,31 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen, setIs777GameOpen, setIsTradeModalOpen ].forEach(s => { if (s !== setter) s(false); });
+              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen, setIsTradeAssociationOpen ].forEach(s => { if (s !== setter) s(false); });
           } else { showNavBar(); }
           return newState;
       });
   };
 
   const getPlayerBattleStats = () => {
-    return { maxHp: totalPlayerStats.hp, hp: totalPlayerStats.hp, atk: totalPlayerStats.atk, def: totalPlayerStats.def, maxEnergy: 50, energy: 50 };
+    const BASE_HP = 0, BASE_ATK = 0, BASE_DEF = 0;
+    return { 
+        maxHp: BASE_HP + totalPlayerStats.hp, 
+        hp: BASE_HP + totalPlayerStats.hp, 
+        atk: BASE_ATK + totalPlayerStats.atk, 
+        def: BASE_DEF + totalPlayerStats.def, 
+        maxEnergy: 50, 
+        energy: 50 
+    };
   };
 
   const getEquippedSkillsDetails = () => {
     if (!ownedSkills || !equippedSkillIds) return [];
-    return equippedSkillIds.map(equippedId => { 
-        if (!equippedId) return null; 
-        const owned = ownedSkills.find(s => s.id === equippedId); 
-        if (!owned) return null; 
-        const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); 
-        if (!blueprint) return null; 
-        return { ...owned, ...blueprint }; 
-    }).filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
+    return equippedSkillIds.map(equippedId => { if (!equippedId) return null; const owned = ownedSkills.find(s => s.id === equippedId); if (!owned) return null; const blueprint = ALL_SKILLS.find(b => b.id === owned.skillId); if (!blueprint) return null; return { ...owned, ...blueprint }; }).filter((skill): skill is OwnedSkill & SkillBlueprint => skill !== null);
   };
   
-  const handleStateUpdateFromChest = (updates: any) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
-  const handleAchievementsDataUpdate = (updates: any) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
+  const handleStateUpdateFromChest = (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => { setCoins(updates.newCoins); setGems(updates.newGems); setTotalVocabCollected(updates.newTotalVocab); };
+  const handleAchievementsDataUpdate = (updates: { coins?: number; masteryCards?: number }) => { if (updates.coins !== undefined) setCoins(updates.coins); if (updates.masteryCards !== undefined) setMasteryCards(updates.masteryCards); };
   
   const toggleRank = createToggleFunction(setIsRankOpen);
   const togglePvpArena = createToggleFunction(setIsPvpArenaOpen);
@@ -471,16 +476,19 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggle777Game = createToggleFunction(setIs777GameOpen);
-  const toggleTradeModal = createToggleFunction(setIsTradeModalOpen); // Mới
+  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen); // New toggle
   
-  const handleSkillScreenClose = (dataUpdated: boolean) => toggleSkillScreen();
+  const handleSkillScreenClose = (dataUpdated: boolean) => { toggleSkillScreen(); };
 
   const updateSkillsState = (data: SkillScreenExitData) => {
-    setCoins(data.gold); setDisplayedCoins(data.gold); setAncientBooks(data.ancientBooks); setOwnedSkills(data.ownedSkills); setEquippedSkillIds(data.equippedSkillIds);
+    setCoins(data.gold);
+    setDisplayedCoins(data.gold);
+    setAncientBooks(data.ancientBooks);
+    setOwnedSkills(data.ownedSkills);
+    setEquippedSkillIds(data.equippedSkillIds);
   };
 
-  const updateUserCurrency = (updates: any) => {
+  const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
     if (updates.coins !== undefined) { setCoins(updates.coins); setDisplayedCoins(updates.coins); }
     if (updates.gems !== undefined) setGems(updates.gems);
     if (updates.equipmentPieces !== undefined) setEquipmentPieces(updates.equipmentPieces);
@@ -488,27 +496,52 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     if (updates.cardCapacity !== undefined) setCardCapacity(updates.cardCapacity);
   };
 
-  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen || is777GameOpen || isTradeModalOpen;
+  const isAnyOverlayOpen = isRankOpen || isPvpArenaOpen || isLuckyGameOpen || isBossBattleOpen || isShopOpen || isVocabularyChestOpen || isAchievementsOpen || isAdminPanelOpen || isMinerChallengeOpen || isUpgradeScreenOpen || isBaseBuildingOpen || isSkillScreenOpen || isEquipmentOpen || isAuctionHouseOpen || isCheckInOpen || isMailboxOpen || isTradeAssociationOpen;
   const isLoading = isLoadingUserData || !assetsLoaded;
   const isGamePaused = isAnyOverlayOpen || isLoading || isBackgroundPaused;
 
   const value: IGameContext = {
     isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, 
-    userStatsLevel, userStatsValue, jackpotPool, bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
-    equipmentPieces, ownedItems, equippedItems, stones,
-    wood, leather, ore, cloth, // Export Materials
-    totalEquipmentStats, totalPlayerStats, loginStreak, lastCheckIn, accountType, vipExpiresAt, vipLuckySpinClaims,
+    userStatsLevel, 
+    userStatsValue,
+    jackpotPool,
+    bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
+    
+    equipmentPieces, 
+    ownedItems, 
+    equippedItems,
+    stones, 
+    
+    // Resources
+    wood, leather, ore, cloth,
+
+    totalEquipmentStats,
+    totalPlayerStats,
+    loginStreak, lastCheckIn, 
+    
+    accountType, vipExpiresAt, vipLuckySpinClaims,
+
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
-    isAuctionHouseOpen, isCheckInOpen, isMailboxOpen, is777GameOpen, isTradeModalOpen,
+    isAuctionHouseOpen,
+    isCheckInOpen,
+    isMailboxOpen,
+    isTradeAssociationOpen,
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
-    handleVipLuckySpinClaim, getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    updateUserCurrency, updateCoins, handleExchangeResources, // Export Thương hội logic
+    handleVipLuckySpinClaim, 
+    getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
+    updateUserCurrency,
+    updateCoins,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
-    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, toggleAuctionHouse, toggleCheckIn, toggleMailbox, toggleBaseBuilding, toggle777Game,
-    toggleTradeModal,
-    setCoins, setIsSyncingData
+    toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
+    toggleAuctionHouse,
+    toggleCheckIn,
+    toggleMailbox,
+    toggleBaseBuilding, 
+    toggleTradeAssociation,
+    setCoins,
+    setIsSyncingData
   };
 
   return <GameContext.Provider value={value}>{children}</GameContext.Provider>;
@@ -516,8 +549,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
 export const useGame = (): IGameContext => {
   const context = useContext(GameContext);
-  if (context === undefined) throw new Error('useGame must be used within a GameProvider');
+  if (context === undefined) {
+    throw new Error('useGame must be used within a GameProvider');
+  }
   return context;
 };
-
 // --- END OF FILE GameContext.tsx ---
