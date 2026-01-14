@@ -1,6 +1,7 @@
 // --- START OF FILE GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
+import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore'; 
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
@@ -32,17 +33,18 @@ interface IGameContext {
     totalVocabCollected: number;
     cardCapacity: number;
     
-    // Equipment Data
-    equipmentPieces: number;
-    ownedItems: OwnedItem[];
-    equippedItems: EquippedItems;
-    stones: { low: number; medium: number; high: number };
-
-    // Resources Data (New for Trade Association)
+    // Resources (MỚI - Dùng cho Trade Association)
     wood: number;
     leather: number;
     ore: number;
     cloth: number;
+
+    // Equipment Data
+    equipmentPieces: number;
+    ownedItems: OwnedItem[];
+    equippedItems: EquippedItems;
+    // Stones
+    stones: { low: number; medium: number; high: number };
 
     totalEquipmentStats: { hp: number; atk: number; def: number; };
     totalPlayerStats: { hp: number; atk: number; def: number; };
@@ -73,7 +75,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    isTradeAssociationOpen: boolean; // Thay thế 777Game
+    isTradeAssociationOpen: boolean; // MỚI: Trạng thái mở modal Thương Hội
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -83,7 +85,7 @@ interface IGameContext {
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
-    handleVipLuckySpinClaim: () => Promise<boolean>; // Hàm xử lý nhận thưởng VIP
+    handleVipLuckySpinClaim: () => Promise<boolean>;
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -110,7 +112,8 @@ interface IGameContext {
     toggleCheckIn: () => void;
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
-    toggleTradeAssociation: () => void; // Thay thế toggle777Game
+    toggleTradeAssociation: () => void; // MỚI
+    
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -145,16 +148,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
   
-  const [equipmentPieces, setEquipmentPieces] = useState(0);
-  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
-  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
-  const [stones, setStones] = useState({ low: 0, medium: 0, high: 0 });
-
-  // Resources States
+  // RESOURCES STATE (MỚI - Wood, Leather, Ore, Cloth)
   const [wood, setWood] = useState(0);
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
   const [cloth, setCloth] = useState(0);
+
+  const [equipmentPieces, setEquipmentPieces] = useState(0);
+  const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
+  const [equippedItems, setEquippedItems] = useState<EquippedItems>({ weapon: null, armor: null, Helmet: null });
+  const [stones, setStones] = useState({ low: 0, medium: 0, high: 0 });
 
   const [loginStreak, setLoginStreak] = useState(0);
   const [lastCheckIn, setLastCheckIn] = useState<Date | null>(null);
@@ -181,7 +184,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
-  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false); // Thay thế 777
+  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false); // MỚI: Modal Thương Hội
   
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -210,21 +213,20 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setTotalVocabCollected(gameData.totalVocabCollected);
       setCardCapacity(gameData.cardCapacity);
       
+      // Load Resources from DB
+      setWood((gameData as any).wood || 0);
+      setLeather((gameData as any).leather || 0);
+      setOre((gameData as any).ore || 0);
+      setCloth((gameData as any).cloth || 0);
+
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
       setEquippedItems(gameData.equipment.equipped);
       setStones(gameData.equipment.stones || { low: 0, medium: 0, high: 0 });
 
-      // Load Resources
-      setWood(gameData.resources?.wood || 0);
-      setLeather(gameData.resources?.leather || 0);
-      setOre(gameData.resources?.ore || 0);
-      setCloth(gameData.resources?.cloth || 0);
-
       setLoginStreak(gameData.loginStreak || 0);
       setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
       
-      // Update VIP data
       setAccountType(gameData.accountType || 'Normal');
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
       setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
@@ -265,16 +267,16 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setTotalVocabCollected(gameData.totalVocabCollected ?? 0);
                 setCardCapacity(gameData.cardCapacity ?? 100);
                 
+                // Real-time Resources Update
+                setWood(gameData.wood ?? 0);
+                setLeather(gameData.leather ?? 0);
+                setOre(gameData.ore ?? 0);
+                setCloth(gameData.cloth ?? 0);
+
                 setEquipmentPieces(gameData.equipment?.pieces ?? 0);
                 setOwnedItems(gameData.equipment?.owned ?? []);
                 setEquippedItems(gameData.equipment?.equipped ?? { weapon: null, armor: null, Helmet: null });
                 setStones(gameData.equipment?.stones || { low: 0, medium: 0, high: 0 });
-
-                // Update Resources
-                setWood(gameData.resources?.wood || 0);
-                setLeather(gameData.resources?.leather || 0);
-                setOre(gameData.resources?.ore || 0);
-                setCloth(gameData.resources?.cloth || 0);
 
                 setLoginStreak(gameData.loginStreak ?? 0);
                 setLastCheckIn(gameData.lastCheckIn ? gameData.lastCheckIn.toDate() : null);
@@ -310,18 +312,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); 
         
+        // Reset resources
+        setWood(0); setLeather(0); setOre(0); setCloth(0);
+
         setEquipmentPieces(0); 
         setOwnedItems([]); 
         setEquippedItems({ weapon: null, armor: null, Helmet: null }); 
         setStones({ low: 0, medium: 0, high: 0 });
 
-        // Reset Resources
-        setWood(0); setLeather(0); setOre(0); setCloth(0);
-
         setLoginStreak(0); setLastCheckIn(null);
         setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
-        setIsTradeAssociationOpen(false);
+        setIsTradeAssociationOpen(false); // Reset trạng thái modal
         
         setAccountType('Normal');
         setVipExpiresAt(null);
@@ -342,7 +344,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   }, []);
   
   useEffect(() => { if (showRateLimitToast) { const timer = setTimeout(() => { setShowRateLimitToast(false); }, 2500); return () => clearTimeout(timer); } }, [showRateLimitToast]);
-  // Note: Optimistic update sets displayedCoins directly, this effect ensures sync if coins changes via other means (like snapshot)
   useEffect(() => { if (displayedCoins === coins) return; const timeoutId = setTimeout(() => { setDisplayedCoins(coins); }, 100); return () => clearTimeout(timeoutId); }, [coins, displayedCoins]);
   
   const totalEquipmentStats = useMemo(() => {
@@ -372,7 +373,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, [userStatsValue, totalEquipmentStats]);
     
-  // --- OPTIMISTIC UPDATE COINS ---
   const updateCoins = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
@@ -430,16 +430,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setJackpotPool(await updateJackpotPool(amount, reset));
   };
 
-  // --- NEW: Handle VIP Claim Logic ---
   const handleVipLuckySpinClaim = async (): Promise<boolean> => {
       const userId = auth.currentUser?.uid;
-      // Chỉ cho phép nếu là VIP và chưa hết hạn
       if (!userId || accountType !== 'VIP') return false;
       
-      // Kiểm tra giới hạn (5 lần/ngày)
       if (vipLuckySpinClaims >= 5) return false;
 
-      // Optimistic Update
       const oldVal = vipLuckySpinClaims;
       setVipLuckySpinClaims(oldVal + 1);
 
@@ -451,7 +447,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           return true;
       } catch (error) {
           console.error("Error updating VIP claim:", error);
-          setVipLuckySpinClaims(oldVal); // Rollback
+          setVipLuckySpinClaims(oldVal); 
           return false;
       }
   };
@@ -464,7 +460,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              [ setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen, setIsTradeAssociationOpen ].forEach(s => { if (s !== setter) s(false); });
+              // Đảm bảo đóng tất cả các modal khác, bao gồm cả TradeAssociation
+              [ 
+                  setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, 
+                  setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, 
+                  setIsEquipmentOpen, setIsAchievementsOpen, setIsAdminPanelOpen, setIsUpgradeScreenOpen, 
+                  setIsBaseBuildingOpen, setIsAuctionHouseOpen, setIsCheckInOpen, setIsMailboxOpen, 
+                  setIsTradeAssociationOpen 
+              ].forEach(s => { if (s !== setter) s(false); });
           } else { showNavBar(); }
           return newState;
       });
@@ -507,7 +510,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen);
+  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen); // MỚI
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
@@ -551,14 +554,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
     
-    // Equipment & Stones
+    wood, leather, ore, cloth, // Export Resources
+
     equipmentPieces, 
     ownedItems, 
     equippedItems,
-    stones, 
-
-    // Resources
-    wood, leather, ore, cloth,
+    stones,
 
     totalEquipmentStats,
     totalPlayerStats,
@@ -572,7 +573,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isAuctionHouseOpen,
     isCheckInOpen,
     isMailboxOpen,
-    isTradeAssociationOpen,
+    isTradeAssociationOpen, // MỚI
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     handleVipLuckySpinClaim,
@@ -585,7 +586,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     toggleCheckIn,
     toggleMailbox,
     toggleBaseBuilding, 
-    toggleTradeAssociation,
+    toggleTradeAssociation, // MỚI
     setCoins,
     setIsSyncingData
   };
