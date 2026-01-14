@@ -57,7 +57,13 @@ const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, cla
                 /> 
             );
         case 'leather': 
-            return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-orange-700`}><path d="M12 2L4 5v14l8 3 8-3V5l-8-3zm0 2.18l6 2.25v11.14l-6 2.25-6-2.25V6.43l6-2.25z"/></svg> );
+            return ( 
+                <img 
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/leather.webp" 
+                    alt="Leather" 
+                    className={`${className} object-contain`} 
+                /> 
+            );
         case 'ore': 
             return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-slate-400`}><path d="M20.57 14.86L22 13.43 20.57 12 17 15.57 8.43 7 12 3.43 10.57 2 9.14 3.43 7.71 2 5.57 4.14 2 7.71l1.43 1.43L2 10.57 3.43 12 7 8.43 15.57 17 12 20.57 13.43 22 14.86 20.57 16.29 22 18.43 19.86 22 16.29l-1.43-1.43z"/></svg> );
         case 'cloth': 
