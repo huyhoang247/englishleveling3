@@ -1,7 +1,7 @@
 import React, { memo } from 'react';
 import { equipmentUiAssets } from '../../game-assets.ts';
 
-// --- ĐỊNH NGHĨA TYPES ---
+// --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
 
 export interface TradeIngredient {
@@ -19,37 +19,43 @@ export interface TradeOption {
     description?: string;
 }
 
-// --- CẤU HÌNH CÔNG THỨC ĐỔI ---
+// --- TRADE OPTIONS CONFIGURATION ---
 const TRADE_OPTIONS: TradeOption[] = [
     { 
         id: 'combine_wood_leather', 
-        title: 'Tiếp Tế Thợ Săn',
-        description: 'Chế tác từ nguyên liệu tự nhiên',
+        title: "Hunter's Supply",
+        description: 'Crafted from natural materials',
         ingredients: [
-            { type: 'wood', name: 'Gỗ', amount: 10 },
-            { type: 'leather', name: 'Da', amount: 10 }
+            { type: 'wood', name: 'Wood', amount: 10 },
+            { type: 'leather', name: 'Leather', amount: 10 }
         ],
         receiveType: 'equipmentPiece', 
         receiveAmount: 1
     },
     { 
         id: 'combine_ore_cloth', 
-        title: 'Tiếp Tế Chiến Binh',
-        description: 'Chế tác từ khoáng sản và vải vóc',
+        title: "Warrior's Supply",
+        description: 'Crafted from minerals and fabrics',
         ingredients: [
-            { type: 'ore', name: 'Quặng', amount: 10 },
-            { type: 'cloth', name: 'Vải', amount: 10 }
+            { type: 'ore', name: 'Ore', amount: 10 },
+            { type: 'cloth', name: 'Cloth', amount: 10 }
         ],
         receiveType: 'equipmentPiece', 
         receiveAmount: 1
     },
 ];
 
-// --- CÁC ICON SVG ---
+// --- SVG & IMAGE ICONS ---
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
     switch (type) {
         case 'wood': 
-            return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-amber-600`}><path d="M19.5 12c-2.48 0-4.5 2.02-4.5 4.5s2.02 4.5 4.5 4.5 4.5-2.02 4.5-4.5-2.02-4.5-4.5-4.5zm-15 0c-2.48 0-4.5 2.02-4.5 4.5s2.02 4.5 4.5 4.5 4.5-2.02 4.5-4.5-2.02-4.5-4.5-4.5zM12 3c-4.97 0-9 4.03-9 9H.75C.34 12 0 12.34 0 12.75V15h24v-2.25c0-.41-.34-.75-.75-.75H21c0-4.97-4.03-9-9-9z"/><path d="M12 5c-3.87 0-7 3.13-7 7h14c0-3.87-3.13-7-7-7z" opacity="0.5"/></svg> );
+            return ( 
+                <img 
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/wood.webp" 
+                    alt="Wood" 
+                    className={`${className} object-contain`} 
+                /> 
+            );
         case 'leather': 
             return ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`${className} text-orange-700`}><path d="M12 2L4 5v14l8 3 8-3V5l-8-3zm0 2.18l6 2.25v11.14l-6 2.25-6-2.25V6.43l6-2.25z"/></svg> );
         case 'ore': 
@@ -72,10 +78,10 @@ const CloseIcon = ({ className = '' }: { className?: string }) => (
 
 const ResourceWallet = ({ resources }: { resources: Record<ResourceType, number> }) => {
     const items: { type: ResourceType; label: string }[] = [
-        { type: 'wood', label: 'Gỗ' },
-        { type: 'leather', label: 'Da' },
-        { type: 'ore', label: 'Quặng' },
-        { type: 'cloth', label: 'Vải' },
+        { type: 'wood', label: 'Wood' },
+        { type: 'leather', label: 'Leather' },
+        { type: 'ore', label: 'Ore' },
+        { type: 'cloth', label: 'Cloth' },
     ];
 
     return (
@@ -106,11 +112,6 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-[110] p-4">
-            {/* 
-                TỐI ƯU HIỆU NĂNG:
-                - Thay thế backdrop-blur (ngốn GPU) bằng bg-black/80 (màu đơn sắc).
-                - Đây là cách nhẹ nhất để che nền.
-            */}
             <div 
                 className="fixed inset-0 bg-black/80" 
                 onClick={onClose} 
@@ -128,7 +129,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                         </div>
                         <div>
                             <h3 className="text-xl font-bold uppercase tracking-widest text-amber-400 drop-shadow-md font-serif">
-                                Thương Hội
+                                Trade Association
                             </h3>
                             <p className="text-[11px] text-amber-200/60 uppercase tracking-wider">Exchange & Supply</p>
                         </div>
@@ -150,13 +151,13 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                             
                             return (
                                 <div key={option.id} className="relative group bg-[#252833] rounded-xl border border-slate-700 shadow-lg overflow-hidden transition-transform hover:scale-[1.01] hover:border-amber-700/50">
-                                    {/* Header của Card */}
+                                    {/* Card Header */}
                                     <div className="px-4 py-2 bg-[#2d313d] border-b border-slate-700/50 flex justify-between items-center">
                                         <span className="text-sm font-bold text-amber-500/90 uppercase tracking-wide">{option.title}</span>
                                         <span className="text-[10px] text-slate-500 italic">{option.description}</span>
                                     </div>
 
-                                    {/* Body của Card */}
+                                    {/* Card Body */}
                                     <div className="p-4 flex flex-col sm:flex-row items-center gap-4">
                                         
                                         {/* Inputs */}
@@ -169,7 +170,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                                 return (
                                                     <div key={ing.type} className="flex items-center justify-between bg-black/30 p-2 rounded-lg border border-slate-800">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="bg-slate-800 p-1.5 rounded-md shadow-inner">
+                                                            <div className="bg-slate-800 p-1.5 rounded-md shadow-inner flex items-center justify-center overflow-hidden">
                                                                 <ResourceIcon type={ing.type} className="w-5 h-5" />
                                                             </div>
                                                             <span className="text-slate-300 font-medium text-sm">{ing.name}</span>
@@ -196,7 +197,6 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                         {/* Output & Button */}
                                         <div className="flex-1 w-full flex flex-col items-center justify-center gap-3 bg-black/20 p-3 rounded-xl border border-dashed border-slate-700/50">
                                             <div className="relative">
-                                                {/* Loại bỏ Blur effect của glow, dùng opacity đơn giản */}
                                                 <div className={`absolute inset-0 bg-amber-500 rounded-full opacity-10 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
                                                 <EquipmentPieceIcon className="w-14 h-14 drop-shadow-2xl relative z-10" />
                                                 <span className="absolute -bottom-1 -right-1 bg-amber-600 text-white text-[10px] font-bold px-1.5 rounded border border-amber-400 shadow-md">
@@ -215,7 +215,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                                     }
                                                 `}
                                             >
-                                                {isProcessing ? 'Processing...' : 'Trao Đổi'}
+                                                {isProcessing ? 'Processing...' : 'Exchange'}
                                             </button>
                                         </div>
 
@@ -228,7 +228,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
 
                 <div className="bg-[#1a1d26] p-3 text-center border-t border-slate-800">
                     <p className="text-[10px] text-slate-500 font-mono">
-                        *Tỷ lệ quy đổi có thể thay đổi tùy theo tình hình thị trường.
+                        *Exchange rates may vary based on market conditions.
                     </p>
                 </div>
             </div>
