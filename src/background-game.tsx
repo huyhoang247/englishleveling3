@@ -8,7 +8,6 @@ import useSessionStorage from './bo-nho-tam.tsx';
 import HeaderBackground from './header-background.tsx';
 import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
-// [UPDATE] Rename import to StickGame for clarity and usage
 import StickGame from './home/stick-game.tsx';
 import DungeonCanvasBackground from './background-canvas.tsx';
 import LuckyChestGame from './lucky-game.tsx';
@@ -31,6 +30,9 @@ import RateLimitToast from './thong-bao.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
 
+// IMPORT MODAL THƯƠNG HỘI
+import TradeAssociationModal from './home/equipment/trade-association-modal.tsx';
+
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 const SlotMachineGame = lazy(() => import('./777.tsx'));
 
@@ -40,6 +42,7 @@ const GemIcon: React.FC<GemIconProps> = ({ size = 24, color = 'currentColor', cl
     <img src={uiAssets.gemIcon} alt="Tourmaline Gem Icon" className="w-full h-full object-contain" />
   </div>
 );
+
 interface StatsIconProps { onClick: () => void; }
 const StatsIcon: React.FC<StatsIconProps> = ({ onClick }) => (
   <div className="relative mr-2 cursor-pointer w-8 h-8 flex items-center justify-center hover:scale-110 transition-transform z-10" onClick={onClick} title="Xem chỉ số nhân vật">
@@ -75,6 +78,10 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isCheckInOpen,
     isMailboxOpen,
     is777GameOpen,
+    isTradeModalOpen, // [NEW]
+    wood, leather, ore, cloth, // [NEW] Resources
+    isSyncingData, // [NEW] 
+    handleExchangeResources, // [NEW]
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate,
@@ -82,7 +89,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     setCoins, updateSkillsState,
     updateEquipmentData,
     updateUserCurrency,
-    updateCoins, // <--- ĐÃ THÊM HÀM NÀY TỪ CONTEXT
+    updateCoins,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge,
     toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
     toggleAdminPanel, toggleUpgradeScreen, toggleSkillScreen, toggleEquipmentScreen, 
@@ -91,6 +98,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleMailbox, 
     toggleBaseBuilding,
     toggle777Game,
+    toggleTradeModal // [NEW]
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -149,11 +157,43 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 <div className="flex items-center space-x-1 currency-display-container relative z-10"><GemDisplay displayedGems={gems} /><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /></div>
             </div>
             <RateLimitToast show={showRateLimitToast} />
+            
+            {/* --- LEFT SIDEBAR ICONS --- */}
             <div className="absolute left-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox }, { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/777-icon.webp" alt="777 Slot Game Icon" className="w-full h-full object-contain" />, onClick: toggle777Game } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ 
+                { icon: <img src={uiAssets.towerIcon} alt="Boss Battle Icon" className="w-full h-full object-contain" />, onClick: toggleBossBattle }, 
+                { icon: <img src={uiAssets.shopIcon} alt="Shop Icon" className="w-full h-full object-contain" />, onClick: toggleShop }, 
+                { icon: <img src={uiAssets.pvpIcon} alt="PvP Arena Icon" className="w-full h-full object-contain" />, onClick: togglePvpArena }, 
+                { icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/mail-icon.webp" alt="Mailbox Icon" className="w-full h-full object-contain p-1" />, onClick: toggleMailbox },
+                // THAY THẾ 777 BẰNG TRADE ASSOCIATION (THƯƠNG HỘI)
+                { 
+                    icon: <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shop-icon.webp" alt="Trade Association" className="w-full h-full object-contain" />, 
+                    onClick: toggleTradeModal 
+                } 
+              ].map((item, index) => ( 
+                <div key={index} className="group cursor-pointer"> 
+                  <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> 
+                    {item.icon} 
+                  </div> 
+                </div> 
+              ))}
             </div>
+
+            {/* --- RIGHT SIDEBAR ICONS --- */}
             <div className="absolute right-4 bottom-32 flex flex-col space-y-4 z-30">
-              {[ { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn } ].map((item, index) => ( <div key={index} className="group cursor-pointer"> <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> {item.icon} </div> </div> ))}
+              {[ 
+                { icon: <img src={uiAssets.vocabularyChestIcon} alt="Vocabulary Chest Icon" className="w-full h-full object-contain" />, onClick: toggleVocabularyChest }, 
+                { icon: <img src={uiAssets.missionIcon} alt="Equipment Icon" className="w-full h-full object-contain" />, onClick: toggleEquipmentScreen }, 
+                { icon: <img src={uiAssets.skillIcon} alt="Skill Icon" className="w-full h-full object-contain" />, onClick: toggleSkillScreen }, 
+                { icon: <img src={uiAssets.gavelIcon} alt="Auction House Icon" className="w-full h-full object-contain p-1" />, onClick: toggleAuctionHouse }, 
+                { icon: <img src={uiAssets.checkInIcon} alt="Check In Icon" className="w-full h-full object-contain" />, onClick: toggleCheckIn } 
+              ].map((item, index) => ( 
+                <div key={index} className="group cursor-pointer"> 
+                  <div className="scale-105 relative transition-all duration-300 flex flex-col items-center justify-center w-14 h-14 flex-shrink-0 bg-black bg-opacity-20 p-1.5 rounded-lg" onClick={item.onClick}> 
+                    {item.icon} 
+                  </div> 
+                </div> 
+              ))}
             </div>
           </div>
         </div>
@@ -161,7 +201,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         {/* --- Overlays / Modals --- */}
         <div className="fixed inset-0 z-[60]" style={{ display: isRankOpen ? 'block' : 'none' }}> <ErrorBoundary>{isRankOpen && currentUser && <EnhancedLeaderboard onClose={toggleRank} currentUserId={currentUser.uid} />}</ErrorBoundary> </div>
         
-        {/* [UPDATE] Replace PvpArena logic with StickGame and pass onClose prop */}
         <div className="fixed inset-0 z-[60]" style={{ display: isPvpArenaOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isPvpArenaOpen && currentUser && (
@@ -173,11 +212,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
         <div className="fixed inset-0 z-[60]" style={{ display: isLuckyGameOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>
                 {currentUser && (
-                    <LuckyChestGame 
-                        onClose={toggleLuckyGame} 
-                        // Props currentCoins, onUpdateCoins, etc. have been removed
-                        // as LuckyChestGame now uses GameContext internally.
-                    />
+                    <LuckyChestGame onClose={toggleLuckyGame} />
                 )}
             </ErrorBoundary> 
         </div>
@@ -201,7 +236,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                         onClose={toggleBossBattle}
                         onBattleEnd={async (result, rewards) => { 
                             if (result === 'win' && rewards.coins) {
-                                updateCoins(rewards.coins); // <-- SỬ DỤNG HÀM TỪ CONTEXT
+                                updateCoins(rewards.coins);
                             }
                         }}
                         onFloorComplete={handleBossFloorUpdate}
@@ -209,25 +244,27 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 )}
             </ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isShopOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>
                 {isShopOpen && 
-                    <Shop 
-                        onClose={toggleShop} 
-                        onCurrencyUpdate={updateUserCurrency} 
-                    />
+                    <Shop onClose={toggleShop} onCurrencyUpdate={updateUserCurrency} />
                 }
             </ErrorBoundary> 
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isVocabularyChestOpen ? 'block' : 'none' }}> 
             <ErrorBoundary>{isVocabularyChestOpen && currentUser && (<VocabularyChestScreen onClose={toggleVocabularyChest} currentUserId={currentUser.uid} onStateUpdate={handleStateUpdateFromChest} />)}</ErrorBoundary> 
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isAchievementsOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isAchievementsOpen && (<AchievementsScreen user={currentUser} onClose={toggleAchievements} onDataUpdate={handleAchievementsDataUpdate} />)}</ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isUpgradeScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isUpgradeScreenOpen && currentUser && (<UpgradeStatsScreen onClose={toggleUpgradeScreen} onDataUpdated={handleStatsUpdate} />)}</ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isBaseBuildingOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isBaseBuildingOpen && currentUser && (
@@ -235,11 +272,12 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                         onClose={toggleBaseBuilding} 
                         coins={coins} 
                         gems={gems} 
-                        onUpdateCoins={updateCoins} // <-- SỬ DỤNG HÀM TỪ CONTEXT
+                        onUpdateCoins={updateCoins}
                     />
                 )}
             </ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isSkillScreenOpen ? 'block' : 'none' }}>
             <ErrorBoundary>{isSkillScreenOpen && currentUser && (
                 <SkillScreen 
@@ -251,6 +289,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                   }} 
                   userId={currentUser.uid} />)}</ErrorBoundary>
         </div>
+
         <div className="fixed inset-0 z-[60]" style={{ display: isEquipmentOpen ? 'block' : 'none' }}>
             <ErrorBoundary>
                 {isEquipmentOpen && currentUser && (
@@ -294,6 +333,19 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                     <Mailbox onClose={toggleMailbox} />
                 </ErrorBoundary>
             </div>
+        )}
+
+        {/* [NEW] MODAL THƯƠNG HỘI OVERLAY */}
+        {isTradeModalOpen && (
+            <ErrorBoundary>
+                <TradeAssociationModal 
+                    isOpen={isTradeModalOpen}
+                    onClose={toggleTradeModal}
+                    resources={{ wood, leather, ore, cloth }}
+                    onExchange={handleExchangeResources}
+                    isProcessing={isSyncingData}
+                />
+            </ErrorBoundary>
         )}
 
         {isSystemCheckOpen && (
