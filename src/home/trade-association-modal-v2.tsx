@@ -1,10 +1,10 @@
 // --- START OF FILE trade-association-modal-v2.tsx ---
 
 import React, { memo, useState, useCallback } from 'react';
-import { equipmentUiAssets } from '../../game-assets.ts';
-import { useGame } from '../../GameContext.tsx';
+import { equipmentUiAssets } from '../game-assets.ts';
+import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
-import { db, auth } from '../../firebase.js';
+import { db, auth } from '../firebase.js';
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
