@@ -163,47 +163,53 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                         <span className="text-[10px] text-slate-500 italic">{option.description}</span>
                                     </div>
 
-                                    {/* Card Body */}
-                                    <div className="p-4 flex flex-col sm:flex-row items-center gap-4">
+                                    {/* Card Body - Updated for Horizontal Ingredients */}
+                                    <div className="p-4 flex flex-col sm:flex-row items-center gap-6">
                                         
-                                        {/* Inputs */}
-                                        <div className="flex-1 w-full space-y-2">
-                                            {option.ingredients.map((ing) => {
+                                        {/* Inputs: Tinh chỉnh thành 1 hàng ngang, bỏ chữ, tập trung vào icon */}
+                                        <div className="flex-1 w-full flex items-center justify-center sm:justify-start gap-4 bg-black/30 p-3 rounded-xl border border-slate-800 shadow-inner">
+                                            {option.ingredients.map((ing, idx) => {
                                                 const userHas = resources[ing.type] || 0;
                                                 const isEnough = userHas >= ing.amount;
                                                 if (!isEnough) canAffordAll = false;
 
                                                 return (
-                                                    <div key={ing.type} className="flex items-center justify-between bg-black/30 p-2 rounded-lg border border-slate-800">
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="bg-slate-800 p-1.5 rounded-md shadow-inner flex items-center justify-center overflow-hidden">
-                                                                <ResourceIcon type={ing.type} className="w-5 h-5" />
+                                                    <React.Fragment key={ing.type}>
+                                                        <div className="flex flex-col items-center gap-1.5 min-w-[60px]">
+                                                            <div className={`relative p-2 rounded-lg border-2 transition-colors ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
+                                                                <ResourceIcon type={ing.type} className="w-8 h-8 drop-shadow-md" />
+                                                                {/* Badge số lượng yêu cầu ở góc icon */}
+                                                                <div className="absolute -top-2 -right-2 bg-amber-600 text-white text-[9px] font-bold px-1 rounded shadow-sm border border-amber-400">
+                                                                    {ing.amount}
+                                                                </div>
                                                             </div>
-                                                            <span className="text-slate-300 font-medium text-sm">{ing.name}</span>
+                                                            <div className="text-[11px] font-mono font-bold">
+                                                                <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
+                                                                    {userHas > 999 ? '999+' : userHas}
+                                                                </span>
+                                                            </div>
                                                         </div>
-                                                        <div className="text-xs font-mono">
-                                                            <span className={isEnough ? "text-slate-400" : "text-red-400 font-bold"}>
-                                                                {userHas}
-                                                            </span>
-                                                            <span className="text-slate-600 mx-1">/</span>
-                                                            <span className="text-amber-400 font-bold">{ing.amount}</span>
-                                                        </div>
-                                                    </div>
+                                                        
+                                                        {/* Dấu + ngăn cách giữa các nguyên liệu */}
+                                                        {idx < option.ingredients.length - 1 && (
+                                                            <div className="text-slate-600 font-bold text-lg opacity-40">+</div>
+                                                        )}
+                                                    </React.Fragment>
                                                 );
                                             })}
                                         </div>
 
                                         {/* Arrow */}
                                         <div className="shrink-0 text-slate-600 rotate-90 sm:rotate-0">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6 animate-pulse">
+                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={3} stroke="currentColor" className="w-6 h-6">
                                                 <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
                                             </svg>
                                         </div>
 
                                         {/* Output & Button */}
-                                        <div className="flex-1 w-full flex flex-col items-center justify-center gap-3 bg-black/20 p-3 rounded-xl border border-dashed border-slate-700/50">
+                                        <div className="flex-1 w-full flex flex-col items-center justify-center gap-3 bg-gradient-to-b from-amber-500/5 to-transparent p-3 rounded-xl border border-dashed border-amber-900/30">
                                             <div className="relative">
-                                                <div className={`absolute inset-0 bg-amber-500 rounded-full opacity-10 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
+                                                <div className={`absolute inset-0 bg-amber-400 rounded-full blur-xl opacity-20 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
                                                 <EquipmentPieceIcon className="w-14 h-14 drop-shadow-2xl relative z-10" />
                                                 <span className="absolute -bottom-1 -right-1 bg-amber-600 text-white text-[10px] font-bold px-1.5 rounded border border-amber-400 shadow-md">
                                                     x{option.receiveAmount}
@@ -214,7 +220,7 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                                                 onClick={() => onExchange(option)}
                                                 disabled={!canAffordAll || isProcessing}
                                                 className={`
-                                                    w-full py-2 px-4 rounded-lg font-bold text-xs uppercase tracking-widest shadow-lg transition-all border-b-4 active:border-b-0 active:translate-y-1
+                                                    w-full py-2.5 px-4 rounded-lg font-bold text-xs uppercase tracking-widest shadow-lg transition-all border-b-4 active:border-b-0 active:translate-y-1
                                                     ${canAffordAll 
                                                         ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-amber-800' 
                                                         : 'bg-slate-700 text-slate-500 border-slate-800 cursor-not-allowed grayscale'
@@ -233,8 +239,8 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                 </div>
 
                 <div className="bg-[#1a1d26] p-3 text-center border-t border-slate-800">
-                    <p className="text-[10px] text-slate-500 font-mono">
-                        *Exchange rates may vary based on market conditions.
+                    <p className="text-[10px] text-slate-500 font-mono italic">
+                        *Trade materials are consumed upon exchange.
                     </p>
                 </div>
             </div>
@@ -246,6 +252,13 @@ const TradeAssociationModal = memo(({ isOpen, onClose, resources, onExchange, is
                 }
                 .animate-zoom-in {
                     animation: zoomIn 0.2s ease-out forwards;
+                }
+                .hide-scrollbar::-webkit-scrollbar {
+                    display: none;
+                }
+                .hide-scrollbar {
+                    -ms-overflow-style: none;
+                    scrollbar-width: none;
                 }
             `}</style>
         </div>
