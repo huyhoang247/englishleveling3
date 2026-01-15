@@ -84,8 +84,9 @@ const VoiceStepper: React.FC<{
     return null;
   }
 
+  // Sử dụng bg-black/50 thay vì backdrop-blur để tối ưu hiệu năng
   return (
-    <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+    <div className="flex items-center justify-center gap-2 bg-black/50 p-1 rounded-full border border-white/25">
       <button 
         onClick={() => onNavigate('previous')} 
         className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
@@ -232,7 +233,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                     {/* Content Wrapper */}
                     <div className="relative z-10">
                         <div className="flex justify-between items-center mb-4">
-                            <div className="relative"><div className="bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
+                            {/* Sử dụng bg-black/40 thay vì backdrop-blur */}
+                            <div className="relative"><div className="bg-black/40 rounded-lg px-2 py-1 shadow-inner border border-white/20"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
                             <div className="flex items-center gap-2">
                                 <button onClick={handleHintClick} disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0} className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30" aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/file_00000000944c623081c4672d72472f68.png" alt="Hint" className="w-4 h-4" /><span className="text-yellow-300">{HINT_COST}</span><div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div></button>
                                 <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
@@ -244,7 +246,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                             {/* Thanh điều khiển âm thanh được đặt ở trên cùng */}
                             {currentAudioUrl && (
                             <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3">
-                                <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
+                                {/* Sử dụng bg-black/50 thay vì backdrop-blur */}
+                                <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/50 border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
                                 { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
                                 </button>
                                 <VoiceStepper
@@ -255,8 +258,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                             </div>
                             )}
                             
-                            {/* Hợp nhất logic hiển thị câu hỏi để xử lý mọi trường hợp (chỉ text, text + audio, chỉ audio) */}
-                            <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
+                            {/* Hợp nhất logic hiển thị câu hỏi - Sử dụng bg-black/40 thay vì backdrop-blur */}
+                            <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
                                 <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
                                 {/* Chỉ hiển thị dịch nghĩa nếu nó tồn tại trong dữ liệu câu hỏi */}
                                 {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
