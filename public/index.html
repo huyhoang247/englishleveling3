@@ -10,6 +10,12 @@
     <meta name="description" content="Level up your English skills in this RPG gamified learning app." />
 
     <!-- ====================================================== -->
+    <!-- KỸ THUẬT PRELOAD (TẢI TRƯỚC) -->
+    <!-- Giúp tải ảnh nền ngay lập tức để tránh bị hiện màn hình xanh quá lâu -->
+    <!-- ====================================================== -->
+    <link rel="preload" as="image" href="/bg-loading.jpeg" />
+
+    <!-- ====================================================== -->
     <!-- PWA CONFIGURATION (CẤU HÌNH CÀI ĐẶT APP) -->
     <!-- ====================================================== -->
     <!-- 1. File Manifest chứa thông tin app -->
@@ -41,7 +47,7 @@
 
     <!-- ====================================================== -->
     <!-- LINK FILE CSS LOADING RIÊNG BIỆT -->
-    <!-- (Giúp file html gọn gàng và tải style loading nhanh hơn) -->
+    <!-- Chứa style cho màn hình chờ và ảnh nền -->
     <!-- ====================================================== -->
     <link rel="stylesheet" href="/loading.css" />
 
