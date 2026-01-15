@@ -44,7 +44,7 @@ html, body, #root {
      2. url: Ảnh nền nằm bên dưới lớp đen đó.
   */
   background-image: 
-    linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)),
+    linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
     url('/bg-loading.jpeg'); 
   
   background-size: cover;      /* Co giãn ảnh để luôn lấp đầy màn hình */
