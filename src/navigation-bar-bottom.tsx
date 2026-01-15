@@ -119,13 +119,12 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
   };
 
   return (
-    // THAY ĐỔI 1: Thêm 'pointer-events-none' để container không chặn click vào phần game bên dưới (ở những vùng trống)
+    // pointer-events-none: Để không chặn click vào các thành phần game bên dưới
     <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center z-50 pointer-events-none">
       
       {/* Nút bật tắt thanh điều hướng chỉ hiển thị khi activeTab là 'story' */}
       {activeTab === 'story' && (
         <div
-          // THAY ĐỔI 2: Thêm 'pointer-events-auto' để nút này vẫn click được
           className="relative flex justify-center pointer-events-auto"
           onClick={toggleVisibility}
         >
@@ -138,15 +137,20 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
 
       {/* Thanh tab với hiệu ứng ẩn hiện */}
       <div
-        // THAY ĐỔI 3:
-        // - Thêm 'pointer-events-auto' để các tab click được.
-        // - Thêm 'pb-[env(safe-area-inset-bottom)]' để padding dưới cùng bằng đúng vùng an toàn của iPhone/Android (tránh bị hở chân).
+        // THAY ĐỔI:
+        // 1. translate-y-2: Dịch toàn bộ thanh bar xuống dưới khoảng 8px.
+        // 2. pb-[env...]: Vẫn giữ padding bottom để đảm bảo full màn hình trên iPhone.
         className={`bg-black bg-opacity-85 backdrop-blur-md shadow-2xl rounded-t-2xl border-t border-gray-800 w-full
           transition-all duration-300 ease-in-out overflow-hidden pointer-events-auto
           ${isVisible ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'} 
-          pb-[env(safe-area-inset-bottom)]`}
+          pb-[env(safe-area-inset-bottom)] translate-y-2`}
       >
-        <div className="mx-2 my-2 flex justify-between items-center">
+        {/* 
+            THAY ĐỔI:
+            Thay 'my-2' thành 'mt-2 mb-1'. 
+            Mục đích: Giảm khoảng cách từ icon xuống đáy, giúp icon nằm thấp hơn một chút.
+        */}
+        <div className="mx-2 mt-2 mb-1 flex justify-between items-center">
           {tabs.map((tab, index) => {
             const Icon = tab.icon;
             // Determine if the current tab is active based on the activeTab prop
@@ -158,7 +162,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
                   className="w-full flex flex-col items-center relative group justify-center"
                   // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
-                    // Type casting để đảm bảo TS không báo lỗi vì tabs id là string
+                    // Type casting để đảm bảo TS không báo lỗi
                     onTabChange(tab.id as 'home' | 'quiz' | 'story' | 'game' | 'profile'); 
                     
                     // When changing tab, if not 'story', ensure the navigation bar is visible
