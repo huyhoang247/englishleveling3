@@ -20,7 +20,7 @@ html, body, #root {
 */
 .app-loading {
   display: flex;
-  flex-direction: column; /* Xếp dọc: Spinner ở trên, Chữ ở dưới */
+  flex-direction: column; 
   align-items: center;    /* Căn giữa theo chiều ngang */
   justify-content: center; /* Căn giữa theo chiều dọc */
   
@@ -35,13 +35,13 @@ html, body, #root {
   /* Đảm bảo luôn nằm trên cùng, che khuất mọi thứ khác */
   z-index: 9999;
   
-  /* --- CẤU HÌNH BACKGROUND VỚI OVERLAY 85% --- */
+  /* --- CẤU HÌNH BACKGROUND VỚI OVERLAY --- */
   background-color: #000000;
   
   /* 
-     Logic xếp chồng background (Lớp trên viết trước, lớp dưới viết sau):
-     1. linear-gradient: Tạo một lớp màu đen phẳng có độ mờ 0.85 (85%).
-     2. url: Ảnh nền nằm bên dưới lớp đen đó.
+     Logic xếp chồng background:
+     1. Lớp phủ đen mờ (opacity ~0.75).
+     2. Ảnh nền bên dưới.
   */
   background-image: 
     linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.75)),
@@ -51,63 +51,74 @@ html, body, #root {
   background-position: center; /* Luôn lấy trung tâm bức ảnh */
   background-repeat: no-repeat;
   
-  /* Cấu hình font chữ chung */
+  /* Font chữ (giữ lại phòng khi cần dùng sau này, dù hiện tại không có text) */
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: white;
 }
 
 /* 
-  3. VÒNG TRÒN XOAY (SPINNER)
+  3. HIỆU ỨNG LOADING DOTS (3 DẤU CHẤM)
+  Thay thế cho vòng tròn spinner cũ.
 */
-.loading-spinner {
-  width: 50px;
-  height: 50px;
+.loading-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px; /* Khoảng cách giữa các chấm */
+}
+
+/* Định dạng chung cho từng dấu chấm (span) */
+.loading-dots span {
+  width: 16px;
+  height: 16px;
   
-  /* Tạo viền tròn trong suốt mờ */
-  border: 4px solid rgba(255, 255, 255, 0.2);
+  /* Màu tím chủ đạo (tương ứng purple-500) */
+  background-color: #a855f7; 
   
-  /* Tô màu cho 1 cạnh để tạo hiệu ứng xoay */
-  border-left-color: #a855f7; /* Màu tím (Purple-500) */
+  border-radius: 50%; /* Bo tròn hoàn toàn */
+  display: inline-block;
   
-  border-radius: 50%; /* Bo tròn thành hình tròn */
+  /* Animation nhảy (bounce) vô tận */
+  animation: bounce 1.4s infinite ease-in-out both;
   
-  /* Animation xoay vô tận */
-  animation: spin 1s linear infinite;
-  
-  margin-bottom: 20px; /* Khoảng cách với dòng chữ bên dưới */
-  
-  /* Hiệu ứng phát sáng nhẹ (Glow) */
-  box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); 
+  /* Đổ bóng nhẹ cùng màu tím */
+  box-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
 }
 
 /* 
-  4. CHỮ "LOADING RPG..."
+  Thiết lập độ trễ (delay) cho từng chấm để tạo hiệu ứng sóng lượn.
+  Chấm 1 chạy trước, rồi đến chấm 2, chấm 3.
 */
-.loading-text {
-  font-weight: 700; /* In đậm */
-  letter-spacing: 3px; /* Giãn cách các chữ cái cho thoáng */
-  font-size: 14px;
-  color: #f1f5f9; /* Màu trắng xám (Slate-100) */
-  text-transform: uppercase; /* Viết hoa toàn bộ */
-  
-  /* Đổ bóng chữ màu đen giúp dễ đọc hơn */
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); 
-  
-  /* Animation nhấp nháy */
-  animation: pulse 1.5s infinite ease-in-out;
+.loading-dots span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.loading-dots span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.loading-dots span:nth-child(3) {
+  animation-delay: 0s;
 }
 
 /* 
-  5. ĐỊNH NGHĨA ANIMATION
+  4. ĐỊNH NGHĨA ANIMATION (KEYFRAMES)
 */
 
-/* Xoay tròn 360 độ */
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Nhấp nháy (Thay đổi độ trong suốt) */
-@keyframes pulse {
-  0%, 100% { opacity: 1; } /* Hiện rõ */
-  50% { opacity: 0.6; }    /* Mờ đi một chút */
+/* Hiệu ứng Bounce: Phóng to thu nhỏ + Đổi màu */
+@keyframes bounce {
+  0%, 80%, 100% { 
+    transform: scale(0); /* Thu nhỏ lại (biến mất) */
+    opacity: 0.5;
+  } 
+  40% { 
+    transform: scale(1); /* Phóng to kích thước chuẩn */
+    opacity: 1;
+    
+    /* Tại điểm to nhất, đổi sang màu trắng sáng để tạo điểm nhấn */
+    background-color: #ffffff; 
+    
+    /* Tăng độ phát sáng (Glow) màu trắng */
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.8); 
+  }
 }
