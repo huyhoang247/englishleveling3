@@ -2,43 +2,100 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    
+    <!-- Cấu hình Viewport chuẩn cho Web App: Chặn zoom, bao phủ toàn màn hình -->
+    <meta 
+      name="viewport" 
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" 
+    />
+    
     <meta name="theme-color" content="#000000" />
+    
+    <!-- 
+      LƯU Ý VỀ HIỆU NĂNG (Mục 1):
+      Hiện tại mình vẫn để link CDN này để bạn copy vào là chạy được ngay.
+      Tuy nhiên, nếu muốn app nhanh tuyệt đối, sau này bạn nên cài Tailwind qua npm 
+      và xóa dòng script này đi để dùng file CSS đã build.
+    -->
     <script src="https://cdn.tailwindcss.com"></script>
+    
     <title>My Flashcards App</title>
 
     <!-- ====================================================== -->
-    <!-- START: TẢI FONT CHỮ LILITA ONE TOÀN CỤC (ĐÃ THÊM) -->
+    <!-- LOAD FONT CHỮ LILITA ONE TOÀN CỤC -->
     <!-- ====================================================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Lilita+One&display=swap" rel="stylesheet">
-    <!-- ====================================================== -->
-    <!-- END: TẢI FONT TOÀN CỤC -->
-    <!-- ====================================================== -->
 
     <style>
-      /* Reset mặc định của trình duyệt và khóa kích thước/scroll */
-      html, body, #root {
+      /* ====================================================== */
+      /* 1. RESET CƠ BẢN & CHẶN CUỘN (SCROLL BLOCKING) */
+      /* ====================================================== */
+      html, body {
         margin: 0;
         padding: 0;
+        width: 100%;
         height: 100%;
-        overflow: hidden; /* Đây là dòng quan trọng nhất, ngăn chặn mọi hành vi cuộn */
-        background-color: #000000; /* QUAN TRỌNG: Đặt nền đen ngay lập tức để chặn nháy trắng */
+        
+        /* Quan trọng: Ngăn chặn hành vi cuộn mặc định của trình duyệt */
+        overflow: hidden; 
+        
+        /* Quan trọng: Đặt nền đen ngay lập tức để tránh nháy trắng khi load */
+        background-color: #000000; 
+        
+        /* Chặn chọn văn bản và menu ngữ cảnh trên Mobile để giống App thật */
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+        
+        /* Font mặc định */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+          'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+          sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
       }
+
+      #root {
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* ====================================================== */
+      /* 2. CSS KEYFRAME ANIMATION (Tối ưu GPU) */
+      /* Thay thế cho việc dùng setInterval trong React Component */
+      /* ====================================================== */
+      
+      @keyframes floating {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-12px); /* Logo bay lên 12px */
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      /* Class tiện ích để áp dụng vào thẻ img trong React */
+      .animate-floating {
+        animation: floating 5s ease-in-out infinite;
+        /* will-change báo cho trình duyệt biết thuộc tính này sẽ thay đổi để tối ưu hóa */
+        will-change: transform; 
+      }
+
     </style>
-    <!-- Nếu có favicon, để file trong public và uncomment -->
-    <!-- <link rel="icon" href="%PUBLIC_URL%/favicon.ico" /> -->
-    <!-- Nếu bạn dùng CRA, biến %PUBLIC_URL% sẽ tự thay thành đường dẫn gốc -->
   </head>
   <body>
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
-    <!-- React sẽ mount vào div này -->
+    
+    <!-- React App sẽ được render vào đây -->
     <div id="root"></div>
 
-    <!-- Nếu bạn dùng CRA, script bundle sẽ được inject tự động ở đây khi build -->
-    <!-- <script src="%PUBLIC_URL%/static/js/main.[hash].js"></script> -->
   </body>
 </html>
