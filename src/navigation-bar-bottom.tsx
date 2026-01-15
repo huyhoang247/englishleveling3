@@ -134,7 +134,8 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
 
       {/* Thanh tab với hiệu ứng ẩn hiện */}
       <div
-        className={`bg-black bg-opacity-85 backdrop-blur-md shadow-2xl rounded-t-2xl border-t border-gray-800 w-full
+        // UPDATED: Removed 'bg-opacity-85' and 'backdrop-blur-md' to make it solid black
+        className={`bg-black shadow-2xl rounded-t-2xl border-t border-gray-800 w-full
           transition-all duration-300 ease-in-out overflow-hidden
           ${isVisible ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}
       >
