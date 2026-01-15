@@ -25,8 +25,10 @@ type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
 type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 
 // ==================================================================
-// HÀM HELPER
+// CONSTANTS & PRELOAD
 // ==================================================================
+const appVersion = "1.0.1";
+const BG_LOADING_URL = "/bg-loading.jpeg"; // URL ảnh background từ public folder
 
 function loadGlobalFonts() {
   const fontUrl = "https://fonts.googleapis.com/css2?family=Lilita+One&display=swap";
@@ -52,6 +54,13 @@ function preloadImage(src: string): Promise<void> {
     };
   });
 }
+
+// Start preloading the background immediately to avoid white flash
+preloadImage(BG_LOADING_URL);
+
+// ==================================================================
+// HÀM HELPER FIREBASE
+// ==================================================================
 
 const ensureUserDocumentExists = async (user: User) => {
   if (!user || !user.uid) { console.error("User object or UID is missing."); return; }
@@ -79,8 +88,6 @@ const enterFullScreen = async () => {
   } catch (error) { console.warn("Failed to enter full-screen mode:", error); }
 };
 
-const appVersion = "1.0.1";
-
 // ==================================================================
 // CÁC HÀM HELPER ĐỂ QUẢN LÝ CACHE
 // ==================================================================
@@ -93,7 +100,11 @@ async function checkAreAllAssetsCached(urls: string[]): Promise<boolean> {
     const cache = await caches.open(ASSET_CACHE_NAME);
     const cachedRequests = await cache.keys();
     const cachedUrls = new Set(cachedRequests.map(req => req.url));
-    return urls.every(url => cachedUrls.has(new URL(url, window.location.origin).href));
+    // Check both relative and absolute paths
+    return urls.every(url => {
+        const absoluteUrl = new URL(url, window.location.origin).href;
+        return cachedUrls.has(absoluteUrl);
+    });
   } catch (error) {
     console.error("Error checking asset cache:", error);
     return false;
@@ -104,7 +115,8 @@ async function cacheAsset(url: string): Promise<void> {
     if (!('caches' in window)) return;
     try {
         const cache = await caches.open(ASSET_CACHE_NAME);
-        const response = await fetch(url, { mode: 'cors' });
+        // Use 'no-cache' to ensure we get a fresh copy if we are caching explicitly
+        const response = await fetch(url, { mode: 'cors', cache: 'no-cache' });
         if (response.ok) {
             await cache.put(url, response);
         } else {
@@ -139,10 +151,33 @@ interface LoadingScreenLayoutProps {
 
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
-    <div className={`relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden ${className}`}>
-      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
-      {children}
-      <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
+    <div className={`relative w-full h-screen overflow-hidden ${className}`}>
+      
+      {/* 1. Background Image - Loaded immediately */}
+      <img 
+        src={BG_LOADING_URL} 
+        alt="Loading Background" 
+        className="absolute inset-0 w-full h-full object-cover z-0"
+      />
+
+      {/* 2. Black Overlay with 75% Opacity */}
+      <div className="absolute inset-0 bg-black/75 z-0"></div>
+
+      {/* 3. Content Container (Z-Index 10 to float above overlay) */}
+      <div className="relative z-10 flex flex-col items-center justify-between pt-28 pb-56 w-full h-full text-white font-sans">
+        <img 
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
+            alt="Loading Logo" 
+            className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} 
+            style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} 
+        />
+        
+        {children}
+
+        <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
+            Version {appVersion}
+        </p>
+      </div>
     </div>
   );
 };
@@ -197,14 +232,11 @@ const App: React.FC = () => {
           const startTime = Date.now();
           if (user) {
             await ensureUserDocumentExists(user);
-            // --- TÍCH HỢP ĐỒNG BỘ DỮ LIỆU ---
             try {
-              // Gọi hàm đồng bộ và đợi nó hoàn tất để dữ liệu mới nhất được tải về
               await syncUserData(user.uid);
             } catch (err) {
               console.error("Initial sync failed but continuing app load:", err);
             }
-            // --------------------------------
           }
           const elapsedTime = Date.now() - startTime;
           const remainingDelay = 1500 - elapsedTime;
@@ -215,7 +247,6 @@ const App: React.FC = () => {
         };
         processInitialAuth();
       } else {
-        // Trường hợp user đăng nhập lại mà không reload trang (ít gặp nhưng đề phòng)
         if (user) {
             syncUserData(user.uid).catch(console.error);
         }
@@ -230,10 +261,13 @@ const App: React.FC = () => {
     let isCancelled = false;
 
     async function preloadAndCacheAssets() {
-      const isCacheValid = await checkAreAllAssetsCached(allImageUrls);
+      // Include the background image in the list of assets to verify/cache
+      const fullAssetList = [BG_LOADING_URL, ...allImageUrls];
+
+      const isCacheValid = await checkAreAllAssetsCached(fullAssetList);
       
       if (isCacheValid) {
-        console.log("All assets are already cached. Skipping download.");
+        console.log("All assets (including BG) are already cached. Skipping download.");
         setLoadingText("Assets loaded from cache");
         setLoadingProgress(100);
         await new Promise(resolve => setTimeout(resolve, 1000));
@@ -242,10 +276,10 @@ const App: React.FC = () => {
         setLoadingText("Downloading assets");
         await cleanupOldCaches();
 
-        const totalAssets = allImageUrls.length;
+        const totalAssets = fullAssetList.length;
         for (let i = 0; i < totalAssets; i++) {
           if (isCancelled) return;
-          await cacheAsset(allImageUrls[i]);
+          await cacheAsset(fullAssetList[i]);
           setLoadingProgress(Math.round(((i + 1) / totalAssets) * 100));
         }
       }
@@ -286,12 +320,12 @@ const App: React.FC = () => {
       <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
           
-          <p className="mt-1 mb-5 text-sm text-white/85 tracking-widest font-['Lilita_One'] uppercase">
+          <p className="mt-1 mb-5 text-sm text-white/85 tracking-widest font-['Lilita_One'] uppercase" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
             {text}<span className="inline-block w-3 text-left">{ellipsis}</span>
           </p>
 
           <div className="w-80 lg:w-96 relative">
-            <div className="h-6 w-full bg-black/40 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
+            <div className="h-6 w-full bg-black/60 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
               <div
                 className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
                 style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
