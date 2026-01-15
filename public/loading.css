@@ -1,17 +1,24 @@
-/* File này chỉ chứa style cho màn hình chờ lúc mới vào web */
-body {
+/* --- START OF FILE public/loading.css --- */
+
+/* Reset mặc định để full màn hình và chặn cuộn trang */
+html, body, #root {
   margin: 0;
   padding: 0;
-  background-color: #0f172a; /* Trùng màu nền App */
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: #0f172a; /* Màu nền xanh đậm của App */
+  -webkit-tap-highlight-color: transparent;
 }
 
+/* Container chính của màn hình Loading */
 .app-loading {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  height: 100vh; /* Full màn hình */
-  width: 100vw;
+  height: 100%;
+  width: 100%;
   background-color: #0f172a;
   color: white;
   font-family: sans-serif;
@@ -21,28 +28,32 @@ body {
   z-index: 9999;
 }
 
+/* Vòng tròn xoay (Spinner) */
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.1);
-  border-left-color: #a855f7; /* Màu tím */
+  border: 4px solid rgba(255, 255, 255, 0.1); /* Viền mờ */
+  border-left-color: #a855f7; /* Viền sáng màu tím */
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 20px;
 }
 
+/* Chữ Loading nhấp nháy */
 .loading-text {
   font-weight: bold;
   letter-spacing: 2px;
   font-size: 14px;
-  color: #94a3b8;
+  color: #94a3b8; /* Màu xám sáng */
   animation: pulse 1.5s infinite ease-in-out;
 }
 
+/* Hiệu ứng xoay */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
+/* Hiệu ứng nhấp nháy */
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.5; }
