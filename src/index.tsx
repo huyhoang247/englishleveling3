@@ -1,6 +1,6 @@
 // --- START OF FILE src/index.tsx ---
 
-import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { GameProvider } from './GameContext.tsx';
 import { QuizAppProvider } from './courses/course-context.tsx';
 import { createRoot } from 'react-dom/client';
@@ -52,11 +52,6 @@ function preloadImage(src: string): Promise<void> {
     };
   });
 }
-
-// --- Preload Loading Background Image Immediately ---
-const LOADING_BG_URL = "/bg-loading.jpeg";
-// Bắt đầu tải ảnh ngay lập tức khi file script được đọc
-preloadImage(LOADING_BG_URL).catch(() => {});
 
 const ensureUserDocumentExists = async (user: User) => {
   if (!user || !user.uid) { console.error("User object or UID is missing."); return; }
@@ -144,35 +139,10 @@ interface LoadingScreenLayoutProps {
 
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
-    // Thêm bg-black ở đây để đảm bảo nền đen ngay cả khi ảnh chưa load
-    <div className={`relative w-full h-screen overflow-hidden text-white font-sans bg-black ${className}`}>
-      
-      {/* Background Image Layer */}
-      <div className="absolute inset-0 z-0">
-        <img 
-            src={LOADING_BG_URL} 
-            alt="Background" 
-            className="w-full h-full object-cover"
-        />
-        {/* Dark Overlay - Opacity 75% */}
-        <div className="absolute inset-0 bg-black/75"></div>
-      </div>
-
-      {/* Content Layer */}
-      <div className="relative z-10 flex flex-col items-center justify-between pt-28 pb-56 w-full h-full">
-        <img 
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
-            alt="Loading Logo" 
-            className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} 
-            style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} 
-        />
-        
-        {children}
-        
-        <p className="fixed right-4 text-xs font-mono text-gray-400 tracking-wider opacity-80 bottom-[calc(1rem+env(safe-area-inset-bottom))]">
-            Version {appVersion}
-        </p>
-      </div>
+    <div className={`relative flex flex-col items-center justify-between pt-28 pb-56 w-full h-screen bg-slate-950 text-white font-sans bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-gray-700 via-slate-950 to-black overflow-hidden ${className}`}>
+      <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" alt="Loading Logo" className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} />
+      {children}
+      <p className="fixed right-4 text-xs font-mono text-gray-500 tracking-wider opacity-60 bottom-[calc(1rem+env(safe-area-inset-bottom))]">Version {appVersion}</p>
     </div>
   );
 };
@@ -188,21 +158,6 @@ const App: React.FC = () => {
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
   const [loadingText, setLoadingText] = useState('Authenticating');
-
-  // useLayoutEffect chạy đồng bộ ngay sau khi DOM mutation, trước khi trình duyệt vẽ
-  // Giúp loại bỏ màu trắng/xám mặc định của body ngay lập tức
-  useLayoutEffect(() => {
-    document.body.style.backgroundColor = "#000000";
-    // Có thể set thêm height để tránh layout shift
-    document.body.style.height = "100vh";
-    document.body.style.overflow = "hidden";
-    
-    return () => {
-        // Cleanup nếu cần, nhưng thường app này luôn cần full màn hình
-        document.body.style.backgroundColor = ""; 
-        document.body.style.overflow = "";
-    };
-  }, []);
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
