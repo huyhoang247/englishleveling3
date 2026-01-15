@@ -2,41 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <!-- Cập nhật viewport: Chặn zoom (user-scalable=no) để tạo cảm giác giống App native -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    
-    <!-- Màu thanh trạng thái trình duyệt trên mobile (trùng với màu nền app) -->
-    <meta name="theme-color" content="#0f172a" />
-    <meta name="description" content="Level up your English skills in this RPG gamified learning app." />
-
-    <!-- ====================================================== -->
-    <!-- KỸ THUẬT PRELOAD (TẢI TRƯỚC) -->
-    <!-- Giúp tải ảnh nền ngay lập tức để tránh bị hiện màn hình xanh quá lâu -->
-    <!-- ====================================================== -->
-    <link rel="preload" as="image" href="/bg-loading.jpeg" />
-
-    <!-- ====================================================== -->
-    <!-- PWA CONFIGURATION (CẤU HÌNH CÀI ĐẶT APP) -->
-    <!-- ====================================================== -->
-    <!-- 1. File Manifest chứa thông tin app -->
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- 2. Icon hiển thị trên tab và màn hình chính -->
-    <link rel="icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" href="/logo192.png" />
-    
-    <!-- 3. Cấu hình riêng cho iOS (iPhone/iPad) -->
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="EngLeveling">
-
-    <!-- Tailwind CSS -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#000000" />
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <title>English Leveling RPG</title>
+    <title>My Flashcards App</title>
 
     <!-- ====================================================== -->
-    <!-- START: TẢI FONT CHỮ LILITA ONE TOÀN CỤC -->
+    <!-- START: TẢI FONT CHỮ LILITA ONE TOÀN CỤC (ĐÃ THÊM) -->
     <!-- ====================================================== -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -45,100 +17,27 @@
     <!-- END: TẢI FONT TOÀN CỤC -->
     <!-- ====================================================== -->
 
-    <!-- ====================================================== -->
-    <!-- LINK FILE CSS LOADING RIÊNG BIỆT -->
-    <!-- Chứa style cho màn hình chờ và ảnh nền -->
-    <!-- ====================================================== -->
-    <link rel="stylesheet" href="/loading.css" />
-
+    <style>
+      /* Reset mặc định của trình duyệt và khóa kích thước/scroll */
+      html, body, #root {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        overflow: hidden; /* Đây là dòng quan trọng nhất, ngăn chặn mọi hành vi cuộn */
+      }
+    </style>
+    <!-- Nếu có favicon, để file trong public và uncomment -->
+    <!-- <link rel="icon" href="%PUBLIC_URL%/favicon.ico" /> -->
+    <!-- Nếu bạn dùng CRA, biến %PUBLIC_URL% sẽ tự thay thành đường dẫn gốc -->
   </head>
   <body>
     <noscript>
       You need to enable JavaScript to run this app.
     </noscript>
-    
-    <!-- 
-      1. CONTAINER CỦA REACT APP
-      React sẽ render giao diện game vào đây.
-      Nó nằm bên dưới màn hình Loading nên người dùng sẽ không thấy 
-      cho đến khi Loading biến mất.
-    -->
+    <!-- React sẽ mount vào div này -->
     <div id="root"></div>
 
-    <!-- 
-      2. MÀN HÌNH LOADING (ĐÃ CẬP NHẬT)
-      - Đã xóa dòng chữ Loading.
-      - Đã thay Spinner bằng Dots (3 dấu chấm).
-      - Style được định nghĩa trong loading.css
-    -->
-    <div id="global-loader" class="app-loading">
-      <div class="loading-dots">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
-    </div>
-
-    <!-- 
-      3. SCRIPT XỬ LÝ DELAY 3 GIÂY
-      Đoạn mã này đảm bảo màn hình Loading hiện ít nhất 3 giây mới tắt.
-    -->
-    <script>
-      // Lắng nghe sự kiện khi toàn bộ trang (bao gồm ảnh, script) tải xong
-      window.addEventListener('load', () => {
-        
-        // Thời gian chờ tối thiểu (3000ms = 3 giây)
-        const MIN_WAIT_TIME = 3000; 
-
-        // Hàm xóa loading
-        const removeLoader = () => {
-          const loader = document.getElementById('global-loader');
-          if (loader) {
-            // Thêm hiệu ứng mờ dần (Fade Out) trong 0.5s cho mượt mà
-            loader.style.transition = 'opacity 0.5s ease';
-            loader.style.opacity = '0';
-
-            // Sau khi hiệu ứng mờ kết thúc (0.5s), mới xóa hẳn phần tử khỏi HTML
-            // Để người dùng có thể thao tác (click/touch) vào App bên dưới
-            setTimeout(() => {
-              loader.remove();
-            }, 500);
-          }
-        };
-
-        // Kích hoạt bộ đếm thời gian
-        setTimeout(removeLoader, MIN_WAIT_TIME);
-      });
-    </script>
-
-    <!-- ====================================================== -->
-    <!-- SCRIPT QUAN TRỌNG: BẮT SỰ KIỆN CÀI ĐẶT & SERVICE WORKER -->
-    <!-- ====================================================== -->
-    <script>
-      // 1. Khởi tạo biến toàn cục để lưu sự kiện cài đặt
-      window.deferredPrompt = null;
-
-      // 2. Lắng nghe sự kiện ngay lập tức khi trang tải
-      window.addEventListener('beforeinstallprompt', (e) => {
-        // Ngăn Chrome hiển thị thanh thông báo cài đặt mặc định bên dưới màn hình
-        e.preventDefault();
-        
-        // Lưu sự kiện lại vào biến window để React Component (profile.tsx) dùng sau
-        window.deferredPrompt = e;
-        
-        console.log('✅ PWA Install Prompt captured successfully in index.html');
-      });
-
-      // 3. Đăng ký Service Worker (Bắt buộc cho PWA)
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-          navigator.serviceWorker.register('/service-worker.js').then(function(registration) {
-            console.log('ServiceWorker registration successful with scope: ', registration.scope);
-          }, function(err) {
-            console.log('ServiceWorker registration failed: ', err);
-          });
-        });
-      }
-    </script>
+    <!-- Nếu bạn dùng CRA, script bundle sẽ được inject tự động ở đây khi build -->
+    <!-- <script src="%PUBLIC_URL%/static/js/main.[hash].js"></script> -->
   </body>
 </html>
