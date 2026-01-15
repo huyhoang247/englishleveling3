@@ -1,5 +1,3 @@
-// --- START OF FILE src/index.tsx ---
-
 import React, { useState, useEffect, useRef } from 'react';
 import { GameProvider } from './GameContext.tsx';
 import { QuizAppProvider } from './courses/course-context.tsx';
@@ -16,7 +14,7 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx';
-// Import service đồng bộ dữ liệu mới tạo
+// Import service đồng bộ dữ liệu
 import { syncUserData } from './local-data/sync-service.ts';
 
 // Định nghĩa các loại tab
@@ -30,18 +28,7 @@ type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 const appVersion = "1.0.1";
 const BG_LOADING_URL = "/bg-loading.jpeg"; // URL ảnh background từ public folder
 
-function loadGlobalFonts() {
-  const fontUrl = "https://fonts.googleapis.com/css2?family=Lilita+One&display=swap";
-  
-  if (!document.querySelector(`link[href="${fontUrl}"]`)) {
-    const link = document.createElement('link');
-    link.href = fontUrl;
-    link.rel = "stylesheet";
-    document.head.appendChild(link);
-    console.log("Global font 'Lilita One' loaded via index.tsx");
-  }
-}
-loadGlobalFonts();
+// Tối ưu 3: Đã xóa hàm loadGlobalFonts() vì đã chuyển sang index.html
 
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
@@ -59,7 +46,7 @@ function preloadImage(src: string): Promise<void> {
 preloadImage(BG_LOADING_URL);
 
 // ==================================================================
-// HÀM HELPER FIREBASE
+// HÀM HELPER FIREBASE (TỐI ƯU HÓA)
 // ==================================================================
 
 const ensureUserDocumentExists = async (user: User) => {
@@ -67,13 +54,39 @@ const ensureUserDocumentExists = async (user: User) => {
   const userDocRef = doc(db, 'users', user.uid);
   try {
     const userDocSnap = await getDoc(userDocRef);
+    
     if (!userDocSnap.exists()) {
-      await setDoc(userDocRef, { email: user.email, username: user.displayName || null, createdAt: new Date(), coins: 0, gems: 0, keys: 0, openedImageIds: [] });
+      // Nếu chưa có user, tạo mới hoàn toàn
+      await setDoc(userDocRef, { 
+        email: user.email, 
+        username: user.displayName || null, 
+        createdAt: new Date(), 
+        coins: 0, 
+        gems: 0, 
+        keys: 0, 
+        openedImageIds: [] 
+      });
     } else {
+      // Tối ưu 4: Chỉ ghi vào DB nếu dữ liệu thực sự thay đổi hoặc thiếu
       const userData = userDocSnap.data();
-      if (userData?.email !== user.email) { await setDoc(userDocRef, { email: user.email }, { merge: true }); }
-      if (!userData?.openedImageIds) { await setDoc(userDocRef, { openedImageIds: [] }, { merge: true }); }
-      if (!userData?.username) { await setDoc(userDocRef, { username: null }, { merge: true }); }
+      const updates: any = {};
+      
+      // Kiểm tra từng trường, chỉ thêm vào updates nếu cần thiết
+      if (userData?.email !== user.email) {
+        updates.email = user.email;
+      }
+      if (userData?.openedImageIds === undefined) {
+        updates.openedImageIds = [];
+      }
+      if (userData?.username === undefined) {
+        updates.username = null;
+      }
+
+      // Chỉ gọi setDoc nếu object updates có dữ liệu (Object.keys > 0)
+      if (Object.keys(updates).length > 0) {
+        await setDoc(userDocRef, updates, { merge: true });
+        console.log("User document updated with missing fields.");
+      }
     }
   } catch (error) { console.error("Error ensuring user document exists:", error); }
 };
@@ -143,15 +156,13 @@ async function cleanupOldCaches() {
 // COMPONENT LAYOUT CHUNG CHO MÀN HÌNH LOADING
 // ==================================================================
 interface LoadingScreenLayoutProps {
-  logoFloating: boolean;
   appVersion: string;
   children: React.ReactNode;
   className?: string;
 }
 
-const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
+const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ appVersion, children, className }) => {
   return (
-    // THAY ĐỔI Ở ĐÂY: Thêm 'bg-black' để nền đen thay vì xám/trắng khi ảnh chưa load
     <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
       
       {/* 1. Background Image - Loaded immediately */}
@@ -164,12 +175,13 @@ const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating,
       {/* 2. Black Overlay with 75% Opacity */}
       <div className="absolute inset-0 bg-black/75 z-0"></div>
 
-      {/* 3. Content Container (Z-Index 10 to float above overlay) */}
+      {/* 3. Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-between pt-28 pb-56 w-full h-full text-white font-sans">
+        {/* Tối ưu 4: Sử dụng class 'animate-floating' từ CSS thay vì JS state */}
         <img 
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
             alt="Loading Logo" 
-            className={`w-48 h-48 object-contain transition-transform ease-in-out duration-[2500ms] ${logoFloating ? '-translate-y-3' : 'translate-y-0'}`} 
+            className="w-48 h-48 object-contain animate-floating" 
             style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} 
         />
         
@@ -190,13 +202,16 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loadingStep, setLoadingStep] = useState<LoadingStep>('authenticating');
   const [loadingProgress, setLoadingProgress] = useState(0);
-  const [logoFloating, setLogoFloating] = useState(true);
+  
+  // Tối ưu 4: Đã xóa state logoFloating (vì dùng CSS animation)
+
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
   const [loadingText, setLoadingText] = useState('Authenticating');
 
   const isInitialAuthCheck = useRef(true);
-  useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
+  
+  // Hiệu ứng dấu chấm chạy (...)
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
 
   useEffect(() => {
@@ -257,6 +272,7 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
 
+  // Tối ưu 2: Tải tài sản (Assets) song song
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
     let isCancelled = false;
@@ -278,10 +294,24 @@ const App: React.FC = () => {
         await cleanupOldCaches();
 
         const totalAssets = fullAssetList.length;
-        for (let i = 0; i < totalAssets; i++) {
+        
+        // CHUNK_SIZE: Số lượng ảnh tải cùng một lúc (Song song)
+        const CHUNK_SIZE = 6; 
+        
+        // Vòng lặp tải theo nhóm thay vì từng cái
+        for (let i = 0; i < totalAssets; i += CHUNK_SIZE) {
           if (isCancelled) return;
-          await cacheAsset(fullAssetList[i]);
-          setLoadingProgress(Math.round(((i + 1) / totalAssets) * 100));
+          
+          // Lấy ra một nhóm ảnh
+          const chunk = fullAssetList.slice(i, i + CHUNK_SIZE);
+          
+          // Tải toàn bộ nhóm này song song
+          await Promise.all(chunk.map(url => cacheAsset(url)));
+          
+          // Cập nhật progress bar sau khi cả nhóm tải xong
+          // Việc này giảm số lần re-render giao diện đi 6 lần
+          const loadedCount = Math.min(i + CHUNK_SIZE, totalAssets);
+          setLoadingProgress(Math.round((loadedCount / totalAssets) * 100));
         }
       }
 
@@ -318,7 +348,7 @@ const App: React.FC = () => {
     const progress = isAuthenticating ? authLoadProgress : loadingProgress;
     const text = isAuthenticating ? 'Authenticating' : loadingText;
     return (
-      <LoadingScreenLayout logoFloating={logoFloating} appVersion={appVersion}>
+      <LoadingScreenLayout appVersion={appVersion}>
         <div className="w-full flex flex-col items-center px-4">
           
           <p className="mt-1 mb-5 text-sm text-white/85 tracking-widest font-['Lilita_One'] uppercase" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.8)' }}>
@@ -328,7 +358,7 @@ const App: React.FC = () => {
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/60 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
               <div
-                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-500 ease-out flex items-center justify-end"
+                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300 ease-linear flex items-center justify-end"
                 style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
               </div>
@@ -345,7 +375,6 @@ const App: React.FC = () => {
   
   // Giao diện chính của ứng dụng
   return (
-    // THAY ĐỔI Ở ĐÂY: Thêm 'bg-black' để đảm bảo nền đen xuyên suốt các container chính
     <div className="relative w-screen bg-black" style={{ height: 'var(--app-height, 100vh)' }}>
       <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
         <QuizAppProvider>
