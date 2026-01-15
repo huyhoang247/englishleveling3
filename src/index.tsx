@@ -151,6 +151,7 @@ interface LoadingScreenLayoutProps {
 
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
+    // THAY ĐỔI Ở ĐÂY: Thêm 'bg-black' để nền đen thay vì xám/trắng khi ảnh chưa load
     <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
       
       {/* 1. Background Image - Loaded immediately */}
@@ -344,20 +345,18 @@ const App: React.FC = () => {
   
   // Giao diện chính của ứng dụng
   return (
+    // THAY ĐỔI Ở ĐÂY: Thêm 'bg-black' để đảm bảo nền đen xuyên suốt các container chính
     <div className="relative w-screen bg-black" style={{ height: 'var(--app-height, 100vh)' }}>
       <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
         <QuizAppProvider>
-          {/* Container cho nội dung chính */}
           <div className="app-container" style={{ height: '100%' }}>
             {activeTab === 'home' && <Home hideNavBar={hideNavBar} showNavBar={showNavBar} />}
             {activeTab === 'profile' && <Profile />}
             {activeTab === 'story' && <Story hideNavBar={hideNavBar} showNavBar={showNavBar} currentUser={currentUser} />}
             {activeTab === 'quiz' && <QuizAppHome hideNavBar={hideNavBar} showNavBar={showNavBar} />}
             {activeTab === 'game' && <GameBrowser hideNavBar={hideNavBar} showNavBar={showNavBar} />}
+            {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
           </div>
-          
-          {/* NavigationBarBottom được đưa ra ngoài 'app-container' để không bị ảnh hưởng bởi transform */}
-          {isNavBarVisible && <NavigationBarBottom activeTab={activeTab} onTabChange={handleTabChange} />}
           
           <GameSkeletonLoader show={loadingStep === 'launching'} />
         </QuizAppProvider>
