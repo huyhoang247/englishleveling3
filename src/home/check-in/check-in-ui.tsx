@@ -40,10 +40,16 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
                 const status = getStatus(reward.day);
                 
                 let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 relative ";
-                if (status === 'claimed') dayClasses += "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
-                else if (status === 'claimable') dayClasses += "bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
-                // THAY ĐỔI: Thêm /85 vào bg-slate-700 để có opacity 85%
-                else dayClasses += "bg-slate-700/85 text-slate-400";
+                
+                // MÀU SẮC: Giữ opacity /85 nhưng chuyển nền thường sang màu đen (slate-900)
+                if (status === 'claimed') {
+                    dayClasses += "bg-gradient-to-r from-green-500/85 to-emerald-600/85 text-white shadow-md";
+                } else if (status === 'claimable') {
+                    dayClasses += "bg-gradient-to-r from-purple-400/85 to-indigo-500/85 text-white shadow-lg";
+                } else {
+                    // THAY ĐỔI: slate-700 -> slate-900 (Đen hơn)
+                    dayClasses += "bg-slate-900/85 text-slate-500 border border-slate-800/30";
+                }
 
                 return (
                     <div key={reward.day} className="relative group">
@@ -76,17 +82,18 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     const percentage = Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100);
 
     return (
-        // THAY ĐỔI: bg-slate-800/85 (Opacity 85%)
-        <div className="group relative rounded-xl overflow-hidden bg-slate-800/85 border border-slate-700 shadow-lg p-4 mb-4">
+        // THAY ĐỔI: bg-slate-800 -> bg-slate-900 (Đen hơn) giữ opacity 85%
+        <div className="group relative rounded-xl overflow-hidden bg-slate-900/85 border border-slate-800/50 shadow-lg p-4 mb-4">
             <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
-                    <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80">
+                {/* Icon Background đậm hơn */}
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-800 to-black shadow-lg p-1">
+                    <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-950/80">
                         <div className="w-10 h-10">{nextStreakGoal.icon}</div>
                     </div>
                 </div>
                 <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
-                        <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
+                        <div className="w-full h-3.5 bg-black/50 rounded-full overflow-hidden shadow-inner p-0.5">
                             <div 
                                 className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
                                 style={{ width: `${percentage}%` }}
@@ -94,7 +101,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
                                 <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
                             </div>
                         </div>
-                        <div className="bg-slate-900/50 border border-slate-700 rounded-md px-2 py-0.5 flex items-baseline">
+                        <div className="bg-black/50 border border-slate-800 rounded-md px-2 py-0.5 flex items-baseline">
                             <span className="text-base font-bold text-white">{loginStreak}</span>
                             <span className="text-xs text-slate-400 font-mono">/{nextStreakGoal.streakGoal}</span>
                         </div>
@@ -131,13 +138,15 @@ const RewardItem = memo(({
                 <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
             )}
             
-            {/* THAY ĐỔI: bg-slate-800/85 (Opacity 85%) cho cả trạng thái claimable và thường */}
-            <div className={`relative flex items-center gap-4 p-4 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
-            {/* THAY ĐỔI: bg-slate-700/85 cho tag ngày */}
-            <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
+            {/* THAY ĐỔI: bg-slate-800 -> bg-slate-900 (Đen hơn) + Opacity 85% */}
+            <div className={`relative flex items-center gap-4 p-4 rounded-xl border ${ isClaimable ? 'bg-slate-900/85 border-purple-500/50' : 'bg-slate-900/85 border-transparent'}`}>
             
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
+            {/* Tag ngày: Màu đen slate-950 */}
+            <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-950/85 rounded-br-lg uppercase font-lilita text-slate-400">Day {reward.day}</div>
+            
+            {/* Icon Background: Gradient tối hơn */}
+            <div className={`w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-800 via-slate-900 to-black border border-slate-700' : 'bg-gradient-to-br from-slate-800 to-black'} shadow-lg p-1`}>
+                <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-950/80' : 'bg-slate-950'}`}>
                     <div className="w-10 h-10">{reward.icon}</div>
                 </div>
             </div>
@@ -146,14 +155,14 @@ const RewardItem = memo(({
                 <div className={`inline-flex items-center px-2.5 py-1 rounded-md border mb-1.5 shadow-sm ${
                     isClaimable 
                     ? 'bg-indigo-950/40 border-indigo-500/30 text-indigo-100' 
-                    : 'bg-slate-900/60 border-white/5 text-slate-400'
+                    : 'bg-black/40 border-white/5 text-slate-500' 
                 }`}>
                     <span className="text-[10px] font-bold tracking-widest uppercase truncate max-w-[120px]">
                         {reward.name}
                     </span>
                 </div>
                 
-                <p className={`text-base font-lilita leading-none ml-1 ${isClaimable ? 'text-white' : 'text-slate-300'}`}>
+                <p className={`text-base font-lilita leading-none ml-1 ${isClaimable ? 'text-white' : 'text-slate-400'}`}>
                     x{reward.amount}
                 </p>
             </div>
@@ -164,7 +173,7 @@ const RewardItem = memo(({
                 className={`min-w-[90px] h-10 flex-shrink-0 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
                 isClaimed ? 'bg-green-600 text-white' : 
                 isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg active:scale-95' : 
-                'bg-slate-700 text-slate-400'
+                'bg-slate-800 text-slate-500' // Nút khi chưa đến ngày: Màu tối
                 }`}
             >
                 { isClaimed ? 'Received' : 
@@ -175,7 +184,7 @@ const RewardItem = memo(({
             </button>
             
             {isClaimed && (
-                <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-10">
+                <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
                     <div className="bg-green-600 rounded-full p-2 transform rotate-12 shadow-lg">
                         <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                     </div>
@@ -187,7 +196,6 @@ const RewardItem = memo(({
 });
 
 // 5. CheckInMainContent: [QUAN TRỌNG NHẤT] - Component chứa list
-// Component này SẼ KHÔNG Render lại khi particles (hiệu ứng) ở cha thay đổi
 const CheckInMainContent = memo(({ 
     dailyRewards, canClaimToday, claimableDay, loginStreak, nextStreakGoal, isClaiming, isSyncingData, onClaim 
 }: any) => {
