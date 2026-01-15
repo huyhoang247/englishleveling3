@@ -1,84 +1,113 @@
 /* --- START OF FILE public/loading.css --- */
 
-/* Reset mặc định để full màn hình và chặn cuộn trang */
+/* 
+  1. CẤU HÌNH CƠ BẢN 
+  Reset mặc định để app full màn hình, chặn cuộn trang và đặt màu nền đen.
+*/
 html, body, #root {
   margin: 0;
   padding: 0;
   height: 100%;
   width: 100%;
-  overflow: hidden;
-  background-color: #0f172a; /* Màu nền dự phòng trong khi chờ ảnh tải */
+  overflow: hidden; /* Ngăn chặn cuộn trang trong lúc loading */
+  background-color: #000000; /* Màu đen tuyền làm nền cơ sở */
   -webkit-tap-highlight-color: transparent;
 }
 
-/* Container chính của màn hình Loading */
+/* 
+  2. CONTAINER CHÍNH (MÀN HÌNH LOADING)
+  Sử dụng Flexbox để căn giữa mọi thứ và Fixed Position để phủ kín màn hình.
+*/
 .app-loading {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+  flex-direction: column; /* Xếp dọc: Spinner ở trên, Chữ ở dưới */
+  align-items: center;    /* Căn giữa theo chiều ngang */
+  justify-content: center; /* Căn giữa theo chiều dọc */
+  
   height: 100%;
   width: 100%;
+  
+  /* Ghim chặt vào khung nhìn */
   position: fixed;
   top: 0;
   left: 0;
+  
+  /* Đảm bảo luôn nằm trên cùng, che khuất mọi thứ khác */
   z-index: 9999;
   
-  /* --- CẤU HÌNH HÌNH NỀN --- */
-  background-color: #0f172a;
+  /* --- CẤU HÌNH BACKGROUND VỚI OVERLAY 85% --- */
+  background-color: #000000;
   
   /* 
-     Kết hợp 2 lớp nền:
-     1. Lớp màu đen mờ (linear-gradient) để làm tối ảnh đi 70-80% => Giúp chữ trắng dễ đọc.
-     2. Ảnh nền của bạn (bg-loading.jpeg)
+     Logic xếp chồng background (Lớp trên viết trước, lớp dưới viết sau):
+     1. linear-gradient: Tạo một lớp màu đen phẳng có độ mờ 0.85 (85%).
+     2. url: Ảnh nền nằm bên dưới lớp đen đó.
   */
   background-image: 
-    linear-gradient(to bottom, rgba(15, 23, 42, 0.7), rgba(15, 23, 42, 0.9)),
+    linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)),
     url('/bg-loading.jpeg'); 
   
-  background-size: cover;    /* Co dãn ảnh để phủ kín màn hình điện thoại/PC */
-  background-position: center; /* Luôn căn giữa ảnh */
+  background-size: cover;      /* Co giãn ảnh để luôn lấp đầy màn hình */
+  background-position: center; /* Luôn lấy trung tâm bức ảnh */
   background-repeat: no-repeat;
   
-  font-family: sans-serif;
+  /* Cấu hình font chữ chung */
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   color: white;
 }
 
-/* Vòng tròn xoay (Spinner) */
+/* 
+  3. VÒNG TRÒN XOAY (SPINNER)
+*/
 .loading-spinner {
   width: 50px;
   height: 50px;
-  border: 4px solid rgba(255, 255, 255, 0.2);
-  border-left-color: #a855f7; /* Màu tím chủ đạo */
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 20px;
   
-  /* Hiệu ứng phát sáng nhẹ giúp nổi bật trên nền ảnh */
+  /* Tạo viền tròn trong suốt mờ */
+  border: 4px solid rgba(255, 255, 255, 0.2);
+  
+  /* Tô màu cho 1 cạnh để tạo hiệu ứng xoay */
+  border-left-color: #a855f7; /* Màu tím (Purple-500) */
+  
+  border-radius: 50%; /* Bo tròn thành hình tròn */
+  
+  /* Animation xoay vô tận */
+  animation: spin 1s linear infinite;
+  
+  margin-bottom: 20px; /* Khoảng cách với dòng chữ bên dưới */
+  
+  /* Hiệu ứng phát sáng nhẹ (Glow) */
   box-shadow: 0 0 15px rgba(168, 85, 247, 0.5); 
 }
 
-/* Chữ Loading */
+/* 
+  4. CHỮ "LOADING RPG..."
+*/
 .loading-text {
-  font-weight: bold;
-  letter-spacing: 3px;
+  font-weight: 700; /* In đậm */
+  letter-spacing: 3px; /* Giãn cách các chữ cái cho thoáng */
   font-size: 14px;
-  color: #f1f5f9;
-  text-transform: uppercase;
+  color: #f1f5f9; /* Màu trắng xám (Slate-100) */
+  text-transform: uppercase; /* Viết hoa toàn bộ */
   
-  /* Đổ bóng chữ màu đen để không bị lẫn vào nền */
+  /* Đổ bóng chữ màu đen giúp dễ đọc hơn */
   text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); 
   
+  /* Animation nhấp nháy */
   animation: pulse 1.5s infinite ease-in-out;
 }
 
-/* Animation xoay */
+/* 
+  5. ĐỊNH NGHĨA ANIMATION
+*/
+
+/* Xoay tròn 360 độ */
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
 
-/* Animation nhấp nháy chữ */
+/* Nhấp nháy (Thay đổi độ trong suốt) */
 @keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.6; }
+  0%, 100% { opacity: 1; } /* Hiện rõ */
+  50% { opacity: 0.6; }    /* Mờ đi một chút */
 }
