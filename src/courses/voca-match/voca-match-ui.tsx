@@ -1,3 +1,5 @@
+// --- START OF FILE: voca-match-ui.tsx ---
+
 // VocaMatchGame.tsx (Refactored to use Context)
 import React, { useMemo, useState } from 'react';
 import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; // Import context
@@ -49,9 +51,10 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
 
   return (
     <div className="flex-shrink-0 p-4 pt-0">
+      {/* Loại bỏ backdrop-blur, thay bằng nền trắng đục rõ hơn (bg-white/95 hoặc bg-white) vì đây là popup thông tin quan trọng */}
       <div
         key={definition.english}
-        className="bg-white/80 backdrop-blur-sm border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
+        className="bg-white border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
       >
         <div className="flex items-center mb-2">
           <BookmarkIcon className="w-5 h-5 text-indigo-500 mr-2 flex-shrink-0" />
@@ -119,8 +122,9 @@ const VoiceSelector: React.FC = () => {
         setSelectedVoice(availableVoices[newIndex]);
     };
 
+    // Loại bỏ backdrop-blur, thay bằng bg-black/40 (tương phản tốt trên nền tối)
     return (
-        <div className="flex items-center justify-center gap-1 bg-white/20 backdrop-blur-sm rounded-md border border-white/30 px-1 py-0.5">
+        <div className="flex items-center justify-center gap-1 bg-black/40 rounded-md border border-white/30 px-1 py-0.5">
             <button onClick={handlePrev} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
                 <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M15 19l-7-7 7-7" /></svg>
             </button>
@@ -194,27 +198,45 @@ const VocaMatchUI: React.FC = () => {
       </header>
 
       <div className="flex-grow p-4 sm:p-6 flex flex-col min-h-0">
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4 rounded-xl shadow-lg mb-4 sm:mb-6 flex-shrink-0">
-          <div className="flex justify-between items-center mb-4">
-            <div className="relative">
-              <div className="bg-white/20 backdrop-blur-sm rounded-lg px-2.5 py-1 shadow-inner border border-white/30">
-                <div className="flex items-center">
-                  <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
-                    {Math.min(pairsCompletedInSession + 1, totalPairsInSession)}
-                  </span>
-                  <span className="mx-0.5 text-white/70 text-xs">/</span>
-                  <span className="text-xs text-white/50">{totalPairsInSession}</span>
+         {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI (Image + Overlay 85%, không blur) */}
+        <div className="relative text-white p-4 rounded-xl shadow-lg mb-4 sm:mb-6 flex-shrink-0 overflow-hidden">
+            {/* Background Image */}
+            <div 
+                className="absolute inset-0 z-0"
+                style={{
+                  backgroundImage: "url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-quiz.webp')",
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+            />
+            {/* Overlay Black 85% */}
+            <div className="absolute inset-0 bg-black/85 z-0" />
+
+            {/* Content Wrapper */}
+            <div className="relative z-10">
+                <div className="flex justify-between items-center mb-4">
+                    <div className="relative">
+                    {/* Dùng bg-black/40 thay vì backdrop-blur */}
+                    <div className="bg-black/40 rounded-lg px-2.5 py-1 shadow-inner border border-white/30">
+                        <div className="flex items-center">
+                        <span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">
+                            {Math.min(pairsCompletedInSession + 1, totalPairsInSession)}
+                        </span>
+                        <span className="mx-0.5 text-white/70 text-xs">/</span>
+                        <span className="text-xs text-white/50">{totalPairsInSession}</span>
+                        </div>
+                    </div>
+                    </div>
+                    {isAudioMatch ? <VoiceSelector /> : <p className="text-sm font-semibold text-white/90">Tiến Độ</p>}
                 </div>
-              </div>
+                <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
+                    <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${gameProgress}%` }}>
+                    <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
+                    </div>
+                </div>
             </div>
-            {isAudioMatch ? <VoiceSelector /> : <p className="text-sm font-semibold text-white/90">Tiến Độ</p>}
-          </div>
-          <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
-            <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${gameProgress}%` }}>
-              <div className="absolute top-0 h-1 w-full bg-white opacity-30"></div>
-            </div>
-          </div>
         </div>
+        {/* <<< END: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
 
         <main className="flex-grow grid grid-cols-2 gap-4 sm:gap-6">
           <div className="flex flex-col gap-3">
