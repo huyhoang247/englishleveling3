@@ -25,7 +25,7 @@ type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 // CONSTANTS & PRELOAD
 // ==================================================================
 const appVersion = "1.0.1";
-const BG_LOADING_URL = "/bg-loading.jpeg"; // URL ảnh background từ public folder
+const BG_LOADING_URL = "/bg-loading.webp"; // URL ảnh background từ public folder
 
 // Hàm tải trước ảnh nền để tránh nháy trắng
 function preloadImage(src: string): Promise<void> {
