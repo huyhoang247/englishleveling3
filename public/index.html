@@ -57,19 +57,55 @@
       You need to enable JavaScript to run this app.
     </noscript>
     
-    <!-- React sẽ mount vào div này -->
-    <div id="root">
-      <!-- 
-        START: PRE-LOADING SCREEN 
-        Phần này sử dụng class từ file loading.css
-        Nó sẽ hiện ngay lập tức và biến mất khi React tải xong.
-      -->
-      <div class="app-loading">
-        <div class="loading-spinner"></div>
-        <div class="loading-text">LOADING RPG...</div>
-      </div>
-      <!-- END: PRE-LOADING SCREEN -->
+    <!-- 
+      1. CONTAINER CỦA REACT APP
+      React sẽ render giao diện game vào đây.
+      Nó nằm bên dưới màn hình Loading nên người dùng sẽ không thấy 
+      cho đến khi Loading biến mất.
+    -->
+    <div id="root"></div>
+
+    <!-- 
+      2. MÀN HÌNH LOADING (ĐÃ ĐƯA RA NGOÀI ROOT)
+      Nó có z-index: 9999 (trong file loading.css) nên sẽ luôn phủ lên trên App React.
+      Thêm id="global-loader" để JavaScript có thể tìm và xóa nó sau 3s.
+    -->
+    <div id="global-loader" class="app-loading">
+      <div class="loading-spinner"></div>
+      <div class="loading-text">LOADING RPG...</div>
     </div>
+
+    <!-- 
+      3. SCRIPT XỬ LÝ DELAY 3 GIÂY
+      Đoạn mã này đảm bảo màn hình Loading hiện ít nhất 3 giây mới tắt.
+    -->
+    <script>
+      // Lắng nghe sự kiện khi toàn bộ trang (bao gồm ảnh, script) tải xong
+      window.addEventListener('load', () => {
+        
+        // Thời gian chờ tối thiểu (3000ms = 3 giây)
+        const MIN_WAIT_TIME = 3000; 
+
+        // Hàm xóa loading
+        const removeLoader = () => {
+          const loader = document.getElementById('global-loader');
+          if (loader) {
+            // Thêm hiệu ứng mờ dần (Fade Out) trong 0.5s cho mượt mà
+            loader.style.transition = 'opacity 0.5s ease';
+            loader.style.opacity = '0';
+
+            // Sau khi hiệu ứng mờ kết thúc (0.5s), mới xóa hẳn phần tử khỏi HTML
+            // Để người dùng có thể thao tác (click/touch) vào App bên dưới
+            setTimeout(() => {
+              loader.remove();
+            }, 500);
+          }
+        };
+
+        // Kích hoạt bộ đếm thời gian
+        setTimeout(removeLoader, MIN_WAIT_TIME);
+      });
+    </script>
 
     <!-- ====================================================== -->
     <!-- SCRIPT QUAN TRỌNG: BẮT SỰ KIỆN CÀI ĐẶT & SERVICE WORKER -->
