@@ -42,7 +42,8 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
                 let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 relative ";
                 if (status === 'claimed') dayClasses += "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
                 else if (status === 'claimable') dayClasses += "bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
-                else dayClasses += "bg-slate-700 text-slate-400";
+                // THAY ĐỔI: Thêm /85 vào bg-slate-700 để có opacity 85%
+                else dayClasses += "bg-slate-700/85 text-slate-400";
 
                 return (
                     <div key={reward.day} className="relative group">
@@ -75,7 +76,8 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     const percentage = Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100);
 
     return (
-        <div className="group relative rounded-xl overflow-hidden bg-slate-800 border border-slate-700 shadow-lg p-4 mb-4">
+        // THAY ĐỔI: bg-slate-800/85 (Opacity 85%)
+        <div className="group relative rounded-xl overflow-hidden bg-slate-800/85 border border-slate-700 shadow-lg p-4 mb-4">
             <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
                     <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80">
@@ -129,8 +131,10 @@ const RewardItem = memo(({
                 <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
             )}
             
-            <div className={`relative flex items-center gap-4 p-4 rounded-xl border ${ isClaimable ? 'bg-slate-800 border-purple-500/50' : 'bg-slate-800 border-transparent'}`}>
-            <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
+            {/* THAY ĐỔI: bg-slate-800/85 (Opacity 85%) cho cả trạng thái claimable và thường */}
+            <div className={`relative flex items-center gap-4 p-4 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
+            {/* THAY ĐỔI: bg-slate-700/85 cho tag ngày */}
+            <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
             
             <div className={`w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                 <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
