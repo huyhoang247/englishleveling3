@@ -1,14 +1,12 @@
-// --- START OF FILE src/navigation-bar-bottom.tsx ---
-
-import React, { useState } from "react";
+import React, { useState } from "react"; // Import React and useState
 import { uiAssets } from "./game-assets.ts";
 
 // Define the props interface for the component
 interface NavigationBarBottomProps {
   // activeTab prop to receive the currently active tab ID from the parent component
-  activeTab: 'home' | 'quiz' | 'story' | 'game' | 'profile';
+  activeTab: 'home' | 'quiz' | 'story' | 'game' | 'profile'; // Updated possible values based on the tabs array
   // onTabChange prop to receive a function to call when a tab is clicked
-  onTabChange: (tab: 'home' | 'quiz' | 'story' | 'game' | 'profile') => void;
+  onTabChange: (tab: 'home' | 'quiz' | 'story' | 'game' | 'profile') => void; // Updated possible values
 }
 
 // Define the NavigationBarBottom functional component, receiving the defined props
@@ -113,20 +111,19 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
     },
   ];
 
-  // Hàm xử lý ẩn/hiện thanh điều hướng
+  // Hàm xử lý ẩn/hiện thanh điều hướng (kept from original file)
   const toggleVisibility = () => {
     setIsVisible(!isVisible);
   };
 
   return (
-    // pointer-events-none: Để không chặn click vào các thành phần game bên dưới
-    <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center z-50 pointer-events-none">
-      
+    // Added z-50 to ensure the navigation bar is on top
+    <div className="fixed bottom-0 left-0 right-0 flex flex-col items-center z-50">
       {/* Nút bật tắt thanh điều hướng chỉ hiển thị khi activeTab là 'story' */}
       {activeTab === 'story' && (
         <div
-          className="relative flex justify-center pointer-events-auto"
-          onClick={toggleVisibility}
+          className="relative flex justify-center"
+          onClick={toggleVisibility} // Use toggleVisibility to hide/show the bar
         >
           <div className="absolute -top-3 w-12 h-6 bg-gray-900 bg-opacity-80 backdrop-blur-md rounded-full flex justify-center items-center cursor-pointer shadow-lg border border-gray-800 transform transition-transform duration-300 hover:scale-105">
             <div className="w-4 h-4 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 glow-sm"></div>
@@ -137,20 +134,11 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
 
       {/* Thanh tab với hiệu ứng ẩn hiện */}
       <div
-        // THAY ĐỔI:
-        // 1. translate-y-2: Dịch toàn bộ thanh bar xuống dưới khoảng 8px.
-        // 2. pb-[env...]: Vẫn giữ padding bottom để đảm bảo full màn hình trên iPhone.
         className={`bg-black bg-opacity-85 backdrop-blur-md shadow-2xl rounded-t-2xl border-t border-gray-800 w-full
-          transition-all duration-300 ease-in-out overflow-hidden pointer-events-auto
-          ${isVisible ? 'max-h-32 opacity-100' : 'max-h-0 opacity-0'} 
-          pb-[env(safe-area-inset-bottom)] translate-y-2`}
+          transition-all duration-300 ease-in-out overflow-hidden
+          ${isVisible ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}
       >
-        {/* 
-            THAY ĐỔI:
-            Thay 'my-2' thành 'mt-2 mb-1'. 
-            Mục đích: Giảm khoảng cách từ icon xuống đáy, giúp icon nằm thấp hơn một chút.
-        */}
-        <div className="mx-2 mt-2 mb-1 flex justify-between items-center">
+        <div className="mx-2 my-2 flex justify-between items-center">
           {tabs.map((tab, index) => {
             const Icon = tab.icon;
             // Determine if the current tab is active based on the activeTab prop
@@ -162,9 +150,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
                   className="w-full flex flex-col items-center relative group justify-center"
                   // Call the onTabChange prop function when the button is clicked
                   onClick={() => {
-                    // Type casting để đảm bảo TS không báo lỗi
-                    onTabChange(tab.id as 'home' | 'quiz' | 'story' | 'game' | 'profile'); 
-                    
+                    onTabChange(tab.id); // Notify the parent component of the tab change
                     // When changing tab, if not 'story', ensure the navigation bar is visible
                     if (tab.id !== 'story') {
                       setIsVisible(true);
@@ -180,14 +166,18 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
                   {/* Icon container with smooth transition */}
                   <div
                     className={`p-2 rounded-full transition-all duration-300 ease-in-out transform
-                      ${isActive ? `bg-gray-500 bg-opacity-30 shadow-lg` : 'bg-transparent'}`}
+                      ${isActive ? `bg-gray-500 bg-opacity-30 shadow-lg` : 'bg-transparent'}`} // Apply gray, semi-transparent circular background if active
                   >
                     <Icon
                       size={20}
-                      color={isActive ? "#ffffff" : "#9ca3af"}
-                      strokeWidth={isActive ? 2.5 : 2}
+                      color={isActive ? "#ffffff" : "#9ca3af"} // White color for active icon, gray for inactive
+                      strokeWidth={isActive ? 2.5 : 2} // Thicker stroke for active icon
                     />
                   </div>
+                  {/* Tab label - optional, uncomment if you want labels */}
+                  {/* <span className={`text-xs mt-1 transition-colors duration-300 ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                    {tab.label}
+                  </span> */}
                 </button>
 
                 {/* Separator line between tabs */}
@@ -199,7 +189,7 @@ const NavigationBarBottom: React.FC<NavigationBarBottomProps> = ({
           })}
         </div>
 
-        {/* Bottom border (optional aesthetic line) */}
+        {/* Bottom border */}
         <div className="h-1 w-full bg-gray-900"></div>
       </div>
 
