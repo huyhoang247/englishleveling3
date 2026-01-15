@@ -1,4 +1,4 @@
-// --- START OF FILE: fill-word-home.tsx ---
+// --- START OF FILE: fill-blank-ui.tsx ---
 
 import React, { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react';
 import { auth } from '../../firebase.js';
@@ -44,7 +44,7 @@ const allPhraseParts = Array.from( new Map( phraseData.flatMap(sentence => sente
 const PhrasePopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Phrases" dataSource={allPhraseParts} noResultsMessage="Không tìm thấy cụm từ" isPhrase={true} /> );
 const ExamPopup: React.FC<{ isOpen: boolean; onClose: () => void; currentWord: string; }> = ({ isOpen, onClose, currentWord }) => ( <BasePopup isOpen={isOpen} onClose={onClose} currentWord={currentWord} title="Exams" dataSource={exampleData} noResultsMessage="Không tìm thấy ví dụ" /> );
 
-// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT (KHÔNG CẦN THAY ĐỔI)
+// <<< START: CẬP NHẬT AUDIO PLAYER COMPONENT (Đã loại bỏ backdrop-blur)
 const AudioPlayerUI: React.FC<{
   audioUrls: { [voiceName: string]: string };
 }> = ({ audioUrls }) => {
@@ -98,13 +98,15 @@ const AudioPlayerUI: React.FC<{
   return (
     <div className="w-full flex justify-between items-center">
         <audio ref={audioRef} src={currentAudioUrl} key={currentAudioUrl} preload="auto" className="hidden"/>
+        {/* Sử dụng bg-black/50 thay vì backdrop-blur */}
         <button 
           onClick={togglePlay} 
-          className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/20 backdrop-blur-sm border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
+          className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/50 border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} 
           aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
           {isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" />}
         </button>
-        <div className="flex items-center justify-center gap-2 bg-black/20 backdrop-blur-sm p-1 rounded-full border border-white/25">
+        {/* Sử dụng bg-black/50 thay vì backdrop-blur */}
+        <div className="flex items-center justify-center gap-2 bg-black/50 p-1 rounded-full border border-white/25">
             <button onClick={() => handleNavigateVoice('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors" aria-label="Giọng đọc trước">
                 <ChevronLeftIcon className="w-3 h-3 text-white/80" />
             </button>
@@ -181,37 +183,56 @@ const FillWordGameUI: React.FC<{ onGoBack: () => void; selectedPractice: number;
             </div>
           ) : (
             <>
-              {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
-              <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 relative w-full rounded-xl">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="relative bg-white/20 backdrop-blur-sm rounded-lg px-2 py-1 shadow-inner border border-white/30"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
-                  <div className="flex items-center gap-2">
-                    {currentWord && (
-                      <>
-                        <button onClick={() => setShowPhrasePopup(true)} className="group w-8 h-8 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-inner border border-white/30 hover:bg-white/35 active:bg-white/40 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Xem cụm từ"><PhraseIcon className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /></button>
-                        <button onClick={() => setShowExamPopup(true)} className="group w-8 h-8 rounded-full flex items-center justify-center bg-white/20 backdrop-blur-sm shadow-inner border border-white/30 hover:bg-white/35 active:bg-white/40 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Xem ví dụ"><ExamIcon className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /></button>
-                      </>
-                    )}
-                    <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
-                  </div>
-                </div>
-                <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
-                
-                {/* <<< START: THÊM CONTAINER CHO AUDIO PLAYER */}
-                {(selectedPractice % 100 === 8) && currentWord?.audioUrls && (
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-3 shadow-lg border border-white/25 mt-4 min-h-[60px] flex items-center">
-                     <AudioPlayerUI audioUrls={currentWord.audioUrls} />
-                  </div>
-                )}
-                {/* <<< END: THÊM CONTAINER CHO AUDIO PLAYER */}
+              {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI (Image + Overlay 85% Black, không blur) */}
+              <div className="relative text-white p-6 overflow-hidden w-full rounded-xl">
+                 {/* Background Image */}
+                 <div 
+                    className="absolute inset-0 z-0"
+                    style={{
+                      backgroundImage: "url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-quiz.webp')",
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                    }}
+                  />
+                  {/* Overlay Black 85% */}
+                  <div className="absolute inset-0 bg-black/85 z-0" />
 
-                {/* Điều kiện hiển thị câu hỏi cho các practice khác */}
-                {(selectedPractice % 100 !== 1 && selectedPractice % 100 !== 8) && currentWord && (
-                  <div className="bg-white/15 backdrop-blur-sm rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
-                    <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
-                    {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
+                  {/* Content Wrapper */}
+                  <div className="relative z-10">
+                    <div className="flex justify-between items-center mb-4">
+                      {/* Dùng bg-black/40 thay vì backdrop-blur */}
+                      <div className="relative bg-black/40 rounded-lg px-2 py-1 shadow-inner border border-white/20"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{displayCount}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{totalCount}</span></div></div>
+                      <div className="flex items-center gap-2">
+                        {currentWord && (
+                          <>
+                             {/* Dùng bg-white/10 thay vì backdrop-blur để giữ độ sáng cho icon trên nền tối */}
+                            <button onClick={() => setShowPhrasePopup(true)} className="group w-8 h-8 rounded-full flex items-center justify-center bg-white/10 shadow-inner border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Xem cụm từ"><PhraseIcon className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /></button>
+                            <button onClick={() => setShowExamPopup(true)} className="group w-8 h-8 rounded-full flex items-center justify-center bg-white/10 shadow-inner border border-white/20 hover:bg-white/25 active:bg-white/30 transition-all duration-200 ease-in-out transform hover:scale-110 active:scale-100" aria-label="Xem ví dụ"><ExamIcon className="w-4 h-4 text-white/80 group-hover:text-white transition-colors" /></button>
+                          </>
+                        )}
+                        <CountdownTimer timeLeft={timeLeft} totalTime={TOTAL_TIME} />
+                      </div>
+                    </div>
+                    <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${progressPercentage}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
+                    
+                    {/* <<< START: THÊM CONTAINER CHO AUDIO PLAYER */}
+                    {(selectedPractice % 100 === 8) && currentWord?.audioUrls && (
+                      // Dùng bg-black/40 thay vì backdrop-blur
+                      <div className="bg-black/40 rounded-lg p-3 shadow-lg border border-white/25 mt-4 min-h-[60px] flex items-center">
+                        <AudioPlayerUI audioUrls={currentWord.audioUrls} />
+                      </div>
+                    )}
+                    {/* <<< END: THÊM CONTAINER CHO AUDIO PLAYER */}
+
+                    {/* Điều kiện hiển thị câu hỏi cho các practice khác */}
+                    {(selectedPractice % 100 !== 1 && selectedPractice % 100 !== 8) && currentWord && (
+                      // Dùng bg-black/40 thay vì backdrop-blur
+                      <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mt-4">
+                        <p className="text-lg sm:text-xl font-semibold text-white leading-tight">{currentWord.question?.split('___').map((part, i, arr) => ( <React.Fragment key={i}> {part} {i < arr.length - 1 && <span className="font-bold text-indigo-300">___</span>} </React.Fragment> ))}</p>
+                        {currentWord.vietnameseHint && (<p className="text-white/80 text-sm mt-2 italic">{currentWord.vietnameseHint}</p>)}
+                      </div>
+                    )}
                   </div>
-                )}
               </div>
               {/* <<< END: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
               
