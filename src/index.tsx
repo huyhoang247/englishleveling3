@@ -19,6 +19,9 @@ import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 // Import service đồng bộ dữ liệu mới tạo
 import { syncUserData } from './local-data/sync-service.ts';
 
+// --- QUAN TRỌNG: Đặt nền body thành đen ngay lập tức để tránh nháy sáng/xám ---
+document.body.style.backgroundColor = "#000000";
+
 // Định nghĩa các loại tab
 type TabType = 'home' | 'profile' | 'story' | 'quiz' | 'game';
 // Định nghĩa các bước của quá trình tải
@@ -55,7 +58,7 @@ function preloadImage(src: string): Promise<void> {
   });
 }
 
-// Start preloading the background immediately to avoid white flash
+// Start preloading the background immediately
 preloadImage(BG_LOADING_URL);
 
 // ==================================================================
@@ -100,7 +103,6 @@ async function checkAreAllAssetsCached(urls: string[]): Promise<boolean> {
     const cache = await caches.open(ASSET_CACHE_NAME);
     const cachedRequests = await cache.keys();
     const cachedUrls = new Set(cachedRequests.map(req => req.url));
-    // Check both relative and absolute paths
     return urls.every(url => {
         const absoluteUrl = new URL(url, window.location.origin).href;
         return cachedUrls.has(absoluteUrl);
@@ -115,7 +117,6 @@ async function cacheAsset(url: string): Promise<void> {
     if (!('caches' in window)) return;
     try {
         const cache = await caches.open(ASSET_CACHE_NAME);
-        // Use 'no-cache' to ensure we get a fresh copy if we are caching explicitly
         const response = await fetch(url, { mode: 'cors', cache: 'no-cache' });
         if (response.ok) {
             await cache.put(url, response);
@@ -151,14 +152,19 @@ interface LoadingScreenLayoutProps {
 
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
-    <div className={`relative w-full h-screen overflow-hidden ${className}`}>
+    // Thêm class bg-black ở đây để nền luôn đen khi ảnh chưa load xong
+    <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
       
       {/* 1. Background Image - Loaded immediately */}
       <img 
         src={BG_LOADING_URL} 
         alt="Loading Background" 
         className="absolute inset-0 w-full h-full object-cover z-0"
+        style={{ opacity: 0, animation: 'fadeIn 0.5s forwards' }} // Fade in nhẹ để mượt mà
       />
+      <style>{`
+        @keyframes fadeIn { to { opacity: 1; } }
+      `}</style>
 
       {/* 2. Black Overlay with 75% Opacity */}
       <div className="absolute inset-0 bg-black/75 z-0"></div>
@@ -261,9 +267,7 @@ const App: React.FC = () => {
     let isCancelled = false;
 
     async function preloadAndCacheAssets() {
-      // Include the background image in the list of assets to verify/cache
       const fullAssetList = [BG_LOADING_URL, ...allImageUrls];
-
       const isCacheValid = await checkAreAllAssetsCached(fullAssetList);
       
       if (isCacheValid) {
