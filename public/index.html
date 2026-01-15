@@ -66,13 +66,17 @@
     <div id="root"></div>
 
     <!-- 
-      2. MÀN HÌNH LOADING (ĐÃ ĐƯA RA NGOÀI ROOT)
-      Nó có z-index: 9999 (trong file loading.css) nên sẽ luôn phủ lên trên App React.
-      Thêm id="global-loader" để JavaScript có thể tìm và xóa nó sau 3s.
+      2. MÀN HÌNH LOADING (ĐÃ CẬP NHẬT)
+      - Đã xóa dòng chữ Loading.
+      - Đã thay Spinner bằng Dots (3 dấu chấm).
+      - Style được định nghĩa trong loading.css
     -->
     <div id="global-loader" class="app-loading">
-      <div class="loading-spinner"></div>
-      <div class="loading-text">LOADING RPG...</div>
+      <div class="loading-dots">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
 
     <!-- 
