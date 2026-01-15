@@ -265,20 +265,30 @@ const DailyCheckInView = () => {
   } = useCheckIn();
 
   return (
-    <div className="bg-black/95 shadow-2xl overflow-hidden relative flex flex-col h-screen">
-      <header className="flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 z-20 pt-2 pb-2 px-4 shadow-md">
+    <div className="shadow-2xl overflow-hidden relative flex flex-col h-screen">
+      
+      {/* 1. LỚP NỀN HÌNH ẢNH */}
+      <div className="absolute inset-0 z-0">
+        <img 
+            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-check-in.webp" 
+            alt="Check In Background" 
+            className="w-full h-full object-cover"
+        />
+      </div>
+
+      {/* 2. LỚP PHỦ MÀU ĐEN OPACITY 75% */}
+      <div className="absolute inset-0 z-0 bg-black/75"></div>
+
+      {/* 3. NỘI DUNG CHÍNH (z-10 để nổi lên trên nền) */}
+      <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
           <CoinWrapper />
         </div>
       </header>
       
-      {/* 
-          Phần list nặng được tách ra CheckInMainContent.
-          Khi `particles` thay đổi (60fps), `DailyCheckInView` re-render, 
-          nhưng `CheckInMainContent` giữ nguyên vì props không đổi.
-      */}
-      <div className="flex-1 overflow-y-auto hide-scrollbar overscroll-none" style={{ willChange: 'scroll-position' }}>
+      {/* Phần list nặng được tách ra CheckInMainContent */}
+      <div className="relative z-10 flex-1 overflow-y-auto hide-scrollbar overscroll-none" style={{ willChange: 'scroll-position' }}>
          <CheckInMainContent 
             dailyRewards={dailyRewards}
             canClaimToday={canClaimToday}
