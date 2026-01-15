@@ -14,7 +14,6 @@ import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc, setDoc } from 'firebase/firestore';
 import { allImageUrls } from './game-assets.ts';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx';
-// Import service đồng bộ dữ liệu
 import { syncUserData } from './local-data/sync-service.ts';
 
 // Định nghĩa các loại tab
@@ -28,8 +27,7 @@ type LoadingStep = 'authenticating' | 'downloading' | 'launching' | 'ready';
 const appVersion = "1.0.1";
 const BG_LOADING_URL = "/bg-loading.jpeg"; // URL ảnh background từ public folder
 
-// Tối ưu 3: Đã xóa hàm loadGlobalFonts() vì đã chuyển sang index.html
-
+// Hàm tải trước ảnh nền để tránh nháy trắng
 function preloadImage(src: string): Promise<void> {
   return new Promise((resolve) => {
     const img = new Image();
@@ -42,11 +40,11 @@ function preloadImage(src: string): Promise<void> {
   });
 }
 
-// Start preloading the background immediately to avoid white flash
+// Start preloading the background immediately
 preloadImage(BG_LOADING_URL);
 
 // ==================================================================
-// HÀM HELPER FIREBASE (TỐI ƯU HÓA)
+// HÀM HELPER FIREBASE (TỐI ƯU HÓA GHI DATABASE)
 // ==================================================================
 
 const ensureUserDocumentExists = async (user: User) => {
@@ -67,11 +65,10 @@ const ensureUserDocumentExists = async (user: User) => {
         openedImageIds: [] 
       });
     } else {
-      // Tối ưu 4: Chỉ ghi vào DB nếu dữ liệu thực sự thay đổi hoặc thiếu
+      // TỐI ƯU: Chỉ ghi vào DB nếu dữ liệu thực sự thay đổi hoặc thiếu
       const userData = userDocSnap.data();
       const updates: any = {};
       
-      // Kiểm tra từng trường, chỉ thêm vào updates nếu cần thiết
       if (userData?.email !== user.email) {
         updates.email = user.email;
       }
@@ -82,10 +79,9 @@ const ensureUserDocumentExists = async (user: User) => {
         updates.username = null;
       }
 
-      // Chỉ gọi setDoc nếu object updates có dữ liệu (Object.keys > 0)
+      // Chỉ gọi setDoc nếu có dữ liệu cần update
       if (Object.keys(updates).length > 0) {
         await setDoc(userDocRef, updates, { merge: true });
-        console.log("User document updated with missing fields.");
       }
     }
   } catch (error) { console.error("Error ensuring user document exists:", error); }
@@ -128,7 +124,6 @@ async function cacheAsset(url: string): Promise<void> {
     if (!('caches' in window)) return;
     try {
         const cache = await caches.open(ASSET_CACHE_NAME);
-        // Use 'no-cache' to ensure we get a fresh copy if we are caching explicitly
         const response = await fetch(url, { mode: 'cors', cache: 'no-cache' });
         if (response.ok) {
             await cache.put(url, response);
@@ -177,7 +172,7 @@ const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ appVersion, c
 
       {/* 3. Content Container */}
       <div className="relative z-10 flex flex-col items-center justify-between pt-28 pb-56 w-full h-full text-white font-sans">
-        {/* Tối ưu 4: Sử dụng class 'animate-floating' từ CSS thay vì JS state */}
+        {/* CSS Class 'animate-floating' sẽ thay thế JS state để làm animation cho Logo */}
         <img 
             src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
             alt="Loading Logo" 
@@ -202,8 +197,6 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [loadingStep, setLoadingStep] = useState<LoadingStep>('authenticating');
   const [loadingProgress, setLoadingProgress] = useState(0);
-  
-  // Tối ưu 4: Đã xóa state logoFloating (vì dùng CSS animation)
 
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
@@ -214,6 +207,7 @@ const App: React.FC = () => {
   // Hiệu ứng dấu chấm chạy (...)
   useEffect(() => { const i = setInterval(() => setEllipsis(p => (p === '...' ? '.' : p + '.')), 500); return () => clearInterval(i); }, []);
 
+  // Thiết lập chiều cao app (tránh lỗi trên iOS Safari)
   useEffect(() => {
     const setAppHeight = () => {
       document.documentElement.style.setProperty('--app-height', `${window.innerHeight}px`);
@@ -223,6 +217,7 @@ const App: React.FC = () => {
     return () => window.removeEventListener('resize', setAppHeight);
   }, []);
 
+  // Giả lập loading thanh auth lúc đầu
   useEffect(() => {
     if (loadingStep === 'authenticating') {
       const i = setInterval(() => { setAuthLoadProgress(p => (p >= 95 ? 95 : p + Math.floor(Math.random() * 5) + 2)); }, 120);
@@ -240,6 +235,7 @@ const App: React.FC = () => {
     }
   };
 
+  // Lắng nghe trạng thái đăng nhập Firebase
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
       if (isInitialAuthCheck.current) {
@@ -272,7 +268,9 @@ const App: React.FC = () => {
     return () => unsub();
   }, []);
 
-  // Tối ưu 2: Tải tài sản (Assets) song song
+  // =========================================================================
+  // LOGIC TẢI ẢNH SONG SONG + MƯỢT MÀ (SMOOTH PARALLEL LOADING)
+  // =========================================================================
   useEffect(() => {
     if (loadingStep !== 'downloading' || !currentUser) return;
     let isCancelled = false;
@@ -284,12 +282,12 @@ const App: React.FC = () => {
       const isCacheValid = await checkAreAllAssetsCached(fullAssetList);
       
       if (isCacheValid) {
-        console.log("All assets (including BG) are already cached. Skipping download.");
+        console.log("All assets are already cached. Skipping download.");
         setLoadingText("Assets loaded from cache");
         setLoadingProgress(100);
         await new Promise(resolve => setTimeout(resolve, 1000));
       } else {
-        console.log("Cache is outdated or incomplete. Starting download...");
+        console.log("Starting download...");
         setLoadingText("Downloading assets");
         await cleanupOldCaches();
 
@@ -297,21 +295,31 @@ const App: React.FC = () => {
         
         // CHUNK_SIZE: Số lượng ảnh tải cùng một lúc (Song song)
         const CHUNK_SIZE = 6; 
-        
-        // Vòng lặp tải theo nhóm thay vì từng cái
+        let assetsLoadedCount = 0; // Biến đếm cục bộ để theo dõi tiến độ chính xác
+
+        // Vòng lặp tải theo nhóm
         for (let i = 0; i < totalAssets; i += CHUNK_SIZE) {
           if (isCancelled) return;
           
           // Lấy ra một nhóm ảnh
           const chunk = fullAssetList.slice(i, i + CHUNK_SIZE);
           
-          // Tải toàn bộ nhóm này song song
-          await Promise.all(chunk.map(url => cacheAsset(url)));
-          
-          // Cập nhật progress bar sau khi cả nhóm tải xong
-          // Việc này giảm số lần re-render giao diện đi 6 lần
-          const loadedCount = Math.min(i + CHUNK_SIZE, totalAssets);
-          setLoadingProgress(Math.round((loadedCount / totalAssets) * 100));
+          // Tạo một mảng các Promise để tải ảnh song song
+          const chunkPromises = chunk.map(async (url) => {
+            // Tải từng ảnh
+            await cacheAsset(url);
+            
+            // Ngay khi ảnh này tải xong, cập nhật tiến độ ngay lập tức
+            if (!isCancelled) {
+              assetsLoadedCount++;
+              const percent = (assetsLoadedCount / totalAssets) * 100;
+              setLoadingProgress(percent);
+            }
+          });
+
+          // Chờ cho TẤT CẢ các ảnh trong nhóm này tải xong mới sang nhóm tiếp theo
+          // (Để tránh làm nghẽn mạng nếu tải hết 1 lần)
+          await Promise.all(chunkPromises);
         }
       }
 
@@ -357,11 +365,19 @@ const App: React.FC = () => {
 
           <div className="w-80 lg:w-96 relative">
             <div className="h-6 w-full bg-black/60 border border-cyan-900/50 rounded-full p-1" style={{ boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.6), 0 0 15px rgba(0, 255, 255, 0.08)' }}>
+              
+              {/* THANH PROGRESS BAR MƯỢT MÀ */}
               <div
-                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full transition-all duration-300 ease-linear flex items-center justify-end"
-                style={{ width: `${progress}%`, boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` }}>
+                className="h-full bg-gradient-to-r from-cyan-400 to-blue-500 rounded-full flex items-center justify-end transition-all ease-out"
+                // 'duration-300' kết hợp 'ease-out' giúp làm mịn các bước nhảy số liệu
+                style={{ 
+                  width: `${progress}%`, 
+                  transitionDuration: '300ms',
+                  boxShadow: `0 0 8px rgba(0, 255, 255, 0.35), 0 0 15px rgba(0, 200, 255, 0.2)` 
+                }}>
                 {progress > 10 && <div className="w-2 h-2 mr-1 bg-white rounded-full animate-pulse opacity-80"></div>}
               </div>
+
             </div>
             <div className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white" style={{ textShadow: '1px 1px 2px rgba(0,0,0,0.8)' }}>{Math.round(progress)}%</div>
           </div>
