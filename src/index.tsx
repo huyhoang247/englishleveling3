@@ -1,6 +1,6 @@
 // --- START OF FILE src/index.tsx ---
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import { GameProvider } from './GameContext.tsx';
 import { QuizAppProvider } from './courses/course-context.tsx';
 import { createRoot } from 'react-dom/client';
@@ -55,7 +55,8 @@ function preloadImage(src: string): Promise<void> {
 
 // --- Preload Loading Background Image Immediately ---
 const LOADING_BG_URL = "/bg-loading.jpeg";
-preloadImage(LOADING_BG_URL).then(() => console.log("Loading background preloaded"));
+// Bắt đầu tải ảnh ngay lập tức khi file script được đọc
+preloadImage(LOADING_BG_URL).catch(() => {});
 
 const ensureUserDocumentExists = async (user: User) => {
   if (!user || !user.uid) { console.error("User object or UID is missing."); return; }
@@ -143,7 +144,8 @@ interface LoadingScreenLayoutProps {
 
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
-    <div className={`relative w-full h-screen overflow-hidden text-white font-sans ${className}`}>
+    // Thêm bg-black ở đây để đảm bảo nền đen ngay cả khi ảnh chưa load
+    <div className={`relative w-full h-screen overflow-hidden text-white font-sans bg-black ${className}`}>
       
       {/* Background Image Layer */}
       <div className="absolute inset-0 z-0">
@@ -186,6 +188,21 @@ const App: React.FC = () => {
   const [authLoadProgress, setAuthLoadProgress] = useState(0);
   const [ellipsis, setEllipsis] = useState('.');
   const [loadingText, setLoadingText] = useState('Authenticating');
+
+  // useLayoutEffect chạy đồng bộ ngay sau khi DOM mutation, trước khi trình duyệt vẽ
+  // Giúp loại bỏ màu trắng/xám mặc định của body ngay lập tức
+  useLayoutEffect(() => {
+    document.body.style.backgroundColor = "#000000";
+    // Có thể set thêm height để tránh layout shift
+    document.body.style.height = "100vh";
+    document.body.style.overflow = "hidden";
+    
+    return () => {
+        // Cleanup nếu cần, nhưng thường app này luôn cần full màn hình
+        document.body.style.backgroundColor = ""; 
+        document.body.style.overflow = "";
+    };
+  }, []);
 
   const isInitialAuthCheck = useRef(true);
   useEffect(() => { const i = setInterval(() => setLogoFloating(p => !p), 2500); return () => clearInterval(i); }, []);
