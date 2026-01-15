@@ -151,7 +151,8 @@ interface LoadingScreenLayoutProps {
 
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ logoFloating, appVersion, children, className }) => {
   return (
-    <div className={`relative w-full h-screen overflow-hidden ${className}`}>
+    // THAY ĐỔI Ở ĐÂY: Thêm 'bg-black' để nền đen thay vì xám/trắng khi ảnh chưa load
+    <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
       
       {/* 1. Background Image - Loaded immediately */}
       <img 
@@ -344,7 +345,8 @@ const App: React.FC = () => {
   
   // Giao diện chính của ứng dụng
   return (
-    <div className="relative w-screen" style={{ height: 'var(--app-height, 100vh)' }}>
+    // THAY ĐỔI Ở ĐÂY: Thêm 'bg-black' để đảm bảo nền đen xuyên suốt các container chính
+    <div className="relative w-screen bg-black" style={{ height: 'var(--app-height, 100vh)' }}>
       <GameProvider hideNavBar={hideNavBar} showNavBar={showNavBar} assetsLoaded={true}>
         <QuizAppProvider>
           <div className="app-container" style={{ height: '100%' }}>
