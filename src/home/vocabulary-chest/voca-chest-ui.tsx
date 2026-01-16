@@ -1,3 +1,5 @@
+// --- START OF FILE voca-chest-ui.tsx ---
+
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { uiAssets, treasureAssets } from '../../game-assets.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
@@ -67,7 +69,7 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
-        /* --- LỚP GỐC (ĐÃ CẬP NHẬT BACKGROUND & OVERLAY) --- */
+        /* --- LỚP GỐC --- */
         .vocabulary-chest-root { 
             width: 100%; 
             height: 100%; 
@@ -75,7 +77,7 @@ const ScopedStyles = () => (
             top: 0; 
             left: 0; 
             background-color: #0a0a14; 
-            /* Cập nhật hình nền */
+            /* Hình nền */
             background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-voca-chest.webp');
             background-size: cover;
             background-position: center;
@@ -97,7 +99,7 @@ const ScopedStyles = () => (
             inset: 0;
             background-color: #0a0a14;
             opacity: 0.85;
-            z-index: 0; /* Nằm dưới nội dung chính */
+            z-index: 0;
             pointer-events: none;
         }
 
@@ -111,7 +113,23 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 100%; max-width: 1300px; padding: 20px 20px 100px; box-sizing: border-box; flex-grow: 1; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none; }
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { display: none; }
         
-        .vocabulary-chest-root .chest-ui-container { width: 100%; max-width: 380px; min-width: 300px; background-color: #1a1f36; border-radius: 16px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2); overflow: hidden; display: flex; flex-direction: column; transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease; position: relative; border: none; }
+        /* --- CHEST CONTAINER (CẬP NHẬT TRANSPARENCY) --- */
+        .vocabulary-chest-root .chest-ui-container { 
+            width: 100%; 
+            max-width: 380px; 
+            min-width: 300px; 
+            /* Sử dụng RGBA để tạo độ trong suốt cho các ô */
+            background-color: rgba(26, 31, 54, 0.85); 
+            border-radius: 16px; 
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), 0 0 15px rgba(76, 89, 186, 0.2); 
+            overflow: hidden; 
+            display: flex; 
+            flex-direction: column; 
+            transition: transform 0.3s ease, box-shadow 0.3s ease, filter 0.3s ease, opacity 0.3s ease; 
+            position: relative; 
+            border: none; 
+        }
+        
         .vocabulary-chest-root .chest-ui-container.is-coming-soon { filter: grayscale(80%); opacity: 0.7; }
         .vocabulary-chest-root .chest-ui-container::before { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
         .vocabulary-chest-root .chest-ui-container:hover:not(.is-processing) { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3); }
@@ -119,7 +137,8 @@ const ScopedStyles = () => (
         /* --- HEADER & CEFR TAG CSS --- */
         .vocabulary-chest-root .chest-header { 
             padding: 12px 10px; 
-            background-color: rgba(42, 49, 78, 0.7); 
+            /* Header con trong suốt */
+            background-color: rgba(42, 49, 78, 0.6); 
             font-size: 0.9rem; 
             font-weight: 600; 
             color: #c7d2fe; 
@@ -129,7 +148,7 @@ const ScopedStyles = () => (
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            gap: 8px; /* Khoảng cách giữa Text và Tag */
+            gap: 8px; 
         }
         
         .vocabulary-chest-root .cefr-tag { 
@@ -139,13 +158,24 @@ const ScopedStyles = () => (
             border-radius: 4px; 
             color: rgba(255, 255, 255, 0.9); 
             background-color: rgba(0, 0, 0, 0.5); 
-            border: 1px solid rgba(255, 255, 255, 0.15); /* Viền mỏng để nổi bật trên nền tối */
+            border: 1px solid rgba(255, 255, 255, 0.15); 
             vertical-align: middle; 
             display: inline-block;
         }
 
         /* --- BODY & COMPONENTS --- */
-        .vocabulary-chest-root .chest-body { background: linear-gradient(170deg, #43335b, #2c2240); padding: 20px; position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
+        .vocabulary-chest-root .chest-body { 
+            /* Gradient cũng dùng RGBA để giữ độ trong suốt */
+            background: linear-gradient(170deg, rgba(67, 51, 91, 0.8), rgba(44, 34, 64, 0.9)); 
+            padding: 20px; 
+            position: relative; 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            overflow: hidden; 
+        }
+        
         .vocabulary-chest-root .chest-body::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-image: url('data:image/svg+xml,...'); opacity: 0.1; z-index: 0; }
         .vocabulary-chest-root .chest-body > * { position: relative; z-index: 1; }
         .vocabulary-chest-root .chest-top-section { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
@@ -252,7 +282,8 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
             </div>
 
             <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
-                <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 backdrop-blur-sm border-b border-white/10 flex-shrink-0 z-[1100]">
+                {/* Đã xóa backdrop-blur-sm, chỉ giữ màu nền bán trong suốt */}
+                <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 border-b border-white/10 flex-shrink-0 z-[1100]">
                     <button onClick={onClose} className={`vocab-screen-home-btn ${isOverlayVisible ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
                         <HomeIcon /><span>Trang Chính</span>
                     </button>
