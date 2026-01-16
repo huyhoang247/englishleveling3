@@ -91,7 +91,7 @@ const ScopedStyles = () => (
             overflow: hidden; 
         }
 
-        /* Lớp phủ Overlay: 0.75 */
+        /* Lớp phủ Overlay cho màn hình chính: 0.8 */
         .vocabulary-chest-root::before {
             content: '';
             position: absolute;
@@ -163,7 +163,6 @@ const ScopedStyles = () => (
 
         /* --- BODY & COMPONENTS (GRADIENT TỪ 0.5 ĐẾN 0.6) --- */
         .vocabulary-chest-root .chest-body { 
-            /* Cập nhật Gradient theo yêu cầu: 0.5 và 0.6 */
             background: linear-gradient(170deg, rgba(67, 51, 91, 0.5), rgba(44, 34, 64, 0.6)); 
             padding: 20px; 
             position: relative; 
@@ -215,8 +214,49 @@ const ScopedStyles = () => (
         @keyframes vocabulary-chest-fade-in { from { opacity: 0; } to { opacity: 1; } }
         @keyframes vocabulary-chest-flip-in { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
         @keyframes vocabulary-chest-deal-in { from { opacity: 0; transform: translateY(50px) scale(0.8); } to { opacity: 1; transform: translateY(0) scale(1); } }
-        .vocabulary-chest-root .card-opening-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(10, 10, 20, 0.95); z-index: 1000; display: flex; justify-content: center; align-items: center; animation: vocabulary-chest-fade-in 0.5s ease; overflow: hidden; padding: 70px 15px 80px; box-sizing: border-box; }
-        .vocabulary-chest-root .overlay-content { width: 100%; max-width: 900px; }
+        
+        /* --- CARD OPENING OVERLAY (POPUP) --- */
+        .vocabulary-chest-root .card-opening-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            /* Đồng nhất background với màn hình chính */
+            background-color: #0a0a14;
+            background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-voca-chest.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            z-index: 1000; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            animation: vocabulary-chest-fade-in 0.5s ease; 
+            overflow: hidden; 
+            padding: 70px 15px 80px; 
+            box-sizing: border-box; 
+        }
+
+        /* Lớp phủ Overlay tối 80% cho Popup */
+        .vocabulary-chest-root .card-opening-overlay::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: #0a0a14;
+            opacity: 0.8;
+            z-index: 0;
+            pointer-events: none;
+        }
+
+        /* Nội dung popup phải nổi lên trên lớp phủ */
+        .vocabulary-chest-root .overlay-content { 
+            width: 100%; 
+            max-width: 900px; 
+            position: relative; 
+            z-index: 1; 
+        }
+
         .vocabulary-chest-root .overlay-footer { position: fixed; bottom: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: center; align-items: center; gap: 20px; background: rgba(10, 21, 46, 0.8); border-top: 1px solid rgba(255, 255, 255, 0.1); z-index: 1010; }
         .vocabulary-chest-root .footer-btn { background: transparent; border: 1px solid rgba(255, 255, 255, 0.5); color: rgba(255, 255, 255, 0.8); padding: 8px 25px; font-size: 14px; font-weight: 500; border-radius: 20px; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; }
         .vocabulary-chest-root .footer-btn:hover { background-color: rgba(255, 255, 255, 0.1); border-color: white; color: white; }
