@@ -268,24 +268,14 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
                     {/* Trade Options List Container */}
                     <div className="space-y-6 md:space-y-8 flex-1 pb-10">
-                        <div className="flex items-center gap-4 mb-4">
-                            <h4 className="text-amber-500/80 font-serif text-2xl">Available Exchanges</h4>
-                            <div className="h-[1px] flex-1 bg-gradient-to-r from-amber-900/50 to-transparent"></div>
-                        </div>
+                        {/* Title and divider removed */}
                         
                         {TRADE_OPTIONS.map((option) => {
                             let canAffordAll = true;
                             
                             return (
                                 <div key={option.id} className="relative group bg-[#252833] rounded-2xl border border-slate-700 shadow-xl overflow-hidden transition-all duration-300 hover:border-amber-700/50 hover:shadow-2xl hover:bg-[#2a2d38] hover:-translate-y-1">
-                                    {/* Card Header */}
-                                    <div className="px-6 py-4 bg-[#2d313d] border-b border-slate-700/50 flex flex-col md:flex-row md:justify-between md:items-center gap-2">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_10px_rgba(245,158,11,0.8)]"></div>
-                                            <span className="text-lg font-bold text-amber-500/90 uppercase tracking-wide">{option.title}</span>
-                                        </div>
-                                        <span className="text-xs md:text-sm text-slate-400 italic font-mono">{option.description}</span>
-                                    </div>
+                                    {/* Header with Title and Description removed */}
 
                                     {/* Card Body */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
@@ -333,13 +323,22 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                         </div>
 
                                         {/* RESULT & BUTTON AREA */}
-                                        <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-gradient-to-b from-amber-500/5 to-transparent p-5 rounded-2xl border border-dashed border-amber-900/30">
-                                            {/* Reward Icon */}
+                                        {/* Background updated to match Ingredients area */}
+                                        <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
+                                            
+                                            {/* Reward Icon Wrapped in Box */}
                                             <div className="relative group-hover:scale-105 transition-transform duration-500">
-                                                <div className={`absolute inset-0 bg-amber-400 rounded-full blur-2xl opacity-20 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
-                                                <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10" />
-                                                <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-sm font-bold px-3 py-1 rounded-lg border border-amber-400 shadow-lg z-20">
-                                                    x{option.receiveAmount}
+                                                {/* Glow effect */}
+                                                <div className={`absolute inset-0 bg-amber-400 rounded-xl blur-xl opacity-10 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
+                                                
+                                                {/* Box Wrapper matching resources */}
+                                                <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
+                                                    <EquipmentPieceIcon className="w-10 h-10 md:w-12 md:h-12 drop-shadow-2xl relative z-10 object-contain" />
+                                                    
+                                                    {/* Quantity Badge attached to the box */}
+                                                    <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-amber-400 shadow-lg z-20">
+                                                        x{option.receiveAmount}
+                                                    </div>
                                                 </div>
                                             </div>
 
