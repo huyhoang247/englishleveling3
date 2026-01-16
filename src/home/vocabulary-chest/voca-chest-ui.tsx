@@ -97,7 +97,7 @@ const ScopedStyles = () => (
             position: absolute;
             inset: 0;
             background-color: #0a0a14;
-            opacity: 0.75;
+            opacity: 0.8;
             z-index: 0;
             pointer-events: none;
         }
