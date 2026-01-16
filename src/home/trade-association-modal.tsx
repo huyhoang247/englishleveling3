@@ -4,6 +4,7 @@ import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
+import CoinDisplay from '../ui/display/coin-display.tsx'; // Import CoinDisplay
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
@@ -93,20 +94,16 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
 );
 
 // --- COMPONENT HEADER ---
-const Header = memo(({ onClose }: { onClose: () => void }) => {
+// Updated to accept displayedCoins
+const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
                 <HomeButton onClick={onClose} />
-                <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-600 to-amber-800 rounded-lg border border-yellow-400/50 flex items-center justify-center shadow-lg">
-                        <img 
-                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shop-icon.webp" 
-                            className="w-5 h-5 object-contain"
-                            alt="Trade"
-                        />
-                    </div>
-                    <span className="text-lg font-bold text-amber-400 font-serif tracking-wide hidden xs:block">Trade Association</span>
+                
+                {/* Changed: Replaced Title/Icon with CoinDisplay */}
+                <div className="flex items-center">
+                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
             </div>
         </header>
@@ -122,7 +119,8 @@ interface TradeAssociationModalV2Props {
 const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModalV2Props) => {
     const { 
         wood, leather, ore, cloth, 
-        refreshUserData
+        refreshUserData,
+        displayedCoins // Get displayedCoins from Context
     } = useGame();
 
     const [isProcessing, setIsProcessing] = useState(false);
@@ -218,7 +216,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         // MAIN CONTAINER
         <div className="fixed inset-0 z-[110] bg-[#13151b] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
-            <Header onClose={onClose} />
+            {/* Pass displayedCoins to Header */}
+            <Header onClose={onClose} displayedCoins={displayedCoins} />
 
             <div className="flex-1 overflow-y-auto hide-scrollbar relative bg-[#1c1e26]">
                 
@@ -264,7 +263,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 return (
                                                     <React.Fragment key={ing.type}>
                                                         <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                                            {/* Icon Container - REMOVED BADGE HERE */}
+                                                            {/* Icon Container */}
                                                             <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
                                                             </div>
@@ -285,13 +284,13 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             })}
                                         </div>
 
-                                        {/* ARROW DIRECTION - UPDATED TO ICON WITH OPACITY 80% */}
+                                        {/* ARROW DIRECTION - UPDATED: BIGGER & OPACITY 90% */}
                                         <div className="shrink-0 flex items-center justify-center">
                                             <img 
                                                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/arrow-down-exchange.webp" 
                                                 alt="Convert to"
-                                                // rotate-0 on mobile (pointing down), -rotate-90 on desktop (pointing right)
-                                                className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-80 lg:-rotate-90"
+                                                // w-12/16, opacity-90
+                                                className="w-12 h-12 md:w-16 md:h-16 object-contain opacity-90 lg:-rotate-90"
                                             />
                                         </div>
 
@@ -304,7 +303,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
                                                     <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
                                                     
-                                                    {/* Dynamic Quantity Badge - KEPT HERE */}
+                                                    {/* Dynamic Quantity Badge */}
                                                     <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
                                                         x{option.receiveAmount * quantity}
                                                     </div>
