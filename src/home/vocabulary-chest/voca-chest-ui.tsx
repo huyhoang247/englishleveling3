@@ -1,5 +1,3 @@
-// --- START OF FILE voca-chest-ui.tsx ---
-
 import React, { useState, useEffect, useCallback, memo } from 'react';
 import { uiAssets, treasureAssets } from '../../game-assets.ts';
 import { defaultVocabulary } from '../../voca-data/list-vocabulary.ts';
@@ -69,8 +67,40 @@ const CHEST_DATA = Object.values(CHEST_DEFINITIONS);
 // ========================================================================
 const ScopedStyles = () => (
     <style>{`
-        /* --- LỚP GỐC --- */
-        .vocabulary-chest-root { width: 100%; height: 100%; position: absolute; top: 0; left: 0; background-color: #0a0a14; background-image: radial-gradient(circle at center, #16213e, #0a0a14); color: #e0e0e0; font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; justify-content: flex-start; align-items: center; z-index: 100; overflow: hidden; }
+        /* --- LỚP GỐC (ĐÃ CẬP NHẬT BACKGROUND & OVERLAY) --- */
+        .vocabulary-chest-root { 
+            width: 100%; 
+            height: 100%; 
+            position: absolute; 
+            top: 0; 
+            left: 0; 
+            background-color: #0a0a14; 
+            /* Cập nhật hình nền */
+            background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-voca-chest.webp');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            color: #e0e0e0; 
+            font-family: 'Roboto', sans-serif; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: flex-start; 
+            align-items: center; 
+            z-index: 100; 
+            overflow: hidden; 
+        }
+
+        /* Lớp phủ Overlay 85% */
+        .vocabulary-chest-root::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-color: #0a0a14;
+            opacity: 0.85;
+            z-index: 0; /* Nằm dưới nội dung chính */
+            pointer-events: none;
+        }
+
         .vocabulary-chest-root .vocab-screen-home-btn { display: flex; align-items: center; gap: 8px; padding: 6px 12px; border-radius: 8px; background-color: rgba(30, 41, 59, 0.8); border: 1px solid rgb(51, 65, 85); transition: background-color 0.2s ease, opacity 0.3s ease, visibility 0.3s; cursor: pointer; color: #cbd5e1; }
         .vocabulary-chest-root .vocab-screen-home-btn:hover { background-color: rgb(51, 65, 85); }
         .vocabulary-chest-root .vocab-screen-home-btn.is-hidden { opacity: 0; visibility: hidden; pointer-events: none; }
@@ -86,7 +116,7 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-ui-container::before { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, rgba(129, 140, 248, 0.4), rgba(49, 46, 129, 0.3)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
         .vocabulary-chest-root .chest-ui-container:hover:not(.is-processing) { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6), 0 0 25px rgba(129, 140, 248, 0.3); }
         
-        /* --- HEADER & CEFR TAG CSS (ĐÃ CẬP NHẬT) --- */
+        /* --- HEADER & CEFR TAG CSS --- */
         .vocabulary-chest-root .chest-header { 
             padding: 12px 10px; 
             background-color: rgba(42, 49, 78, 0.7); 
@@ -108,15 +138,11 @@ const ScopedStyles = () => (
             padding: 3px 6px; 
             border-radius: 4px; 
             color: rgba(255, 255, 255, 0.9); 
-            
-            /* <<< CẬP NHẬT MÀU: Đen, Opacity 50% */
             background-color: rgba(0, 0, 0, 0.5); 
             border: 1px solid rgba(255, 255, 255, 0.15); /* Viền mỏng để nổi bật trên nền tối */
-            
             vertical-align: middle; 
             display: inline-block;
         }
-        /* Đã xóa các style riêng cho .A1, .A2... để đồng bộ */
 
         /* --- BODY & COMPONENTS --- */
         .vocabulary-chest-root .chest-body { background: linear-gradient(170deg, #43335b, #2c2240); padding: 20px; position: relative; flex-grow: 1; display: flex; flex-direction: column; align-items: center; overflow: hidden; }
