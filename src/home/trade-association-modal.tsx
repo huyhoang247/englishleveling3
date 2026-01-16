@@ -268,14 +268,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
                     {/* Trade Options List Container */}
                     <div className="space-y-6 md:space-y-8 flex-1 pb-10">
-                        {/* Title and divider removed */}
                         
                         {TRADE_OPTIONS.map((option) => {
                             let canAffordAll = true;
                             
                             return (
                                 <div key={option.id} className="relative group bg-[#252833] rounded-2xl border border-slate-700 shadow-xl overflow-hidden transition-all duration-300 hover:border-amber-700/50 hover:shadow-2xl hover:bg-[#2a2d38] hover:-translate-y-1">
-                                    {/* Header with Title and Description removed */}
 
                                     {/* Card Body */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
@@ -293,8 +291,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                             {/* Icon Container */}
                                                             <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700 group-hover:border-slate-600' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-10 h-10 md:w-12 md:h-12 drop-shadow-lg" />
-                                                                {/* Required Amount Badge */}
-                                                                <div className="absolute -top-3 -right-3 bg-amber-600 text-white text-[11px] font-bold px-2 py-1 rounded-full shadow-lg border border-amber-400 z-10">
+                                                                {/* Required Amount Badge - UPDATED: bg-black, border-slate-600 */}
+                                                                <div className="absolute -top-3 -right-3 bg-black text-white text-[11px] font-bold px-2 py-1 rounded-full shadow-lg border border-slate-600 z-10">
                                                                     {ing.amount}
                                                                 </div>
                                                             </div>
@@ -323,7 +321,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                         </div>
 
                                         {/* RESULT & BUTTON AREA */}
-                                        {/* Background updated to match Ingredients area */}
                                         <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             
                                             {/* Reward Icon Wrapped in Box */}
@@ -335,8 +332,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
                                                     <EquipmentPieceIcon className="w-10 h-10 md:w-12 md:h-12 drop-shadow-2xl relative z-10 object-contain" />
                                                     
-                                                    {/* Quantity Badge attached to the box */}
-                                                    <div className="absolute -top-3 -right-3 bg-gradient-to-r from-amber-600 to-amber-700 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-amber-400 shadow-lg z-20">
+                                                    {/* Quantity Badge - UPDATED: bg-black, border-slate-600 */}
+                                                    <div className="absolute -top-3 -right-3 bg-black text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
                                                         x{option.receiveAmount}
                                                     </div>
                                                 </div>
@@ -346,10 +343,11 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             <button
                                                 onClick={() => handleExchange(option)}
                                                 disabled={!canAffordAll || isProcessing}
+                                                // UPDATED: Changed border-amber-800 to border-black for the 3D edge effect
                                                 className={`
                                                     w-full md:w-3/4 py-3.5 px-6 rounded-xl font-bold text-sm md:text-base uppercase tracking-widest shadow-lg transition-all border-b-4 active:border-b-0 active:translate-y-1
                                                     ${canAffordAll 
-                                                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-amber-800 shadow-amber-900/20' 
+                                                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-black shadow-amber-900/20' 
                                                         : 'bg-slate-700 text-slate-500 border-slate-800 cursor-not-allowed grayscale opacity-70'
                                                     }
                                                 `}
