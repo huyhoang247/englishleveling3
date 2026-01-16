@@ -270,9 +270,9 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                             </div>
                                                         </div>
                                                         
-                                                        {/* REPLACED PLUS TEXT WITH ICON */}
+                                                        {/* REPLACED PLUS TEXT WITH ICON - ADDED TRANSLATE-Y */}
                                                         {idx < option.ingredients.length - 1 && (
-                                                            <div className="shrink-0 flex items-center justify-center px-1">
+                                                            <div className="shrink-0 flex items-center justify-center px-1 -translate-y-3 md:-translate-y-4">
                                                                 <img 
                                                                     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-exchange.webp"
                                                                     alt="plus"
