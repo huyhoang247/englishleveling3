@@ -96,7 +96,7 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
 // --- COMPONENT HEADER ---
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
-        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20 relative">
+        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-700/50 z-20 relative">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
                 <HomeButton onClick={onClose} />
                 <div className="flex items-center">
@@ -248,7 +248,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                             let canAffordAll = true;
                             
                             return (
-                                <div key={option.id} className="relative group bg-[#252833] rounded-2xl border border-slate-700 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-[#2a2d38] hover:-translate-y-1">
+                                // MODIFIED: bg-slate-900/80 (removed backdrop-blur-md)
+                                <div key={option.id} className="relative group bg-slate-900/80 rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-slate-900/90 hover:-translate-y-1">
 
                                     {/* Card Body - REDUCED GAP TO 4/6 */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
