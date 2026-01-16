@@ -4,7 +4,7 @@ import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
-import CoinDisplay from '../ui/display/coin-display.tsx'; // Import CoinDisplay
+import CoinDisplay from '../ui/coin-display.tsx'; 
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
@@ -94,14 +94,11 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
 );
 
 // --- COMPONENT HEADER ---
-// Updated to accept displayedCoins
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
                 <HomeButton onClick={onClose} />
-                
-                {/* Changed: Replaced Title/Icon with CoinDisplay */}
                 <div className="flex items-center">
                     <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
                 </div>
@@ -120,7 +117,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     const { 
         wood, leather, ore, cloth, 
         refreshUserData,
-        displayedCoins // Get displayedCoins from Context
+        displayedCoins
     } = useGame();
 
     const [isProcessing, setIsProcessing] = useState(false);
@@ -139,7 +136,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         setTradeQuantities(prev => {
             const current = prev[optionId] || 1;
             const newVal = current + change;
-            // Minimum 1, Maximum 99 (or arbitrary limit)
             if (newVal < 1) return prev;
             if (newVal > 99) return prev;
             return { ...prev, [optionId]: newVal };
@@ -198,7 +194,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
             setMessage({ text: `Successfully exchanged for ${option.receiveAmount * quantity} Equipment Piece(s)!`, type: 'success' });
             await refreshUserData();
-            // Reset quantity to 1 after successful trade? Optional.
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
 
         } catch (error: any) {
@@ -216,7 +211,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         // MAIN CONTAINER
         <div className="fixed inset-0 z-[110] bg-[#13151b] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
-            {/* Pass displayedCoins to Header */}
             <Header onClose={onClose} displayedCoins={displayedCoins} />
 
             <div className="flex-1 overflow-y-auto hide-scrollbar relative bg-[#1c1e26]">
@@ -249,11 +243,11 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                             return (
                                 <div key={option.id} className="relative group bg-[#252833] rounded-2xl border border-slate-700 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-[#2a2d38] hover:-translate-y-1">
 
-                                    {/* Card Body */}
-                                    <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
+                                    {/* Card Body - REDUCED GAP TO 4/6 */}
+                                    <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
                                         
                                         {/* INGREDIENTS AREA */}
-                                        <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-8 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
+                                        <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-6 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             {option.ingredients.map((ing, idx) => {
                                                 const userHas = resources[ing.type] || 0;
                                                 const requiredAmount = ing.amount * quantity;
@@ -276,21 +270,29 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                             </div>
                                                         </div>
                                                         
+                                                        {/* REPLACED PLUS TEXT WITH ICON */}
                                                         {idx < option.ingredients.length - 1 && (
-                                                            <div className="text-slate-600 font-bold text-3xl opacity-30 pb-6">+</div>
+                                                            <div className="shrink-0 flex items-center justify-center px-1">
+                                                                <img 
+                                                                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-exchange.webp"
+                                                                    alt="plus"
+                                                                    // Sized similar to arrow (w-10 to w-14)
+                                                                    className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-90"
+                                                                />
+                                                            </div>
                                                         )}
                                                     </React.Fragment>
                                                 );
                                             })}
                                         </div>
 
-                                        {/* ARROW DIRECTION - UPDATED: BIGGER & OPACITY 90% */}
+                                        {/* ARROW DIRECTION - MADE BIGGER */}
                                         <div className="shrink-0 flex items-center justify-center">
                                             <img 
                                                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/arrow-down-exchange.webp" 
                                                 alt="Convert to"
-                                                // w-12/16, opacity-90
-                                                className="w-12 h-12 md:w-16 md:h-16 object-contain opacity-90 lg:-rotate-90"
+                                                // Increased to w-14/20
+                                                className="w-14 h-14 md:w-20 md:h-20 object-contain opacity-90 lg:-rotate-90"
                                             />
                                         </div>
 
