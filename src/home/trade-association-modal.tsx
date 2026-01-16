@@ -3,7 +3,7 @@ import { equipmentUiAssets } from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
-import HomeButton from '../ui/home-button.tsx'; // Import HomeButton
+import HomeButton from '../ui/home-button.tsx'; 
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
@@ -11,7 +11,7 @@ export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
 export interface TradeIngredient {
     type: ResourceType;
     name: string;
-    amount: number;
+    amount: number; // Base amount required for 1 unit
 }
 
 export interface TradeOption {
@@ -19,7 +19,7 @@ export interface TradeOption {
     title: string;
     ingredients: TradeIngredient[];
     receiveType: 'equipmentPiece';
-    receiveAmount: number;
+    receiveAmount: number; // Base amount received for 1 exchange
     description?: string;
 }
 
@@ -97,10 +97,7 @@ const Header = memo(({ onClose }: { onClose: () => void }) => {
     return (
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
-                {/* Sử dụng HomeButton thay thế nút cũ */}
                 <HomeButton onClick={onClose} />
-
-                {/* Tiêu đề bên phải */}
                 <div className="flex items-center gap-3">
                     <div className="w-8 h-8 bg-gradient-to-br from-yellow-600 to-amber-800 rounded-lg border border-yellow-400/50 flex items-center justify-center shadow-lg">
                         <img 
@@ -116,30 +113,6 @@ const Header = memo(({ onClose }: { onClose: () => void }) => {
     );
 });
 
-// --- COMPONENT HIỂN THỊ VÍ TÀI NGUYÊN ---
-const ResourceWallet = ({ resources }: { resources: Record<ResourceType, number> }) => {
-    const items: { type: ResourceType; label: string }[] = [
-        { type: 'wood', label: 'Wood' },
-        { type: 'leather', label: 'Leather' },
-        { type: 'ore', label: 'Ore' },
-        { type: 'cloth', label: 'Cloth' },
-    ];
-
-    return (
-        <div className="grid grid-cols-4 gap-4 mb-8 bg-slate-950/50 p-4 rounded-xl border border-slate-700/50 shadow-inner max-w-4xl mx-auto backdrop-blur-sm">
-            {items.map((item) => (
-                <div key={item.type} className="flex flex-col items-center justify-center group">
-                    <div className="bg-slate-800/80 p-3 rounded-full mb-2 border border-slate-600 shadow-md transform group-hover:scale-110 transition-transform duration-300">
-                        <ResourceIcon type={item.type} className="w-8 h-8" />
-                    </div>
-                    <span className="text-[10px] md:text-xs text-slate-400 uppercase font-bold tracking-wider mb-1">{item.label}</span>
-                    <span className="text-lg md:text-xl font-bold text-white drop-shadow-md">{resources[item.type]?.toLocaleString() || 0}</span>
-                </div>
-            ))}
-        </div>
-    );
-};
-
 interface TradeAssociationModalV2Props {
     isOpen: boolean;
     onClose: () => void;
@@ -147,7 +120,6 @@ interface TradeAssociationModalV2Props {
 
 // --- MAIN COMPONENT ---
 const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModalV2Props) => {
-    // 1. Get Global State (Resources) to display in UI
     const { 
         wood, leather, ore, cloth, 
         refreshUserData
@@ -155,12 +127,28 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+    
+    // State to track quantity for each trade option
+    const [tradeQuantities, setTradeQuantities] = useState<Record<string, number>>({});
 
-    // Map resources to object for easier access
     const resources: Record<ResourceType, number> = { wood, leather, ore, cloth };
 
-    // 2. Independent Logic Handler using Firestore Transaction
-    const handleExchange = useCallback(async (option: TradeOption) => {
+    // Helper to get current quantity
+    const getQuantity = (optionId: string) => tradeQuantities[optionId] || 1;
+
+    // Helper to set quantity
+    const handleQuantityChange = (optionId: string, change: number) => {
+        setTradeQuantities(prev => {
+            const current = prev[optionId] || 1;
+            const newVal = current + change;
+            // Minimum 1, Maximum 99 (or arbitrary limit)
+            if (newVal < 1) return prev;
+            if (newVal > 99) return prev;
+            return { ...prev, [optionId]: newVal };
+        });
+    };
+
+    const handleExchange = useCallback(async (option: TradeOption, quantity: number) => {
         const userId = auth.currentUser?.uid;
         if (!userId) {
             setMessage({ text: "User not authenticated!", type: 'error' });
@@ -172,14 +160,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         setMessage(null);
 
         try {
-            // A. Client-side Validation (Quick check before server)
+            // A. Client-side Validation with Multiplier
             for (const ing of option.ingredients) {
-                if ((resources[ing.type] || 0) < ing.amount) {
-                    throw new Error(`Insufficient ${ing.name}!`);
+                const totalRequired = ing.amount * quantity;
+                if ((resources[ing.type] || 0) < totalRequired) {
+                    throw new Error(`Insufficient ${ing.name}! Need ${totalRequired}.`);
                 }
             }
 
-            // B. Firestore Transaction (Server-side check & Atomic Update)
+            // B. Firestore Transaction
             await runTransaction(db, async (transaction) => {
                 const userRef = doc(db, 'users', userId);
                 const userDoc = await transaction.get(userRef);
@@ -187,115 +176,101 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 if (!userDoc.exists()) throw new Error("User document does not exist!");
                 const userData = userDoc.data();
 
-                // Validate again inside transaction (Server-side)
                 const updates: any = {};
                 
+                // Deduct Resources based on Quantity
                 for (const ing of option.ingredients) {
                     const currentVal = userData[ing.type] || 0;
-                    if (currentVal < ing.amount) {
-                        throw new Error(`Server: Not enough ${ing.name} (Has: ${currentVal}, Need: ${ing.amount})`);
+                    const totalRequired = ing.amount * quantity;
+                    if (currentVal < totalRequired) {
+                        throw new Error(`Server: Not enough ${ing.name} (Has: ${currentVal}, Need: ${totalRequired})`);
                     }
-                    // Prepare deduction
-                    updates[ing.type] = currentVal - ing.amount;
+                    updates[ing.type] = currentVal - totalRequired;
                 }
 
-                // Add Equipment Pieces
-                // Note: Assuming equipment pieces are stored in `equipment.pieces` object map or field.
+                // Add Equipment Pieces based on Quantity
                 const currentPieces = userData.equipment?.pieces || 0;
-                const newPieces = currentPieces + option.receiveAmount;
+                const totalReceive = option.receiveAmount * quantity;
+                const newPieces = currentPieces + totalReceive;
                 
-                // Construct final update object using Dot Notation for nested fields
                 updates['equipment.pieces'] = newPieces;
 
-                // Execute Update
                 transaction.update(userRef, updates);
             });
 
-            // C. Success Handling
-            setMessage({ text: `Successfully exchanged for ${option.receiveAmount} Equipment Piece(s)!`, type: 'success' });
-            
-            // Trigger global refresh to sync UI immediately
+            setMessage({ text: `Successfully exchanged for ${option.receiveAmount * quantity} Equipment Piece(s)!`, type: 'success' });
             await refreshUserData();
+            // Reset quantity to 1 after successful trade? Optional.
+            setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
 
         } catch (error: any) {
             console.error("Trade Error:", error);
-            setMessage({ text: error.message || "Transaction failed. Please try again.", type: 'error' });
+            setMessage({ text: error.message || "Transaction failed.", type: 'error' });
         } finally {
             setIsProcessing(false);
-            // Clear message after 3 seconds
             setTimeout(() => setMessage(null), 3000);
         }
     }, [resources, refreshUserData, isProcessing]);
 
-
     if (!isOpen) return null;
 
     return (
-        // MAIN CONTAINER: Fixed Full Screen
+        // MAIN CONTAINER
         <div className="fixed inset-0 z-[110] bg-[#13151b] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
-            {/* 1. HEADER SECTION */}
             <Header onClose={onClose} />
 
-            {/* 2. BODY SECTION (Scrollable) */}
             <div className="flex-1 overflow-y-auto hide-scrollbar relative bg-[#1c1e26]">
                 
-                {/* Decorative Background Pattern */}
                 <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
                      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}>
                 </div>
 
                 <div className="relative p-4 md:p-10 min-h-full max-w-5xl mx-auto flex flex-col">
                     
-                    {/* Feedback Toast Message (Floating) */}
+                    {/* Feedback Toast */}
                     {message && (
                         <div className={`fixed top-28 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 text-base font-bold animate-bounce flex items-center gap-3 backdrop-blur-md ${message.type === 'success' ? 'bg-green-950/90 border-green-500 text-green-100' : 'bg-red-950/90 border-red-500 text-red-100'}`}>
                             {message.type === 'success' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6">
-                                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                             ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6">
-                                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                </svg>
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
                             )}
                             {message.text}
                         </div>
                     )}
 
-                    {/* Resources Display Component */}
-                    <ResourceWallet resources={resources} />
-
                     {/* Trade Options List Container */}
-                    <div className="space-y-6 md:space-y-8 flex-1 pb-10">
+                    <div className="space-y-6 md:space-y-8 flex-1 pb-10 mt-4">
                         
                         {TRADE_OPTIONS.map((option) => {
+                            const quantity = getQuantity(option.id);
                             let canAffordAll = true;
                             
                             return (
-                                // UPDATED: Removed hover:border-amber-700/50
                                 <div key={option.id} className="relative group bg-[#252833] rounded-2xl border border-slate-700 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-[#2a2d38] hover:-translate-y-1">
 
                                     {/* Card Body */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
                                         
-                                        {/* INGREDIENTS AREA */}
+                                        {/* INGREDIENTS AREA (Dynamic Scaling) */}
                                         <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-8 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             {option.ingredients.map((ing, idx) => {
                                                 const userHas = resources[ing.type] || 0;
-                                                const isEnough = userHas >= ing.amount;
+                                                // Dynamic Cost Calculation
+                                                const requiredAmount = ing.amount * quantity;
+                                                const isEnough = userHas >= requiredAmount;
                                                 if (!isEnough) canAffordAll = false;
 
                                                 return (
                                                     <React.Fragment key={ing.type}>
                                                         <div className="flex flex-col items-center gap-3 min-w-[80px]">
                                                             {/* Icon Container */}
-                                                            <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700 group-hover:border-slate-600' : 'bg-red-950/20 border-red-900/50'}`}>
-                                                                {/* UPDATED: Increased Size to w-16 h-16 md:w-20 md:h-20 */}
+                                                            <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
-                                                                {/* UPDATED: bg-black/50 */}
+                                                                {/* Dynamic Required Amount Badge */}
                                                                 <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full shadow-lg border border-slate-600 z-10">
-                                                                    {ing.amount}
+                                                                    {requiredAmount}
                                                                 </div>
                                                             </div>
                                                             {/* User Stock Display */}
@@ -303,7 +278,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                                 <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
                                                                     {userHas > 999 ? '999+' : userHas}
                                                                 </span>
-                                                                <span className="text-slate-500 ml-1">/ {ing.amount}</span>
+                                                                <span className="text-slate-500 ml-1">/ {requiredAmount}</span>
                                                             </div>
                                                         </div>
                                                         
@@ -325,26 +300,43 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                         {/* RESULT & BUTTON AREA */}
                                         <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             
-                                            {/* Reward Icon Wrapped in Box */}
+                                            {/* Reward Icon */}
                                             <div className="relative group-hover:scale-105 transition-transform duration-500">
-                                                {/* Glow effect */}
                                                 <div className={`absolute inset-0 bg-amber-400 rounded-xl blur-xl opacity-10 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
-                                                
-                                                {/* Box Wrapper matching resources */}
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
-                                                    {/* UPDATED: Increased Size to w-16 h-16 md:w-20 md:h-20 */}
                                                     <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
                                                     
-                                                    {/* UPDATED: bg-black/50 */}
+                                                    {/* Dynamic Quantity Badge */}
                                                     <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
-                                                        x{option.receiveAmount}
+                                                        x{option.receiveAmount * quantity}
                                                     </div>
                                                 </div>
                                             </div>
 
+                                            {/* Quantity Controls */}
+                                            <div className="flex items-center justify-center gap-3 w-full max-w-[140px] bg-slate-900/50 p-1.5 rounded-lg border border-slate-700">
+                                                <button 
+                                                    onClick={() => handleQuantityChange(option.id, -1)}
+                                                    className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 transition-colors"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                                                    </svg>
+                                                </button>
+                                                <span className="flex-1 text-center font-bold font-mono text-lg text-amber-500">{quantity}</span>
+                                                <button 
+                                                    onClick={() => handleQuantityChange(option.id, 1)}
+                                                    className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 transition-colors"
+                                                >
+                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                                    </svg>
+                                                </button>
+                                            </div>
+
                                             {/* Exchange Button */}
                                             <button
-                                                onClick={() => handleExchange(option)}
+                                                onClick={() => handleExchange(option, quantity)}
                                                 disabled={!canAffordAll || isProcessing}
                                                 className={`
                                                     w-full md:w-3/4 py-3.5 px-6 rounded-xl font-bold text-sm md:text-base uppercase tracking-widest shadow-lg transition-all border-b-4 active:border-b-0 active:translate-y-1
@@ -374,7 +366,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 </div>
             </div>
             
-            {/* Internal Styles */}
             <style>{`
                 @keyframes zoomIn {
                     from { opacity: 0; transform: scale(0.98); }
