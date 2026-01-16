@@ -190,15 +190,28 @@ function BombGameUI() {
       </div>
 
       {exitConfirmationPos && (
-         <div className="fixed inset-0 z-20 flex items-center justify-center bg-slate-900/70 backdrop-blur-sm animate-fade-in p-4">
-            <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-xs p-6 sm:p-8 text-center">
-                {/* THAY ĐỔI: Loại bỏ nền tròn và phóng to icon */}
-                <img src={minerAssets.exitIcon} alt="Complete" className="h-16 w-16 object-contain mx-auto mb-5" />
-                <h3 className="text-2xl font-bold text-white">Floor Complete!</h3>
-                <p className="mt-2 text-slate-400">Go to Floor {currentFloor + 1}?</p>
-                <div className="mt-8 grid grid-cols-2 gap-4">
-                    <button onClick={() => setExitConfirmationPos(null)} className="inline-flex justify-center rounded-lg border border-slate-600 bg-slate-700 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-slate-600">Stay</button>
-                    <button onClick={goToNextFloor} className="inline-flex justify-center rounded-lg border border-transparent bg-violet-600 px-4 py-2 text-base font-semibold text-white shadow-sm hover:bg-violet-700">Next Floor</button>
+         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in p-4">
+            <div className="bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-600 w-full max-w-xs p-8 flex flex-col items-center gap-8">
+                {/* Hình ảnh lớn hơn */}
+                <div className="relative">
+                    <div className="absolute inset-0 bg-violet-500/20 blur-xl rounded-full transform scale-90" />
+                    <img src={minerAssets.exitIcon} alt="Complete" className="relative h-32 w-32 object-contain drop-shadow-xl" />
+                </div>
+                
+                {/* Các nút bấm được thiết kế lại: Font Lilita, Uppercase, 3D style */}
+                <div className="grid grid-cols-2 gap-4 w-full">
+                    <button 
+                        onClick={() => setExitConfirmationPos(null)} 
+                        className="font-lilita uppercase tracking-wide py-3 px-2 rounded-xl bg-slate-700 text-slate-300 border-b-4 border-slate-900 hover:bg-slate-600 hover:text-white hover:border-slate-800 active:border-b-0 active:translate-y-1 transition-all text-lg"
+                    >
+                        Stay
+                    </button>
+                    <button 
+                        onClick={goToNextFloor} 
+                        className="font-lilita uppercase tracking-wide py-3 px-2 rounded-xl bg-violet-600 text-white border-b-4 border-violet-900 hover:bg-violet-500 hover:border-violet-800 active:border-b-0 active:translate-y-1 transition-all text-lg shadow-[0_0_15px_rgba(124,58,237,0.3)]"
+                    >
+                        Next Floor
+                    </button>
                 </div>
             </div>
          </div>
