@@ -3,7 +3,7 @@ import { equipmentUiAssets } from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
-import HomeButton from '../ui/components/home-button.tsx'; // Import HomeButton
+import HomeButton from '../ui/home-button.tsx'; // Import HomeButton
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
