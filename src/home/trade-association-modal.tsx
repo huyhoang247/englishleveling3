@@ -91,11 +91,44 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
     <img src={equipmentUiAssets.equipmentPieceIcon} alt="Piece" className={className} />
 );
 
-const CloseIcon = ({ className = '' }: { className?: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className={className} strokeWidth={2.5}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-    </svg>
+// Icon Home giống skill-ui
+const HomeIcon = ({ className = '' }: { className?: string }) => ( 
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> 
+    </svg> 
 );
+
+// --- COMPONENT HEADER (STYLE GIỐNG SKILL-UI) ---
+const Header = memo(({ onClose }: { onClose: () => void }) => {
+    return (
+        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20">
+            <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
+                {/* Nút Quay lại Trang Chính */}
+                <button 
+                    onClick={onClose} 
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors group" 
+                    aria-label="Quay lại Trang Chính" 
+                    title="Quay lại Trang Chính"
+                >
+                    <HomeIcon className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                    <span className="hidden sm:inline text-sm font-semibold text-slate-300 group-hover:text-white">Trang Chính</span>
+                </button>
+
+                {/* Tiêu đề bên phải */}
+                <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-yellow-600 to-amber-800 rounded-lg border border-yellow-400/50 flex items-center justify-center shadow-lg">
+                        <img 
+                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shop-icon.webp" 
+                            className="w-5 h-5 object-contain"
+                            alt="Trade"
+                        />
+                    </div>
+                    <span className="text-lg font-bold text-amber-400 font-serif tracking-wide hidden xs:block">Trade Association</span>
+                </div>
+            </div>
+        </header>
+    );
+});
 
 // --- COMPONENT HIỂN THỊ VÍ TÀI NGUYÊN ---
 const ResourceWallet = ({ resources }: { resources: Record<ResourceType, number> }) => {
@@ -215,35 +248,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         // MAIN CONTAINER: Fixed Full Screen
         <div className="fixed inset-0 z-[110] bg-[#13151b] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
-            {/* 1. HEADER SECTION (Fixed Top) */}
-            <div className="relative bg-gradient-to-r from-[#2c241b] via-[#3e3226] to-[#2c241b] p-4 md:px-8 border-b-2 border-[#8b7355] flex justify-between items-center shadow-lg z-20 shrink-0">
-                <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 bg-gradient-to-br from-yellow-600 to-amber-800 rounded-xl border-2 border-yellow-400/50 shadow-lg flex items-center justify-center transform hover:rotate-6 transition-transform">
-                        {/* Scale Icon */}
-                        <img 
-                            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shop-icon.webp" 
-                            className="w-9 h-9 object-contain drop-shadow-md"
-                            alt="Trade"
-                        />
-                    </div>
-                    <div>
-                        <h3 className="text-xl md:text-3xl font-bold uppercase tracking-widest text-amber-400 drop-shadow-md font-serif">
-                            Trade Association
-                        </h3>
-                        <p className="text-xs md:text-sm text-amber-200/60 uppercase tracking-wider font-semibold">
-                            Global Resource Exchange
-                        </p>
-                    </div>
-                </div>
-                
-                {/* Close Button */}
-                <button 
-                    onClick={onClose} 
-                    className="group bg-black/40 hover:bg-red-900/80 p-3 rounded-full border border-slate-600 hover:border-red-500 transition-all transform hover:scale-110 active:scale-95 shadow-xl"
-                >
-                    <CloseIcon className="w-6 h-6 md:w-8 md:h-8 text-slate-300 group-hover:text-white" />
-                </button>
-            </div>
+            {/* 1. HEADER SECTION (Updated to match Skill-UI style) */}
+            <Header onClose={onClose} />
 
             {/* 2. BODY SECTION (Scrollable) */}
             <div className="flex-1 overflow-y-auto hide-scrollbar relative bg-[#1c1e26]">
@@ -275,7 +281,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     <ResourceWallet resources={resources} />
 
                     {/* Trade Options List Container */}
-                    <div className="space-y-6 md:space-y-8 flex-1">
+                    <div className="space-y-6 md:space-y-8 flex-1 pb-10">
                         <div className="flex items-center gap-4 mb-4">
                             <h4 className="text-amber-500/80 font-serif text-2xl">Available Exchanges</h4>
                             <div className="h-[1px] flex-1 bg-gradient-to-r from-amber-900/50 to-transparent"></div>
@@ -382,14 +388,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     </div>
                 </div>
             </div>
-
-            {/* 3. FOOTER SECTION (Fixed Bottom) */}
-            <div className="bg-[#1a1d26] p-4 text-center border-t border-slate-800 shrink-0 z-20 shadow-[0_-5px_15px_rgba(0,0,0,0.3)]">
-                <p className="text-[11px] text-slate-500 font-mono italic">
-                    *Trade materials are consumed immediately upon exchange. Transactions are final and recorded by the Guild Ledger.
-                </p>
-            </div>
-
+            
             {/* Internal Styles */}
             <style>{`
                 @keyframes zoomIn {
