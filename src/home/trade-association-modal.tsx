@@ -4,7 +4,7 @@ import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
-import CoinDisplay from '../ui/coin-display.tsx'; 
+import CoinDisplay from '../ui/display/coin-display.tsx'; 
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
