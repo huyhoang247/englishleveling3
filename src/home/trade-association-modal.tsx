@@ -3,6 +3,7 @@ import { equipmentUiAssets } from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
+import HomeButton from '../ui/components/home-button.tsx'; // Import HomeButton
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
@@ -91,28 +92,13 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
     <img src={equipmentUiAssets.equipmentPieceIcon} alt="Piece" className={className} />
 );
 
-// Icon Home giống skill-ui
-const HomeIcon = ({ className = '' }: { className?: string }) => ( 
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
-        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> 
-    </svg> 
-);
-
-// --- COMPONENT HEADER (STYLE GIỐNG SKILL-UI) ---
+// --- COMPONENT HEADER ---
 const Header = memo(({ onClose }: { onClose: () => void }) => {
     return (
         <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
-                {/* Nút Quay lại Trang Chính */}
-                <button 
-                    onClick={onClose} 
-                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700 border border-slate-700 transition-colors group" 
-                    aria-label="Quay lại Trang Chính" 
-                    title="Quay lại Trang Chính"
-                >
-                    <HomeIcon className="w-5 h-5 text-slate-300 group-hover:text-white" />
-                    <span className="hidden sm:inline text-sm font-semibold text-slate-300 group-hover:text-white">Trang Chính</span>
-                </button>
+                {/* Sử dụng HomeButton thay thế nút cũ */}
+                <HomeButton onClick={onClose} />
 
                 {/* Tiêu đề bên phải */}
                 <div className="flex items-center gap-3">
@@ -248,7 +234,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         // MAIN CONTAINER: Fixed Full Screen
         <div className="fixed inset-0 z-[110] bg-[#13151b] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
-            {/* 1. HEADER SECTION (Updated to match Skill-UI style) */}
+            {/* 1. HEADER SECTION */}
             <Header onClose={onClose} />
 
             {/* 2. BODY SECTION (Scrollable) */}
