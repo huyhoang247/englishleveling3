@@ -91,7 +91,7 @@ const ScopedStyles = () => (
             overflow: hidden; 
         }
 
-        /* Lớp phủ Overlay: Giảm xuống 0.75 để background sáng hơn */
+        /* Lớp phủ Overlay: 0.75 */
         .vocabulary-chest-root::before {
             content: '';
             position: absolute;
@@ -112,15 +112,14 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-gallery-container { display: flex; flex-wrap: wrap; justify-content: center; gap: 30px; width: 100%; max-width: 1300px; padding: 20px 20px 100px; box-sizing: border-box; flex-grow: 1; overflow-y: auto; -ms-overflow-style: none; scrollbar-width: none; }
         .vocabulary-chest-root .chest-gallery-container::-webkit-scrollbar { display: none; }
         
-        /* --- CHEST CONTAINER (QUAN TRỌNG: ĐỘ TRONG SUỐT) --- */
+        /* --- CHEST CONTAINER --- */
         .vocabulary-chest-root .chest-ui-container { 
             width: 100%; 
             max-width: 380px; 
             min-width: 300px; 
-            /* Dùng RGBA 0.5 để tạo hiệu ứng kính bán trong suốt */
+            /* Background container bán trong suốt (0.5) */
             background-color: rgba(26, 31, 54, 0.5); 
             border-radius: 16px; 
-            /* Thêm viền mờ để làm nổi bật khối khi nền trong suốt */
             border: 1px solid rgba(129, 140, 248, 0.2);
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 15px rgba(76, 89, 186, 0.1); 
             overflow: hidden; 
@@ -134,10 +133,9 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-ui-container::before { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, rgba(129, 140, 248, 0.3), rgba(49, 46, 129, 0.2)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
         .vocabulary-chest-root .chest-ui-container:hover:not(.is-processing) { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(129, 140, 248, 0.2); }
         
-        /* --- HEADER & CEFR TAG CSS --- */
+        /* --- HEADER --- */
         .vocabulary-chest-root .chest-header { 
             padding: 12px 10px; 
-            /* Header rất trong (0.4) */
             background-color: rgba(42, 49, 78, 0.4); 
             font-size: 0.9rem; 
             font-weight: 600; 
@@ -163,10 +161,10 @@ const ScopedStyles = () => (
             display: inline-block;
         }
 
-        /* --- BODY & COMPONENTS (QUAN TRỌNG: GRADIENT TRONG SUỐT) --- */
+        /* --- BODY & COMPONENTS (GRADIENT TỪ 0.5 ĐẾN 0.6) --- */
         .vocabulary-chest-root .chest-body { 
-            /* Thay đổi gradient từ màu đặc sang RGBA rất trong (0.3 - 0.4) */
-            background: linear-gradient(170deg, rgba(67, 51, 91, 0.3), rgba(44, 34, 64, 0.4)); 
+            /* Cập nhật Gradient theo yêu cầu: 0.5 và 0.6 */
+            background: linear-gradient(170deg, rgba(67, 51, 91, 0.5), rgba(44, 34, 64, 0.6)); 
             padding: 20px; 
             position: relative; 
             flex-grow: 1; 
@@ -182,7 +180,6 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-top-section { display: flex; justify-content: space-between; align-items: center; width: 100%; margin-bottom: 20px; }
         .vocabulary-chest-root .chest-level-info { display: flex; align-items: center; gap: 8px; }
         
-        /* Các thành phần con cũng cần dùng RGBA */
         .vocabulary-chest-root .chest-level-name { background-color: rgba(0, 0, 0, 0.3); color: #c7d2fe; padding: 4px 10px; border-radius: 12px; font-size: 0.85rem; font-weight: 600; border: 1px solid rgba(129, 140, 248, 0.4); }
         .vocabulary-chest-root .chest-help-icon { width: 24px; height: 24px; background-color: rgba(0, 0, 0, 0.3); border: 1px solid rgba(129, 140, 248, 0.4); border-radius: 50%; color: #c7d2fe; font-weight: bold; display: flex; justify-content: center; align-items: center; cursor: pointer; font-size: 0.85rem; transition: background-color 0.2s; padding: 0; }
         .vocabulary-chest-root .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.5); }
