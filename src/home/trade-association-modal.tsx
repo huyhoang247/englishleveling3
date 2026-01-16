@@ -253,11 +253,10 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                     {/* Card Body */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-8 lg:gap-12">
                                         
-                                        {/* INGREDIENTS AREA (Dynamic Scaling) */}
+                                        {/* INGREDIENTS AREA */}
                                         <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-8 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             {option.ingredients.map((ing, idx) => {
                                                 const userHas = resources[ing.type] || 0;
-                                                // Dynamic Cost Calculation
                                                 const requiredAmount = ing.amount * quantity;
                                                 const isEnough = userHas >= requiredAmount;
                                                 if (!isEnough) canAffordAll = false;
@@ -265,13 +264,9 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 return (
                                                     <React.Fragment key={ing.type}>
                                                         <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                                            {/* Icon Container */}
+                                                            {/* Icon Container - REMOVED BADGE HERE */}
                                                             <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
-                                                                {/* Dynamic Required Amount Badge */}
-                                                                <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full shadow-lg border border-slate-600 z-10">
-                                                                    {requiredAmount}
-                                                                </div>
                                                             </div>
                                                             {/* User Stock Display */}
                                                             <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5">
@@ -290,11 +285,14 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             })}
                                         </div>
 
-                                        {/* ARROW DIRECTION */}
-                                        <div className="shrink-0 text-slate-600 rotate-90 lg:rotate-0 animate-pulse">
-                                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-10 h-10 md:w-12 md:h-12 opacity-50">
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
-                                            </svg>
+                                        {/* ARROW DIRECTION - UPDATED TO ICON WITH OPACITY 80% */}
+                                        <div className="shrink-0 flex items-center justify-center">
+                                            <img 
+                                                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/arrow-down-exchange.webp" 
+                                                alt="Convert to"
+                                                // rotate-0 on mobile (pointing down), -rotate-90 on desktop (pointing right)
+                                                className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-80 lg:-rotate-90"
+                                            />
                                         </div>
 
                                         {/* RESULT & BUTTON AREA */}
@@ -306,7 +304,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
                                                     <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
                                                     
-                                                    {/* Dynamic Quantity Badge */}
+                                                    {/* Dynamic Quantity Badge - KEPT HERE */}
                                                     <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
                                                         x{option.receiveAmount * quantity}
                                                     </div>
