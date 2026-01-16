@@ -96,7 +96,7 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
 // --- COMPONENT HEADER ---
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
-        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20">
+        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-800/50 z-20 relative">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
                 <HomeButton onClick={onClose} />
                 <div className="flex items-center">
@@ -209,16 +209,23 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     return (
         // MAIN CONTAINER
-        <div className="fixed inset-0 z-[110] bg-[#13151b] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
+        <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
+            {/* BACKGROUND IMAGE LAYER */}
+            <div className="absolute inset-0 z-0">
+                <img 
+                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-trade-association.webp" 
+                    alt="Background" 
+                    className="w-full h-full object-cover"
+                />
+                {/* BLACK OVERLAY 80% */}
+                <div className="absolute inset-0 bg-black/80" />
+            </div>
+
             <Header onClose={onClose} displayedCoins={displayedCoins} />
 
-            <div className="flex-1 overflow-y-auto hide-scrollbar relative bg-[#1c1e26]">
+            <div className="flex-1 overflow-y-auto hide-scrollbar relative z-10">
                 
-                <div className="absolute inset-0 opacity-[0.03] pointer-events-none" 
-                     style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }}>
-                </div>
-
                 <div className="relative p-4 md:p-10 min-h-full max-w-5xl mx-auto flex flex-col">
                     
                     {/* Feedback Toast */}
