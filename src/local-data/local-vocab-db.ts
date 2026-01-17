@@ -11,7 +11,6 @@ export interface IOpenedVocab {
 }
 
 // Interface cho dữ liệu THÀNH TÍCH từ vựng (Level/EXP)
-// Đây là interface quan trọng để fix lỗi reset level
 export interface IVocabAchievement {
   id: number;       // ID từ API
   word: string;     // Dùng 'word' làm primary key vì nó là duy nhất
@@ -108,25 +107,22 @@ class LocalVocabDatabase extends Dexie {
   }
 
   /**
-   * [FIX QUAN TRỌNG] Lưu (ghi đè) toàn bộ dữ liệu thành tích vào cache.
-   * Sử dụng transaction để đảm bảo tính toàn vẹn dữ liệu.
-   * KHÔNG sử dụng try/catch ở đây để lỗi được ném ra ngoài cho caller xử lý.
+   * [FIX QUAN TRỌNG] Lưu dữ liệu thành tích.
+   * Sử dụng bulkPut thay vì clear+add để đảm bảo ghi đè chính xác (Upsert).
+   * Điều này ngăn chặn việc dữ liệu bị reset sau khi F5.
    * 
    * @param {IVocabAchievement[]} achievements - Mảng dữ liệu thành tích mới.
    */
   async saveVocabAchievements(achievements: IVocabAchievement[]): Promise<void> {
-    // Sử dụng transaction: Hoặc là xong cả (xóa cũ + thêm mới), hoặc là không làm gì cả.
+    if (achievements.length === 0) return;
+
+    // Sử dụng transaction để đảm bảo an toàn dữ liệu
     await this.transaction('rw', this.vocabAchievements, async () => {
-      // 1. Xóa dữ liệu cũ
-      await this.vocabAchievements.clear();
-      
-      // 2. Thêm dữ liệu mới (nếu có)
-      if (achievements.length > 0) {
-        await this.vocabAchievements.bulkAdd(achievements);
-      }
+      // Dùng bulkPut: Nếu tồn tại thì update, chưa có thì insert.
+      // Cách này an toàn hơn clear() vì không làm mất dữ liệu nếu quá trình ghi bị lỗi giữa chừng.
+      await this.vocabAchievements.bulkPut(achievements);
     });
-    // Nếu transaction thất bại, Dexie sẽ tự động throw error.
-    // Lỗi này sẽ chặn quá trình cộng tiền bên 'course-data-service.ts'.
+    // Lưu ý: Không dùng try/catch ở đây để lỗi (nếu có) bắn ra ngoài cho Service xử lý
   }
 
   // ==========================================================
