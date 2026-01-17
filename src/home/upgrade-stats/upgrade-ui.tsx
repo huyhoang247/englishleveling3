@@ -37,8 +37,8 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   return (
     <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
         <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-        {/* Changed bg-slate-900/95 to bg-slate-900 (solid) for better performance */}
-        <div className="relative bg-slate-900 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
+        {/* Updated: bg-slate-900/80 (80% opacity) */}
+        <div className="relative bg-slate-900/80 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
             <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
             <div className="flex-grow flex flex-col items-center gap-1">
                 <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
@@ -99,7 +99,6 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
         <div className={`relative z-10 w-full h-full p-4 flex flex-col items-center justify-center transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
             <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
             
-            {/* Header: Removed backdrop-blur-sm, increased opacity to bg-slate-900/90 */}
             <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-slate-900/90 border-b-2 border-slate-700/80">
                 <button onClick={onClose} className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 transition-colors" aria-label="Quay lại Trang Chính" title="Quay lại Trang Chính">
                     <HomeIcon className="w-5 h-5 text-slate-300" />
@@ -136,8 +135,8 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
                     <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
                 </div>
 
-                {/* Stats Summary: Removed backdrop-blur-sm, changed bg-slate-900/50 to bg-slate-900/90 */}
-                <div className="w-full max-w-xs bg-slate-900/90 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
+                {/* Updated: bg-slate-900/75 (75% opacity) */}
+                <div className="w-full max-w-xs bg-slate-900/75 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
@@ -148,7 +147,6 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
                         <span className="text-md font-bold text-slate-400 tracking-wide text-shadow-sm">Stage {prestigeLevel + 1}</span>
                         <span className="text-sm font-semibold text-slate-400">Lv. {totalLevels}</span>
                     </div>
-                    {/* Progress Bar: Removed backdrop-blur-sm, used bg-slate-950/80 */}
                     <div className="relative w-full h-7 bg-slate-950/80 rounded-full border-2 border-slate-700/80 p-1 shadow-inner">
                         <div className="h-full bg-gradient-to-r from-cyan-500 to-blue-600 rounded-full shadow-[0_0_8px_rgba(0,246,255,0.45)] transition-all duration-500 ease-out" style={{ width: `${progressPercent}%` }}></div>
                         <div className="absolute inset-0 flex justify-end items-center px-4 text-sm text-white text-shadow-sm font-bold">
