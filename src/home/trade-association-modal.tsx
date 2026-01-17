@@ -7,7 +7,7 @@ import HomeButton from '../ui/home-button.tsx';
 import CoinDisplay from '../ui/display/coin-display.tsx'; 
 
 // --- DEFINITION TYPES ---
-export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth';
+export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
 
 export interface TradeIngredient {
     type: ResourceType;
@@ -19,7 +19,7 @@ export interface TradeOption {
     id: string;
     title: string;
     ingredients: TradeIngredient[];
-    receiveType: 'equipmentPiece';
+    receiveType: 'equipmentPiece' | 'ancientBook';
     receiveAmount: number; // Base amount received for 1 exchange
     description?: string;
 }
@@ -65,12 +65,20 @@ const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, cla
             return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ore.webp" alt="Ore" className={`${className} object-contain`} />;
         case 'cloth': 
             return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp" alt="Cloth" className={`${className} object-contain`} />;
+        case 'feather':
+            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/feather.webp" alt="Feather" className={`${className} object-contain`} />;
+        case 'coal':
+            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coal.webp" alt="Coal" className={`${className} object-contain`} />;
         default: return null;
     }
 };
 
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
     <img src={equipmentUiAssets.equipmentPieceIcon} alt="Piece" className={className} />
+);
+
+const AncientBookIcon = ({ className = '' }: { className?: string }) => (
+    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ancient-book.webp" alt="Book" className={className} />
 );
 
 // --- COMPONENT HEADER ---
@@ -147,7 +155,7 @@ interface TradeAssociationModalV2Props {
 // --- MAIN COMPONENT ---
 const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModalV2Props) => {
     const { 
-        wood, leather, ore, cloth, 
+        wood, leather, ore, cloth, feather, coal,
         refreshUserData,
         displayedCoins
     } = useGame();
@@ -156,7 +164,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
     const [tradeQuantities, setTradeQuantities] = useState<Record<string, number>>({});
 
-    const resources: Record<ResourceType, number> = { wood, leather, ore, cloth };
+    const resources: Record<ResourceType, number> = { wood, leather, ore, cloth, feather, coal };
 
     // --- DYNAMIC TRADE OPTIONS ---
     const currentTradeOptions: TradeOption[] = useMemo(() => {
@@ -181,6 +189,17 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     { type: 'cloth', name: 'Cloth', amount: getDailyPrice('cloth') }
                 ],
                 receiveType: 'equipmentPiece', 
+                receiveAmount: 1
+            },
+            { 
+                id: 'combine_feather_coal', 
+                title: "Scholar's Supply",
+                description: 'Market fluctuation applied',
+                ingredients: [
+                    { type: 'feather', name: 'Feather', amount: getDailyPrice('feather') },
+                    { type: 'coal', name: 'Coal', amount: getDailyPrice('coal') }
+                ],
+                receiveType: 'ancientBook', 
                 receiveAmount: 1
             },
         ];
@@ -238,15 +257,22 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     updates[ing.type] = currentVal - totalRequired;
                 }
 
-                // Add Equipment Pieces
-                const currentPieces = userData.equipment?.pieces || 0;
+                // Add Result based on Type
                 const totalReceive = option.receiveAmount * quantity;
-                updates['equipment.pieces'] = currentPieces + totalReceive;
+
+                if (option.receiveType === 'equipmentPiece') {
+                    const currentPieces = userData.equipment?.pieces || 0;
+                    updates['equipment.pieces'] = currentPieces + totalReceive;
+                } else if (option.receiveType === 'ancientBook') {
+                    const currentBooks = userData.ancientBooks || 0;
+                    updates['ancientBooks'] = currentBooks + totalReceive;
+                }
 
                 transaction.update(userRef, updates);
             });
 
-            setMessage({ text: `Successfully exchanged for ${option.receiveAmount * quantity} Equipment Piece(s)!`, type: 'success' });
+            const rewardName = option.receiveType === 'ancientBook' ? 'Ancient Book(s)' : 'Equipment Piece(s)';
+            setMessage({ text: `Successfully exchanged for ${option.receiveAmount * quantity} ${rewardName}!`, type: 'success' });
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
 
@@ -359,7 +385,11 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             
                                             <div className="relative group-hover:scale-105 transition-transform duration-500">
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
-                                                    <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
+                                                    {option.receiveType === 'equipmentPiece' ? (
+                                                        <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
+                                                    ) : (
+                                                        <AncientBookIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
+                                                    )}
                                                     <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
                                                         x{option.receiveAmount * quantity}
                                                     </div>
