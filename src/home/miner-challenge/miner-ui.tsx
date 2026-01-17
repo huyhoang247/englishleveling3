@@ -150,18 +150,17 @@ function BombGameUI() {
                 <img src={minerAssets.exitIcon} alt="Floor" className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Floor</span>
-                    <span className="font-mono text-lg font-bold text-white">{currentFloor}</span>
+                    {/* Changed Font to Lilita */}
+                    <span className="font-lilita text-lg tracking-wide text-white">{currentFloor}</span>
                 </div>
             </div>
             {/* Pickaxe Box - Changed to bg-black/80 */}
-            <div className="bg-black/30 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
+            <div className="bg-black/30 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}`}>
                 <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
-                    <div className="flex items-baseline" style={{ gap: '2px' }}>
-                      <span className="font-mono text-lg font-bold text-white">{pickaxes}</span>
-                      <span className="font-mono text-sm font-bold text-slate-500">/ {MAX_PICKAXES}</span>
-                    </div>
+                    {/* Changed Font to Lilita & Removed Max Pickaxes display */}
+                    <span className="font-lilita text-lg tracking-wide text-white">{pickaxes}</span>
                 </div>
             </div>
             {/* Bombs Box - Changed to bg-black/80 */}
@@ -169,7 +168,8 @@ function BombGameUI() {
                 <img src={minerAssets.bombIcon} alt="Bombs" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Bombs</span>
-                    <span className="font-mono text-lg font-bold text-white">{TOTAL_BOMBS - flagsPlaced}</span>
+                    {/* Changed Font to Lilita */}
+                    <span className="font-lilita text-lg tracking-wide text-white">{TOTAL_BOMBS - flagsPlaced}</span>
                 </div>
             </div>
             {/* Rewards Box - Changed to bg-black/80 */}
@@ -177,7 +177,8 @@ function BombGameUI() {
                 <img src={minerAssets.coinIcon} alt="Rewards" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
-                    <span className="font-mono text-lg font-bold text-white">{rewardPerCoin}</span>
+                    {/* Changed Font to Lilita */}
+                    <span className="font-lilita text-lg tracking-wide text-white">{rewardPerCoin}</span>
                 </div>
             </div>
         </div>
