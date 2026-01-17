@@ -109,10 +109,22 @@ function BombGameUI() {
   } = useBomb();
 
   return (
-    <main className="relative bg-slate-900 text-white min-h-screen flex flex-col items-center p-4 font-poppins">
+    <main className="relative text-white min-h-screen flex flex-col items-center p-4 font-poppins">
+      
+      {/* Background Image */}
+      <div 
+        className="absolute inset-0 z-0 bg-cover bg-center"
+        style={{ 
+            backgroundImage: "url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-miner.webp')" 
+        }}
+      />
+      
+      {/* Black Overlay (80% opacity) */}
+      <div className="absolute inset-0 z-0 bg-black/80" />
+
       <CustomAnimationStyles />
       
-      <header className="fixed top-0 left-0 w-full z-10 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
+      <header className="fixed top-0 left-0 w-full z-20 bg-slate-900/70 backdrop-blur-sm border-b border-slate-700/80">
         <div className="w-full max-w-md mx-auto flex items-center justify-between py-3 px-4">
           <button
               onClick={handleClose}
@@ -130,7 +142,8 @@ function BombGameUI() {
         </div>
       </header>
       
-      <div className="w-full max-w-xs sm:max-w-sm mx-auto pt-24">
+      {/* Game Content Wrapper - Added relative z-10 to sit above background */}
+      <div className="relative z-10 w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             <div className="bg-slate-900/50 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
                 <img src={minerAssets.exitIcon} alt="Floor" className="w-6 h-6 object-contain opacity-70" />
