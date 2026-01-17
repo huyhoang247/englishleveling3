@@ -1,4 +1,5 @@
 
+
 import React from 'react';
 
 const BACKGROUND_IMAGE = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-tower.webp";
@@ -9,20 +10,22 @@ const BossBattleLoader: React.FC = () => {
       
       {/* --- CSS Animations --- */}
       <style>{`
-        @keyframes subtle-bounce {
+        @keyframes wave-gradient {
             0%, 100% {
-                transform: translateY(0) scale(0.85);
-                opacity: 0.5;
-                filter: brightness(1);
+                transform: translateY(0);
+                opacity: 0.4;
+                filter: brightness(0.9);
+                transform: scale(1);
             }
             50% {
-                transform: translateY(-16px) scale(1.15);
+                transform: translateY(-14px);
                 opacity: 1;
-                filter: brightness(1.3);
+                filter: brightness(1.4) contrast(1.2);
+                transform: scale(1.15);
             }
         }
         .loader-dot {
-            animation: subtle-bounce 1.5s infinite ease-in-out both;
+            animation: wave-gradient 1.2s infinite ease-in-out both;
         }
       `}</style>
 
@@ -39,24 +42,30 @@ const BossBattleLoader: React.FC = () => {
           <div className="absolute inset-0 bg-black/70" />
       </div>
 
-      {/* --- 3 COLORED DOTS --- */}
-      <div className="relative z-10 flex items-center gap-6">
+      {/* --- 4 DOTS GRADIENT SPECTRUM --- */}
+      <div className="relative z-10 flex items-center gap-5">
           
-          {/* Dot 1: Cyan (Magic/Energy) */}
+          {/* Dot 1: Cyan */}
           <div 
-              className="w-5 h-5 rounded-full bg-cyan-400 loader-dot shadow-[0_0_20px_rgba(34,211,238,0.6)] border border-cyan-300/30" 
-              style={{ animationDelay: '-0.32s' }}
+              className="w-3.5 h-3.5 rounded-full bg-cyan-400 loader-dot shadow-[0_0_15px_rgba(34,211,238,0.5)]" 
+              style={{ animationDelay: '-0.45s' }}
           ></div>
 
-          {/* Dot 2: Purple/Fuchsia (Mystery/Void) */}
+          {/* Dot 2: Sky/Blue (Transition) */}
           <div 
-              className="w-5 h-5 rounded-full bg-fuchsia-500 loader-dot shadow-[0_0_20px_rgba(217,70,239,0.6)] border border-fuchsia-400/30" 
-              style={{ animationDelay: '-0.16s' }}
+              className="w-3.5 h-3.5 rounded-full bg-sky-500 loader-dot shadow-[0_0_15px_rgba(14,165,233,0.5)]" 
+              style={{ animationDelay: '-0.3s' }}
           ></div>
 
-          {/* Dot 3: Yellow/Amber (Power/Gold) */}
+          {/* Dot 3: Violet (Transition) */}
           <div 
-              className="w-5 h-5 rounded-full bg-amber-400 loader-dot shadow-[0_0_20px_rgba(251,191,36,0.6)] border border-amber-300/30" 
+              className="w-3.5 h-3.5 rounded-full bg-violet-500 loader-dot shadow-[0_0_15px_rgba(139,92,246,0.5)]" 
+              style={{ animationDelay: '-0.15s' }}
+          ></div>
+
+          {/* Dot 4: Fuchsia */}
+          <div 
+              className="w-3.5 h-3.5 rounded-full bg-fuchsia-500 loader-dot shadow-[0_0_15px_rgba(217,70,239,0.5)]" 
               style={{ animationDelay: '0s' }}
           ></div>
 
