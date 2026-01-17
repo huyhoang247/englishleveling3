@@ -16,7 +16,7 @@ const sampleItemsNonWeapons = [
   { id: 2002, name: 'Equipment Piece', type: 'Item', rarity: 'B', price: 10, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-piece.webp', description: 'Nguyên liệu cốt lõi dùng để chế tạo và hợp nhất trang bị.', stackable: true, quantityOptions: [10, 50, 100] },
   { id: 2003, name: 'Pickaxe', type: 'Item', rarity: 'B', price: 50, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/pickaxe-icon.webp', description: 'Dùng để khai thác tài nguyên và khoáng sản.', stackable: true, quantityOptions: [10, 50, 100], },
   
-  // --- THÊM 3 LOẠI ĐÁ CƯỜNG HOÁ ---
+  // --- ĐÁ CƯỜNG HOÁ ---
   { 
       id: 2004, 
       name: 'Đá Sơ Cấp', 
@@ -49,6 +49,52 @@ const sampleItemsNonWeapons = [
       description: 'Đá cường hoá cấp cao quý hiếm. Tỉ lệ thành công lên tới 90%.', 
       stackable: true, 
       quantityOptions: [1, 5, 10] 
+  },
+
+  // --- NGUYÊN LIỆU (MỚI) ---
+  {
+      id: 2007,
+      name: 'Gỗ (Wood)',
+      type: 'Item',
+      rarity: 'D',
+      price: 100,
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/wood.webp',
+      description: 'Nguyên liệu cơ bản từ tự nhiên, dùng để chế tác các vật phẩm và trang bị.',
+      stackable: true,
+      quantityOptions: [10, 50, 100]
+  },
+  {
+      id: 2008,
+      name: 'Da (Leather)',
+      type: 'Item',
+      rarity: 'D',
+      price: 100,
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/leather.webp',
+      description: 'Da thú đã qua xử lý, bền bỉ và dẻo dai. Cần thiết cho các trang bị phòng thủ nhẹ.',
+      stackable: true,
+      quantityOptions: [10, 50, 100]
+  },
+  {
+      id: 2009,
+      name: 'Quặng (Ore)',
+      type: 'Item',
+      rarity: 'D',
+      price: 100,
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ore.webp',
+      description: 'Khoáng sản thô khai thác từ lòng đất. Nguyên liệu chính để rèn vũ khí và giáp nặng.',
+      stackable: true,
+      quantityOptions: [10, 50, 100]
+  },
+  {
+      id: 2010,
+      name: 'Vải (Cloth)',
+      type: 'Item',
+      rarity: 'D',
+      price: 100,
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp',
+      description: 'Vải dệt chất lượng cao. Dùng để may trang phục và các vật phẩm ma thuật.',
+      stackable: true,
+      quantityOptions: [10, 50, 100]
   },
 ];
 
@@ -108,24 +154,35 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
     
     setIsSyncingData(true);
     try {
-      // Gọi service, giờ đây service trả về cả stones
-      const { newCoins, newBooks, newCapacity, newPieces, newStones } = await processShopPurchase(currentUser.uid, item, quantity);
+      // Gọi service, xử lý tất cả các loại trả về bao gồm Stones và Resources
+      const { 
+          newCoins, 
+          newBooks, 
+          newCapacity, 
+          newPieces, 
+          newStones, 
+          newWood, 
+          newLeather, 
+          newOre, 
+          newCloth 
+      } = await processShopPurchase(currentUser.uid, item, quantity);
       
       const updates: { 
           coins?: number; 
           ancientBooks?: number; 
           cardCapacity?: number; 
           equipmentPieces?: number; 
-          stones?: any; // Thêm stones vào type
+          stones?: any;
+          // Lưu ý: GameContext hiện tại cập nhật Resource qua onSnapshot,
+          // nhưng chúng ta vẫn có thể pass vào updateUserCurrency nếu logic đó được mở rộng sau này.
       } = { coins: newCoins };
       
       if (item.id === 1009) { updates.ancientBooks = newBooks; } 
       else if (item.id === 2001) { updates.cardCapacity = newCapacity; } 
       else if (item.id === 2002) { updates.equipmentPieces = newPieces; }
-      // Các ID đá cường hoá
       else if ([2004, 2005, 2006].includes(item.id)) { updates.stones = newStones; }
-
-      // Cập nhật lên GameContext (Lưu ý: GameContext cần hỗ trợ nhận stones trong hàm này, nếu chưa thì nó sẽ bỏ qua nhưng DB đã update)
+      
+      // Update tiền và các item đặc biệt ngay lập tức cho UI
       updateUserCurrency(updates as any); 
       
       triggerToast(`Mua thành công x${quantity} ${item.name}!`, false);
