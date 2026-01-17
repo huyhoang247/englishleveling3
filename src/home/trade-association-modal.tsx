@@ -1,4 +1,4 @@
-import React, { memo, useState, useCallback } from 'react';
+import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import { equipmentUiAssets } from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
@@ -24,67 +24,47 @@ export interface TradeOption {
     description?: string;
 }
 
-// --- TRADE OPTIONS CONFIGURATION ---
-const TRADE_OPTIONS: TradeOption[] = [
-    { 
-        id: 'combine_wood_leather', 
-        title: "Hunter's Supply",
-        description: 'Crafted from natural materials',
-        ingredients: [
-            { type: 'wood', name: 'Wood', amount: 10 },
-            { type: 'leather', name: 'Leather', amount: 10 }
-        ],
-        receiveType: 'equipmentPiece', 
-        receiveAmount: 1
-    },
-    { 
-        id: 'combine_ore_cloth', 
-        title: "Warrior's Supply",
-        description: 'Crafted from minerals and fabrics',
-        ingredients: [
-            { type: 'ore', name: 'Ore', amount: 10 },
-            { type: 'cloth', name: 'Cloth', amount: 10 }
-        ],
-        receiveType: 'equipmentPiece', 
-        receiveAmount: 1
-    },
-];
+// --- UTILITY: DETERMINISTIC RANDOM PRICE (VIETNAM TIME) ---
+// Generates a random number between 5-20 based on the Vietnam Date and resource type.
+const getDailyPrice = (resourceType: string): number => {
+    // 1. Get current time
+    const now = new Date();
+    
+    // 2. Convert to Vietnam Time String to get the correct date
+    // This handles the timezone conversion automatically (UTC+7)
+    const vnDateString = now.toLocaleDateString("en-US", { 
+        timeZone: "Asia/Ho_Chi_Minh",
+        year: 'numeric',
+        month: 'numeric',
+        day: 'numeric'
+    });
+
+    // 3. Create Seed from Vietnam Date + Resource Type
+    const seed = vnDateString + resourceType;
+    
+    let hash = 0;
+    for (let i = 0; i < seed.length; i++) {
+        const char = seed.charCodeAt(i);
+        hash = ((hash << 5) - hash) + char;
+        hash = hash & hash; // Convert to 32bit integer
+    }
+    
+    const min = 5;
+    const max = 20;
+    return (Math.abs(hash) % (max - min + 1)) + min;
+};
 
 // --- IMAGE ICONS ---
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
     switch (type) {
         case 'wood': 
-            return ( 
-                <img 
-                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/wood.webp" 
-                    alt="Wood" 
-                    className={`${className} object-contain`} 
-                /> 
-            );
+            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/wood.webp" alt="Wood" className={`${className} object-contain`} />;
         case 'leather': 
-            return ( 
-                <img 
-                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/leather.webp" 
-                    alt="Leather" 
-                    className={`${className} object-contain`} 
-                /> 
-            );
+            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/leather.webp" alt="Leather" className={`${className} object-contain`} />;
         case 'ore': 
-            return ( 
-                <img 
-                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ore.webp" 
-                    alt="Ore" 
-                    className={`${className} object-contain`} 
-                /> 
-            );
+            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ore.webp" alt="Ore" className={`${className} object-contain`} />;
         case 'cloth': 
-            return ( 
-                <img 
-                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp" 
-                    alt="Cloth" 
-                    className={`${className} object-contain`} 
-                /> 
-            );
+            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp" alt="Cloth" className={`${className} object-contain`} />;
         default: return null;
     }
 };
@@ -107,6 +87,55 @@ const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, display
     );
 });
 
+// --- MARKET TIMER COMPONENT (VIETNAM TIME) ---
+const MarketTimer = () => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const now = new Date();
+            
+            // Convert current time to a manipulatable Date object in VN Time
+            const vnNowString = now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
+            const vnNow = new Date(vnNowString);
+
+            // Create target time (Tomorrow 00:00:00 VN Time)
+            const vnTomorrow = new Date(vnNow);
+            vnTomorrow.setDate(vnTomorrow.getDate() + 1);
+            vnTomorrow.setHours(0, 0, 0, 0);
+
+            // Difference in milliseconds
+            const diff = vnTomorrow.getTime() - vnNow.getTime();
+
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / (1000 * 60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        };
+
+        setTimeLeft(calculateTimeLeft());
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    return (
+        <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-sm border border-amber-500/30 px-5 py-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.1)] mx-auto w-fit mb-4 animate-fadeIn">
+            <div className="relative flex h-3 w-3">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+            </div>
+            <div className="text-xs uppercase tracking-widest text-slate-400 font-bold">VN Market Reset</div>
+            <div className="font-mono text-xl font-bold text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
+                {timeLeft}
+            </div>
+        </div>
+    );
+};
+
 interface TradeAssociationModalV2Props {
     isOpen: boolean;
     onClose: () => void;
@@ -122,16 +151,40 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     const [isProcessing, setIsProcessing] = useState(false);
     const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
-    
-    // State to track quantity for each trade option
     const [tradeQuantities, setTradeQuantities] = useState<Record<string, number>>({});
 
     const resources: Record<ResourceType, number> = { wood, leather, ore, cloth };
 
-    // Helper to get current quantity
+    // --- DYNAMIC TRADE OPTIONS ---
+    const currentTradeOptions: TradeOption[] = useMemo(() => {
+        return [
+            { 
+                id: 'combine_wood_leather', 
+                title: "Hunter's Supply",
+                description: 'Market fluctuation applied',
+                ingredients: [
+                    { type: 'wood', name: 'Wood', amount: getDailyPrice('wood') },
+                    { type: 'leather', name: 'Leather', amount: getDailyPrice('leather') }
+                ],
+                receiveType: 'equipmentPiece', 
+                receiveAmount: 1
+            },
+            { 
+                id: 'combine_ore_cloth', 
+                title: "Warrior's Supply",
+                description: 'Market fluctuation applied',
+                ingredients: [
+                    { type: 'ore', name: 'Ore', amount: getDailyPrice('ore') },
+                    { type: 'cloth', name: 'Cloth', amount: getDailyPrice('cloth') }
+                ],
+                receiveType: 'equipmentPiece', 
+                receiveAmount: 1
+            },
+        ];
+    }, []); 
+
     const getQuantity = (optionId: string) => tradeQuantities[optionId] || 1;
 
-    // Helper to set quantity
     const handleQuantityChange = (optionId: string, change: number) => {
         setTradeQuantities(prev => {
             const current = prev[optionId] || 1;
@@ -154,7 +207,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         setMessage(null);
 
         try {
-            // A. Client-side Validation with Multiplier
+            // A. Client-side Validation
             for (const ing of option.ingredients) {
                 const totalRequired = ing.amount * quantity;
                 if ((resources[ing.type] || 0) < totalRequired) {
@@ -172,22 +225,20 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
                 const updates: any = {};
                 
-                // Deduct Resources based on Quantity
+                // Deduct Resources
                 for (const ing of option.ingredients) {
                     const currentVal = userData[ing.type] || 0;
                     const totalRequired = ing.amount * quantity;
                     if (currentVal < totalRequired) {
-                        throw new Error(`Server: Not enough ${ing.name} (Has: ${currentVal}, Need: ${totalRequired})`);
+                        throw new Error(`Server: Not enough ${ing.name}`);
                     }
                     updates[ing.type] = currentVal - totalRequired;
                 }
 
-                // Add Equipment Pieces based on Quantity
+                // Add Equipment Pieces
                 const currentPieces = userData.equipment?.pieces || 0;
                 const totalReceive = option.receiveAmount * quantity;
-                const newPieces = currentPieces + totalReceive;
-                
-                updates['equipment.pieces'] = newPieces;
+                updates['equipment.pieces'] = currentPieces + totalReceive;
 
                 transaction.update(userRef, updates);
             });
@@ -208,17 +259,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     if (!isOpen) return null;
 
     return (
-        // MAIN CONTAINER
         <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
             
-            {/* BACKGROUND IMAGE LAYER */}
+            {/* BACKGROUND */}
             <div className="absolute inset-0 z-0">
                 <img 
                     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-trade-association.webp" 
                     alt="Background" 
                     className="w-full h-full object-cover"
                 />
-                {/* BLACK OVERLAY 80% */}
                 <div className="absolute inset-0 bg-black/80" />
             </div>
 
@@ -228,9 +277,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 
                 <div className="relative p-4 md:p-10 min-h-full max-w-5xl mx-auto flex flex-col">
                     
+                    {/* --- VIETNAM MARKET TIMER --- */}
+                    <MarketTimer />
+
                     {/* Feedback Toast */}
                     {message && (
-                        <div className={`fixed top-28 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 text-base font-bold animate-bounce flex items-center gap-3 backdrop-blur-md ${message.type === 'success' ? 'bg-green-950/90 border-green-500 text-green-100' : 'bg-red-950/90 border-red-500 text-red-100'}`}>
+                        <div className={`fixed top-32 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 text-base font-bold animate-bounce flex items-center gap-3 backdrop-blur-md ${message.type === 'success' ? 'bg-green-950/90 border-green-500 text-green-100' : 'bg-red-950/90 border-red-500 text-red-100'}`}>
                             {message.type === 'success' ? (
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
                             ) : (
@@ -240,21 +292,19 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                         </div>
                     )}
 
-                    {/* Trade Options List Container */}
-                    <div className="space-y-6 md:space-y-8 flex-1 pb-10 mt-4">
+                    {/* Trade Options List */}
+                    <div className="space-y-6 md:space-y-8 flex-1 pb-10 mt-2">
                         
-                        {TRADE_OPTIONS.map((option) => {
+                        {currentTradeOptions.map((option) => {
                             const quantity = getQuantity(option.id);
                             let canAffordAll = true;
                             
                             return (
-                                // OPTION CARD
                                 <div key={option.id} className="relative group bg-slate-900/80 rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-slate-900/90 hover:-translate-y-1">
 
-                                    {/* Card Body */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
                                         
-                                        {/* INGREDIENTS AREA */}
+                                        {/* INGREDIENTS */}
                                         <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-6 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             {option.ingredients.map((ing, idx) => {
                                                 const userHas = resources[ing.type] || 0;
@@ -265,11 +315,14 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 return (
                                                     <React.Fragment key={ing.type}>
                                                         <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                                            {/* Icon Container */}
+                                                            {/* Price Tag Badge */}
+                                                            <div className="absolute z-10 -top-3 left-1/2 -translate-x-1/2 bg-amber-600/90 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-sm border border-amber-500/50 whitespace-nowrap">
+                                                                Price: {ing.amount}
+                                                            </div>
+
                                                             <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
                                                             </div>
-                                                            {/* User Stock Display */}
                                                             <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5">
                                                                 <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
                                                                     {userHas > 999 ? '999+' : userHas}
@@ -292,7 +345,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             })}
                                         </div>
 
-                                        {/* ARROW DIRECTION */}
+                                        {/* ARROW */}
                                         <div className="shrink-0 flex items-center justify-center">
                                             <img 
                                                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/arrow-down-exchange.webp" 
@@ -301,22 +354,18 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             />
                                         </div>
 
-                                        {/* RESULT & BUTTON AREA */}
+                                        {/* RESULT */}
                                         <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             
-                                            {/* Reward Icon - REMOVED ORANGE FLASHING */}
                                             <div className="relative group-hover:scale-105 transition-transform duration-500">
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
                                                     <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
-                                                    
-                                                    {/* Dynamic Quantity Badge */}
                                                     <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
                                                         x{option.receiveAmount * quantity}
                                                     </div>
                                                 </div>
                                             </div>
 
-                                            {/* Quantity Controls */}
                                             <div className="flex items-center justify-center gap-3 w-full max-w-[140px] bg-slate-900/50 p-1.5 rounded-lg border border-slate-700">
                                                 <button 
                                                     onClick={() => handleQuantityChange(option.id, -1)}
@@ -337,7 +386,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 </button>
                                             </div>
 
-                                            {/* Exchange Button - COMPACT & GREEN DESIGN */}
                                             <button
                                                 onClick={() => handleExchange(option, quantity)}
                                                 disabled={!canAffordAll || isProcessing}
@@ -350,15 +398,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                     }
                                                 `}
                                             >
-                                                {isProcessing ? (
-                                                    <>
-                                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                                        </svg>
-                                                        <span className="text-xs">Processing</span>
-                                                    </>
-                                                ) : 'Exchange'}
+                                                {isProcessing ? 'Processing...' : 'Exchange'}
                                             </button>
                                         </div>
 
@@ -375,8 +415,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     from { opacity: 0; transform: scale(0.98); }
                     to { opacity: 1; transform: scale(1); }
                 }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(-10px); }
+                    to { opacity: 1; transform: translateY(0); }
+                }
                 .animate-zoom-in {
                     animation: zoomIn 0.2s ease-out forwards;
+                }
+                .animate-fadeIn {
+                    animation: fadeIn 0.5s ease-out forwards;
                 }
                 .hide-scrollbar::-webkit-scrollbar {
                     display: none;
