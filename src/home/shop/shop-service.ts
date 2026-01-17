@@ -57,14 +57,21 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
 
         const updates: { [key: string]: any } = { coins: currentCoins - totalCost };
         
+        // Khởi tạo các biến để trả về giá trị mới sau khi update
         let newBooks = data.ancientBooks || 0;
         let newCapacity = data.cardCapacity || 100;
         let newPieces = data.equipment?.pieces || 0;
         let newPickaxes = data.pickaxes || 0;
         
-        // Lấy stones hiện tại, xử lý trường hợp chưa có field này
+        // Resources (Nguyên liệu)
+        let newWood = data.wood || 0;
+        let newLeather = data.leather || 0;
+        let newOre = data.ore || 0;
+        let newCloth = data.cloth || 0;
+        
+        // Stones (Đá cường hoá)
         const currentStones = data.equipment?.stones || { low: 0, medium: 0, high: 0 };
-        const newStones = { ...currentStones }; // Clone object
+        const newStones = { ...currentStones }; // Clone object để update
 
         switch (item.id) {
             case 1009: // Ancient Book
@@ -98,19 +105,44 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
                 updates['equipment.stones'] = newStones;
                 break;
 
+            // --- XỬ LÝ NGUYÊN LIỆU (MỚI) ---
+            case 2007: // Wood (Gỗ)
+                newWood += quantity;
+                updates.wood = newWood;
+                break;
+            case 2008: // Leather (Da)
+                newLeather += quantity;
+                updates.leather = newLeather;
+                break;
+            case 2009: // Ore (Quặng)
+                newOre += quantity;
+                updates.ore = newOre;
+                break;
+            case 2010: // Cloth (Vải)
+                newCloth += quantity;
+                updates.cloth = newCloth;
+                break;
+
             default:
                 break;
         }
         
+        // Thực hiện update vào Firestore
         t.update(userDocRef, updates);
         
+        // Trả về các giá trị mới để cập nhật UI ngay lập tức (nếu cần)
         return { 
             newCoins: updates.coins, 
             newBooks, 
             newCapacity,
             newPieces,
             newPickaxes,
-            newStones // Trả về object stones mới
+            newStones,
+            // Return resources
+            newWood,
+            newLeather,
+            newOre,
+            newCloth
         };
     });
 };
