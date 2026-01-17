@@ -90,17 +90,19 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     const rewardValue = currentGoal * Math.max(1, masteryCount);
 
     return (
-        // Changed bg to black/80 and text colors to be visible on dark bg
-        <div className="bg-black/80 backdrop-blur-sm p-4 sm:p-5 rounded-2xl shadow-lg border border-white/10 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        // Changed bg to solid slate-900 (removed opacity)
+        <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl shadow-lg border border-slate-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3 flex-shrink-0">
                     <img src={iconSrc} alt={title} className="w-11 h-11" />
                     <div>
-                        <h3 className="text-base font-lilita uppercase tracking-wider text-white opacity-50">{title}</h3>
+                        {/* Title color changed to text-indigo-200 to match outside theme */}
+                        <h3 className="text-base font-lilita uppercase tracking-wider text-indigo-200">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-400 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-300 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                             <div className="flex items-center gap-1">
-                                <span className="text-lg font-lilita text-amber-400 leading-none pb-0.5">
+                                {/* Coin text changed to white */}
+                                <span className="text-lg font-lilita text-white leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
                                 <img 
@@ -121,10 +123,10 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                             <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
                         </button>
                     ) : (
-                        // Adjusted non-met goal display for dark mode
-                        <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-white/10 text-gray-400 rounded-lg cursor-not-allowed">
+                        // Progress box redesigned: bg-slate-800, text-slate-200
+                        <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-slate-800 border border-slate-700 text-slate-200 rounded-lg cursor-not-allowed">
                             <GiftIcon />
-                            <span className="flex items-baseline"><span className="text-base font-extrabold text-white">{currentProgress}</span><span className="text-sm font-medium text-gray-400">/{currentGoal}</span></span>
+                            <span className="flex items-baseline"><span className="text-base font-extrabold text-white">{currentProgress}</span><span className="text-sm font-medium text-slate-400">/{currentGoal}</span></span>
                         </div>
                     )}
                 </div>
@@ -164,7 +166,6 @@ const ActivityCalendar: FC<{ activityData: any }> = memo(({ activityData }) => {
     return (
         <div className="bg-white p-4 sm:p-6 rounded-2xl shadow-lg border border-gray-100 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
             <div className="flex items-center gap-3 mb-4">
-                {/* Removed the Calendar Icon wrapper as requested */}
                 <StyledSectionTitle title="Activity" />
             </div>
             <div className="grid grid-cols-7 gap-1.5 sm:gap-2 text-center">
