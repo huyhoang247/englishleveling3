@@ -112,8 +112,8 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
             </header>
 
             {message && (
-              // Changed: bg-red-600/60 (60% opacity)
-              <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/60 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2 backdrop-blur-sm">
+              // Fixed: Removed backdrop-blur-sm, kept bg-red-600/60
+              <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/60 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
                 {message === 'ko đủ vàng' ? (
                   <>
                     <span>Not enough</span>
