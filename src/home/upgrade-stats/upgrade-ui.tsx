@@ -1,4 +1,4 @@
-// --- START OF FILE upgrade-ui.tsx (đã sửa hoàn chỉnh) ---
+// --- START OF FILE upgrade-ui.tsx ---
 
 import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
@@ -78,16 +78,24 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
 
   const displayGold = isLoading ? 0 : gold;
   const animatedGold = useAnimateValue(displayGold);
+  
+  const bgImage = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-upgrade.webp";
 
   return (
-    <div className="main-bg absolute inset-0 w-full h-full bg-gradient-to-br from-[#110f21] to-[#2c0f52] font-lilita text-white overflow-hidden">
+    <div 
+      className="main-bg absolute inset-0 w-full h-full font-lilita text-white overflow-hidden bg-cover bg-center bg-no-repeat"
+      style={{ backgroundImage: `url('${bgImage}')` }}
+    >
+        {/* Overlay Black 80% */}
+        <div className="absolute inset-0 bg-black/80 z-0"></div>
+
         {/* Lớp Skeleton */}
         <div className={`absolute inset-0 z-40 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
             <UpgradeStatsSkeleton />
         </div>
 
         {/* Lớp Nội dung chính */}
-        <div className={`w-full h-full p-4 flex flex-col items-center justify-center transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
+        <div className={`relative z-10 w-full h-full p-4 flex flex-col items-center justify-center transition-opacity duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
             <style>{`@keyframes breathing-stone { 0%, 100% { transform: scale(1) translateY(0); filter: drop-shadow(0 10px 15px rgba(0, 246, 255, 0.1)); } 50% { transform: scale(1.03) translateY(-6px); filter: drop-shadow(0 20px 25px rgba(0, 246, 255, 0.18)); } } .animate-breathing { animation: breathing-stone 4s ease-in-out infinite; }`}</style>
             
             <header className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between p-2.5 bg-black/30 backdrop-blur-sm border-b-2 border-slate-700/80">
@@ -113,7 +121,6 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
               </div>
             )}
 
-            {/* SỬA LỖI: z-10 -> z-30 để toast nổi lên trên header (z-20) */}
             <div className="relative z-30 w-full max-w-sm sm:max-w-md mx-auto flex flex-col items-center pt-8">
                 <div className="relative mb-4 w-40 h-40 flex items-center justify-center animate-breathing">
                     {toastData && (
