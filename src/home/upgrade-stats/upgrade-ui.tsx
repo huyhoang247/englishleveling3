@@ -30,15 +30,18 @@ const formatNumber = (num: number) => { if (num < 1000) return num.toString(); i
 
 // --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: any) => void, isProcessing: boolean, isDisabled: boolean }) => {
-  const { name, level, icon, color } = stat;
+  const { name, level, icon } = stat; // Removed 'color' usage
   const upgradeCost = calculateUpgradeCost(level);
   const bonusForNextLevel = getBonusForLevel(level + 1, stat.baseUpgradeBonus);
 
   return (
-    <div className={`relative group rounded-xl bg-gradient-to-r ${color} p-px transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
-        <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow"></div>
-        {/* Updated: bg-slate-900/80 (80% opacity) */}
-        <div className="relative bg-slate-900/80 rounded-[11px] h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3">
+    // Changed: Removed dynamic gradient color, added standard border and transparent container
+    <div className={`relative group rounded-xl border-2 border-slate-800 transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
+        {/* Hover Effect Layer */}
+        <div className="absolute inset-0 rounded-[10px] bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow pointer-events-none"></div>
+        
+        {/* Inner Content: Changed to bg-black/80 (Nền đen opacity) */}
+        <div className="relative bg-black/80 rounded-[10px] h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3 z-10">
             <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
             <div className="flex-grow flex flex-col items-center gap-1">
                 <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
@@ -135,7 +138,7 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
                     <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
                 </div>
 
-                {/* Updated: bg-slate-900/75 (75% opacity) */}
+                {/* Total Stats: bg-slate-900/75 */}
                 <div className="w-full max-w-xs bg-slate-900/75 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
