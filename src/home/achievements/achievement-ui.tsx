@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { User } from 'firebase/auth';
 import { AchievementsProvider, useAchievements } from './achievement-context.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import type { VocabularyItem } from '../../courses/course-data-service.ts'; // SỬA ĐỔI: Import từ nguồn chính xác
+import type { VocabularyItem } from '../../courses/course-data-service.ts';
 import AchievementsLoadingSkeleton from './achievement-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx';
@@ -59,7 +59,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
 
   return (
     <div 
-        // SỬA ĐỔI: Background image với lớp phủ đen 85%
         className="fixed inset-0 z-50 bg-slate-900 text-white font-sans flex flex-col items-center bg-cover bg-center bg-no-repeat"
         style={{
             backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-achievement.webp')`
@@ -77,14 +76,16 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <VocabularyIcon className="w-7 h-7 flex-shrink-0" />
             <div>
-              <p className="text-xl font-bold text-white">{vocabulary.length}</p>
+              {/* SỬA ĐỔI: Font Lilita cho số lượng Vocabulary */}
+              <p className="text-2xl font-lilita text-white tracking-wide">{vocabulary.length}</p>
               <p className="text-sm text-slate-400">Vocabulary</p>
             </div>
           </div>
           <div className="flex flex-1 sm:flex-none sm:w-52 items-center gap-3 p-3 bg-slate-800/50 border border-slate-700 rounded-lg">
             <MasteryCardIcon className="w-7 h-7 flex-shrink-0" />
             <div>
-              <p className="text-xl font-bold text-white">{masteryCards}</p>
+              {/* SỬA ĐỔI: Font Lilita cho số lượng Mastery */}
+              <p className="text-2xl font-lilita text-white tracking-wide">{masteryCards}</p>
               <p className="text-sm text-slate-400">Mastery</p>
             </div>
           </div>
@@ -94,7 +95,6 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             <button
                 onClick={claimAllAchievements}
                 disabled={totalClaimableRewards.masteryCards === 0 || isUpdating}
-                // SỬA ĐỔI: Đã loại bỏ backdrop-blur-sm, giữ nguyên opacity /90
                 className={`w-full max-w-md rounded-xl transition-all duration-300 ${
                   totalClaimableRewards.masteryCards > 0 && !isUpdating 
                   ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900/80 via-indigo-800/80 to-slate-900/80 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer' 
@@ -108,15 +108,18 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
                         {totalClaimableRewards.masteryCards > 0 && !isUpdating ? (
                             <>
-                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}><MasteryCardIcon className="w-7 h-7" /><span className="text-base font-semibold">{totalClaimableRewards.masteryCards}</span></div>
+                                {/* SỬA ĐỔI: Font Lilita cho số thưởng Mastery */}
+                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.masteryCards} Thẻ Thông Thạo`}><MasteryCardIcon className="w-7 h-7" /><span className="text-lg font-lilita tracking-wide pt-0.5">{totalClaimableRewards.masteryCards}</span></div>
                                 <div className="h-6 w-px bg-white/20"></div>
-                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}><GoldIcon className="w-6 h-6" /><span className="text-base font-semibold">{totalClaimableRewards.gold}</span></div>
+                                {/* SỬA ĐỔI: Font Lilita cho số thưởng Gold */}
+                                <div className="flex items-center gap-1.5" title={`${totalClaimableRewards.gold} Vàng`}><GoldIcon className="w-6 h-6" /><span className="text-lg font-lilita tracking-wide pt-0.5">{totalClaimableRewards.gold}</span></div>
                             </>
                         ) : (
                             <>
-                                <div className="flex items-center gap-1.5 opacity-40" title="Thẻ Thông Thạo"><MasteryCardIcon className="w-7 h-7" /><span className="text-base font-semibold">0</span></div>
+                                {/* SỬA ĐỔI: Font Lilita cho số 0 (disabled) */}
+                                <div className="flex items-center gap-1.5 opacity-40" title="Thẻ Thông Thạo"><MasteryCardIcon className="w-7 h-7" /><span className="text-lg font-lilita tracking-wide pt-0.5">0</span></div>
                                 <div className="h-6 w-px bg-slate-600"></div>
-                                <div className="flex items-center gap-1.5 opacity-40" title="Vàng"><GoldIcon className="w-6 h-6" /><span className="text-base font-semibold">0</span></div>
+                                <div className="flex items-center gap-1.5 opacity-40" title="Vàng"><GoldIcon className="w-6 h-6" /><span className="text-lg font-lilita tracking-wide pt-0.5">0</span></div>
                             </>
                         )}
                     </div>
@@ -172,12 +175,25 @@ const VocabularyRow = React.memo(function VocabularyRow({ item, rank, onClaim, i
         </div>
         <p className="text-xs text-slate-400 mt-1.5 text-right font-mono">{exp} / {maxExp} EXP</p>
       </div>
-      <div className="col-span-6 md:col-span-3 flex items-center justify-center"> <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> <div className="flex items-center gap-1.5" title="1 Mastery"> <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">1</span> </div> <div className="h-6 w-px bg-slate-600"></div> <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> <GoldIcon className="w-5 h-5 flex-shrink-0" /> <span className="text-sm font-semibold text-slate-200">{goldReward}</span> </div> </div> </div>
+      <div className="col-span-6 md:col-span-3 flex items-center justify-center"> 
+        <div className="flex w-full max-w-[180px] items-center justify-center gap-4 rounded-xl bg-black/20 p-2 shadow-inner border border-slate-700"> 
+            <div className="flex items-center gap-1.5" title="1 Mastery"> 
+                <MasteryCardIcon className="w-6 h-6 flex-shrink-0" /> 
+                {/* SỬA ĐỔI: Font Lilita cho số Mastery Reward trong Row */}
+                <span className="text-base font-lilita text-slate-200 tracking-wide pt-0.5">1</span> 
+            </div> 
+            <div className="h-6 w-px bg-slate-600"></div> 
+            <div className="flex items-center gap-1.5" title={`${goldReward} Vàng`}> 
+                <GoldIcon className="w-5 h-5 flex-shrink-0" /> 
+                {/* SỬA ĐỔI: Font Lilita cho số Gold Reward trong Row */}
+                <span className="text-base font-lilita text-slate-200 tracking-wide pt-0.5">{goldReward}</span> 
+            </div> 
+        </div> 
+      </div>
       <div className="col-span-6 md:col-span-2 flex justify-end md:justify-center">
         <button 
             onClick={handleClaimClick} 
             disabled={!isClaimable || isAnyClaiming} 
-            // SỬA ĐỔI: text-sm, text-white/85, padding pt-2 pb-1.5
             className={`flex items-center justify-center w-auto px-4 py-2 rounded-lg font-lilita uppercase text-sm tracking-wide transition-all duration-300 border ${isClaimable && !isAnyClaiming ? 'bg-gradient-to-r from-blue-600 to-indigo-500 border-blue-500/50 text-white/85 shadow-lg shadow-blue-500/30 transform hover:scale-105 hover:from-blue-500 hover:to-indigo-400 cursor-pointer pt-2 pb-1.5' : 'bg-slate-800 border-slate-700 text-slate-500 cursor-not-allowed opacity-70 pt-2 pb-1.5'}`}
         >
             {isAnyClaiming ? 'CLAIMING...' : 'CLAIM'}
