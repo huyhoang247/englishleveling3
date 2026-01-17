@@ -1,3 +1,5 @@
+// --- START OF FILE tower-ui.tsx ---
+
 import React, { useState, useCallback, useEffect, memo, useMemo, useRef } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
@@ -497,8 +499,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 ) : (
                     <div className="w-full h-full flex flex-col relative z-10">
                         {(!playerStats || !bossStats || !currentBossData) ? (
-                            <div className="flex-grow flex items-center justify-center">
-                                <p>Missing required data.</p>
+                            /* --- FIX QUAN TRỌNG: NẾU THIẾU DATA, HIỆN LOADING THAY VÌ BÁO LỖI --- */
+                            <div className="absolute inset-0 z-50">
+                                <BossBattleLoader />
                             </div>
                         ) : (
                             <>
@@ -640,3 +643,5 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
+
+// --- END OF FILE tower-ui.tsx ---
