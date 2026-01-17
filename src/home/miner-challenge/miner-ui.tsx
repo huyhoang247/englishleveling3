@@ -212,7 +212,7 @@ function BombGameUI() {
             onClick={() => setExitConfirmationPos(null)} // Click outside to close
          >
             <div 
-                className="bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-600 w-full max-w-xs p-8 flex flex-col items-center gap-8"
+                className="bg-slate-800/90 rounded-2xl shadow-2xl border-2 border-slate-600 w-full max-w-xs p-8 flex flex-col items-center gap-8"
                 onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside box
             >
                 {/* Hình ảnh lớn hơn */}
