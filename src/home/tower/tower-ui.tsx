@@ -222,17 +222,21 @@ const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: bo
 
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
+    // Đổi tên isLoading thành dataIsLoading để phân biệt với assetsLoaded
     const {
-        isLoading, error, playerStats, bossStats, previousCombatLog, gameOver,
+        isLoading: dataIsLoading, 
+        error, playerStats, bossStats, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
+    // State kiểm soát việc load hình ảnh
+    const [assetsLoaded, setAssetsLoaded] = useState(false);
+
     const [damages, setDamages] = useState<DamageText[]>([]);
     const damagesRef = useRef<DamageText[]>([]);
     
-    // Skill Effects State (Reusable for both Player and Boss)
-    // SkillProps exported from skill-effect.tsx: { id, type, delay, startPos }
+    // Skill Effects State
     const [orbEffects, setOrbEffects] = useState<SkillProps[]>([]);
     
     const [visualBossHp, setVisualBossHp] = useState(0);
@@ -244,6 +248,53 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [isSweeping, setIsSweeping] = useState(false);
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
+
+    // --- ASSET PRELOADING LOGIC ---
+    // Chỉ chạy khi đã có dữ liệu boss (currentBossData)
+    useEffect(() => {
+        // Nếu đang load data hoặc chưa có boss data thì chưa thể load ảnh
+        if (dataIsLoading || !currentBossData) {
+            setAssetsLoaded(false);
+            return;
+        }
+
+        const idStr = String(currentBossData.id).padStart(2, '0');
+        const bossImageUrl = `/images/boss/${idStr}.webp`;
+
+        // Các ảnh quan trọng cần tải xong trước khi tắt loading screen
+        const imagesToPreload = [
+            BACKGROUND_IMAGE,
+            bossImageUrl,
+            FIGHT_ICON,
+            SKIP_BATTLE_ICON,
+            SWEEP_BATTLE_ICON
+        ];
+
+        let loadedCount = 0;
+        let isCancelled = false;
+
+        const checkDone = () => {
+            loadedCount++;
+            if (loadedCount === imagesToPreload.length && !isCancelled) {
+                // Thêm delay nhỏ 300ms để hiệu ứng chuyển cảnh mượt hơn
+                setTimeout(() => setAssetsLoaded(true), 300);
+            }
+        };
+
+        imagesToPreload.forEach((src) => {
+            const img = new Image();
+            img.src = src;
+            // Dù load thành công hay lỗi cũng tính là done để không bị treo
+            img.onload = checkDone;
+            img.onerror = checkDone;
+        });
+
+        return () => { isCancelled = true; };
+    }, [dataIsLoading, currentBossData]);
+
+    // Quyết định hiển thị Loading Screen
+    // Loading hiển thị khi: Đang fetch Data HOẶC Chưa tải xong Assets
+    const showLoader = dataIsLoading || !assetsLoaded;
 
     // --- SYNC VISUAL HP ---
     useEffect(() => {
@@ -269,9 +320,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
     }, [currentBossData, bossImgSrc]);
 
-    const displayableCoins = isLoading ? 0 : displayedCoins;
+    const displayableCoins = dataIsLoading ? 0 : displayedCoins;
     const animatedCoins = useAnimateValue(displayableCoins);
-    const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
+    const displayableEnergy = dataIsLoading || !playerStats ? 0 : playerStats.energy ?? 0;
     const animatedEnergy = useAnimateValue(displayableEnergy);
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
@@ -492,14 +543,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     <div className="absolute inset-0 bg-black/70" />
                 </div>
 
-                {isLoading ? (
+                {/* --- LOADING LOGIC ĐÃ SỬA: CHECK CẢ DATA LẪN ASSETS --- */}
+                {showLoader ? (
                     <div className="absolute inset-0 z-50">
                         <BossBattleLoader />
                     </div>
                 ) : (
-                    <div className="w-full h-full flex flex-col relative z-10">
+                    <div className="w-full h-full flex flex-col relative z-10 animate-fade-in">
                         {(!playerStats || !bossStats || !currentBossData) ? (
-                            /* --- FIX QUAN TRỌNG: NẾU THIẾU DATA, HIỆN LOADING THAY VÌ BÁO LỖI --- */
+                            /* Fallback an toàn nếu data bị null ngay sau khi tắt loader */
                             <div className="absolute inset-0 z-50">
                                 <BossBattleLoader />
                             </div>
