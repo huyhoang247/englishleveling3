@@ -123,12 +123,15 @@ const MarketTimer = () => {
     }, []);
 
     return (
-        <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-sm border border-amber-500/30 px-5 py-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.1)] mx-auto w-fit mb-4 animate-fadeIn">
+        // Changed border to white/30
+        <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-sm border border-white/30 px-5 py-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.1)] mx-auto w-fit mb-4 animate-fadeIn">
             <div className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500"></span>
+                {/* Changed dot to Green */}
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </div>
-            <div className="text-xs uppercase tracking-widest text-slate-400 font-bold">VN Market Reset</div>
+            {/* Changed text to Market Reset */}
+            <div className="text-xs uppercase tracking-widest text-slate-400 font-bold">Market Reset</div>
             <div className="font-mono text-xl font-bold text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
                 {timeLeft}
             </div>
@@ -315,10 +318,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 return (
                                                     <React.Fragment key={ing.type}>
                                                         <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                                            {/* Price Tag Badge */}
-                                                            <div className="absolute z-10 -top-3 left-1/2 -translate-x-1/2 bg-amber-600/90 text-white text-[10px] uppercase font-bold px-2 py-0.5 rounded shadow-sm border border-amber-500/50 whitespace-nowrap">
-                                                                Price: {ing.amount}
-                                                            </div>
+                                                            {/* REMOVED PRICE TAG BADGE HERE */}
 
                                                             <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
