@@ -27,6 +27,9 @@ const SpinnerIcon = () => <svg className="animate-spin h-5 w-5 text-white" xmlns
 // --- TYPE DEFINITIONS ---
 interface AnalysisDashboardProps { onGoBack: () => void; }
 
+// --- CONSTANTS ---
+const BACKGROUND_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-analysis.webp";
+
 // --- HELPER COMPONENT: Styled Section Title ---
 const StyledSectionTitle = ({ title }: { title: string }) => (
     <h3 className="text-base font-lilita uppercase tracking-wider text-slate-900 opacity-30 select-none">
@@ -52,13 +55,15 @@ interface MilestoneProgressProps {
   title: string; iconSrc: string; milestones: number[]; currentProgress: number; masteryCount: number;
   claimedMilestones: number[]; onClaim: (milestone: number, rewardAmount: number) => Promise<void>;
   user: User | null; progressColorClass?: string; completedText?: string;
+  isTransparent?: boolean; // Prop mới để hỗ trợ chế độ trong suốt khi nằm trong container chung
 }
 
 const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     title, iconSrc, milestones, currentProgress, masteryCount, 
     claimedMilestones, onClaim, user,
     progressColorClass = "from-green-400 to-blue-500",
-    completedText = "All missions completed!"
+    completedText = "All missions completed!",
+    isTransparent = false
 }) => {
     const [isClaiming, setIsClaiming] = useState(false);
 
@@ -89,19 +94,21 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
     // Tính toán số vàng hiển thị
     const rewardValue = currentGoal * Math.max(1, masteryCount);
 
+    // Xác định style container dựa trên prop isTransparent
+    const containerClasses = isTransparent 
+        ? "p-4 sm:p-5 relative z-10" // Không có background, border, shadow
+        : "bg-slate-900 p-4 sm:p-5 rounded-2xl shadow-lg border border-slate-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1";
+
     return (
-        // Changed bg to solid slate-900 (removed opacity)
-        <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl shadow-lg border border-slate-700 transition-all duration-300 hover:shadow-xl hover:-translate-y-1">
+        <div className={containerClasses}>
             <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex items-center gap-3 flex-shrink-0">
-                    <img src={iconSrc} alt={title} className="w-11 h-11" />
+                    <img src={iconSrc} alt={title} className="w-11 h-11 drop-shadow-md" />
                     <div>
-                        {/* Title color changed to text-indigo-200 to match outside theme */}
-                        <h3 className="text-base font-lilita uppercase tracking-wider text-indigo-200">{title}</h3>
+                        <h3 className="text-base font-lilita uppercase tracking-wider text-indigo-200 drop-shadow-sm">{title}</h3>
                         {areAllGoalsMet ? ( <p className="text-xs sm:text-sm text-green-400 font-semibold">{completedText}</p> ) : (
                         <div className="flex items-center text-xs sm:text-sm text-gray-300 mt-1" title={`Reward = Milestone (${currentGoal}) × Max(1, Mastery Cards: ${masteryCount})`}>
                             <div className="flex items-center gap-1">
-                                {/* Coin text changed to white */}
                                 <span className="text-lg font-lilita text-white leading-none pb-0.5">
                                     {rewardValue.toLocaleString()}
                                 </span>
@@ -123,7 +130,6 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                             <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
                         </button>
                     ) : (
-                        // Progress box redesigned: bg-slate-800, text-slate-200
                         <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-slate-800 border border-slate-700 text-slate-200 rounded-lg cursor-not-allowed">
                             <GiftIcon />
                             <span className="flex items-baseline"><span className="text-base font-extrabold text-white">{currentProgress}</span><span className="text-sm font-medium text-slate-400">/{currentGoal}</span></span>
@@ -132,7 +138,7 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                 </div>
                 <div className="w-full mt-3">
                     {areAllGoalsMet ? ( <div className="h-2.5 w-full bg-gradient-to-r from-green-400 to-teal-500 rounded-full" title="All milestones completed!"></div>
-                    ) : ( <div className={`w-full bg-gray-700 rounded-full h-2.5`}><div className={`bg-gradient-to-r ${progressColorClass} h-2.5 rounded-full transition-all duration-500 ease-out`} style={{ width: `${progressPercentage}%` }}></div></div> )}
+                    ) : ( <div className={`w-full bg-gray-700/80 rounded-full h-2.5`}><div className={`bg-gradient-to-r ${progressColorClass} h-2.5 rounded-full transition-all duration-500 ease-out shadow-[0_0_10px_rgba(59,130,246,0.5)]`} style={{ width: `${progressPercentage}%` }}></div></div> )}
                 </div>
             </div>
         </div>
@@ -306,10 +312,49 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                 return (
                     <div className="p-4 sm:p-6 bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 min-h-full">
                         <div className="max-w-7xl mx-auto">
-                            <div className="space-y-6 my-6">
-                                <MilestoneProgress title="Voca Journey" iconSrc={dashboardAssets.vocaJourneyIcon} milestones={VOCAB_MILESTONES} currentProgress={totalWordsLearned} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedVocabMilestones} onClaim={claimVocabReward} user={user} progressColorClass="from-blue-400 to-purple-500" completedText="Max level reached!" />
-                                <MilestoneProgress title="Daily Missions" iconSrc={dashboardAssets.dailyMissionsIcon} milestones={GOAL_MILESTONES} currentProgress={wordsLearnedToday} masteryCount={userProgress.masteryCount} claimedMilestones={userProgress.claimedDailyGoals} onClaim={claimDailyReward} user={user} progressColorClass="from-green-400 to-blue-500" completedText="All missions completed!" />
+                            
+                            {/* NEW: Combined Container for Milestones with Background Image */}
+                            <div className="relative rounded-2xl overflow-hidden shadow-xl border border-slate-700 my-6 group">
+                                {/* Background Image Layer */}
+                                <div 
+                                    className="absolute inset-0 bg-cover bg-center z-0 transition-transform duration-700 group-hover:scale-105" 
+                                    style={{ backgroundImage: `url('${BACKGROUND_URL}')` }} 
+                                />
+                                
+                                {/* Black Overlay 80% */}
+                                <div className="absolute inset-0 bg-black/80 z-0" />
+
+                                {/* Content Layer */}
+                                <div className="relative z-10 flex flex-col divide-y divide-white/10">
+                                    <MilestoneProgress 
+                                        title="Voca Journey" 
+                                        iconSrc={dashboardAssets.vocaJourneyIcon} 
+                                        milestones={VOCAB_MILESTONES} 
+                                        currentProgress={totalWordsLearned} 
+                                        masteryCount={userProgress.masteryCount} 
+                                        claimedMilestones={userProgress.claimedVocabMilestones} 
+                                        onClaim={claimVocabReward} 
+                                        user={user} 
+                                        progressColorClass="from-blue-400 to-purple-500" 
+                                        completedText="Max level reached!" 
+                                        isTransparent={true}
+                                    />
+                                    <MilestoneProgress 
+                                        title="Daily Missions" 
+                                        iconSrc={dashboardAssets.dailyMissionsIcon} 
+                                        milestones={GOAL_MILESTONES} 
+                                        currentProgress={wordsLearnedToday} 
+                                        masteryCount={userProgress.masteryCount} 
+                                        claimedMilestones={userProgress.claimedDailyGoals} 
+                                        onClaim={claimDailyReward} 
+                                        user={user} 
+                                        progressColorClass="from-green-400 to-blue-500" 
+                                        completedText="All missions completed!" 
+                                        isTransparent={true}
+                                    />
+                                </div>
                             </div>
+                            
                             <div className="mb-6"><ActivityCalendar activityData={dailyActivityData} /></div>
                             <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
                                 
