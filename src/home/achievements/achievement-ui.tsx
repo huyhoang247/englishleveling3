@@ -97,7 +97,7 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
                 // SỬA ĐỔI: Đã loại bỏ backdrop-blur-sm, giữ nguyên opacity /90
                 className={`w-full max-w-md rounded-xl transition-all duration-300 ${
                   totalClaimableRewards.masteryCards > 0 && !isUpdating 
-                  ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900/90 via-indigo-800/90 to-slate-900/90 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer' 
+                  ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900/80 via-indigo-800/80 to-slate-900/80 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer' 
                   : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
                 }`}>
                 <div className="flex items-center justify-between w-full p-3">
