@@ -248,10 +248,10 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                             let canAffordAll = true;
                             
                             return (
-                                // MODIFIED: bg-slate-900/80 (removed backdrop-blur-md)
+                                // OPTION CARD
                                 <div key={option.id} className="relative group bg-slate-900/80 rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-slate-900/90 hover:-translate-y-1">
 
-                                    {/* Card Body - REDUCED GAP TO 4/6 */}
+                                    {/* Card Body */}
                                     <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
                                         
                                         {/* INGREDIENTS AREA */}
@@ -278,13 +278,11 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                             </div>
                                                         </div>
                                                         
-                                                        {/* REPLACED PLUS TEXT WITH ICON - ADJUSTED HEIGHT */}
                                                         {idx < option.ingredients.length - 1 && (
                                                             <div className="shrink-0 flex items-center justify-center px-1 -translate-y-4 md:-translate-y-6">
                                                                 <img 
                                                                     src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-exchange.webp"
                                                                     alt="plus"
-                                                                    // Sized similar to arrow (w-10 to w-14)
                                                                     className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-90"
                                                                 />
                                                             </div>
@@ -294,12 +292,11 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                             })}
                                         </div>
 
-                                        {/* ARROW DIRECTION - MADE BIGGER */}
+                                        {/* ARROW DIRECTION */}
                                         <div className="shrink-0 flex items-center justify-center">
                                             <img 
                                                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/arrow-down-exchange.webp" 
                                                 alt="Convert to"
-                                                // Increased to w-14/20
                                                 className="w-14 h-14 md:w-20 md:h-20 object-contain opacity-90 lg:-rotate-90"
                                             />
                                         </div>
@@ -307,9 +304,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                         {/* RESULT & BUTTON AREA */}
                                         <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
                                             
-                                            {/* Reward Icon */}
+                                            {/* Reward Icon - REMOVED ORANGE FLASHING */}
                                             <div className="relative group-hover:scale-105 transition-transform duration-500">
-                                                <div className={`absolute inset-0 bg-amber-400 rounded-xl blur-xl opacity-10 ${canAffordAll ? 'animate-pulse' : 'hidden'}`}></div>
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
                                                     <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
                                                     
@@ -341,26 +337,27 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 </button>
                                             </div>
 
-                                            {/* Exchange Button */}
+                                            {/* Exchange Button - COMPACT & GREEN DESIGN */}
                                             <button
                                                 onClick={() => handleExchange(option, quantity)}
                                                 disabled={!canAffordAll || isProcessing}
                                                 className={`
-                                                    w-full md:w-3/4 py-3.5 px-6 rounded-xl font-bold text-sm md:text-base uppercase tracking-widest shadow-lg transition-all border-b-4 active:border-b-0 active:translate-y-1
+                                                    w-full max-w-[200px] py-2.5 px-4 rounded-xl font-bold text-sm uppercase tracking-wider shadow-md transition-all duration-200
+                                                    flex items-center justify-center gap-2 transform active:scale-95
                                                     ${canAffordAll 
-                                                        ? 'bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-500 hover:to-orange-500 text-white border-black shadow-amber-900/20' 
-                                                        : 'bg-slate-700 text-slate-500 border-slate-800 cursor-not-allowed grayscale opacity-70'
+                                                        ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-emerald-900/30' 
+                                                        : 'bg-slate-800 text-slate-600 border border-slate-700 cursor-not-allowed opacity-70'
                                                     }
                                                 `}
                                             >
                                                 {isProcessing ? (
-                                                    <span className="flex items-center justify-center gap-3">
-                                                        <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                    <>
+                                                        <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                                         </svg>
-                                                        Forging...
-                                                    </span>
+                                                        <span className="text-xs">Processing</span>
+                                                    </>
                                                 ) : 'Exchange'}
                                             </button>
                                         </div>
