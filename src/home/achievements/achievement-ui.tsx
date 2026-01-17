@@ -58,7 +58,13 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-800 to-slate-900 text-white font-sans flex flex-col items-center">
+    <div 
+        // SỬA ĐỔI: Background image với lớp phủ đen 85%
+        className="fixed inset-0 z-50 bg-slate-900 text-white font-sans flex flex-col items-center bg-cover bg-center bg-no-repeat"
+        style={{
+            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-achievement.webp')`
+        }}
+    >
        <header className="w-full max-w-5xl flex items-center justify-between py-2.5 px-4 sticky top-0 z-20 bg-slate-900/50 backdrop-blur-sm border-b border-slate-700/50">
         <HomeButton onClick={onClose} />
         <div className="flex items-center gap-2">
@@ -88,11 +94,15 @@ function AchievementsScreenUI({ onClose }: { onClose: () => void }) {
             <button
                 onClick={claimAllAchievements}
                 disabled={totalClaimableRewards.masteryCards === 0 || isUpdating}
-                className={`w-full max-w-md rounded-xl transition-all duration-300 ${totalClaimableRewards.masteryCards > 0 && !isUpdating ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900 via-indigo-800 to-slate-900 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer' : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'}`}>
+                // SỬA ĐỔI: Đã loại bỏ backdrop-blur-sm, giữ nguyên opacity /90
+                className={`w-full max-w-md rounded-xl transition-all duration-300 ${
+                  totalClaimableRewards.masteryCards > 0 && !isUpdating 
+                  ? 'text-white border border-indigo-700/50 bg-gradient-to-r from-slate-900/80 via-indigo-800/80 to-slate-900/80 bg-[length:200%_auto] animate-[background-pan_4s_ease-in-out_infinite] shadow-lg shadow-indigo-500/20 transform hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/30 hover:border-indigo-600 cursor-pointer' 
+                  : 'bg-slate-800/80 border border-slate-700 text-slate-500 cursor-not-allowed'
+                }`}>
                 <div className="flex items-center justify-between w-full p-3">
                     <div className="flex items-center gap-3">
                         <img src={totalClaimableRewards.masteryCards > 0 && !isUpdating ? uiAssets.giftBoxIcon : uiAssets.giftBoxDisabledIcon} alt="Claim all rewards" className="w-8 h-8" />
-                        {/* SỬA ĐỔI: text-lg, text-white/85 */}
                         <span className="font-lilita uppercase text-lg tracking-wide pt-1 text-white/85">{isUpdating ? 'CLAIMING...' : 'CLAIM ALL'}</span>
                     </div>
                     <div className="flex items-center gap-3 bg-black/20 rounded-lg px-3 py-1.5 shadow-inner">
