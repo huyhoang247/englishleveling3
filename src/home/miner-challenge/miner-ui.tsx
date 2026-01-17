@@ -209,7 +209,7 @@ function BombGameUI() {
                         onClick={goToNextFloor} 
                         className="font-lilita uppercase tracking-wide py-3 px-6 rounded-xl bg-blue-500 text-white border-b-4 border-blue-700 hover:bg-blue-400 hover:border-blue-600 active:border-b-0 active:translate-y-1 transition-all text-lg shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                     >
-                        Next Floor
+                        Next
                     </button>
                 </div>
             </div>
