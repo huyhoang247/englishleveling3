@@ -9,7 +9,6 @@ import {
 import { localDB, ICompletedWord, ICompletedMultiWord, VocabularyItem } from '../local-data/local-vocab-db.ts'; 
 
 // Import dữ liệu local khác
-import quizData from './multiple-choice/multiple-data.ts'; 
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
 
