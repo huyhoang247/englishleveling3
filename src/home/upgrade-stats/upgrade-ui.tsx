@@ -35,7 +35,6 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   const bonusForNextLevel = getBonusForLevel(level + 1, stat.baseUpgradeBonus);
 
   return (
-    // Changed: bg-black/40 (40% opacity)
     <div className={`
         relative rounded-xl border-2 border-slate-700/80 
         bg-black/40 
@@ -90,7 +89,7 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
       className="main-bg absolute inset-0 w-full h-full font-lilita text-white overflow-hidden bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url('${bgImage}')` }}
     >
-        {/* Changed: Reverted to bg-black/80 as requested */}
+        {/* Overlay Black 80% */}
         <div className="absolute inset-0 bg-black/80 z-0"></div>
 
         {/* Lớp Skeleton */}
@@ -113,7 +112,8 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
             </header>
 
             {message && (
-              <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
+              // Changed: bg-red-600/60 (60% opacity)
+              <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/60 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2 backdrop-blur-sm">
                 {message === 'ko đủ vàng' ? (
                   <>
                     <span>Not enough</span>
