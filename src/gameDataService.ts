@@ -51,15 +51,23 @@ export interface UserGameData {
   skills: { owned: OwnedSkill[]; equipped: (string | null)[] };
   totalVocabCollected: number;
   cardCapacity: number;
-  // CẬP NHẬT: Thêm stones vào equipment
+  
+  // --- RESOURCES (NEW) ---
+  wood?: number;
+  leather?: number;
+  ore?: number;
+  cloth?: number;
+
+  // Equipment including Stones
   equipment: { 
       pieces: number; 
       owned: OwnedItem[]; 
       equipped: EquippedItems; 
-      stones: EnhancementStones; // <-- MỚI: Đá cường hoá
+      stones: EnhancementStones; 
   };
   lastCheckIn?: Timestamp;
   loginStreak?: number;
+  
   // Các trường cho VIP
   accountType?: string; 
   vipExpiresAt?: Timestamp | null;
@@ -114,7 +122,14 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       skills: skillsData,
       totalVocabCollected: data.totalVocabCollected || 0,
       cardCapacity: data.cardCapacity || 100,
-      equipment: equipmentData, // Đã bao gồm stones
+      
+      // Load Resources (Default 0 if undefined)
+      wood: data.wood || 0,
+      leather: data.leather || 0,
+      ore: data.ore || 0,
+      cloth: data.cloth || 0,
+
+      equipment: equipmentData, 
       lastCheckIn: data.lastCheckIn || null,
       loginStreak: data.loginStreak || 0,
       accountType: data.accountType || 'Normal',
@@ -129,6 +144,13 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
       totalVocabCollected: 0, cardCapacity: 100,
+      
+      // Initialize Resources
+      wood: 0,
+      leather: 0,
+      ore: 0,
+      cloth: 0,
+
       equipment: { 
           pieces: 100, 
           owned: [], 
