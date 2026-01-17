@@ -146,7 +146,7 @@ function BombGameUI() {
       <div className="relative z-10 w-full max-w-xs sm:max-w-sm mx-auto pt-24">
         <div className="bg-slate-800/50 p-3 rounded-xl mb-6 shadow-lg border border-slate-700 grid grid-cols-2 gap-3">
             {/* Floor Box - Changed to bg-black/80 */}
-            <div className="bg-black/40 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
+            <div className="bg-black/30 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Current Floor: ${currentFloor}`}>
                 <img src={minerAssets.exitIcon} alt="Floor" className="w-6 h-6 object-contain opacity-70" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Floor</span>
@@ -154,7 +154,7 @@ function BombGameUI() {
                 </div>
             </div>
             {/* Pickaxe Box - Changed to bg-black/80 */}
-            <div className="bg-black/40 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
+            <div className="bg-black/30 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Pickaxes Remaining: ${pickaxes}/${MAX_PICKAXES}`}>
                 <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-6 h-6" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Pickaxe</span>
@@ -165,7 +165,7 @@ function BombGameUI() {
                 </div>
             </div>
             {/* Bombs Box - Changed to bg-black/80 */}
-            <div className="bg-black/40 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title="Bombs Remaining">
+            <div className="bg-black/30 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title="Bombs Remaining">
                 <img src={minerAssets.bombIcon} alt="Bombs" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Bombs</span>
@@ -173,7 +173,7 @@ function BombGameUI() {
                 </div>
             </div>
             {/* Rewards Box - Changed to bg-black/80 */}
-            <div className="bg-black/40 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
+            <div className="bg-black/30 rounded-lg px-3 py-2 flex items-center justify-start gap-3" title={`Reward per Coin (Mastery Lvl ${masteryCards} x Floor ${currentFloor})`}>
                 <img src={minerAssets.coinIcon} alt="Rewards" className="w-6 h-6 object-contain" />
                 <div className="flex flex-col text-left">
                     <span className="text-xs font-semibold text-slate-400 uppercase">Rewards</span>
