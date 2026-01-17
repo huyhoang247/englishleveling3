@@ -190,24 +190,30 @@ function BombGameUI() {
       </div>
 
       {exitConfirmationPos && (
-         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in p-4">
-            <div className="bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-600 w-full max-w-xs p-8 flex flex-col items-center gap-8">
-                {/* Hình ảnh lớn hơn - ĐÃ XÓA HIỆU ỨNG PHÁT SÁNG */}
+         <div 
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 animate-fade-in p-4"
+            onClick={() => setExitConfirmationPos(null)} // Click outside to close
+         >
+            <div 
+                className="bg-slate-800 rounded-2xl shadow-2xl border-2 border-slate-600 w-full max-w-xs p-8 flex flex-col items-center gap-8"
+                onClick={(e) => e.stopPropagation()} // Prevent close when clicking inside box
+            >
+                {/* Hình ảnh lớn hơn */}
                 <div className="relative">
                     <img src={minerAssets.exitIcon} alt="Complete" className="relative h-32 w-32 object-contain drop-shadow-xl" />
                 </div>
                 
-                {/* Các nút bấm được thiết kế lại: Flexbox, Blue Color for Next, Padded */}
+                {/* Các nút bấm: dùng flex-1 để cân bằng kích thước bất kể chữ */}
                 <div className="flex items-center justify-center gap-4 w-full">
                     <button 
                         onClick={() => setExitConfirmationPos(null)} 
-                        className="font-lilita uppercase tracking-wide py-3 px-6 rounded-xl bg-slate-700 text-slate-300 border-b-4 border-slate-900 hover:bg-slate-600 hover:text-white hover:border-slate-800 active:border-b-0 active:translate-y-1 transition-all text-lg"
+                        className="flex-1 font-lilita uppercase tracking-wide py-3 px-2 rounded-xl bg-slate-700 text-slate-300 border-b-4 border-slate-900 hover:bg-slate-600 hover:text-white hover:border-slate-800 active:border-b-0 active:translate-y-1 transition-all text-lg"
                     >
                         Stay
                     </button>
                     <button 
                         onClick={goToNextFloor} 
-                        className="font-lilita uppercase tracking-wide py-3 px-6 rounded-xl bg-blue-500 text-white border-b-4 border-blue-700 hover:bg-blue-400 hover:border-blue-600 active:border-b-0 active:translate-y-1 transition-all text-lg shadow-[0_0_15px_rgba(59,130,246,0.3)]"
+                        className="flex-1 font-lilita uppercase tracking-wide py-3 px-2 rounded-xl bg-blue-500 text-white border-b-4 border-blue-700 hover:bg-blue-400 hover:border-blue-600 active:border-b-0 active:translate-y-1 transition-all text-lg shadow-[0_0_15px_rgba(59,130,246,0.3)]"
                     >
                         Next
                     </button>
