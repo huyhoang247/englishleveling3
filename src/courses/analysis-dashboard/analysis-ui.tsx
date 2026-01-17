@@ -326,8 +326,8 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                 <div className="absolute inset-0 bg-black/80 z-0" />
 
                                 {/* Content Layer */}
-                                {/* EDITED: divide-white/30 kept from previous request */}
-                                <div className="relative z-10 flex flex-col divide-y divide-white/30">
+                                {/* EDITED: Changed divide-y to divide-y-2 for thickness, kept divide-white/30 for opacity */}
+                                <div className="relative z-10 flex flex-col divide-y-2 divide-white/30">
                                     <MilestoneProgress 
                                         title="Voca Journey" 
                                         iconSrc={dashboardAssets.vocaJourneyIcon} 
