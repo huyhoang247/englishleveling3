@@ -5,11 +5,10 @@ import {
   doc, getDoc, setDoc, updateDoc, increment, collection, 
   getDocs, Unsubscribe, onSnapshot
 } from 'firebase/firestore';
-// Import DB và các interface mới từ local-vocab-db
+// Import DB và các interface từ local-vocab-db
 import { localDB, ICompletedWord, ICompletedMultiWord, VocabularyItem } from '../local-data/local-vocab-db.ts'; 
 
 // Import dữ liệu local khác
-// ĐÃ XÓA: import quizData from './multiple-choice/multiple-data.ts'; (Không còn sử dụng)
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
 
@@ -275,7 +274,7 @@ export const fetchPracticeListProgress = async (
       const vocabRegex = new RegExp(`\\b(${Array.from(userVocabSet).join('|')})\\b`, 'ig');
 
       if (selectedType === 'tracNghiem') {
-          // XỬ LÝ LOGIC MỚI CHO TRẮC NGHIỆM: Không dùng quizData tĩnh nữa
+          // XỬ LÝ LOGIC MỚI CHO TRẮC NGHIỆM
           
           // Chuẩn bị dữ liệu cho các bài tập dựa trên câu ví dụ (Practice 2, 3, 5)
           const wordToRelevantExampleSentences = new Map<string, any[]>();
@@ -301,7 +300,6 @@ export const fetchPracticeListProgress = async (
               
               if (baseNum === 1) {
                   // Practice 1: Hỏi nghĩa từ
-                  // Tính số lượng từ đã mở mà người dùng đã hoàn thành trong mode này
                   let completedCount = 0;
                   userVocabSet.forEach(word => {
                       if (completedSet.has(word)) {
@@ -428,8 +426,6 @@ const EXP_PER_SUCCESS = 100; // Điểm kinh nghiệm cho mỗi lần trả lờ
  * @returns {Promise<VocabularyItem[]>} Dữ liệu thành tích từ cache.
  */
 export const fetchAndSyncVocabularyData = async (userId: string): Promise<VocabularyItem[]> => {
-  // Logic "Rebuild from Firestore" đã bị xóa vì Firestore không còn là nguồn tin cậy
-  // cho `completedWords` nữa. Dữ liệu thành tích giờ được xây dựng hoàn toàn ở local.
   console.log("Fetching vocabulary achievements from local DB cache.");
   return await localDB.getVocabAchievements();
 };
@@ -459,7 +455,9 @@ const addExpToLocalAchievementForWord = async (word: string): Promise<void> => {
 
 /**
  * Cập nhật dữ liệu thành tích khi người dùng "claim" phần thưởng.
- * Cập nhật coin/thẻ trên Firestore và ghi đè dữ liệu thành tích trên Local DB.
+ * FIX: Cập nhật Local DB trước để đảm bảo lưu trạng thái Level/EXP mới,
+ * sau đó mới cập nhật coin lên Firestore. Nếu Local DB lỗi, sẽ không cộng coin.
+ * 
  * @param userId - ID của người dùng.
  * @param updates - Dữ liệu cần cập nhật.
  */
@@ -471,21 +469,36 @@ export const updateAchievementData = async (
   
   const { coinsToAdd, cardsToAdd, newVocabularyData } = updates;
 
-  // 1. Cập nhật coin và thẻ trên Firestore
+  // ========================================================================
+  // BƯỚC 1: CỐ GẮNG LƯU VÀO LOCAL DB TRƯỚC (QUAN TRỌNG)
+  // ========================================================================
+  try {
+      // Hàm này trong local-vocab-db.ts cần được bỏ try/catch để ném lỗi ra ngoài
+      // nếu transaction thất bại.
+      await localDB.saveVocabAchievements(newVocabularyData);
+      console.log(`Local achievements saved successfully for user ${userId}.`);
+  } catch (error) {
+      console.error("CRITICAL: Failed to save achievement progress to Local DB. Aborting coin update.", error);
+      // Ném lỗi ra để UI biết quá trình thất bại và không cho phép user tiếp tục/tắt loading
+      throw error; 
+  }
+
+  // ========================================================================
+  // BƯỚC 2: CHỈ CẬP NHẬT COIN LÊN SERVER NẾU BƯỚC 1 THÀNH CÔNG
+  // ========================================================================
   if (coinsToAdd > 0 || cardsToAdd > 0) {
     const userDocRef = doc(db, 'users', userId);
     const payload: { [key: string]: any } = {};
     if (coinsToAdd > 0) payload.coins = increment(coinsToAdd);
     if (cardsToAdd > 0) payload.masteryCards = increment(cardsToAdd);
+    
     await updateDoc(userDocRef, payload).catch(err => {
         console.error(`Failed to update user currency for ${userId}:`, err);
+        // Lưu ý: Nếu bước này lỗi, User đã được lên level ở Local nhưng chưa nhận được coin.
+        // Đây là kịch bản "Fail Safe" chấp nhận được hơn là việc "Coin tăng nhưng Level không lưu".
         throw err;
     });
   }
-
-  // 2. Lưu lại toàn bộ danh sách từ vựng mới vào Local DB
-  await localDB.saveVocabAchievements(newVocabularyData);
-  console.log(`Local achievements updated and saved for user ${userId}.`);
 };
 
 /**
