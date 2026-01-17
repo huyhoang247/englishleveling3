@@ -130,8 +130,8 @@ const MilestoneProgress: FC<MilestoneProgressProps> = memo(({
                             <span className="ml-1.5 text-sm">{isClaiming ? 'Wait' : 'Claim'}</span>
                         </button>
                     ) : (
-                        // EDITED: Changed bg-slate-800 to bg-slate-800/75 and added backdrop-blur-sm
-                        <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-slate-800/75 backdrop-blur-sm border border-slate-700 text-slate-200 rounded-lg cursor-not-allowed">
+                        // EDITED: Removed backdrop-blur-sm, changed bg-slate-800/75 to bg-slate-800/60
+                        <div className="flex items-center justify-center gap-2 px-4 py-2 font-bold bg-slate-800/60 border border-slate-700 text-slate-200 rounded-lg cursor-not-allowed">
                             <GiftIcon />
                             <span className="flex items-baseline"><span className="text-base font-extrabold text-white">{currentProgress}</span><span className="text-sm font-medium text-slate-400">/{currentGoal}</span></span>
                         </div>
@@ -326,7 +326,7 @@ function DashboardContent({ onGoBack }: AnalysisDashboardProps) {
                                 <div className="absolute inset-0 bg-black/80 z-0" />
 
                                 {/* Content Layer */}
-                                {/* EDITED: Changed divide-white/10 to divide-white/30 to make it clearer */}
+                                {/* EDITED: divide-white/30 kept from previous request */}
                                 <div className="relative z-10 flex flex-col divide-y divide-white/30">
                                     <MilestoneProgress 
                                         title="Voca Journey" 
