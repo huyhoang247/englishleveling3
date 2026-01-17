@@ -139,7 +139,7 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
                     <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
                 </div>
 
-                <div className="w-full max-w-xs bg-slate-900/75 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
+                <div className="w-full max-w-xs bg-slate-900/50 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
