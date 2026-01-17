@@ -30,29 +30,30 @@ const formatNumber = (num: number) => { if (num < 1000) return num.toString(); i
 
 // --- COMPONENT STAT CARD ---
 const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, onUpgrade: (id: any) => void, isProcessing: boolean, isDisabled: boolean }) => {
-  const { name, level, icon } = stat; // Removed 'color' usage
+  const { name, level, icon } = stat;
   const upgradeCost = calculateUpgradeCost(level);
   const bonusForNextLevel = getBonusForLevel(level + 1, stat.baseUpgradeBonus);
 
   return (
-    // Changed: Removed dynamic gradient color, added standard border and transparent container
-    <div className={`relative group rounded-xl border-2 border-slate-800 transition-all duration-300 ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:shadow-lg hover:shadow-cyan-500/10'}`}>
-        {/* Hover Effect Layer */}
-        <div className="absolute inset-0 rounded-[10px] bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300 animate-border-flow pointer-events-none"></div>
-        
-        {/* Inner Content: Changed to bg-black/80 (Nền đen opacity) */}
-        <div className="relative bg-black/80 rounded-[10px] h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3 z-10">
-            <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
-            <div className="flex-grow flex flex-col items-center gap-1">
-                <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
-                <p className="text-lg sm:text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
-                <p className="text-xs text-slate-400">Level {level}</p>
-            </div>
-            <button onClick={() => onUpgrade(stat.id)} disabled={isDisabled || isProcessing} className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 sm:py-2 px-2 flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60">
-                <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
-                <span className="text-sm sm:text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
-            </button>
+    // Changed: Removed nested divs for border effects.
+    // Added: hover:scale-[0.97] (gentle zoom out), bg-black/75
+    <div className={`
+        relative rounded-xl border-2 border-slate-800 
+        bg-black/75 
+        transition-transform duration-300 ease-out
+        ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:scale-[0.97]'}
+        h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3
+    `}>
+        <div className="w-8 h-8 sm:w-10 sm:h-10">{icon}</div>
+        <div className="flex-grow flex flex-col items-center gap-1">
+            <p className="text-base sm:text-lg uppercase font-bold tracking-wider">{name}</p>
+            <p className="text-lg sm:text-xl font-black text-shadow-cyan">+{formatNumber(bonusForNextLevel)}</p>
+            <p className="text-xs text-slate-400">Level {level}</p>
         </div>
+        <button onClick={() => onUpgrade(stat.id)} disabled={isDisabled || isProcessing} className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 sm:py-2 px-2 flex items-center justify-center gap-1.5 sm:gap-2 shadow-lg transition-all duration-200 active:scale-95 hover:enabled:bg-slate-800 hover:enabled:border-yellow-500 hover:enabled:shadow-lg hover:enabled:shadow-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-60">
+            <div className="w-5 h-5 flex-shrink-0">{icons.coin}</div>
+            <span className="text-sm sm:text-base font-bold text-yellow-400 transition-colors duration-200">{formatNumber(upgradeCost)}</span>
+        </button>
     </div>
   );
 };
@@ -138,7 +139,6 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
                     <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
                 </div>
 
-                {/* Total Stats: bg-slate-900/75 */}
                 <div className="w-full max-w-xs bg-slate-900/75 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
