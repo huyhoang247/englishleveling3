@@ -10,16 +10,16 @@ export interface IOpenedVocab {
   chestType: string;
 }
 
-// Interface cho dữ liệu THÀNH TÍCH từ vựng (Level/EXP)
+// Interface cho dữ liệu THÀNH TÍCH từ vựng
 export interface IVocabAchievement {
-  id: number;       // ID từ API
+  id: number;       // ID từ API (có thể không tuần tự)
   word: string;     // Dùng 'word' làm primary key vì nó là duy nhất
   exp: number;
   level: number;
   maxExp: number;
 }
 
-// Interface cho dữ liệu từ đơn đã hoàn thành (tiến trình game)
+// Interface cho dữ liệu từ đơn đã hoàn thành
 export interface ICompletedWord {
   word: string; // Primary key, lowercase
   lastCompletedAt: Date;
@@ -30,7 +30,7 @@ export interface ICompletedWord {
   };
 }
 
-// Interface cho dữ liệu cụm từ đã hoàn thành (tiến trình game nhiều từ)
+// Interface cho dữ liệu cụm từ đã hoàn thành
 export interface ICompletedMultiWord {
   phrase: string; // Primary key, lowercase
   lastCompletedAt: Date;
@@ -39,8 +39,6 @@ export interface ICompletedMultiWord {
   };
 }
 
-// Interface export ra ngoài để các file khác dùng chung nếu cần
-export type VocabularyItem = IVocabAchievement;
 
 class LocalVocabDatabase extends Dexie {
   openedVocab!: Table<IOpenedVocab>; 
@@ -50,19 +48,17 @@ class LocalVocabDatabase extends Dexie {
 
   constructor() {
     super('VocabularyChestDB');
-    
-    // **QUAN TRỌNG**: Giữ version(3) để khớp với schema hiện tại của bạn
+    // **QUAN TRỌNG**: Tăng phiên bản DB lên 3 để áp dụng schema mới
     this.version(3).stores({
       openedVocab: 'id, word, collectedAt',
-      vocabAchievements: 'word, level', // word là khoá chính
+      vocabAchievements: 'word, level',
+      // Định nghĩa 2 bảng mới, với 'word' và 'phrase' làm primary key
       completedWords: 'word',
       completedMultiWord: 'phrase'
     });
   }
 
-  // ==========================================================
-  // === Các hàm cho 'openedVocab' (Từ vựng đã mở rương) ===
-  // ==========================================================
+  // === Các hàm cho 'openedVocab' ===
 
   /**
    * Lấy ID của tất cả các từ vựng đã mở khóa.
@@ -94,9 +90,7 @@ class LocalVocabDatabase extends Dexie {
     }
   }
 
-  // ==========================================================
-  // === Các hàm cho 'vocabAchievements' (Level/EXP) ===
-  // ==========================================================
+  // === Các hàm cho 'vocabAchievements' ===
 
   /**
    * Lấy tất cả dữ liệu thành tích từ vựng từ cache.
@@ -107,27 +101,26 @@ class LocalVocabDatabase extends Dexie {
   }
 
   /**
-   * [FIX QUAN TRỌNG] Lưu dữ liệu thành tích.
-   * Sử dụng bulkPut thay vì clear+add để đảm bảo ghi đè chính xác (Upsert).
-   * Điều này ngăn chặn việc dữ liệu bị reset sau khi F5.
-   * 
+   * Lưu (ghi đè) toàn bộ dữ liệu thành tích vào cache.
+   * Dùng bulkPut để thêm mới hoặc cập nhật hiệu quả.
    * @param {IVocabAchievement[]} achievements - Mảng dữ liệu thành tích mới.
    */
   async saveVocabAchievements(achievements: IVocabAchievement[]): Promise<void> {
-    if (achievements.length === 0) return;
-
-    // Sử dụng transaction để đảm bảo an toàn dữ liệu
-    await this.transaction('rw', this.vocabAchievements, async () => {
-      // Dùng bulkPut: Nếu tồn tại thì update, chưa có thì insert.
-      // Cách này an toàn hơn clear() vì không làm mất dữ liệu nếu quá trình ghi bị lỗi giữa chừng.
-      await this.vocabAchievements.bulkPut(achievements);
-    });
-    // Lưu ý: Không dùng try/catch ở đây để lỗi (nếu có) bắn ra ngoài cho Service xử lý
+    if (achievements.length === 0) {
+        // Nếu mảng rỗng, có thể ta muốn xóa sạch cache
+        await this.vocabAchievements.clear();
+        return;
+    }
+    try {
+      // Xóa dữ liệu cũ và thêm dữ liệu mới để đảm bảo cache luôn là bản mới nhất
+      await this.vocabAchievements.clear();
+      await this.vocabAchievements.bulkAdd(achievements);
+    } catch (error) {
+      console.error("Failed to save vocab achievements to Dexie:", error);
+    }
   }
 
-  // ==========================================================
-  // === Các hàm cho tiến trình game (Completed Words) ===
-  // ==========================================================
+  // === Các hàm mới cho tiến trình game ===
 
   /**
    * Lấy tất cả các từ đơn đã hoàn thành.
@@ -145,9 +138,7 @@ class LocalVocabDatabase extends Dexie {
     return this.completedMultiWord.toArray();
   }
 
-  // ==========================================================
-  // === Quản lý chung (Clear Data) ===
-  // ==========================================================
+  // === Quản lý chung ===
 
   /**
    * Xóa toàn bộ dữ liệu trong TẤT CẢ các bảng khi người dùng đăng xuất.
@@ -163,5 +154,8 @@ class LocalVocabDatabase extends Dexie {
   }
 }
 
-// Export instance singleton để dùng trong toàn bộ app
 export const localDB = new LocalVocabDatabase();
+
+// **QUAN TRỌNG**: Bạn nên gọi `localDB.clearAllData()`
+// trong logic đăng xuất người dùng để đảm bảo dữ liệu
+// của người dùng này không bị lẫn với người dùng khác đăng nhập trên cùng trình duyệt.
