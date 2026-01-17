@@ -39,6 +39,8 @@ export interface ICompletedMultiWord {
   };
 }
 
+// Interface export dùng chung cho các service khác để tránh import vòng
+export interface VocabularyItem extends IVocabAchievement {}
 
 class LocalVocabDatabase extends Dexie {
   openedVocab!: Table<IOpenedVocab>; 
@@ -48,10 +50,11 @@ class LocalVocabDatabase extends Dexie {
 
   constructor() {
     super('VocabularyChestDB');
+    
     // **QUAN TRỌNG**: Tăng phiên bản DB lên 3 để áp dụng schema mới
     this.version(3).stores({
       openedVocab: 'id, word, collectedAt',
-      vocabAchievements: 'word, level',
+      vocabAchievements: 'word, level', // word là khóa chính
       // Định nghĩa 2 bảng mới, với 'word' và 'phrase' làm primary key
       completedWords: 'word',
       completedMultiWord: 'phrase'
@@ -84,7 +87,8 @@ class LocalVocabDatabase extends Dexie {
   async addBulkWords(newWords: IOpenedVocab[]): Promise<void> {
     if (newWords.length === 0) return;
     try {
-      await this.openedVocab.bulkAdd(newWords);
+      // Dùng bulkPut để an toàn hơn, tránh lỗi nếu trùng ID
+      await this.openedVocab.bulkPut(newWords);
     } catch (error) {
       console.error("Failed to bulk add words to Dexie:", error);
     }
@@ -101,22 +105,31 @@ class LocalVocabDatabase extends Dexie {
   }
 
   /**
-   * Lưu (ghi đè) toàn bộ dữ liệu thành tích vào cache.
-   * Dùng bulkPut để thêm mới hoặc cập nhật hiệu quả.
+   * Lưu (ghi đè/cập nhật) toàn bộ dữ liệu thành tích vào cache.
+   * SỬA LỖI: Sử dụng bulkPut thay vì clear + bulkAdd để tránh lỗi Transaction Rollback
+   * khiến dữ liệu bị reset về cũ khi F5.
    * @param {IVocabAchievement[]} achievements - Mảng dữ liệu thành tích mới.
    */
   async saveVocabAchievements(achievements: IVocabAchievement[]): Promise<void> {
     if (achievements.length === 0) {
-        // Nếu mảng rỗng, có thể ta muốn xóa sạch cache
-        await this.vocabAchievements.clear();
         return;
     }
     try {
-      // Xóa dữ liệu cũ và thêm dữ liệu mới để đảm bảo cache luôn là bản mới nhất
-      await this.vocabAchievements.clear();
-      await this.vocabAchievements.bulkAdd(achievements);
+      // 1. Chuẩn hóa dữ liệu: Đảm bảo 'word' luôn là lowercase để khớp với khóa chính
+      const normalizedData = achievements.map(item => ({
+        ...item,
+        word: item.word.trim().toLowerCase()
+      }));
+
+      // 2. Dùng bulkPut: Tự động cập nhật nếu đã có, thêm mới nếu chưa có.
+      // Không dùng clear() để tránh rủi ro mất dữ liệu nếu quá trình ghi bị lỗi.
+      await this.vocabAchievements.bulkPut(normalizedData);
+      
+      console.log(`Successfully saved ${normalizedData.length} achievement items to LocalDB.`);
     } catch (error) {
       console.error("Failed to save vocab achievements to Dexie:", error);
+      // Ném lỗi ra ngoài để UI có thể hiển thị thông báo nếu cần (tùy chọn)
+      throw error;
     }
   }
 
@@ -144,13 +157,17 @@ class LocalVocabDatabase extends Dexie {
    * Xóa toàn bộ dữ liệu trong TẤT CẢ các bảng khi người dùng đăng xuất.
    */
   async clearAllData(): Promise<void> {
-    // Xóa tất cả các bảng
-    await Promise.all([
-        this.openedVocab.clear(),
-        this.vocabAchievements.clear(),
-        this.completedWords.clear(),
-        this.completedMultiWord.clear()
-    ]);
+    try {
+        await Promise.all([
+            this.openedVocab.clear(),
+            this.vocabAchievements.clear(),
+            this.completedWords.clear(),
+            this.completedMultiWord.clear()
+        ]);
+        console.log("Local Database cleared successfully.");
+    } catch (error) {
+        console.error("Error clearing Local Database:", error);
+    }
   }
 }
 
