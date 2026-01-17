@@ -36,6 +36,8 @@ interface IGameContext {
     leather: number;
     ore: number;
     cloth: number;
+    feather: number; // Mới thêm
+    coal: number;    // Mới thêm
 
     // Equipment Data
     equipmentPieces: number;
@@ -151,6 +153,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
   const [cloth, setCloth] = useState(0);
+  const [feather, setFeather] = useState(0); // Mới thêm
+  const [coal, setCoal] = useState(0);       // Mới thêm
 
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
@@ -216,6 +220,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setLeather((gameData as any).leather || 0);
       setOre((gameData as any).ore || 0);
       setCloth((gameData as any).cloth || 0);
+      setFeather((gameData as any).feather || 0); // Mới thêm
+      setCoal((gameData as any).coal || 0);       // Mới thêm
 
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
@@ -273,6 +279,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setLeather(gameData.leather ?? 0);
                 setOre(gameData.ore ?? 0);
                 setCloth(gameData.cloth ?? 0);
+                setFeather(gameData.feather ?? 0); // Mới thêm
+                setCoal(gameData.coal ?? 0);       // Mới thêm
 
                 setEquipmentPieces(gameData.equipment?.pieces ?? 0);
                 setOwnedItems(gameData.equipment?.owned ?? []);
@@ -315,6 +323,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         
         // Reset resources
         setWood(0); setLeather(0); setOre(0); setCloth(0);
+        setFeather(0); setCoal(0); // Reset mới
 
         setEquipmentPieces(0); 
         setOwnedItems([]); 
@@ -555,7 +564,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
     
-    wood, leather, ore, cloth, // Export Resources
+    wood, leather, ore, cloth, feather, coal, // Export Resources
 
     equipmentPieces, 
     ownedItems, 
