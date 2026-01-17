@@ -1,5 +1,3 @@
-// --- START OF FILE GameContext.tsx ---
-
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
@@ -33,7 +31,7 @@ interface IGameContext {
     totalVocabCollected: number;
     cardCapacity: number;
     
-    // Resources (MỚI - Dùng cho Trade Association)
+    // --- RESOURCES (NEW) ---
     wood: number;
     leather: number;
     ore: number;
@@ -75,7 +73,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    isTradeAssociationOpen: boolean; // MỚI: Trạng thái mở modal Thương Hội
+    isTradeAssociationOpen: boolean; // Trạng thái mở modal Thương Hội
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -112,7 +110,7 @@ interface IGameContext {
     toggleCheckIn: () => void;
     toggleMailbox: () => void;
     toggleBaseBuilding: () => void;
-    toggleTradeAssociation: () => void; // MỚI
+    toggleTradeAssociation: () => void; 
     
     setCoins: React.Dispatch<React.SetStateAction<number>>;
     setIsSyncingData: React.Dispatch<React.SetStateAction<boolean>>;
@@ -148,7 +146,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
   
-  // RESOURCES STATE (MỚI - Wood, Leather, Ore, Cloth)
+  // --- RESOURCES STATE (NEW) ---
   const [wood, setWood] = useState(0);
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
@@ -184,7 +182,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [isAuctionHouseOpen, setIsAuctionHouseOpen] = useState(false);
   const [isCheckInOpen, setIsCheckInOpen] = useState(false);
   const [isMailboxOpen, setIsMailboxOpen] = useState(false);
-  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false); // MỚI: Modal Thương Hội
+  const [isTradeAssociationOpen, setIsTradeAssociationOpen] = useState(false);
   
   // States for data syncing and rate limiting UI
   const [isSyncingData, setIsSyncingData] = useState(false);
@@ -231,8 +229,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
       setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
 
-    } catch (error) { console.error("Error refreshing user data:", error);
-    } finally { setIsLoadingUserData(false); }
+    } catch (error) { 
+        console.error("Error refreshing user data:", error);
+    } finally { 
+        setIsLoadingUserData(false); 
+    }
   }, []);
 
   useEffect(() => {
@@ -460,7 +461,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              // Đảm bảo đóng tất cả các modal khác, bao gồm cả TradeAssociation
+              // Đảm bảo đóng tất cả các modal khác
               [ 
                   setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, 
                   setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, 
@@ -510,7 +511,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const toggleCheckIn = createToggleFunction(setIsCheckInOpen);
   const toggleMailbox = createToggleFunction(setIsMailboxOpen);
   const toggleBaseBuilding = createToggleFunction(setIsBaseBuildingOpen);
-  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen); // MỚI
+  const toggleTradeAssociation = createToggleFunction(setIsTradeAssociationOpen);
   
   const handleSkillScreenClose = (dataUpdated: boolean) => {
     toggleSkillScreen();
@@ -573,7 +574,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isAuctionHouseOpen,
     isCheckInOpen,
     isMailboxOpen,
-    isTradeAssociationOpen, // MỚI
+    isTradeAssociationOpen, 
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     handleVipLuckySpinClaim,
@@ -586,7 +587,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     toggleCheckIn,
     toggleMailbox,
     toggleBaseBuilding, 
-    toggleTradeAssociation, // MỚI
+    toggleTradeAssociation,
     setCoins,
     setIsSyncingData
   };
@@ -601,4 +602,3 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
-// --- END OF FILE GameContext.tsx ---
