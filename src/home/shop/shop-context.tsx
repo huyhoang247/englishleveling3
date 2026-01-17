@@ -16,10 +16,10 @@ const sampleItemsNonWeapons = [
   { id: 2002, name: 'Equipment Piece', type: 'Item', rarity: 'B', price: 10, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-piece.webp', description: 'Nguyên liệu cốt lõi dùng để chế tạo và hợp nhất trang bị.', stackable: true, quantityOptions: [10, 50, 100] },
   { id: 2003, name: 'Pickaxe', type: 'Item', rarity: 'B', price: 50, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/pickaxe-icon.webp', description: 'Dùng để khai thác tài nguyên và khoáng sản.', stackable: true, quantityOptions: [10, 50, 100], },
   
-  // --- ĐÁ CƯỜNG HOÁ ---
+  // --- ĐÁ CƯỜNG HOÁ (RENAMED) ---
   { 
       id: 2004, 
-      name: 'Đá Sơ Cấp', 
+      name: 'Basic Stone', 
       type: 'Item', 
       rarity: 'D', 
       price: 10, 
@@ -30,7 +30,7 @@ const sampleItemsNonWeapons = [
   },
   { 
       id: 2005, 
-      name: 'Đá Trung Cấp', 
+      name: 'Intermediate Stone', 
       type: 'Item', 
       rarity: 'B', 
       price: 50, 
@@ -41,7 +41,7 @@ const sampleItemsNonWeapons = [
   },
   { 
       id: 2006, 
-      name: 'Đá Cao Cấp', 
+      name: 'Advanced Stone', 
       type: 'Item', 
       rarity: 'S', 
       price: 100, 
@@ -51,10 +51,10 @@ const sampleItemsNonWeapons = [
       quantityOptions: [1, 5, 10] 
   },
 
-  // --- NGUYÊN LIỆU (MỚI) ---
+  // --- NGUYÊN LIỆU (RENAMED) ---
   {
       id: 2007,
-      name: 'Gỗ (Wood)',
+      name: 'Wood',
       type: 'Item',
       rarity: 'D',
       price: 100,
@@ -65,7 +65,7 @@ const sampleItemsNonWeapons = [
   },
   {
       id: 2008,
-      name: 'Da (Leather)',
+      name: 'Leather',
       type: 'Item',
       rarity: 'D',
       price: 100,
@@ -76,7 +76,7 @@ const sampleItemsNonWeapons = [
   },
   {
       id: 2009,
-      name: 'Quặng (Ore)',
+      name: 'Ore',
       type: 'Item',
       rarity: 'D',
       price: 100,
@@ -87,7 +87,7 @@ const sampleItemsNonWeapons = [
   },
   {
       id: 2010,
-      name: 'Vải (Cloth)',
+      name: 'Cloth',
       type: 'Item',
       rarity: 'D',
       price: 100,
@@ -173,8 +173,6 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
           cardCapacity?: number; 
           equipmentPieces?: number; 
           stones?: any;
-          // Lưu ý: GameContext hiện tại cập nhật Resource qua onSnapshot,
-          // nhưng chúng ta vẫn có thể pass vào updateUserCurrency nếu logic đó được mở rộng sau này.
       } = { coins: newCoins };
       
       if (item.id === 1009) { updates.ancientBooks = newBooks; } 
@@ -182,6 +180,7 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
       else if (item.id === 2002) { updates.equipmentPieces = newPieces; }
       else if ([2004, 2005, 2006].includes(item.id)) { updates.stones = newStones; }
       
+      // Lưu ý: Tài nguyên Wood, Leather, Ore, Cloth được update qua onSnapshot trong GameContext
       // Update tiền và các item đặc biệt ngay lập tức cho UI
       updateUserCurrency(updates as any); 
       
