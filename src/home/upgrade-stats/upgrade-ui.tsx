@@ -35,11 +35,10 @@ const StatCard = ({ stat, onUpgrade, isProcessing, isDisabled }: { stat: any, on
   const bonusForNextLevel = getBonusForLevel(level + 1, stat.baseUpgradeBonus);
 
   return (
-    // Changed: Removed nested divs for border effects.
-    // Added: hover:scale-[0.97] (gentle zoom out), bg-black/75
+    // Changed: bg-black/60 (để dễ nhìn xuyên qua hơn)
     <div className={`
-        relative rounded-xl border-2 border-slate-800 
-        bg-black/75 
+        relative rounded-xl border-2 border-slate-700/80 
+        bg-black/60 
         transition-transform duration-300 ease-out
         ${isDisabled && !isProcessing ? 'opacity-60' : 'hover:scale-[0.97]'}
         h-full flex flex-col items-center justify-between text-center text-white w-28 sm:w-36 p-3 sm:p-4 gap-2 sm:gap-3
@@ -91,8 +90,8 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
       className="main-bg absolute inset-0 w-full h-full font-lilita text-white overflow-hidden bg-cover bg-center bg-no-repeat"
       style={{ backgroundImage: `url('${bgImage}')` }}
     >
-        {/* Overlay Black 80% */}
-        <div className="absolute inset-0 bg-black/80 z-0"></div>
+        {/* Changed: Giảm độ tối nền từ bg-black/80 xuống bg-black/50 để hình nền sáng hơn, giúp nhìn xuyên qua thẻ dễ hơn */}
+        <div className="absolute inset-0 bg-black/50 z-0"></div>
 
         {/* Lớp Skeleton */}
         <div className={`absolute inset-0 z-40 transition-opacity duration-300 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
@@ -139,7 +138,7 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
                     <img src={uiAssets.statHeroStoneIcon} alt="Hero Stone Icon" className="w-full h-full object-contain" />
                 </div>
 
-                <div className="w-full max-w-xs bg-slate-900/50 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
+                <div className="w-full max-w-xs bg-slate-900/75 border border-slate-700 rounded-lg p-3 mb-6 flex justify-around items-center shadow-lg">
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.heart}</div> <span className="text-lg font-bold">{formatNumber(totalHp)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.sword}</div> <span className="text-lg font-bold">{formatNumber(totalAtk)}</span> </div>
                     <div className="flex items-center gap-2"> <div className="w-6 h-6">{icons.shield}</div> <span className="text-lg font-bold">{formatNumber(totalDef)}</span> </div>
