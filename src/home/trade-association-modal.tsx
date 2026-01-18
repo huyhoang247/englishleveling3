@@ -396,11 +396,11 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     {/* --- VIETNAM MARKET TIMER --- */}
                     <MarketTimer />
 
-                    {/* Feedback Toast - ĐÃ DỊCH LÊN TRÊN */}
+                    {/* Feedback Toast - ĐÃ THAY ĐỔI VỊ TRÍ XUỐNG DƯỚI */}
                     <RateLimitToast 
                         show={toastState.show} 
                         message={toastState.message}
-                        className="fixed top-12 right-4 z-[120]" 
+                        className="fixed top-24 right-4 z-[120]" 
                     />
 
                     {/* Trade Options List */}
