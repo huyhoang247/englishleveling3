@@ -23,7 +23,7 @@ const BossBattleLoader: React.FC = () => {
         .loader-dot {
             will-change: transform, opacity;
             /* Thời gian 1.6s + ease-in-out tạo nhịp thở đều đặn */
-            animation: floating-wave 1.6s ease-in-out infinite;
+            animation: floating-wave 3.6s ease-in-out infinite;
         }
       `}</style>
 
