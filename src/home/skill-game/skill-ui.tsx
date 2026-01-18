@@ -14,7 +14,7 @@ import {
 } from './skill-data.tsx';
 import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import RateLimitToast from '../../thong-bao.tsx';
+import RateLimitToast from '../../ui/notification.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import SkillScreenSkeleton from './skill-loading.tsx';
 import UpgradeEffectToast from './upgrade-effect-toast.tsx';
