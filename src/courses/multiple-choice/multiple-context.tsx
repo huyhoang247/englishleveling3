@@ -2,7 +2,6 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuizApp } from '../course-context.tsx';
-// Đã xóa import quizData vì không còn sử dụng dữ liệu tĩnh
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -46,6 +45,9 @@ interface QuizContextType {
   selectedVoice: string;
   showConfetti: boolean;
   
+  // New State for Detail Button Fix
+  isDetailAvailable: boolean;
+
   // Actions / Handlers
   handleAnswer: (selectedAnswer: string) => void;
   handleHintClick: () => void;
@@ -72,7 +74,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     userCoins,
     masteryCount: globalMasteryCount,
     getOpenedVocab, 
-    fetchAllLocalProgress, // Sử dụng hàm mới
+    fetchAllLocalProgress, 
     recordGameSuccess,
     updateUserCoins,
     fetchOrCreateUser,
@@ -140,6 +142,13 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     return null;
   }, [currentQuestion, playableQuestions, selectedVoice]);
+
+  // --- LOGIC MỚI: Tính toán xem có thể hiển thị nút Detail hay không ---
+  const isDetailAvailable = useMemo(() => {
+    if (!currentQuestionWord) return false;
+    // Kiểm tra xem từ hiện tại có trong từ điển không
+    return !!definitionsMap[currentQuestionWord.toLowerCase()];
+  }, [currentQuestionWord, definitionsMap]);
 
   useEffect(() => {
     const loadQuizData = async () => {
@@ -421,6 +430,8 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     selectedVoice,
     handleVoiceChange,
     handleChangeVoiceDirection,
+    // Provide the new state
+    isDetailAvailable,
   };
 
   return (
@@ -437,4 +448,3 @@ export const useQuiz = (): QuizContextType => {
   }
   return context;
 };
-// --- END OF FILE: multiple-context.tsx ---
