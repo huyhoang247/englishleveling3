@@ -1,6 +1,6 @@
 // --- START OF FILE trade-service.ts ---
 import { doc, runTransaction } from 'firebase/firestore';
-import { db } from '../firebase.js';
+import { db } from '../../firebase.js';
 
 // --- TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
