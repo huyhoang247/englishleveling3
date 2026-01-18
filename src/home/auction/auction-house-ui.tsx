@@ -14,7 +14,7 @@ import { uiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import GemDisplay from '../../ui/display/gem-display.tsx';
 import HomeButton from '../../ui/home-button.tsx';
-import RateLimitToast from '../../thong-bao.tsx';
+import RateLimitToast from '../../ui/notification.tsx';
 
 // --- START: HELPERS & ICONS ---
 const getRarityColor = (rank: ItemRank): string => ({ SSR: 'border-red-500', SR: 'border-orange-400', S: 'border-yellow-400', A: 'border-purple-500', B: 'border-blue-500', D: 'border-green-500', E: 'border-gray-500' }[rank] || 'border-gray-600');
