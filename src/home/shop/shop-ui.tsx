@@ -1,7 +1,7 @@
 // --- START OF FILE shop-ui.tsx ---
 
 import React, { useState, useEffect } from 'react';
-import RateLimitToast from '../../thong-bao.tsx';
+import RateLimitToast from '../../ui/notification.tsx';
 import { itemDatabase, ItemRank } from '../equipment/item-database.ts';
 import { uiAssets } from '../../game-assets.ts';
 import { auth } from '../../firebase.js';
