@@ -8,7 +8,6 @@ const BossBattleLoader: React.FC = () => {
       
       {/* --- CSS Animations Optimized --- */}
       <style>{`
-        /* Animation sóng lượn: Mượt mà, không giật, chạy vô tận êm dịu */
         @keyframes floating-wave {
             0%, 100% {
                 transform: translateY(0) scale(0.8);
@@ -22,22 +21,24 @@ const BossBattleLoader: React.FC = () => {
 
         .loader-dot {
             will-change: transform, opacity;
-            /* Thời gian 1.6s + ease-in-out tạo nhịp thở đều đặn */
             animation: floating-wave 1.6s ease-in-out infinite;
         }
       `}</style>
 
-      {/* --- BACKGROUND LAYER (No Blur - High Performance) --- */}
+      {/* --- BACKGROUND LAYER (SYNCED WITH TOWER-UI) --- */}
       <div className="absolute inset-0 z-0 pointer-events-none">
           <div 
-              className="absolute inset-0 bg-cover bg-no-repeat bg-center"
-              style={{ backgroundImage: `url(${BACKGROUND_IMAGE})` }}
+              className="absolute inset-0 bg-cover bg-no-repeat bg-slate-900"
+              style={{ 
+                  backgroundImage: `url(${BACKGROUND_IMAGE})`,
+                  backgroundPosition: 'center 30px' /* Đã đồng bộ vị trí với UI */
+              }}
           />
-          {/* Lớp phủ đen 85% để làm nổi bật dots */}
-          <div className="absolute inset-0 bg-black/85" />
+          {/* Đã đồng bộ độ tối với UI (70%) */}
+          <div className="absolute inset-0 bg-black/70" />
       </div>
 
-      {/* --- DOTS ONLY --- */}
+      {/* --- DOTS --- */}
       <div className="relative z-10 flex items-center gap-5">
               
           {/* Dot 1: Cyan */}
