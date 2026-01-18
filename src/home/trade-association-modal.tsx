@@ -9,120 +9,20 @@ import {
     tradeAssets 
 } from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
-import { doc, runTransaction } from 'firebase/firestore';
-import { db, auth } from '../firebase.js';
+import { auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
 import CoinDisplay from '../ui/display/coin-display.tsx'; 
-import RateLimitToast from '../ui/notification.tsx'; // Import component thông báo
+import RateLimitToast from '../ui/notification.tsx'; 
 
-// --- DEFINITION TYPES ---
-export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
+// Import Service và Types từ file mới
+import { 
+    getTradeOptions, 
+    executeTradeTransaction, 
+    TradeOption, 
+    ResourceType 
+} from './trade-service.ts';
 
-export interface TradeIngredient {
-    type: ResourceType;
-    name: string;
-    amount: number; // Base amount required for 1 unit
-}
-
-export interface TradeOption {
-    id: string;
-    title: string;
-    ingredients: TradeIngredient[];
-    receiveType: 'equipmentPiece' | 'ancientBook' | 'stone';
-    receiveSubType?: 'low' | 'medium' | 'high'; // Đã thêm phân loại đá
-    receiveAmount: number; // Base amount received for 1 exchange
-    description?: string;
-}
-
-// --- UTILITY: DETERMINISTIC RANDOM (VIETNAM TIME) ---
-// Lấy chuỗi ngày giờ VN để làm Seed (Hạt giống random)
-const getVnDateString = () => {
-    return new Date().toLocaleDateString("en-US", { 
-        timeZone: "Asia/Ho_Chi_Minh",
-        year: 'numeric',
-        month: 'numeric',
-        day: 'numeric'
-    });
-};
-
-// Hàm tạo số ngẫu nhiên giả lập từ chuỗi Seed
-const pseudoRandom = (seed: string): number => {
-    let hash = 0;
-    for (let i = 0; i < seed.length; i++) {
-        const char = seed.charCodeAt(i);
-        hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; 
-    }
-    return Math.abs(hash);
-};
-
-// Tạo số ngẫu nhiên trong khoảng min-max dựa trên Seed
-const getSeededRange = (seed: string, min: number, max: number): number => {
-    return (pseudoRandom(seed) % (max - min + 1)) + min;
-};
-
-// Tạo giá hàng ngày cho các vật phẩm cơ bản (5-20)
-const getDailyPrice = (resourceType: string): number => {
-    return getSeededRange(getVnDateString() + resourceType, 5, 20);
-};
-
-// --- NEW: Generate Daily Stone Trade ---
-// Hàm logic tạo công thức đổi đá hàng ngày
-const getDailyStoneTrade = (): TradeOption => {
-    const dateStr = getVnDateString();
-    
-    // 1. Xác định loại đá (Low, Medium, High) - 1 loại duy nhất trong ngày
-    const tiers: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
-    // Dùng seed là ngày + 'stoneTier' để đảm bảo cả ngày chỉ ra 1 loại
-    const tierIndex = pseudoRandom(dateStr + 'stoneTier') % 3;
-    const selectedTier = tiers[tierIndex];
-
-    // 2. Xác định khoảng số lượng dựa trên loại đá
-    let minQ = 5, maxQ = 15;
-    let title = "Basic Upgrade Cache";
-    
-    if (selectedTier === 'medium') {
-        minQ = 10; maxQ = 25;
-        title = "Rare Upgrade Cache";
-    } else if (selectedTier === 'high') {
-        minQ = 20; maxQ = 35;
-        title = "Legendary Upgrade Cache";
-    }
-
-    // 3. Xác định số lượng cụ thể cho ngày hôm nay
-    const quantity = getSeededRange(dateStr + 'stoneQty', minQ, maxQ);
-
-    // 4. Chọn ngẫu nhiên 1 nguyên liệu thường (Wood, Leather, Ore, Cloth)
-    const commonPool: {type: ResourceType, name: string}[] = [
-        { type: 'wood', name: 'Wood' },
-        { type: 'leather', name: 'Leather' },
-        { type: 'ore', name: 'Ore' },
-        { type: 'cloth', name: 'Cloth' }
-    ];
-    const commonIng = commonPool[pseudoRandom(dateStr + 'commonIng') % commonPool.length];
-
-    // 5. Chọn ngẫu nhiên 1 nguyên liệu hiếm (Feather, Coal)
-    const rarePool: {type: ResourceType, name: string}[] = [
-        { type: 'feather', name: 'Feather' },
-        { type: 'coal', name: 'Coal' }
-    ];
-    const rareIng = rarePool[pseudoRandom(dateStr + 'rareIng') % rarePool.length];
-
-    return {
-        id: 'daily_stone_exchange',
-        title: title,
-        description: `Daily Special: ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Stone`,
-        ingredients: [
-            { type: commonIng.type, name: commonIng.name, amount: quantity },
-            { type: rareIng.type, name: rareIng.name, amount: quantity }
-        ],
-        receiveType: 'stone',
-        receiveSubType: selectedTier,
-        receiveAmount: 1
-    };
-};
-
-// --- IMAGE ICONS ---
+// --- IMAGE ICONS (UI Only) ---
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
     let src = "";
     switch (type) {
@@ -145,7 +45,6 @@ const AncientBookIcon = ({ className = '' }: { className?: string }) => (
     <img src={uiAssets.bookIcon} alt="Book" className={className} />
 );
 
-// Icon cho Đá cường hóa - Sử dụng từ upgradeAssets
 const StoneIcon = ({ tier, className = '' }: { tier?: 'low' | 'medium' | 'high', className?: string }) => {
     let url = upgradeAssets.stoneBasic;
     if (tier === 'medium') url = upgradeAssets.stoneIntermediate;
@@ -168,18 +67,16 @@ const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, display
     );
 });
 
-// --- MARKET TIMER COMPONENT (VIETNAM TIME) ---
+// --- MARKET TIMER COMPONENT ---
 const MarketTimer = () => {
     const [timeLeft, setTimeLeft] = useState('');
 
     useEffect(() => {
         const calculateTimeLeft = () => {
             const now = new Date();
-            // Lấy giờ hiện tại theo múi giờ VN
             const vnNowString = now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
             const vnNow = new Date(vnNowString);
 
-            // Tính thời gian đến 00:00 ngày mai (VN)
             const vnTomorrow = new Date(vnNow);
             vnTomorrow.setDate(vnTomorrow.getDate() + 1);
             vnTomorrow.setHours(0, 0, 0, 0);
@@ -230,7 +127,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     const [isProcessing, setIsProcessing] = useState(false);
     
-    // <<< FIX: Thay đổi cách quản lý state thông báo >>>
     const [toastState, setToastState] = useState<{ show: boolean, message: string }>({ 
         show: false, 
         message: '' 
@@ -240,48 +136,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     const resources: Record<ResourceType, number> = { wood, leather, ore, cloth, feather, coal };
 
-    // --- DYNAMIC TRADE OPTIONS ---
-    const currentTradeOptions: TradeOption[] = useMemo(() => {
-        // Các tùy chọn cố định
-        const standardOptions: TradeOption[] = [
-            { 
-                id: 'combine_wood_leather', 
-                title: "Hunter's Supply",
-                description: 'Market fluctuation applied',
-                ingredients: [
-                    { type: 'wood', name: 'Wood', amount: getDailyPrice('wood') },
-                    { type: 'leather', name: 'Leather', amount: getDailyPrice('leather') }
-                ],
-                receiveType: 'equipmentPiece', 
-                receiveAmount: 1
-            },
-            { 
-                id: 'combine_ore_cloth', 
-                title: "Warrior's Supply",
-                description: 'Market fluctuation applied',
-                ingredients: [
-                    { type: 'ore', name: 'Ore', amount: getDailyPrice('ore') },
-                    { type: 'cloth', name: 'Cloth', amount: getDailyPrice('cloth') }
-                ],
-                receiveType: 'equipmentPiece', 
-                receiveAmount: 1
-            },
-            { 
-                id: 'combine_feather_coal', 
-                title: "Scholar's Supply",
-                description: 'Market fluctuation applied',
-                ingredients: [
-                    { type: 'feather', name: 'Feather', amount: getDailyPrice('feather') },
-                    { type: 'coal', name: 'Coal', amount: getDailyPrice('coal') }
-                ],
-                receiveType: 'ancientBook', 
-                receiveAmount: 1
-            },
-        ];
-
-        // Thêm tùy chọn đổi đá ngẫu nhiên theo ngày
-        return [...standardOptions, getDailyStoneTrade()];
-    }, []); 
+    // --- LOAD TRADE OPTIONS FROM SERVICE ---
+    const currentTradeOptions = useMemo(() => getTradeOptions(), []); 
 
     const getQuantity = (optionId: string) => tradeQuantities[optionId] || 1;
 
@@ -304,11 +160,10 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         if (isProcessing) return;
 
         setIsProcessing(true);
-        // Ẩn toast cũ nếu có
         setToastState(prev => ({ ...prev, show: false }));
 
         try {
-            // A. Client-side Validation (Kiểm tra đủ nguyên liệu không)
+            // A. Client-side Validation (Kiểm tra nhanh trên UI)
             for (const ing of option.ingredients) {
                 const totalRequired = ing.amount * quantity;
                 if ((resources[ing.type] || 0) < totalRequired) {
@@ -316,47 +171,10 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 }
             }
 
-            // B. Firestore Transaction (Thực hiện giao dịch trên server)
-            await runTransaction(db, async (transaction) => {
-                const userRef = doc(db, 'users', userId);
-                const userDoc = await transaction.get(userRef);
-                
-                if (!userDoc.exists()) throw new Error("User document does not exist!");
-                const userData = userDoc.data();
+            // B. Call Service Transaction
+            await executeTradeTransaction(userId, option, quantity);
 
-                const updates: any = {};
-                
-                // Trừ Nguyên Liệu
-                for (const ing of option.ingredients) {
-                    const currentVal = userData[ing.type] || 0;
-                    const totalRequired = ing.amount * quantity;
-                    if (currentVal < totalRequired) {
-                        throw new Error(`Server: Not enough ${ing.name}`);
-                    }
-                    updates[ing.type] = currentVal - totalRequired;
-                }
-
-                // Cộng vật phẩm nhận được
-                const totalReceive = option.receiveAmount * quantity;
-
-                if (option.receiveType === 'equipmentPiece') {
-                    const currentPieces = userData.equipment?.pieces || 0;
-                    updates['equipment.pieces'] = currentPieces + totalReceive;
-                } else if (option.receiveType === 'ancientBook') {
-                    const currentBooks = userData.ancientBooks || 0;
-                    updates['ancientBooks'] = currentBooks + totalReceive;
-                } else if (option.receiveType === 'stone' && option.receiveSubType) {
-                    // Logic cộng đá vào đúng loại
-                    const stonePath = `equipment.stones.${option.receiveSubType}`;
-                    const currentStones = userData.equipment?.stones?.[option.receiveSubType] || 0;
-                    updates[stonePath] = currentStones + totalReceive;
-                }
-
-                transaction.update(userRef, updates);
-            });
-
-            // Thông báo thành công - ĐÃ THÊM DẤU CHẤM
-            setToastState({ show: true, message: 'Đã đổi thành công.' });
+            setToastState({ show: true, message: 'Exchange successful!' });
             
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
@@ -366,7 +184,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
             setToastState({ show: true, message: error.message || "Transaction failed." });
         } finally {
             setIsProcessing(false);
-            // Sau 3 giây, chỉ set show = false, giữ nguyên message để tránh hiển thị text mặc định
             setTimeout(() => setToastState(prev => ({ ...prev, show: false })), 3000);
         }
     }, [resources, refreshUserData, isProcessing]);
@@ -392,18 +209,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 
                 <div className="relative p-4 md:p-10 min-h-full max-w-5xl mx-auto flex flex-col">
                     
-                    {/* --- VIETNAM MARKET TIMER --- */}
                     <MarketTimer />
 
-                    {/* Feedback Toast - ĐÃ ẨN ICON & DỊCH LÊN TRÊN */}
                     <RateLimitToast 
                         show={toastState.show} 
                         message={toastState.message}
-                        showIcon={false} // Loại bỏ icon
-                        className="fixed top-20 right-4 z-[120]" // Dịch lên top-20
+                        showIcon={false} 
+                        className="fixed top-20 right-4 z-[120]"
                     />
 
-                    {/* Trade Options List */}
                     <div className="space-y-6 md:space-y-8 flex-1 pb-10 mt-2">
                         
                         {currentTradeOptions.map((option) => {
