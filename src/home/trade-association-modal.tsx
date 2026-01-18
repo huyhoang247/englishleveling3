@@ -13,7 +13,7 @@ import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
 import CoinDisplay from '../ui/display/coin-display.tsx'; 
-import RateLimitToast from '../thong-bao.tsx'; // Import component thông báo
+import RateLimitToast from '../ui/thong-bao.tsx'; // Import component thông báo
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
@@ -229,7 +229,14 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     } = useGame();
 
     const [isProcessing, setIsProcessing] = useState(false);
-    const [message, setMessage] = useState<{ text: string, type: 'success' | 'error' } | null>(null);
+    
+    // <<< FIX: Thay đổi cách quản lý state thông báo >>>
+    // Thay vì dùng nullable object, ta tách show và text riêng để tránh lỗi hiển thị default text khi ẩn
+    const [toastState, setToastState] = useState<{ show: boolean, message: string }>({ 
+        show: false, 
+        message: '' 
+    });
+    
     const [tradeQuantities, setTradeQuantities] = useState<Record<string, number>>({});
 
     const resources: Record<ResourceType, number> = { wood, leather, ore, cloth, feather, coal };
@@ -292,13 +299,14 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     const handleExchange = useCallback(async (option: TradeOption, quantity: number) => {
         const userId = auth.currentUser?.uid;
         if (!userId) {
-            setMessage({ text: "User not authenticated!", type: 'error' });
+            setToastState({ show: true, message: "User not authenticated!" });
             return;
         }
         if (isProcessing) return;
 
         setIsProcessing(true);
-        setMessage(null);
+        // Ẩn toast cũ nếu có
+        setToastState(prev => ({ ...prev, show: false }));
 
         try {
             // A. Client-side Validation (Kiểm tra đủ nguyên liệu không)
@@ -348,17 +356,19 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 transaction.update(userRef, updates);
             });
 
-            // Thông báo thành công - ĐÃ THAY ĐỔI THEO YÊU CẦU
-            setMessage({ text: 'Đã đổi thành công', type: 'success' });
+            // Thông báo thành công
+            setToastState({ show: true, message: 'Đã đổi thành công' });
+            
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
 
         } catch (error: any) {
             console.error("Trade Error:", error);
-            setMessage({ text: error.message || "Transaction failed.", type: 'error' });
+            setToastState({ show: true, message: error.message || "Transaction failed." });
         } finally {
             setIsProcessing(false);
-            setTimeout(() => setMessage(null), 3000);
+            // Sau 3 giây, chỉ set show = false, giữ nguyên message để tránh hiển thị text mặc định
+            setTimeout(() => setToastState(prev => ({ ...prev, show: false })), 3000);
         }
     }, [resources, refreshUserData, isProcessing]);
 
@@ -386,10 +396,10 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     {/* --- VIETNAM MARKET TIMER --- */}
                     <MarketTimer />
 
-                    {/* Feedback Toast - ĐÃ THAY ĐỔI COMPONENT */}
+                    {/* Feedback Toast */}
                     <RateLimitToast 
-                        show={!!message} 
-                        message={message?.text}
+                        show={toastState.show} 
+                        message={toastState.message}
                         className="fixed top-20 right-4 z-[120]" 
                     />
 
