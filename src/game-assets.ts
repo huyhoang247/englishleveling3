@@ -11,8 +11,8 @@
  * Ví dụ: icon menu, shop, nút đóng...
  */
 export const uiAssets = {
-  homeIcon: require("./assets/images/home-icon.webp"), // <--- THÊM MỚI ICON HOME
-  storyIcon: require("./assets/images/story-icon.webp"), // <--- THÊM MỚI ICON STORY
+  homeIcon: require("./assets/images/home-icon.webp"),
+  storyIcon: require("./assets/images/story-icon.webp"),
   keyIcon: require("./assets/images/key.webp"),
   menuIcon: require("./assets/images/menu.webp"),
   shopIcon: require("./assets/images/shop-icon.webp"),
@@ -20,11 +20,11 @@ export const uiAssets = {
   missionIcon: require("./assets/images/equipment-icon.webp"),
   closeIcon: require("./assets/images/close-icon.webp"),
   towerIcon: require("./assets/images/tower-icon.webp"),
-  pvpIcon: require("./assets/images/pvp-icon.webp"), // <--- THÊM MỚI ICON PVP
+  pvpIcon: require("./assets/images/pvp-icon.webp"),
   gemIcon: require("./assets/images/gems.webp"),
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: require("./assets/images/skill-icon.webp"),
-  backIcon: require("./assets/images/back-icon.webp"), // <--- THÊM DÒNG NÀY
+  backIcon: require("./assets/images/back-icon.webp"),
   // -- Thêm mới từ lat-the.tsx --
   priceIcon: require("./assets/images/coin.webp"),
   cardCapacityIcon: require("./assets/images/card-capacity.webp"),
@@ -42,13 +42,26 @@ export const uiAssets = {
   rankFrameIcon: require("./assets/images/rank-icon.webp"),
   luckyGameIcon: require("./assets/images/lucky-treasure.webp"),
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
-  gavelIcon: require("./assets/images/auction-icon.webp"), // THÊM MỚI ICON ĐẤU GIÁ
-  checkInIcon: require("./assets/images/check-in-icon.webp"), // THÊM MỚI ICON ĐIỂM DANH
+  gavelIcon: require("./assets/images/auction-icon.webp"),
+  checkInIcon: require("./assets/images/check-in-icon.webp"),
   // -- Thêm mới từ achievement-ui.tsx --
   masteryCardIcon: require("./assets/images/mastery-icon.webp"),
   vocaAchievementIcon: require("./assets/images/voca-achievement.webp"),
   giftBoxIcon: require("./assets/images/gift-box.webp"),
   giftBoxDisabledIcon: require("./assets/images/gift-box-grey.webp"),
+};
+
+/**
+ * Tài nguyên cho màn hình Nâng cấp (Upgrade Modal)
+ * (Được chuyển từ upgrade-modal.tsx sang)
+ */
+export const upgradeAssets = {
+  upgradeButton: require("./assets/images/upgrade-button.webp"),
+  failed: require("./assets/images/failed.webp"),
+  success: require("./assets/images/success.webp"),
+  stoneBasic: require("./assets/images/basic-stone.webp"),
+  stoneIntermediate: require("./assets/images/intermediate-stone.webp"),
+  stoneAdvanced: require("./assets/images/advanced-stone.webp"),
 };
 
 /**
@@ -116,8 +129,6 @@ export const itemAssets = {
     // Armor
     tunic: require("./assets/equipment/tunic.webp"),
     silverscalePlate: require("./assets/equipment/silverscale-plate.webp"),
-  
-    
 };
 
 /**
@@ -178,6 +189,7 @@ export const minerAssets = {
  */
 export const allImageUrls = [
     ...Object.values(uiAssets).filter(url => typeof url === 'string'),
+    ...Object.values(upgradeAssets).filter(url => typeof url === 'string'), // Include upgrade assets
     ...Object.values(dashboardAssets),
     ...Object.values(quizHomeAssets),
     ...Object.values(equipmentUiAssets),
@@ -187,4 +199,3 @@ export const allImageUrls = [
     ...Object.values(bossBattleAssets),
     ...Object.values(minerAssets),
 ];
-// --- END OF FILE game-assets.ts ---
