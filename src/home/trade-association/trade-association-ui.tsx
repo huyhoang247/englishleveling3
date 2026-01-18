@@ -174,7 +174,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
             // B. Call Service Transaction
             await executeTradeTransaction(userId, option, quantity);
 
-            setToastState({ show: true, message: 'Exchange successful!' });
+            setToastState({ show: true, message: 'Đã đổi thành công.' });
             
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
