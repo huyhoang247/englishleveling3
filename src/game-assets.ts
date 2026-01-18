@@ -99,6 +99,26 @@ export const equipmentUiAssets = {
   helmetIcon: require("./assets/images/helmet.webp"),
 };
 
+/**
+ * Tài nguyên Nguyên liệu (Resources)
+ */
+export const resourceAssets = {
+  wood: require("./assets/images/wood.webp"),
+  leather: require("./assets/images/leather.webp"),
+  ore: require("./assets/images/ore.webp"),
+  cloth: require("./assets/images/cloth.webp"),
+  feather: require("./assets/images/feather.webp"),
+  coal: require("./assets/images/coal.webp"),
+};
+
+/**
+ * Tài nguyên cho Trade Association (Hội Buôn)
+ */
+export const tradeAssets = {
+  background: require("./assets/images/background-trade-association.webp"),
+  plusIcon: require("./assets/images/plus-exchange.webp"),
+  arrowIcon: require("./assets/images/arrow-down-exchange.webp"),
+};
 
 /**
  * Tài nguyên cho các vật phẩm trong túi đồ
@@ -189,11 +209,13 @@ export const minerAssets = {
  */
 export const allImageUrls = [
     ...Object.values(uiAssets).filter(url => typeof url === 'string'),
-    ...Object.values(upgradeAssets).filter(url => typeof url === 'string'), // Include upgrade assets
+    ...Object.values(upgradeAssets).filter(url => typeof url === 'string'),
     ...Object.values(dashboardAssets),
     ...Object.values(quizHomeAssets),
     ...Object.values(equipmentUiAssets),
     ...Object.values(itemAssets),
+    ...Object.values(resourceAssets), // Thêm tài nguyên nguyên liệu
+    ...Object.values(tradeAssets),    // Thêm tài nguyên trade
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
     ...Object.values(bossBattleAssets),
