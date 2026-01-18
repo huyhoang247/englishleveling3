@@ -28,7 +28,7 @@ import EquipmentScreen, { type EquipmentScreenExitData } from './home/equipment/
 import AuctionHouse from './home/auction/auction-house-ui.tsx';
 import DailyCheckIn from './home/check-in/check-in-ui.tsx';
 import Mailbox from './home/mail/mail.tsx'; 
-import RateLimitToast from './thong-bao.tsx';
+import RateLimitToast from './ui/notification.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
 import TradeAssociationModalV2 from './home/trade-association-modal.tsx';
