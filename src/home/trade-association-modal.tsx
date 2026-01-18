@@ -1,3 +1,5 @@
+// --- START OF FILE trade-association-modal.tsx ---
+
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import { equipmentUiAssets } from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
@@ -19,39 +21,98 @@ export interface TradeOption {
     id: string;
     title: string;
     ingredients: TradeIngredient[];
-    receiveType: 'equipmentPiece' | 'ancientBook';
+    receiveType: 'equipmentPiece' | 'ancientBook' | 'stone'; // Đã thêm 'stone'
+    receiveSubType?: 'low' | 'medium' | 'high'; // Đã thêm phân loại đá
     receiveAmount: number; // Base amount received for 1 exchange
     description?: string;
 }
 
-// --- UTILITY: DETERMINISTIC RANDOM PRICE (VIETNAM TIME) ---
-// Generates a random number between 5-20 based on the Vietnam Date and resource type.
-const getDailyPrice = (resourceType: string): number => {
-    // 1. Get current time
-    const now = new Date();
-    
-    // 2. Convert to Vietnam Time String to get the correct date
-    // This handles the timezone conversion automatically (UTC+7)
-    const vnDateString = now.toLocaleDateString("en-US", { 
+// --- UTILITY: DETERMINISTIC RANDOM (VIETNAM TIME) ---
+// Lấy chuỗi ngày giờ VN để làm Seed (Hạt giống random)
+const getVnDateString = () => {
+    return new Date().toLocaleDateString("en-US", { 
         timeZone: "Asia/Ho_Chi_Minh",
         year: 'numeric',
         month: 'numeric',
         day: 'numeric'
     });
+};
 
-    // 3. Create Seed from Vietnam Date + Resource Type
-    const seed = vnDateString + resourceType;
-    
+// Hàm tạo số ngẫu nhiên giả lập từ chuỗi Seed
+const pseudoRandom = (seed: string): number => {
     let hash = 0;
     for (let i = 0; i < seed.length; i++) {
         const char = seed.charCodeAt(i);
         hash = ((hash << 5) - hash) + char;
-        hash = hash & hash; // Convert to 32bit integer
+        hash = hash & hash; 
     }
+    return Math.abs(hash);
+};
+
+// Tạo số ngẫu nhiên trong khoảng min-max dựa trên Seed
+const getSeededRange = (seed: string, min: number, max: number): number => {
+    return (pseudoRandom(seed) % (max - min + 1)) + min;
+};
+
+// Tạo giá hàng ngày cho các vật phẩm cơ bản (5-20)
+const getDailyPrice = (resourceType: string): number => {
+    return getSeededRange(getVnDateString() + resourceType, 5, 20);
+};
+
+// --- NEW: Generate Daily Stone Trade ---
+// Hàm logic tạo công thức đổi đá hàng ngày
+const getDailyStoneTrade = (): TradeOption => {
+    const dateStr = getVnDateString();
     
-    const min = 5;
-    const max = 20;
-    return (Math.abs(hash) % (max - min + 1)) + min;
+    // 1. Xác định loại đá (Low, Medium, High) - 1 loại duy nhất trong ngày
+    const tiers: ('low' | 'medium' | 'high')[] = ['low', 'medium', 'high'];
+    // Dùng seed là ngày + 'stoneTier' để đảm bảo cả ngày chỉ ra 1 loại
+    const tierIndex = pseudoRandom(dateStr + 'stoneTier') % 3;
+    const selectedTier = tiers[tierIndex];
+
+    // 2. Xác định khoảng số lượng dựa trên loại đá
+    let minQ = 5, maxQ = 15;
+    let title = "Basic Upgrade Cache";
+    
+    if (selectedTier === 'medium') {
+        minQ = 10; maxQ = 25;
+        title = "Rare Upgrade Cache";
+    } else if (selectedTier === 'high') {
+        minQ = 20; maxQ = 35;
+        title = "Legendary Upgrade Cache";
+    }
+
+    // 3. Xác định số lượng cụ thể cho ngày hôm nay
+    const quantity = getSeededRange(dateStr + 'stoneQty', minQ, maxQ);
+
+    // 4. Chọn ngẫu nhiên 1 nguyên liệu thường (Wood, Leather, Ore, Cloth)
+    const commonPool: {type: ResourceType, name: string}[] = [
+        { type: 'wood', name: 'Wood' },
+        { type: 'leather', name: 'Leather' },
+        { type: 'ore', name: 'Ore' },
+        { type: 'cloth', name: 'Cloth' }
+    ];
+    const commonIng = commonPool[pseudoRandom(dateStr + 'commonIng') % commonPool.length];
+
+    // 5. Chọn ngẫu nhiên 1 nguyên liệu hiếm (Feather, Coal)
+    const rarePool: {type: ResourceType, name: string}[] = [
+        { type: 'feather', name: 'Feather' },
+        { type: 'coal', name: 'Coal' }
+    ];
+    const rareIng = rarePool[pseudoRandom(dateStr + 'rareIng') % rarePool.length];
+
+    return {
+        id: 'daily_stone_exchange',
+        title: title,
+        description: `Daily Special: ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Stone`,
+        ingredients: [
+            { type: commonIng.type, name: commonIng.name, amount: quantity },
+            { type: rareIng.type, name: rareIng.name, amount: quantity }
+        ],
+        receiveType: 'stone',
+        receiveSubType: selectedTier,
+        receiveAmount: 1
+    };
 };
 
 // --- IMAGE ICONS ---
@@ -81,6 +142,15 @@ const AncientBookIcon = ({ className = '' }: { className?: string }) => (
     <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ancient-book.webp" alt="Book" className={className} />
 );
 
+// Icon cho Đá cường hóa
+const StoneIcon = ({ tier, className = '' }: { tier?: 'low' | 'medium' | 'high', className?: string }) => {
+    let url = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stone-low.webp";
+    if (tier === 'medium') url = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stone-medium.webp";
+    if (tier === 'high') url = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stone-high.webp";
+    
+    return <img src={url} alt={`${tier} Stone`} className={className} />;
+};
+
 // --- COMPONENT HEADER ---
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
@@ -102,17 +172,15 @@ const MarketTimer = () => {
     useEffect(() => {
         const calculateTimeLeft = () => {
             const now = new Date();
-            
-            // Convert current time to a manipulatable Date object in VN Time
+            // Lấy giờ hiện tại theo múi giờ VN
             const vnNowString = now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
             const vnNow = new Date(vnNowString);
 
-            // Create target time (Tomorrow 00:00:00 VN Time)
+            // Tính thời gian đến 00:00 ngày mai (VN)
             const vnTomorrow = new Date(vnNow);
             vnTomorrow.setDate(vnTomorrow.getDate() + 1);
             vnTomorrow.setHours(0, 0, 0, 0);
 
-            // Difference in milliseconds
             const diff = vnTomorrow.getTime() - vnNow.getTime();
 
             const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
@@ -136,9 +204,7 @@ const MarketTimer = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </div>
-            {/* UPDATED: font-lilita applied to 'Market Reset' */}
             <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Market Reset</div>
-            {/* UPDATED: font-lilita applied to Timer */}
             <div className="font-lilita text-2xl text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
                 {timeLeft}
             </div>
@@ -167,7 +233,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     // --- DYNAMIC TRADE OPTIONS ---
     const currentTradeOptions: TradeOption[] = useMemo(() => {
-        return [
+        // Các tùy chọn cố định
+        const standardOptions: TradeOption[] = [
             { 
                 id: 'combine_wood_leather', 
                 title: "Hunter's Supply",
@@ -202,6 +269,9 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 receiveAmount: 1
             },
         ];
+
+        // Thêm tùy chọn đổi đá ngẫu nhiên theo ngày
+        return [...standardOptions, getDailyStoneTrade()];
     }, []); 
 
     const getQuantity = (optionId: string) => tradeQuantities[optionId] || 1;
@@ -228,7 +298,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         setMessage(null);
 
         try {
-            // A. Client-side Validation
+            // A. Client-side Validation (Kiểm tra đủ nguyên liệu không)
             for (const ing of option.ingredients) {
                 const totalRequired = ing.amount * quantity;
                 if ((resources[ing.type] || 0) < totalRequired) {
@@ -236,7 +306,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 }
             }
 
-            // B. Firestore Transaction
+            // B. Firestore Transaction (Thực hiện giao dịch trên server)
             await runTransaction(db, async (transaction) => {
                 const userRef = doc(db, 'users', userId);
                 const userDoc = await transaction.get(userRef);
@@ -246,7 +316,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
                 const updates: any = {};
                 
-                // Deduct Resources
+                // Trừ Nguyên Liệu
                 for (const ing of option.ingredients) {
                     const currentVal = userData[ing.type] || 0;
                     const totalRequired = ing.amount * quantity;
@@ -256,7 +326,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     updates[ing.type] = currentVal - totalRequired;
                 }
 
-                // Add Result based on Type
+                // Cộng vật phẩm nhận được
                 const totalReceive = option.receiveAmount * quantity;
 
                 if (option.receiveType === 'equipmentPiece') {
@@ -265,12 +335,22 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 } else if (option.receiveType === 'ancientBook') {
                     const currentBooks = userData.ancientBooks || 0;
                     updates['ancientBooks'] = currentBooks + totalReceive;
+                } else if (option.receiveType === 'stone' && option.receiveSubType) {
+                    // Logic cộng đá vào đúng loại
+                    const stonePath = `equipment.stones.${option.receiveSubType}`;
+                    const currentStones = userData.equipment?.stones?.[option.receiveSubType] || 0;
+                    updates[stonePath] = currentStones + totalReceive;
                 }
 
                 transaction.update(userRef, updates);
             });
 
-            const rewardName = option.receiveType === 'ancientBook' ? 'Ancient Book(s)' : 'Equipment Piece(s)';
+            // Thông báo thành công
+            let rewardName = 'Item(s)';
+            if (option.receiveType === 'ancientBook') rewardName = 'Ancient Book(s)';
+            else if (option.receiveType === 'equipmentPiece') rewardName = 'Equipment Piece(s)';
+            else if (option.receiveType === 'stone') rewardName = `${option.receiveSubType} Stone(s)`;
+
             setMessage({ text: `Successfully exchanged for ${option.receiveAmount * quantity} ${rewardName}!`, type: 'success' });
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
@@ -343,8 +423,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 return (
                                                     <React.Fragment key={ing.type}>
                                                         <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                                            {/* REMOVED PRICE TAG BADGE HERE */}
-
+                                                            
                                                             <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
                                                                 <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
                                                             </div>
@@ -386,6 +465,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
                                                     {option.receiveType === 'equipmentPiece' ? (
                                                         <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
+                                                    ) : option.receiveType === 'stone' ? (
+                                                        <StoneIcon tier={option.receiveSubType} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
                                                     ) : (
                                                         <AncientBookIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
                                                     )}
@@ -404,7 +485,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
                                                     </svg>
                                                 </button>
-                                                {/* UPDATED: font-lilita here */}
                                                 <span className="flex-1 text-center font-bold font-lilita text-xl text-amber-500">{quantity}</span>
                                                 <button 
                                                     onClick={() => handleQuantityChange(option.id, 1)}
@@ -416,7 +496,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 </button>
                                             </div>
 
-                                            {/* UPDATED: font-lilita, smaller text (text-lg) and padding (py-2) */}
                                             <button
                                                 onClick={() => handleExchange(option, quantity)}
                                                 disabled={!canAffordAll || isProcessing}
