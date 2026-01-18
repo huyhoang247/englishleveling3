@@ -188,11 +188,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   
   return (
     <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
-      {/* Import Font Be Vietnam Pro */}
-      <style>
-        {`@import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap');`}
-      </style>
-      
       <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
@@ -266,24 +261,16 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                             </div>
                             )}
                             
-                            {/* Hợp nhất logic hiển thị câu hỏi - Đã cập nhật Font */}
+                            {/* Hợp nhất logic hiển thị câu hỏi - Sử dụng bg-black/40 thay vì backdrop-blur */}
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                                {/* Sử dụng font 'Be Vietnam Pro', font-semibold thay vì bold cho nhẹ nhàng, tracking-wide cho thoáng */}
                                 <h2 
-                                    className="text-xl md:text-2xl font-semibold text-white leading-snug tracking-wide drop-shadow-md"
-                                    style={{ fontFamily: '"Be Vietnam Pro", sans-serif' }}
+                                  className="text-xl font-bold text-white leading-tight"
+                                  style={{ fontFamily: '"Comic Sans MS", "Comic Sans", cursive, sans-serif' }}
                                 >
-                                    {playableQuestions[currentQuestion]?.question}
+                                  {playableQuestions[currentQuestion]?.question}
                                 </h2>
                                 {/* Chỉ hiển thị dịch nghĩa nếu nó tồn tại trong dữ liệu câu hỏi */}
-                                {playableQuestions[currentQuestion]?.vietnamese && (
-                                    <p 
-                                        className="text-white/80 text-sm mt-2 font-medium"
-                                        style={{ fontFamily: '"Be Vietnam Pro", sans-serif' }}
-                                    >
-                                        {playableQuestions[currentQuestion]?.vietnamese}
-                                    </p>
-                                )}
+                                {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
                             </div>
                         </div>
                     </div>
@@ -358,3 +345,4 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </QuizProvider>
   );
 }
+// --- END OF FILE: multiple-ui.tsx ---
