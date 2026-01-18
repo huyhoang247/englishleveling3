@@ -68,6 +68,8 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
         let newLeather = data.leather || 0;
         let newOre = data.ore || 0;
         let newCloth = data.cloth || 0;
+        let newFeather = data.feather || 0; // Mới thêm
+        let newCoal = data.coal || 0;       // Mới thêm
         
         // Stones (Đá cường hoá)
         const currentStones = data.equipment?.stones || { low: 0, medium: 0, high: 0 };
@@ -105,7 +107,7 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
                 updates['equipment.stones'] = newStones;
                 break;
 
-            // --- XỬ LÝ NGUYÊN LIỆU (MỚI) ---
+            // --- XỬ LÝ NGUYÊN LIỆU CŨ ---
             case 2007: // Wood (Gỗ)
                 newWood += quantity;
                 updates.wood = newWood;
@@ -121,6 +123,16 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
             case 2010: // Cloth (Vải)
                 newCloth += quantity;
                 updates.cloth = newCloth;
+                break;
+            
+            // --- XỬ LÝ NGUYÊN LIỆU MỚI (FEATHER & COAL) ---
+            case 2011: // Feather (Lông vũ)
+                newFeather += quantity;
+                updates.feather = newFeather;
+                break;
+            case 2012: // Coal (Than đá)
+                newCoal += quantity;
+                updates.coal = newCoal;
                 break;
 
             default:
@@ -142,7 +154,9 @@ export const processShopPurchase = async (userId: string, item: any, quantity: n
             newWood,
             newLeather,
             newOre,
-            newCloth
+            newCloth,
+            newFeather,
+            newCoal
         };
     });
 };
