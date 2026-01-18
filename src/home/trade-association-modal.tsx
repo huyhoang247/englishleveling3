@@ -231,7 +231,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     const [isProcessing, setIsProcessing] = useState(false);
     
     // <<< FIX: Thay đổi cách quản lý state thông báo >>>
-    // Thay vì dùng nullable object, ta tách show và text riêng để tránh lỗi hiển thị default text khi ẩn
     const [toastState, setToastState] = useState<{ show: boolean, message: string }>({ 
         show: false, 
         message: '' 
@@ -356,8 +355,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 transaction.update(userRef, updates);
             });
 
-            // Thông báo thành công
-            setToastState({ show: true, message: 'Đã đổi thành công' });
+            // Thông báo thành công - ĐÃ THÊM DẤU CHẤM
+            setToastState({ show: true, message: 'Đã đổi thành công.' });
             
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
@@ -396,11 +395,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     {/* --- VIETNAM MARKET TIMER --- */}
                     <MarketTimer />
 
-                    {/* Feedback Toast - ĐÃ THAY ĐỔI VỊ TRÍ XUỐNG DƯỚI */}
+                    {/* Feedback Toast - ĐÃ ẨN ICON & DỊCH LÊN TRÊN */}
                     <RateLimitToast 
                         show={toastState.show} 
                         message={toastState.message}
-                        className="fixed top-24 right-4 z-[120]" 
+                        showIcon={false} // Loại bỏ icon
+                        className="fixed top-20 right-4 z-[120]" // Dịch lên top-20
                     />
 
                     {/* Trade Options List */}
