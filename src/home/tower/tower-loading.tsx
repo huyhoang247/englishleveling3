@@ -21,7 +21,7 @@ const BossBattleLoader: React.FC = () => {
 
         .loader-dot {
             will-change: transform, opacity;
-            animation: floating-wave 1.6s ease-in-out infinite;
+            animation: floating-wave 1.2s ease-in-out infinite;
         }
       `}</style>
 
