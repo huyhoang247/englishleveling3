@@ -131,10 +131,8 @@ const MarketTimer = () => {
     }, []);
 
     return (
-        // Changed border to white/30
         <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-sm border border-white/30 px-5 py-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.1)] mx-auto w-fit mb-4 animate-fadeIn">
             <div className="relative flex h-3 w-3">
-                {/* Changed dot to Green */}
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </div>
@@ -406,7 +404,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                         <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
                                                     </svg>
                                                 </button>
-                                                <span className="flex-1 text-center font-bold font-mono text-lg text-amber-500">{quantity}</span>
+                                                {/* UPDATED: font-lilita here */}
+                                                <span className="flex-1 text-center font-bold font-lilita text-xl text-amber-500">{quantity}</span>
                                                 <button 
                                                     onClick={() => handleQuantityChange(option.id, 1)}
                                                     className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 transition-colors"
@@ -417,12 +416,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 </button>
                                             </div>
 
-                                            {/* UPDATED: font-lilita applied here */}
+                                            {/* UPDATED: font-lilita, smaller text (text-lg) and padding (py-2) */}
                                             <button
                                                 onClick={() => handleExchange(option, quantity)}
                                                 disabled={!canAffordAll || isProcessing}
                                                 className={`
-                                                    w-full max-w-[200px] py-2.5 px-4 rounded-xl font-lilita text-xl uppercase tracking-wider shadow-md transition-all duration-200
+                                                    w-full max-w-[200px] py-2 px-4 rounded-xl font-lilita text-lg uppercase tracking-wider shadow-md transition-all duration-200
                                                     flex items-center justify-center gap-2 transform active:scale-95
                                                     ${canAffordAll 
                                                         ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-emerald-900/30' 
