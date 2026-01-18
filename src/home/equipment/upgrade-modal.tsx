@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, memo } from 'react';
 import { 
     getItemDefinition 
@@ -7,13 +6,8 @@ import {
     ENHANCEMENT_STONES, 
     type StoneTier 
 } from './equipment-context.tsx';
-import { uiAssets } from '../../game-assets.ts';
+import { uiAssets, upgradeAssets } from '../../game-assets.ts';
 import type { OwnedItem } from './equipment-ui.tsx';
-
-// --- CONSTANTS ---
-const UPGRADE_BUTTON_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/upgrade-button.webp';
-const FAILED_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/failed.webp';
-const SUCCESS_IMG = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/success.webp';
 
 // --- STYLES & ANIMATIONS ---
 const animationStyles = `
@@ -57,9 +51,9 @@ const getRarityTextColor = (rank: string): string => {
 
 // --- ICON ĐÁ CƯỜNG HOÁ ---
 const STONE_ICONS: Record<StoneTier, string> = {
-    low: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/basic-stone.webp',
-    medium: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/intermediate-stone.webp',
-    high: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/advanced-stone.webp',
+    low: upgradeAssets.stoneBasic,
+    medium: upgradeAssets.stoneIntermediate,
+    high: upgradeAssets.stoneAdvanced,
 };
 
 // --- CÁC ICON CỤC BỘ ---
@@ -133,7 +127,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
         <>
             <style>{animationStyles}</style>
             <div className="fixed inset-0 flex items-center justify-center z-[60] p-4">
-                {/* LỚP PHỦ NỀN: Đã bỏ backdrop-blur-sm để mượt hơn */}
+                {/* LỚP PHỦ NỀN */}
                 <div 
                     className="fixed inset-0 bg-black/80" 
                     onClick={!isProcessing ? onClose : undefined} 
@@ -147,13 +141,13 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                             <div className="animate-float-up flex flex-col items-center">
                                 {upgradeStatus === 'success' ? (
                                     <img 
-                                        src={SUCCESS_IMG} 
+                                        src={upgradeAssets.success} 
                                         alt="Success" 
                                         className="w-64 h-auto object-contain drop-shadow-2xl"
                                     />
                                 ) : (
                                     <img 
-                                        src={FAILED_IMG} 
+                                        src={upgradeAssets.failed} 
                                         alt="Failed" 
                                         className="w-64 h-auto object-contain drop-shadow-2xl"
                                     />
@@ -296,7 +290,7 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                                     `}
                                 >
                                     <img 
-                                        src={UPGRADE_BUTTON_IMG} 
+                                        src={upgradeAssets.upgradeButton} 
                                         alt="Upgrade" 
                                         className="w-full h-auto object-contain drop-shadow-lg"
                                     />
