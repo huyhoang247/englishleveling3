@@ -1,3 +1,5 @@
+// --- START OF FILE GameContext.tsx ---
+
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
 import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
@@ -31,7 +33,7 @@ interface IGameContext {
     totalVocabCollected: number;
     cardCapacity: number;
     
-    // --- RESOURCES (NEW) ---
+    // --- RESOURCES ---
     wood: number;
     leather: number;
     ore: number;
@@ -148,7 +150,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [totalVocabCollected, setTotalVocabCollected] = useState(0);
   const [cardCapacity, setCardCapacity] = useState(100);
   
-  // --- RESOURCES STATE (NEW) ---
+  // --- RESOURCES STATE ---
   const [wood, setWood] = useState(0);
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
@@ -216,12 +218,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setCardCapacity(gameData.cardCapacity);
       
       // Load Resources from DB
-      setWood((gameData as any).wood || 0);
-      setLeather((gameData as any).leather || 0);
-      setOre((gameData as any).ore || 0);
-      setCloth((gameData as any).cloth || 0);
-      setFeather((gameData as any).feather || 0); // Mới thêm
-      setCoal((gameData as any).coal || 0);       // Mới thêm
+      setWood(gameData.wood || 0);
+      setLeather(gameData.leather || 0);
+      setOre(gameData.ore || 0);
+      setCloth(gameData.cloth || 0);
+      setFeather(gameData.feather || 0); // Mới thêm
+      setCoal(gameData.coal || 0);       // Mới thêm
 
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
