@@ -138,9 +138,10 @@ const MarketTimer = () => {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </div>
-            {/* Changed text to Market Reset */}
-            <div className="text-xs uppercase tracking-widest text-slate-400 font-bold">Market Reset</div>
-            <div className="font-mono text-xl font-bold text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
+            {/* UPDATED: font-lilita applied to 'Market Reset' */}
+            <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Market Reset</div>
+            {/* UPDATED: font-lilita applied to Timer */}
+            <div className="font-lilita text-2xl text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
                 {timeLeft}
             </div>
         </div>
@@ -416,11 +417,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                 </button>
                                             </div>
 
+                                            {/* UPDATED: font-lilita applied here */}
                                             <button
                                                 onClick={() => handleExchange(option, quantity)}
                                                 disabled={!canAffordAll || isProcessing}
                                                 className={`
-                                                    w-full max-w-[200px] py-2.5 px-4 rounded-xl font-bold text-sm uppercase tracking-wider shadow-md transition-all duration-200
+                                                    w-full max-w-[200px] py-2.5 px-4 rounded-xl font-lilita text-xl uppercase tracking-wider shadow-md transition-all duration-200
                                                     flex items-center justify-center gap-2 transform active:scale-95
                                                     ${canAffordAll 
                                                         ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-emerald-900/30' 
