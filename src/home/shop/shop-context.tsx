@@ -16,7 +16,7 @@ const sampleItemsNonWeapons = [
   { id: 2002, name: 'Equipment Piece', type: 'Item', rarity: 'B', price: 10, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/equipment-piece.webp', description: 'Nguyên liệu cốt lõi dùng để chế tạo và hợp nhất trang bị.', stackable: true, quantityOptions: [10, 50, 100] },
   { id: 2003, name: 'Pickaxe', type: 'Item', rarity: 'B', price: 50, image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/pickaxe-icon.webp', description: 'Dùng để khai thác tài nguyên và khoáng sản.', stackable: true, quantityOptions: [10, 50, 100], },
   
-  // --- ĐÁ CƯỜNG HOÁ (RENAMED) ---
+  // --- ĐÁ CƯỜNG HOÁ ---
   { 
       id: 2004, 
       name: 'Basic Stone', 
@@ -46,12 +46,12 @@ const sampleItemsNonWeapons = [
       rarity: 'S', 
       price: 100, 
       image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/advanced-stone.webp', 
-      description: 'Đá cường hoá cấp cao quý hiếm. Tỉ lệ thành công lên tới 90%.', 
+      description: 'Đá cường hoá cấp cao quý hiếm. Tỉ lệ thành công 90%.', 
       stackable: true, 
       quantityOptions: [1, 5, 10] 
   },
 
-  // --- NGUYÊN LIỆU (RENAMED) ---
+  // --- NGUYÊN LIỆU CƠ BẢN ---
   {
       id: 2007,
       name: 'Wood',
@@ -93,6 +93,30 @@ const sampleItemsNonWeapons = [
       price: 100,
       image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp',
       description: 'Vải dệt chất lượng cao. Dùng để may trang phục và các vật phẩm ma thuật.',
+      stackable: true,
+      quantityOptions: [10, 50, 100]
+  },
+  
+  // --- NGUYÊN LIỆU MỚI (FEATHER & COAL) ---
+  {
+      id: 2011,
+      name: 'Feather',
+      type: 'Item',
+      rarity: 'D',
+      price: 100,
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/feather.webp',
+      description: 'Lông vũ nhẹ và mềm mại. Nguyên liệu quan trọng để chế tạo tên và các vật phẩm bay.',
+      stackable: true,
+      quantityOptions: [10, 50, 100]
+  },
+  {
+      id: 2012,
+      name: 'Coal',
+      type: 'Item',
+      rarity: 'D',
+      price: 100,
+      image: 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coal.webp',
+      description: 'Than đá cháy lâu, cung cấp nhiệt lượng cao. Cần thiết cho việc rèn và nấu chảy kim loại.',
       stackable: true,
       quantityOptions: [10, 50, 100]
   },
@@ -164,7 +188,9 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
           newWood, 
           newLeather, 
           newOre, 
-          newCloth 
+          newCloth,
+          newFeather, // Nhận Feather mới
+          newCoal     // Nhận Coal mới
       } = await processShopPurchase(currentUser.uid, item, quantity);
       
       const updates: { 
@@ -180,7 +206,7 @@ export const ShopProvider: FC<ShopProviderProps> = ({ children, getShopItemsFunc
       else if (item.id === 2002) { updates.equipmentPieces = newPieces; }
       else if ([2004, 2005, 2006].includes(item.id)) { updates.stones = newStones; }
       
-      // Lưu ý: Tài nguyên Wood, Leather, Ore, Cloth được update qua onSnapshot trong GameContext
+      // Lưu ý: Tài nguyên Wood, Leather, Ore, Cloth, Feather, Coal được update qua onSnapshot trong GameContext
       // Update tiền và các item đặc biệt ngay lập tức cho UI
       updateUserCurrency(updates as any); 
       
