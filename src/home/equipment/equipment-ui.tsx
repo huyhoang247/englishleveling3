@@ -9,7 +9,7 @@ import {
 } from './item-database.ts';
 import { uiAssets, equipmentUiAssets } from '../../game-assets.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
-import RateLimitToast from '../../thong-bao.tsx';
+import RateLimitToast from '../../ui/notification.tsx';
 import { 
     EquipmentProvider, 
     useEquipment 
