@@ -136,6 +136,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     currentAudioUrl,
     selectedVoice,
     handleChangeVoiceDirection,
+    // Lấy biến này từ context để sửa lỗi nút Detail
+    isDetailAvailable,
   } = useQuiz();
 
   const displayedCoins = useAnimateValue(coins, 500);
@@ -299,7 +301,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
           <div className="group relative">
              <button 
                 onClick={handleDetailClick} 
-                disabled={!currentQuestionWord || !detailData} 
+                // Sử dụng biến isDetailAvailable thay vì detailData để nút không bị disabled lúc đầu
+                disabled={!isDetailAvailable}
                 className="flex items-center justify-center w-14 h-14 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none" 
                 aria-label="Xem chi tiết"
              >
@@ -337,3 +340,4 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </QuizProvider>
   );
 }
+// --- END OF FILE: multiple-ui.tsx ---
