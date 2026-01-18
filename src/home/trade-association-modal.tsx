@@ -13,6 +13,7 @@ import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
 import CoinDisplay from '../ui/display/coin-display.tsx'; 
+import RateLimitToast from '../thong-bao.tsx'; // Import component thông báo
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
@@ -347,13 +348,8 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 transaction.update(userRef, updates);
             });
 
-            // Thông báo thành công
-            let rewardName = 'Item(s)';
-            if (option.receiveType === 'ancientBook') rewardName = 'Ancient Book(s)';
-            else if (option.receiveType === 'equipmentPiece') rewardName = 'Equipment Piece(s)';
-            else if (option.receiveType === 'stone') rewardName = `${option.receiveSubType} Stone(s)`;
-
-            setMessage({ text: `Successfully exchanged for ${option.receiveAmount * quantity} ${rewardName}!`, type: 'success' });
+            // Thông báo thành công - ĐÃ THAY ĐỔI THEO YÊU CẦU
+            setMessage({ text: 'Đã đổi thành công', type: 'success' });
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
 
@@ -390,17 +386,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     {/* --- VIETNAM MARKET TIMER --- */}
                     <MarketTimer />
 
-                    {/* Feedback Toast */}
-                    {message && (
-                        <div className={`fixed top-32 left-1/2 -translate-x-1/2 z-50 px-6 py-4 rounded-xl shadow-[0_0_20px_rgba(0,0,0,0.5)] border-2 text-base font-bold animate-bounce flex items-center gap-3 backdrop-blur-md ${message.type === 'success' ? 'bg-green-950/90 border-green-500 text-green-100' : 'bg-red-950/90 border-red-500 text-red-100'}`}>
-                            {message.type === 'success' ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" /></svg>
-                            ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-6 h-6"><path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                            )}
-                            {message.text}
-                        </div>
-                    )}
+                    {/* Feedback Toast - ĐÃ THAY ĐỔI COMPONENT */}
+                    <RateLimitToast 
+                        show={!!message} 
+                        message={message?.text}
+                        className="fixed top-20 right-4 z-[120]" 
+                    />
 
                     {/* Trade Options List */}
                     <div className="space-y-6 md:space-y-8 flex-1 pb-10 mt-2">
