@@ -6,83 +6,63 @@ const BossBattleLoader: React.FC = () => {
   return (
     <div className="relative w-full h-full min-h-screen flex items-center justify-center overflow-hidden bg-slate-900">
       
-      {/* --- CSS Animations Optimized (No Filters) --- */}
+      {/* --- CSS Animations Optimized --- */}
       <style>{`
-        /* Animation: Biến thiên kích thước mượt mà */
-        @keyframes liquid-pulse {
+        /* Animation sóng lượn: Mượt mà, không giật, chạy vô tận êm dịu */
+        @keyframes floating-wave {
             0%, 100% {
-                transform: scale(0.7) translateZ(0);
-                opacity: 0.3;
+                transform: translateY(0) scale(0.8);
+                opacity: 0.4;
             }
             50% {
-                transform: scale(1.3) translateZ(0);
+                transform: translateY(-14px) scale(1.1);
                 opacity: 1;
             }
         }
 
         .loader-dot {
-            /* Tối ưu hóa: Chỉ render lại transform và opacity */
             will-change: transform, opacity;
-            
-            /* Timing function: cubic-bezier giúp chuyển động có gia tốc thực tế (nhanh ở giữa, chậm ở 2 đầu) */
-            animation: liquid-pulse 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite both;
+            /* Thời gian 1.6s + ease-in-out tạo nhịp thở đều đặn */
+            animation: floating-wave 1.6s ease-in-out infinite;
         }
       `}</style>
 
-      {/* --- BACKGROUND LAYER (Lag-free version) --- */}
+      {/* --- BACKGROUND LAYER (No Blur - High Performance) --- */}
       <div className="absolute inset-0 z-0 pointer-events-none">
-          {/* Ảnh nền giữ nguyên độ sắc nét, không dùng blur để tránh lag */}
           <div 
               className="absolute inset-0 bg-cover bg-no-repeat bg-center"
-              style={{ 
-                  backgroundImage: `url(${BACKGROUND_IMAGE})`,
-              }}
+              style={{ backgroundImage: `url(${BACKGROUND_IMAGE})` }}
           />
-          {/* Lớp phủ màu tối đậm hơn để làm nổi bật loader mà không cần xử lý ảnh */}
-          <div className="absolute inset-0 bg-black/80" />
-          
-          {/* Một gradient nhẹ ở trung tâm để tạo tiêu điểm (Vignette rẻ tiền về hiệu năng) */}
-          <div className="absolute inset-0 bg-radial-gradient-center opacity-60" 
-               style={{ background: 'radial-gradient(circle, rgba(0,0,0,0) 0%, rgba(0,0,0,0.8) 100%)' }} 
-          />
+          {/* Lớp phủ đen 85% để làm nổi bật dots */}
+          <div className="absolute inset-0 bg-black/85" />
       </div>
 
-      {/* --- LOADER CONTAINER --- */}
-      <div className="relative z-10 flex flex-col items-center justify-center gap-10">
-          
-          {/* THE DOTS */}
-          <div className="flex items-center gap-6">
+      {/* --- DOTS ONLY --- */}
+      <div className="relative z-10 flex items-center gap-5">
               
-              {/* Dot 1: Cyan - Delay 0s */}
-              <div 
-                  className="w-4 h-4 rounded-full bg-cyan-400 loader-dot" 
-                  style={{ animationDelay: '0s' }}
-              ></div>
+          {/* Dot 1: Cyan */}
+          <div 
+              className="w-4 h-4 rounded-full bg-cyan-400 loader-dot" 
+              style={{ animationDelay: '0s' }}
+          ></div>
 
-              {/* Dot 2: Sky - Delay 0.15s */}
-              <div 
-                  className="w-4 h-4 rounded-full bg-sky-500 loader-dot" 
-                  style={{ animationDelay: '0.15s' }}
-              ></div>
+          {/* Dot 2: Sky */}
+          <div 
+              className="w-4 h-4 rounded-full bg-sky-500 loader-dot" 
+              style={{ animationDelay: '0.2s' }}
+          ></div>
 
-              {/* Dot 3: Violet - Delay 0.3s */}
-              <div 
-                  className="w-4 h-4 rounded-full bg-violet-500 loader-dot" 
-                  style={{ animationDelay: '0.3s' }}
-              ></div>
+          {/* Dot 3: Violet */}
+          <div 
+              className="w-4 h-4 rounded-full bg-violet-500 loader-dot" 
+              style={{ animationDelay: '0.4s' }}
+          ></div>
 
-              {/* Dot 4: Fuchsia - Delay 0.45s */}
-              <div 
-                  className="w-4 h-4 rounded-full bg-fuchsia-500 loader-dot" 
-                  style={{ animationDelay: '0.45s' }}
-              ></div>
-
-          </div>
-
-          {/* Simple Loading Text */}
-          <div className="text-white/50 text-xs tracking-[0.4em] uppercase font-medium">
-             Loading Data...
-          </div>
+          {/* Dot 4: Fuchsia */}
+          <div 
+              className="w-4 h-4 rounded-full bg-fuchsia-500 loader-dot" 
+              style={{ animationDelay: '0.6s' }}
+          ></div>
 
       </div>
     </div>
