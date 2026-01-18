@@ -31,7 +31,7 @@ import Mailbox from './home/mail/mail.tsx';
 import RateLimitToast from './ui/notification.tsx';
 import GameSkeletonLoader from './GameSkeletonLoader.tsx'; 
 import { useGame } from './GameContext.tsx';
-import TradeAssociationModalV2 from './home/trade-association-modal.tsx';
+import TradeAssociationModalV2 from './home/trade-association/trade-association-ui.tsx';
 
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 
