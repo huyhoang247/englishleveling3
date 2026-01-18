@@ -52,11 +52,13 @@ export interface UserGameData {
   totalVocabCollected: number;
   cardCapacity: number;
   
-  // --- RESOURCES (NEW) ---
+  // --- RESOURCES (UPDATED) ---
   wood?: number;
   leather?: number;
   ore?: number;
   cloth?: number;
+  feather?: number; // Mới thêm
+  coal?: number;    // Mới thêm
 
   // Equipment including Stones
   equipment: { 
@@ -128,6 +130,8 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       leather: data.leather || 0,
       ore: data.ore || 0,
       cloth: data.cloth || 0,
+      feather: data.feather || 0, // Load Feather
+      coal: data.coal || 0,       // Load Coal
 
       equipment: equipmentData, 
       lastCheckIn: data.lastCheckIn || null,
@@ -150,6 +154,8 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       leather: 0,
       ore: 0,
       cloth: 0,
+      feather: 0, // Init Feather
+      coal: 0,    // Init Coal
 
       equipment: { 
           pieces: 100, 
@@ -431,5 +437,3 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
   });
 };
 // --- END: ADMIN PANEL SERVICE FUNCTIONS ---
-
-// --- END OF FILE gameDataService.ts ---
