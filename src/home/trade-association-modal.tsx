@@ -13,7 +13,7 @@ import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
 import HomeButton from '../ui/home-button.tsx'; 
 import CoinDisplay from '../ui/display/coin-display.tsx'; 
-import RateLimitToast from '../ui/thong-bao.tsx'; // Import component thông báo
+import RateLimitToast from '../thong-bao.tsx'; // Import component thông báo
 
 // --- DEFINITION TYPES ---
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
