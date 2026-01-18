@@ -1,7 +1,13 @@
 // --- START OF FILE trade-association-modal.tsx ---
 
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
-import { equipmentUiAssets } from '../game-assets.ts';
+import { 
+    equipmentUiAssets, 
+    resourceAssets, 
+    uiAssets, 
+    upgradeAssets, 
+    tradeAssets 
+} from '../game-assets.ts';
 import { useGame } from '../GameContext.tsx';
 import { doc, runTransaction } from 'firebase/firestore';
 import { db, auth } from '../firebase.js';
@@ -21,7 +27,7 @@ export interface TradeOption {
     id: string;
     title: string;
     ingredients: TradeIngredient[];
-    receiveType: 'equipmentPiece' | 'ancientBook' | 'stone'; // Đã thêm 'stone'
+    receiveType: 'equipmentPiece' | 'ancientBook' | 'stone';
     receiveSubType?: 'low' | 'medium' | 'high'; // Đã thêm phân loại đá
     receiveAmount: number; // Base amount received for 1 exchange
     description?: string;
@@ -117,21 +123,17 @@ const getDailyStoneTrade = (): TradeOption => {
 
 // --- IMAGE ICONS ---
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
+    let src = "";
     switch (type) {
-        case 'wood': 
-            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/wood.webp" alt="Wood" className={`${className} object-contain`} />;
-        case 'leather': 
-            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/leather.webp" alt="Leather" className={`${className} object-contain`} />;
-        case 'ore': 
-            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ore.webp" alt="Ore" className={`${className} object-contain`} />;
-        case 'cloth': 
-            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/cloth.webp" alt="Cloth" className={`${className} object-contain`} />;
-        case 'feather':
-            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/feather.webp" alt="Feather" className={`${className} object-contain`} />;
-        case 'coal':
-            return <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/coal.webp" alt="Coal" className={`${className} object-contain`} />;
+        case 'wood': src = resourceAssets.wood; break;
+        case 'leather': src = resourceAssets.leather; break;
+        case 'ore': src = resourceAssets.ore; break;
+        case 'cloth': src = resourceAssets.cloth; break;
+        case 'feather': src = resourceAssets.feather; break;
+        case 'coal': src = resourceAssets.coal; break;
         default: return null;
     }
+    return <img src={src} alt={type} className={`${className} object-contain`} />;
 };
 
 const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
@@ -139,14 +141,14 @@ const EquipmentPieceIcon = ({ className = '' }: { className?: string }) => (
 );
 
 const AncientBookIcon = ({ className = '' }: { className?: string }) => (
-    <img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/ancient-book.webp" alt="Book" className={className} />
+    <img src={uiAssets.bookIcon} alt="Book" className={className} />
 );
 
-// Icon cho Đá cường hóa
+// Icon cho Đá cường hóa - Sử dụng từ upgradeAssets
 const StoneIcon = ({ tier, className = '' }: { tier?: 'low' | 'medium' | 'high', className?: string }) => {
-    let url = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stone-low.webp";
-    if (tier === 'medium') url = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stone-medium.webp";
-    if (tier === 'high') url = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/stone-high.webp";
+    let url = upgradeAssets.stoneBasic;
+    if (tier === 'medium') url = upgradeAssets.stoneIntermediate;
+    if (tier === 'high') url = upgradeAssets.stoneAdvanced;
     
     return <img src={url} alt={`${tier} Stone`} className={className} />;
 };
@@ -372,7 +374,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
             {/* BACKGROUND */}
             <div className="absolute inset-0 z-0">
                 <img 
-                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-trade-association.webp" 
+                    src={tradeAssets.background} 
                     alt="Background" 
                     className="w-full h-full object-cover"
                 />
@@ -438,7 +440,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                                         {idx < option.ingredients.length - 1 && (
                                                             <div className="shrink-0 flex items-center justify-center px-1 -translate-y-4 md:-translate-y-6">
                                                                 <img 
-                                                                    src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-exchange.webp"
+                                                                    src={tradeAssets.plusIcon}
                                                                     alt="plus"
                                                                     className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-90"
                                                                 />
@@ -452,7 +454,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                         {/* ARROW */}
                                         <div className="shrink-0 flex items-center justify-center">
                                             <img 
-                                                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/arrow-down-exchange.webp" 
+                                                src={tradeAssets.arrowIcon} 
                                                 alt="Convert to"
                                                 className="w-14 h-14 md:w-20 md:h-20 object-contain opacity-90 lg:-rotate-90"
                                             />
