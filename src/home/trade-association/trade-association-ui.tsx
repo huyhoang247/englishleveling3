@@ -7,12 +7,12 @@ import {
     uiAssets, 
     upgradeAssets, 
     tradeAssets 
-} from '../game-assets.ts';
-import { useGame } from '../GameContext.tsx';
-import { auth } from '../firebase.js';
-import HomeButton from '../ui/home-button.tsx'; 
-import CoinDisplay from '../ui/display/coin-display.tsx'; 
-import RateLimitToast from '../ui/notification.tsx'; 
+} from '../../game-assets.ts';
+import { useGame } from '../../GameContext.tsx';
+import { auth } from '../../firebase.js';
+import HomeButton from '../../ui/home-button.tsx'; 
+import CoinDisplay from '../../ui/display/coin-display.tsx'; 
+import RateLimitToast from '../../ui/notification.tsx'; 
 
 // Import Service và Types từ file mới
 import { 
