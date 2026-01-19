@@ -56,7 +56,7 @@ const ChevronRightIcon = ({ className }: { className: string }) => (
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
 
-// --- COMPONENT: POPUP NHẬN THƯỞNG (ĐÃ CẬP NHẬT) ---
+// --- COMPONENT: POPUP NHẬN THƯỞNG (ĐÃ CẬP NHẬT ANIMATION GAME) ---
 const ResourceRewardPopup: React.FC<{ 
     image: string; 
     amount: number; 
@@ -64,44 +64,58 @@ const ResourceRewardPopup: React.FC<{
     triggerId: number; 
 }> = ({ image, amount, type, triggerId }) => {
     return (
-        // Vị trí: Cố định góc dưới bên trái, cùng hàng với các nút bên phải
+        // Vị trí: Cố định góc dưới bên trái
         <div key={triggerId} className="fixed bottom-8 left-8 z-[60] pointer-events-none">
-            {/* Animation container: Rơi xuống và nảy */}
-            <div className="animate-item-drop relative">
-                <div className="animate-float-gentle">
-                    {/* Hình ảnh vật phẩm: Nhỏ hơn (w-14 h-14 ~ 56px) */}
-                    <img 
-                        src={image} 
-                        alt={type} 
-                        className="w-14 h-14 object-contain drop-shadow-lg" 
-                    />
-                    
-                    {/* Badge số lượng: Nền trắng, chữ đen, định dạng x3 */}
-                    <div className="absolute -bottom-1 -right-1 bg-white/95 text-black text-xs font-bold px-1.5 py-0.5 rounded border border-gray-300 shadow-sm min-w-[24px] text-center">
-                        x{amount}
-                    </div>
+            {/* Hiệu ứng nảy (Loot Pop) */}
+            <div className="animate-loot-pop relative">
+                {/* Hình ảnh vật phẩm: w-14 h-14 (56px) */}
+                <img 
+                    src={image} 
+                    alt={type} 
+                    className="w-14 h-14 object-contain drop-shadow-lg" 
+                />
+                
+                {/* Badge số lượng: Nền trắng đục, chữ đen, format x3 */}
+                <div className="absolute -bottom-1 -right-1 bg-white/90 text-black text-xs font-bold px-1.5 py-0.5 rounded border border-gray-300 shadow-sm min-w-[24px] text-center animate-fade-in-badge">
+                    x{amount}
                 </div>
             </div>
             
             <style jsx>{`
-                /* Hiệu ứng rơi từ trên xuống giống game */
-                @keyframes item-drop {
-                    0% { opacity: 0; transform: translateY(-50px) scale(0.5); }
-                    50% { opacity: 1; transform: translateY(0) scale(1.1); }
-                    70% { transform: translateY(-10px) scale(0.95); }
-                    100% { opacity: 1; transform: translateY(0) scale(1); }
+                /* Animation mô phỏng vật phẩm nảy ra từ rương/quái */
+                @keyframes loot-pop {
+                    0% { 
+                        opacity: 0;
+                        transform: scale(0) translateY(50px) rotate(-45deg); 
+                    }
+                    40% { 
+                        opacity: 1;
+                        transform: scale(1.2) translateY(-30px) rotate(10deg); /* Nảy lên cao quá đà */
+                    }
+                    60% { 
+                        transform: scale(0.95) translateY(0) rotate(-5deg); /* Chạm đất và hơi bẹt lại */
+                    }
+                    80% { 
+                        transform: scale(1.05) translateY(-10px) rotate(3deg); /* Nảy nhẹ lên lần 2 */
+                    }
+                    100% { 
+                        opacity: 1;
+                        transform: scale(1) translateY(0) rotate(0deg); /* Đứng yên */
+                    }
                 }
-                /* Hiệu ứng lơ lửng nhẹ sau khi rơi xuống */
-                @keyframes float-gentle {
-                    0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-3px); }
+
+                @keyframes fade-in-badge {
+                    0%, 50% { opacity: 0; transform: scale(0); }
+                    100% { opacity: 1; transform: scale(1); }
                 }
-                .animate-item-drop {
-                    animation: item-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+                .animate-loot-pop {
+                    /* Thời gian 1s để mượt hơn, cubic-bezier tạo cảm giác vật lý */
+                    animation: loot-pop 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                 }
-                .animate-float-gentle {
-                    animation: float-gentle 2s ease-in-out infinite;
-                    animation-delay: 0.6s; /* Chờ rơi xong mới lơ lửng */
+                
+                .animate-fade-in-badge {
+                    animation: fade-in-badge 1s ease-out forwards;
                 }
             `}</style>
         </div>
