@@ -9,8 +9,7 @@ export type ActionState = 'idle' | 'attack' | 'hit' | 'dying';
 
 // --- 0. ANIMATION STYLES & CONFIG ---
 // Component này chứa CSS Keyframes cho hiệu ứng "Game Juice"
-// Đã thêm 'will-change' để tối ưu hiệu năng
-export const BattleGlobalStyles = memo(() => (
+const CharacterAnimations = () => (
     <style>{`
         /* Rung lắc + Chớp sáng khi bị đánh (Hit Reaction) */
         @keyframes shake-hit {
@@ -25,45 +24,32 @@ export const BattleGlobalStyles = memo(() => (
             40%, 60% { transform: translateX(5px); }
         }
         .animate-char-hit { 
-            animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both;
-            will-change: transform, filter; /* Tối ưu GPU */
+            animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both; 
         }
 
         /* Player tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang phải */
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
             20% { transform: translateX(-20px) scale(0.95); } /* Windup */
-            50% { transform: translateX(60px) scale(1.1); }   /* Strike */
+            50% { transform: translateX(60px) scale(1.1); }   /* Strike - 60px */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-right { 
             animation: lunge-right 0.5s ease-in-out; 
-            will-change: transform; /* Tối ưu GPU */
         }
 
         /* Boss tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang trái */
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
             20% { transform: translateX(20px) scale(0.95); }  /* Windup */
-            50% { transform: translateX(-60px) scale(1.1); }  /* Strike */
+            50% { transform: translateX(-60px) scale(1.1); }  /* Strike - -60px */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-left { 
-            animation: lunge-left 0.5s ease-in-out;
-            will-change: transform; /* Tối ưu GPU */
-        }
-
-        /* Pulse slow cho ảnh tĩnh */
-        @keyframes pulse-slow {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.95; transform: scale(0.98); }
-        }
-        .animate-pulse-slow {
-            animation: pulse-slow 3s ease-in-out infinite;
-            will-change: transform, opacity;
+            animation: lunge-left 0.5s ease-in-out; 
         }
     `}</style>
-));
+);
 
 // --- 1. HEALTH BAR COMPONENT ---
 export const HealthBar = memo(({ 
@@ -81,7 +67,7 @@ export const HealthBar = memo(({
 }) => {
     const scale = Math.max(0, current / max);
     return (
-        <div className="w-full transition-all duration-300 will-change-transform">
+        <div className="w-full transition-all duration-300">
             <div className={`relative w-full ${heightClass} bg-black/60 rounded-lg border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
                 <div
                     className={`h-full rounded-md transition-transform duration-300 ease-out origin-left ${colorGradient}`}
@@ -102,7 +88,7 @@ export const HealthBar = memo(({
 interface HeroDisplayProps {
     stats: CombatStats;
     onStatsClick: () => void;
-    actionState?: ActionState; // Prop kích hoạt hiệu ứng
+    actionState?: ActionState; // Prop mới để kích hoạt hiệu ứng
 }
 
 export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
@@ -115,7 +101,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full relative">
-             <BattleGlobalStyles />
+             <CharacterAnimations />
              <style>{`
                 .hero-sprite-wrapper {
                     /* Frame Size Grid 6x6 */
@@ -143,7 +129,6 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     animation: 
                         hero-idle-x 0.5s steps(6) infinite,
                         hero-idle-y 3.0s steps(6) infinite;
-                    will-change: background-position;
                 }
 
                 @keyframes hero-idle-x {
@@ -165,6 +150,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
             
             {/* 
                Container định vị vị trí đứng. 
+               LƯU Ý: Không apply animation 'transform' vào đây để tránh xung đột với translate-x 
             */}
             <div 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
@@ -272,7 +258,7 @@ export const BossDisplay = memo(({
             <style>{`
                 .boss-render-optimize {
                     image-rendering: -webkit-optimize-contrast;
-                    transform: translateZ(0); /* Kích hoạt GPU Layer */
+                    transform: translateZ(0);
                 }
                 .boss-sprite-wrapper {
                     padding-bottom: 8px; 
@@ -285,10 +271,6 @@ export const BossDisplay = memo(({
                     overflow: hidden;
                     position: relative;
                     transform-origin: bottom center;
-                }
-                /* Class chung cho sheet để tối ưu */
-                .boss-sprite-sheet {
-                    will-change: background-position;
                 }
 
                 /* --- DEFAULT BOSS --- */
