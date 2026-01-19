@@ -8,7 +8,6 @@ import { CombatStats } from './tower-context.tsx';
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying';
 
 // --- 0. ANIMATION STYLES & CONFIG ---
-// Component này chứa CSS Keyframes cho hiệu ứng "Game Juice"
 const CharacterAnimations = () => (
     <style>{`
         /* Rung lắc + Chớp sáng khi bị đánh (Hit Reaction) */
@@ -18,7 +17,6 @@ const CharacterAnimations = () => (
             20%, 80% { transform: translateX(5px); }
             30%, 50%, 70% { 
                 transform: translateX(-5px); 
-                /* Hiệu ứng Flash: Sáng rực + hơi đỏ/cam */
                 filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3); 
             }
             40%, 60% { transform: translateX(5px); }
@@ -27,23 +25,23 @@ const CharacterAnimations = () => (
             animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both; 
         }
 
-        /* Player tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang phải */
+        /* Player tấn công */
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(-20px) scale(0.95); } /* Windup */
-            50% { transform: translateX(60px) scale(1.1); }   /* Strike - 60px */
-            100% { transform: translateX(0) scale(1); }       /* Recovery */
+            20% { transform: translateX(-20px) scale(0.95); }
+            50% { transform: translateX(60px) scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
         }
         .animate-char-attack-right { 
             animation: lunge-right 0.5s ease-in-out; 
         }
 
-        /* Boss tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang trái */
+        /* Boss tấn công */
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(20px) scale(0.95); }  /* Windup */
-            50% { transform: translateX(-60px) scale(1.1); }  /* Strike - -60px */
-            100% { transform: translateX(0) scale(1); }       /* Recovery */
+            20% { transform: translateX(20px) scale(0.95); }
+            50% { transform: translateX(-60px) scale(1.1); }
+            100% { transform: translateX(0) scale(1); }
         }
         .animate-char-attack-left { 
             animation: lunge-left 0.5s ease-in-out; 
@@ -88,13 +86,12 @@ export const HealthBar = memo(({
 interface HeroDisplayProps {
     stats: CombatStats;
     onStatsClick: () => void;
-    actionState?: ActionState; // Prop mới để kích hoạt hiệu ứng
+    actionState?: ActionState;
 }
 
 export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
 
-    // Chọn class animation dựa trên actionState
     let animClass = '';
     if (actionState === 'hit') animClass = 'animate-char-hit';
     if (actionState === 'attack') animClass = 'animate-char-attack-right';
@@ -110,13 +107,14 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     overflow: hidden;
                     position: relative;
                     
-                    /* Scale 0.85 */
+                    /* Desktop Scale */
                     transform: scale(0.85); 
                     transform-origin: bottom center;
 
-                    /* Tối ưu render pixel art */
+                    /* Tối ưu render pixel art: Pixelated giúp scale 0.5 cực nét */
                     image-rendering: pixelated;
-                    image-rendering: -webkit-optimize-contrast;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: crisp-edges;
                 }
                 
                 .hero-sprite-sheet {
@@ -141,29 +139,19 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     to { background-position-y: -1178px; }
                 }
 
+                /* --- MOBILE CONFIG: SCALE 0.5 --- */
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
-                        transform: scale(0.65); 
+                        transform: scale(0.5); /* Scale chuẩn để nét trên mobile */
                     }
                 }
             `}</style>
             
-            {/* 
-               Container định vị vị trí đứng. 
-               LƯU Ý: Không apply animation 'transform' vào đây để tránh xung đột với translate-x 
-            */}
             <div 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                {/* 
-                    WRAPPER ANIMATION:
-                    Thẻ này chịu trách nhiệm rung lắc/di chuyển. 
-                    Nó bao bọc cả Thanh máu + Sprite để cả 2 cùng chuyển động.
-                */}
                 <div className={animClass}>
-                    
-                    {/* HP Bar - Đã thêm translate-x-6 để dịch sang phải */}
                     <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24 translate-x-6 transition-transform duration-200 group-hover:scale-105">
                          <HealthBar 
                             current={stats.hp} 
@@ -173,15 +161,12 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                         />
                     </div>
 
-                    {/* Sprite */}
                     <div className="hero-sprite-wrapper z-10">
                         <div className="hero-sprite-sheet"></div>
                     </div>
                 </div>
 
-                {/* Shadow (Bóng đổ không nên rung lắc theo người) */}
                 <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
-
             </div>
         </div>
     )
@@ -232,7 +217,7 @@ interface BossDisplayProps {
     imgSrc: string;
     onImgError: () => void;
     onStatsClick: () => void;
-    actionState?: ActionState; // Prop mới
+    actionState?: ActionState;
 }
 
 export const BossDisplay = memo(({
@@ -248,7 +233,6 @@ export const BossDisplay = memo(({
 }: BossDisplayProps) => {
     const isSpriteBoss = [1, 3, 4, 6, 8, 50].includes(bossId);
 
-    // Chọn class animation
     let animClass = '';
     if (actionState === 'hit') animClass = 'animate-char-hit';
     if (actionState === 'attack') animClass = 'animate-char-attack-left';
@@ -257,7 +241,10 @@ export const BossDisplay = memo(({
         <div className="w-full flex flex-col items-center justify-end h-full">
             <style>{`
                 .boss-render-optimize {
-                    image-rendering: -webkit-optimize-contrast;
+                    /* QUAN TRỌNG: Dùng pixelated để scale 0.5 vẫn nét căng */
+                    image-rendering: pixelated;
+                    image-rendering: -moz-crisp-edges;
+                    image-rendering: crisp-edges;
                     transform: translateZ(0);
                 }
                 .boss-sprite-wrapper {
@@ -273,7 +260,7 @@ export const BossDisplay = memo(({
                     transform-origin: bottom center;
                 }
 
-                /* --- DEFAULT BOSS --- */
+                /* --- DEFAULT BOSS (Desktop) --- */
                 .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
                 .boss-anim-default {
                     width: 2814px; height: 2916px; background-size: 2814px 2916px;
@@ -282,7 +269,7 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* --- BOSS 01 CONFIGURATION (Updated Size: 1323x1326) --- */
+                /* --- BOSS 01 (Desktop) --- */
                 .boss-size-01 { width: 220.5px; height: 221px; transform: scale(1); }
                 .boss-anim-01 { 
                     width: 1323px; height: 1326px; background-size: 1323px 1326px; 
@@ -291,54 +278,45 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -1323px; } }
                 @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -1326px; } }
 
-                /* --- BOSS 03 CONFIGURATION --- */
+                /* --- BOSS 03 (Desktop) --- */
                 .boss-size-03 { width: 513px; height: 399px; transform: scale(0.55); }
                 .boss-anim-03 { width: 3078px; height: 2394px; background-size: 3078px 2394px; animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; }
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
 
-                /* --- BOSS 04 CONFIGURATION --- */
+                /* --- BOSS 04 (Desktop) --- */
                 .boss-size-04 { width: 300.5px; height: 332px; transform: scale(0.9); }
                 .boss-anim-04 { width: 1803px; height: 1992px; background-size: 1803px 1992px; animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; }
                 @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
                 @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
 
-                /* --- BOSS 06 CONFIGURATION --- */
+                /* --- BOSS 06 (Desktop) --- */
                 .boss-size-06 { width: 266px; height: 230px; transform: scale(1.1); }
                 .boss-anim-06 { width: 1596px; height: 1380px; background-size: 1596px 1380px; animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; }
                 @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
                 @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -1380px; } }
 
-                /* Mobile Adjustments */
+                /* --- MOBILE CONFIG: ALL BOSSES SCALE 0.5 --- */
                 @media (max-width: 768px) {
-                    .boss-size-default { transform: scale(0.35); }
-                    .boss-size-01 { transform: scale(0.8); } /* Scale 0.8 for mobile */
-                    .boss-size-03 { transform: scale(0.35); }
-                    .boss-size-04 { transform: scale(0.6); }
-                    .boss-size-06 { transform: scale(0.7); }
+                    .boss-size-default { transform: scale(0.5); }
+                    .boss-size-01 { transform: scale(0.5); }
+                    .boss-size-03 { transform: scale(0.5); }
+                    .boss-size-04 { transform: scale(0.5); }
+                    .boss-size-06 { transform: scale(0.5); }
                 }
             `}</style>
 
-            {/* Container định vị chính */}
             <div 
                 className="relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group z-10" 
                 onClick={onStatsClick}
             >
-                {/* Visual Anchor/Shadow at feet - Không rung lắc */}
                 <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
-                {/* Magic Circle - Không rung lắc */}
                 <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* 
-                    WRAPPER ANIMATION: 
-                    Chứa HP Bar và Hình ảnh Boss để cùng rung lắc/di chuyển 
-                */}
                 <div className={animClass}>
-                    
-                    {/* HP Bar Boss */}
                     <div className="w-40 md:w-60 z-20 mb-6 md:mb-10 transition-transform duration-200 group-hover:scale-105">
                         <HealthBar 
                             current={hp} 
@@ -349,7 +327,6 @@ export const BossDisplay = memo(({
                         />
                     </div>
 
-                    {/* Sprite Render */}
                     <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
                         {isSpriteBoss ? (
                             <BossSprite bossId={bossId} />
@@ -363,7 +340,6 @@ export const BossDisplay = memo(({
                         )}
                     </div>
                 </div>
-                
             </div>
         </div>
     );
