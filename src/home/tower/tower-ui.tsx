@@ -242,9 +242,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [heroState, setHeroState] = useState<ActionState>('idle');
     const [bossState, setBossState] = useState<ActionState>('idle');
 
-    // --- REFS ĐỂ NGĂN LOOP ---
-    // Dùng ref này để ghi nhớ lượt đánh (timestamp) đã xử lý
+    // --- REFS ĐỂ NGĂN LOOP VÀ TRUY CẬP DỮ LIỆU MỚI ---
     const lastProcessedTurnRef = useRef<number>(0);
+    const bossStatsRef = useRef(bossStats); // Ref giữ bossStats mới nhất
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -254,8 +254,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
-    // --- SYNC VISUAL HP ---
+    // --- Cập nhật Ref mỗi khi bossStats thay đổi ---
     useEffect(() => {
+        bossStatsRef.current = bossStats;
         if (bossStats && (battleState === 'idle' || visualBossHp === 0)) {
             setVisualBossHp(bossStats.hp);
         }
@@ -327,28 +328,25 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, 1200);
     }, []);
 
-    // --- TURN SEQUENCE LOGIC (ĐÃ FIX LOOP VÀ TỐC ĐỘ) ---
+    // --- TURN SEQUENCE LOGIC (ĐÃ FIX FREEZE & LOOP) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
-        // --- 1. KIỂM TRA LOOP AN TOÀN ---
-        // Nếu sự kiện này đã xử lý rồi thì bỏ qua ngay lập tức
+        // Loop Safety Check
         if (lastTurnEvents.timestamp === lastProcessedTurnRef.current) return;
         
-        // Nếu game kết thúc hoặc không còn đánh nhau
+        // Game State Check
         if (battleState !== 'fighting' || gameOver) return;
 
-        // Đánh dấu sự kiện này đã được xử lý
+        // Mark as processed
         lastProcessedTurnRef.current = lastTurnEvents.timestamp;
         
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // Biến này để tính thời gian kết thúc của hoạt ảnh dài nhất trong lượt
         let maxAnimationDuration = 0;
 
         // --- 1. PLAYER TURN ---
         if (playerDmg > 0) {
-            // A. Animation Attack
             setHeroState('attack');
             setTimeout(() => setHeroState('idle'), 400);
 
@@ -359,20 +357,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
             
-            // B. Spawn Orbs
             const orb1: SkillProps = { id: now, type: 'player-orb', delay: 200, startPos: shuffledSlots[0] };
             const orb2: SkillProps = { id: now + 1, type: 'player-orb', delay: 400, startPos: shuffledSlots[1] };
             const orb3: SkillProps = { id: now + 2, type: 'player-orb', delay: 600, startPos: shuffledSlots[2] };
 
             setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
-            // C. Hit Timing
             const baseFlightTime = 750;
             const hit1Time = 200 + baseFlightTime;
             const hit2Time = 400 + baseFlightTime;
             const hit3Time = 600 + baseFlightTime;
 
-            // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 30); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
@@ -380,7 +375,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit1Time);
             setTimeout(() => setBossState('idle'), hit1Time + 400);
 
-            // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 32); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
@@ -388,7 +382,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit2Time);
             setTimeout(() => setBossState('idle'), hit2Time + 400);
 
-             // Hit 3
              setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 40); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg3));
@@ -396,18 +389,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit3Time);
             setTimeout(() => setBossState('idle'), hit3Time + 400);
 
-            // Cleanup
+            // Cleanup & Safety Sync using Ref
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
-                if (bossStats) {
-                     setVisualBossHp(current => {
-                         if(Math.abs(current - bossStats.hp) < 100) return bossStats.hp;
-                         return current;
-                     });
-                }
+                const currentRealHp = bossStatsRef.current?.hp ?? 0;
+                setVisualBossHp(current => {
+                     // Nếu chênh lệch ít thì đồng bộ luôn, tránh giật cục
+                     if(Math.abs(current - currentRealHp) < 100) return currentRealHp;
+                     return current;
+                 });
             }, hit3Time + 500);
 
-            // Cập nhật duration
             maxAnimationDuration = Math.max(maxAnimationDuration, 1750);
         }
         
@@ -419,7 +411,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         const bossStartDelay = 1500; 
         
         if (bossDmg > 0) {
-            // A. Boss Anim
             setTimeout(() => {
                 setBossState('attack');
                 setTimeout(() => setBossState('idle'), 400);
@@ -478,7 +469,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
 
         // --- 3. TRIGGER NEXT TURN ---
-        // Tăng delay lên 1500ms để người chơi kịp thở (thay vì 800ms)
         const nextTurnDelay = maxAnimationDuration + 1500;
         
         const nextTurnTimer = setTimeout(() => {
@@ -487,8 +477,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
         return () => clearTimeout(nextTurnTimer);
 
-    }, [lastTurnEvents, addDamageText, triggerNextTurn, battleState, gameOver, bossStats]); 
-    // ^ Vẫn giữ dependencies nhưng logic bên trong đã chặn loop bằng ref
+    }, [lastTurnEvents, addDamageText, triggerNextTurn, battleState, gameOver]); 
+    // ^ QUAN TRỌNG: Đã xóa bossStats khỏi dependency array. 
+    // Chúng ta dùng bossStatsRef.current bên trong để truy cập dữ liệu an toàn.
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
