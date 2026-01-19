@@ -46,7 +46,7 @@ const ResourceRewardPopup: React.FC<{
 }> = ({ image, amount, type, triggerId }) => {
     return (
         // Đã sửa class: bottom-32 -> bottom-48 (Dịch lên trên một chút)
-        <div key={triggerId} className="fixed bottom-48 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+        <div key={triggerId} className="fixed bottom-60 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
             <div className="animate-loot-pop relative">
                 <img src={image} alt={type} className="w-16 h-16 object-contain drop-shadow-lg" />
                 <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
