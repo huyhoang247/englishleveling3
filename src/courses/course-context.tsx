@@ -14,6 +14,7 @@ import {
   updateAchievementData as updateAchievementDataService,
   fetchAndSyncVocabularyData as fetchAndSyncVocabularyDataService,
   fetchAllLocalProgress as fetchAllLocalProgressService,
+  updateUserResourceService, // <--- ĐÃ THÊM IMPORT NÀY
   VocabularyItem,
 } from './course-data-service.ts';
 // Import data và generators
@@ -318,8 +319,9 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     return fetchAllLocalProgressService();
   }, [user]);
 
-  // --- NEW FUNCTION: Update Resources Locally ---
-  const updateUserResources = useCallback((resourceType: string, amount: number) => {
+  // --- NEW FUNCTION: Update Resources Locally & Sync to Firebase ---
+  const updateUserResources = useCallback(async (resourceType: string, amount: number) => {
+    // 1. Cập nhật giao diện (Optimistic UI Update)
     switch(resourceType) {
         case 'wood': setWood(prev => prev + amount); break;
         case 'leather': setLeather(prev => prev + amount); break;
@@ -329,9 +331,17 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
         case 'coal': setCoal(prev => prev + amount); break;
         default: break;
     }
-    // Ghi chú: Cần bổ sung logic gọi Service để lưu vào Firebase tại đây nếu muốn lưu lâu dài.
-    // Ví dụ: updateResourceService(user.uid, resourceType, amount);
-  }, []);
+
+    // 2. Gọi Service để đồng bộ dữ liệu lên Firebase
+    if (user) {
+        try {
+            await updateUserResourceService(user.uid, resourceType, amount);
+        } catch (error) {
+            console.error(`Failed to sync resource ${resourceType} to Firebase:`, error);
+            // Có thể thêm logic rollback nếu cần thiết, nhưng với game đơn giản thì log là đủ
+        }
+    }
+  }, [user]);
 
   // --- Giá trị được cung cấp bởi Context ---
   const value: QuizAppContextType = {
