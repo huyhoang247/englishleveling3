@@ -6,9 +6,10 @@ import { ActionState } from './boss-display.tsx';
 import { SkillProps } from './skill-effect.tsx';
 
 // --- CONSTANTS ---
+// Độ phân giải nội bộ của game (Luôn giữ cố định để tính toán tọa độ)
 const STAGE_WIDTH = 800;
 const STAGE_HEIGHT = 450;
-const GROUND_Y = 380; // Vị trí chân nhân vật trên canvas
+const GROUND_Y = 380; // Vị trí chân nhân vật
 
 // --- TYPES ---
 interface BattleRendererProps {
@@ -48,27 +49,36 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
     useEffect(() => {
         if (!canvasContainerRef.current) return;
 
-        // Cờ kiểm tra component còn mount không (tránh lỗi React Strict Mode)
+        // Cờ kiểm tra component còn mount không
         let isMounted = true;
 
         // Tạo Application
         const app = new PIXI.Application();
 
         const initApp = async () => {
-            // PixiJS v8: Init là bất đồng bộ
+            // PixiJS v8 Init
             await app.init({
                 width: STAGE_WIDTH,
                 height: STAGE_HEIGHT,
                 backgroundAlpha: 0, // Nền trong suốt
                 antialias: true,
-                preference: 'webgl' // Ưu tiên WebGL
+                preference: 'webgl', // Ưu tiên WebGL
+                autoDensity: true,   // Hỗ trợ màn hình retina/high dpi
+                resolution: window.devicePixelRatio || 1,
             });
 
-            // Nếu component đã unmount trong lúc init, hủy app ngay
             if (!isMounted || !canvasContainerRef.current) {
                 app.destroy(true);
                 return;
             }
+
+            // --- FIX RESPONSIVE MOBILE ---
+            // Thiết lập CSS cho thẻ Canvas để nó tự co giãn theo container cha
+            // nhưng vẫn giữ nguyên tỷ lệ khung hình và độ phân giải nội bộ.
+            app.canvas.style.width = "100%";
+            app.canvas.style.height = "100%";
+            app.canvas.style.objectFit = "contain"; // Quan trọng: Giữ tỷ lệ ảnh, không bị méo hay cắt
+            app.canvas.style.display = "block"; // Xóa khoảng trắng mặc định của inline element
 
             // Gắn Canvas vào thẻ DIV
             canvasContainerRef.current.appendChild(app.canvas as HTMLCanvasElement);
@@ -119,7 +129,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 bossContainer.y = GROUND_Y;
                 app.stage.addChild(bossContainer);
                 
-                // Lưu container boss vào ref tạm thời (sử dụng 'any' để bypass type check nhanh)
+                // Lưu container boss vào ref tạm thời
                 (bossRef as any).container = bossContainer;
 
             } catch (e) {
@@ -176,7 +186,6 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 
                 bossRef.current = sprite;
              } catch (e) {
-                 // Có thể thêm xử lý lỗi ảnh ở đây nếu cần
                  console.log("Boss asset loading...", e);
              }
         };
@@ -198,16 +207,12 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 if (heroState === 'hit') {
                     // Rung lắc ngẫu nhiên
                     container.x = baseX + (Math.random() * 10 - 5);
-                    // Pixi v8 ColorMatrixFilter (Optional: tint đỏ/trắng khi bị đánh)
-                    // container.tint = 0xffaaaa; 
                 } else if (heroState === 'attack') {
                      // Lướt tới (Interpolation)
                      container.x += ((baseX + 60) - container.x) * 0.2;
-                     // container.tint = 0xffffff;
                 } else {
                      // Trở về vị trí cũ
                      container.x += (baseX - container.x) * 0.1;
-                     // container.tint = 0xffffff;
                 }
             }
 
@@ -342,8 +347,8 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
         };
     }, [orbEffects]);
 
-    // Trả về thẻ DIV để chứa Canvas
-    return <div ref={canvasContainerRef} className="w-full h-full" />;
+    // Trả về thẻ DIV để chứa Canvas, style full width/height để cha quản lý kích thước
+    return <div ref={canvasContainerRef} className="w-full h-full flex items-center justify-center" />;
 };
 
 export default BattleRenderer;
