@@ -453,6 +453,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [currentFloor, isLoading, currentBossData, battleState]);
     
+    // --- KHẮC PHỤC DELAY: Giảm Interval xuống 4000ms (4s) ---
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
           if(savedCallback.current) {
@@ -463,7 +464,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
               if(savedCallback.current) {
                 savedCallback.current();
               }
-          }, 8000); 
+          }, 4000); // <--- ĐÃ SỬA: 8000 -> 4000 (đủ cho 3.5s animation)
         }
         return () => {
           if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
