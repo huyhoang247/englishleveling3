@@ -11,7 +11,6 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- IMPORT BOSS & ELEMENTS ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
-// Import thêm ActionState để dùng cho animation
 import BossDisplay, { HeroDisplay, ActionState } from './boss-display.tsx'; 
 
 // --- IMPORT SKILL COMPONENT ---
@@ -227,7 +226,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         isLoading, error, playerStats, bossStats, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep,
-        triggerNextTurn // <--- LẤY HÀM NÀY TỪ CONTEXT
+        triggerNextTurn
     } = useBossBattle();
 
     const [damages, setDamages] = useState<DamageText[]>([]);
@@ -242,6 +241,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // --- ANIMATION STATES ---
     const [heroState, setHeroState] = useState<ActionState>('idle');
     const [bossState, setBossState] = useState<ActionState>('idle');
+
+    // --- REFS ĐỂ NGĂN LOOP ---
+    // Dùng ref này để ghi nhớ lượt đánh (timestamp) đã xử lý
+    const lastProcessedTurnRef = useRef<number>(0);
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -324,21 +327,28 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, 1200);
     }, []);
 
-    // --- TURN SEQUENCE LOGIC (EVENT BASED) ---
+    // --- TURN SEQUENCE LOGIC (ĐÃ FIX LOOP VÀ TỐC ĐỘ) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
-        // Nếu game kết thúc hoặc không còn đánh nhau, không tính tiếp
+        // --- 1. KIỂM TRA LOOP AN TOÀN ---
+        // Nếu sự kiện này đã xử lý rồi thì bỏ qua ngay lập tức
+        if (lastTurnEvents.timestamp === lastProcessedTurnRef.current) return;
+        
+        // Nếu game kết thúc hoặc không còn đánh nhau
         if (battleState !== 'fighting' || gameOver) return;
+
+        // Đánh dấu sự kiện này đã được xử lý
+        lastProcessedTurnRef.current = lastTurnEvents.timestamp;
         
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
         // Biến này để tính thời gian kết thúc của hoạt ảnh dài nhất trong lượt
         let maxAnimationDuration = 0;
 
-        // --- 1. PLAYER TURN (Starts at 0ms) ---
+        // --- 1. PLAYER TURN ---
         if (playerDmg > 0) {
-            // A. Trigger Animation Attack
+            // A. Animation Attack
             setHeroState('attack');
             setTimeout(() => setHeroState('idle'), 400);
 
@@ -356,18 +366,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
             setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
-            // C. Calculate Hit Timing
-            // Flight time = ~750ms (from skill-effect config)
+            // C. Hit Timing
             const baseFlightTime = 750;
-            const hit1Time = 200 + baseFlightTime; // ~950ms
-            const hit2Time = 400 + baseFlightTime; // ~1150ms
-            const hit3Time = 600 + baseFlightTime; // ~1350ms
+            const hit1Time = 200 + baseFlightTime;
+            const hit2Time = 400 + baseFlightTime;
+            const hit3Time = 600 + baseFlightTime;
 
             // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 30); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
-                setBossState('hit'); // RUNG LẮC BOSS
+                setBossState('hit'); 
             }, hit1Time);
             setTimeout(() => setBossState('idle'), hit1Time + 400);
 
@@ -387,7 +396,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit3Time);
             setTimeout(() => setBossState('idle'), hit3Time + 400);
 
-            // Cleanup Orbs
+            // Cleanup
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
                 if (bossStats) {
@@ -398,8 +407,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 }
             }, hit3Time + 500);
 
-            // Cập nhật thời gian hoạt ảnh dài nhất cho Player
-            // Hit 3 (1350ms) + 400ms buffer cho damage text bay lên
+            // Cập nhật duration
             maxAnimationDuration = Math.max(maxAnimationDuration, 1750);
         }
         
@@ -408,11 +416,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
         
         // --- 2. BOSS TURN ---
-        // Player last hit @ 1350ms. Boss starts @ 1500ms.
         const bossStartDelay = 1500; 
         
         if (bossDmg > 0) {
-            // A. Boss Attack Anim
+            // A. Boss Anim
             setTimeout(() => {
                 setBossState('attack');
                 setTimeout(() => setBossState('idle'), 400);
@@ -429,45 +436,37 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const bDmg2 = Math.floor(bossDmg * 0.3);
             const bDmg3 = bossDmg - bDmg1 - bDmg2;
 
-            // B. Boss Orbs
             setTimeout(() => {
                 setOrbEffects(prev => [...prev, bOrb1, bOrb2, bOrb3]);
             }, bossStartDelay);
 
-            // C. Hit Timing
             const baseFlightTime = 750;
             const hit1Time = bossStartDelay + 200 + baseFlightTime;
             const hit2Time = bossStartDelay + 400 + baseFlightTime;
             const hit3Time = bossStartDelay + 600 + baseFlightTime;
 
-            // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 30); 
-                setHeroState('hit'); // RUNG LẮC HERO
+                setHeroState('hit'); 
             }, hit1Time);
             setTimeout(() => setHeroState('idle'), hit1Time + 400);
 
-            // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 32);
                 setHeroState('hit');
             }, hit2Time);
             setTimeout(() => setHeroState('idle'), hit2Time + 400);
 
-            // Hit 3
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 36);
                 setHeroState('hit');
             }, hit3Time);
             setTimeout(() => setHeroState('idle'), hit3Time + 400);
 
-            // Cleanup Orbs
             setTimeout(() => {
                  setOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
             }, hit3Time + 500);
 
-            // Cập nhật thời gian hoạt ảnh dài nhất cho Boss
-            // Hit 3 time (~2850ms)
             maxAnimationDuration = Math.max(maxAnimationDuration, 2850);
         }
 
@@ -475,13 +474,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
             }, 3000); 
-            // Reflect xảy ra muộn nhất (3000ms), thêm buffer 500ms
             maxAnimationDuration = Math.max(maxAnimationDuration, 3500);
         }
 
         // --- 3. TRIGGER NEXT TURN ---
-        // Gọi lượt tiếp theo sau khi hoạt ảnh dài nhất kết thúc + 800ms nghỉ ngơi
-        const nextTurnDelay = maxAnimationDuration + 800;
+        // Tăng delay lên 1500ms để người chơi kịp thở (thay vì 800ms)
+        const nextTurnDelay = maxAnimationDuration + 1500;
         
         const nextTurnTimer = setTimeout(() => {
              triggerNextTurn();
@@ -490,6 +488,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         return () => clearTimeout(nextTurnTimer);
 
     }, [lastTurnEvents, addDamageText, triggerNextTurn, battleState, gameOver, bossStats]); 
+    // ^ Vẫn giữ dependencies nhưng logic bên trong đã chặn loop bằng ref
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
