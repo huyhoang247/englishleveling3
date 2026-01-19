@@ -45,8 +45,8 @@ const ResourceRewardPopup: React.FC<{
     triggerId: number; 
 }> = ({ image, amount, type, triggerId }) => {
     return (
-        // Đã sửa class để căn giữa và nằm phía dưới (bottom-32)
-        <div key={triggerId} className="fixed bottom-32 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
+        // Đã sửa class: bottom-32 -> bottom-48 (Dịch lên trên một chút)
+        <div key={triggerId} className="fixed bottom-48 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
             <div className="animate-loot-pop relative">
                 <img src={image} alt={type} className="w-16 h-16 object-contain drop-shadow-lg" />
                 <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
@@ -84,7 +84,6 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
 
   return (
     <div className="flex-shrink-0 p-4 pt-0">
-      {/* Loại bỏ backdrop-blur, thay bằng nền trắng đục rõ hơn */}
       <div
         key={definition.english}
         className="bg-white border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
@@ -155,7 +154,6 @@ const VoiceSelector: React.FC = () => {
         setSelectedVoice(availableVoices[newIndex]);
     };
 
-    // Loại bỏ backdrop-blur, thay bằng bg-black/40
     return (
         <div className="flex items-center justify-center gap-1 bg-black/40 rounded-md border border-white/30 px-1 py-0.5">
             <button onClick={handlePrev} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
