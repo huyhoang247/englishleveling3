@@ -1,10 +1,12 @@
+// --- START OF FILE src/home/skill-game/skill-ui.tsx ---
 
 import React, { memo, useState, useEffect, useCallback } from 'react';
 import { SkillProvider, useSkillContext, MergeGroup, SkillScreenExitData } from './skill-context.tsx';
 import {
     ALL_SKILLS,
     CRAFTING_COST,
-    getActivationChance,
+    getActivationChanceFallback, // Hàm fallback cho skill cũ
+    calculateTotalActivationChance, // Hàm tính tổng tỉ lệ
     getUpgradeCost,
     getRarityColor,
     getRarityGradient,
@@ -23,14 +25,24 @@ import UpgradeEffectToast from './upgrade-effect-toast.tsx';
 import ItemRankBorder from '../equipment/item-rank-border.tsx'; 
 import CraftingEffectCanvas from '../equipment/crafting-effect.tsx';
 
-// --- URL BACKGROUND - MỚI ---
+// --- URL BACKGROUND ---
 const SKILL_BG_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-skill.webp";
 
 // --- CÁC ICON GIAO DIỆN CHUNG ---
-const HomeIcon = ({ className = '' }: { className?: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> </svg> );
-const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> </svg>);
+const HomeIcon = ({ className = '' }: { className?: string }) => ( 
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
+        <path fillRule="evenodd" d="M9.293 2.293a1 1 0 011.414 0l7 7A1 1 0 0117 11h-1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-3a1 1 0 00-1-1H9a1 1 0 00-1 1v3a1 1 0 01-1 1H5a1 1 0 01-1-1v-6H3a1 1 0 01-.707-1.707l7-7z" clipRule="evenodd" /> 
+    </svg> 
+);
 
-// --- CÁC COMPONENT CON ---
+const MergeIcon = (props: React.SVGProps<SVGSVGElement>) => ( 
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" {...props}> 
+        <path d="M5.433 13.917l1.262-3.155A4 4 0 017.58 9.42l-2.72-2.72a1 1 0 010-1.414l4.243-4.243a1 1 0 011.414 0l2.72 2.72a4 4 0 011.343 2.863l3.155-1.262a1 1 0 011.23 1.23l-1.262 3.155a4 4 0 01-1.343 2.863l2.72 2.72a1 1 0 010 1.414l-4.243 4.243a1 1 0 01-1.414 0l-2.72-2.72a4 4 0 01-2.863-1.343L6.663 15.147a1 1 0 01-1.23-1.23z" /> 
+        <path d="M11.379 4.424a1 1 0 01-1.414 0L4.424 9.965a1 1 0 010 1.414l2.121 2.121a1 1 0 011.414 0l5.54-5.54a1 1 0 010-1.414l-2.121-2.121z" /> 
+    </svg>
+);
+
+// --- COMPONENT HEADER ---
 const Header = memo(({ goldValue }: { goldValue: number }) => {
     const { handleClose } = useSkillContext();
     const animatedGold = useAnimateValue(goldValue);
@@ -49,7 +61,7 @@ const Header = memo(({ goldValue }: { goldValue: number }) => {
     );
 });
 
-// --- SKILL SLOT ---
+// --- SKILL SLOT (EQUIPPED) ---
 const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null, onClick: () => void }) => {
   const { isProcessing } = useSkillContext();
   const skillBlueprint = ownedSkill ? ALL_SKILLS.find(s => s.id === ownedSkill.skillId) : null;
@@ -105,6 +117,7 @@ const SkillSlot = memo(({ ownedSkill, onClick }: { ownedSkill: OwnedSkill | null
   );
 });
 
+// --- SKILL INVENTORY SLOT (STORAGE) ---
 const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedSkill: OwnedSkill; onClick: (skill: OwnedSkill) => void; isProcessing: boolean; }) => {
     const skillBlueprint = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
     if (!skillBlueprint) return null;
@@ -135,6 +148,7 @@ const SkillInventorySlot = memo(({ ownedSkill, onClick, isProcessing }: { ownedS
     );
 });
 
+// --- COMPONENT MODAL CHI TIẾT KỸ NĂNG ---
 const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseDetailModal, handleEquipSkill, handleUnequipSkill, handleDisenchantSkill, handleUpgradeSkill, equippedSkills, gold, isProcessing } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
@@ -155,8 +169,14 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const canAffordUpgrade = isUpgradable && gold >= currentUpgradeCost;
     const currentEffectValue = calculateEffectValue(ownedSkill.level);
     const actionDisabled = isProcessing;
+
+    // --- TÍNH TOÁN VÀ HIỂN THỊ TỈ LỆ KÍCH HOẠT ---
+    // Sử dụng baseActivationChance nếu có, nếu không thì fallback về logic cũ
+    const baseChance = ownedSkill.baseActivationChance ?? getActivationChanceFallback(ownedSkill.rarity);
+    const totalChance = calculateTotalActivationChance(baseChance, ownedSkill.level);
+    const bonusChance = totalChance - baseChance;
     
-    const mainActionText = isEquipped ? 'Unequip' : 'Equip'; // Đã sửa text cho đồng bộ
+    const mainActionText = isEquipped ? 'Unequip' : 'Equip';
     const mainActionHandler = () => isEquipped ? handleUnequipSkill(ownedSkill) : handleEquipSkill(ownedSkill);
 
     const handleLocalUpgradeClick = () => {
@@ -170,38 +190,76 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
         handleUpgradeSkill(ownedSkill);
     };
 
-    // --- STYLE NÚT MỚI ---
     const commonBtnClasses = "flex-1 py-2.5 rounded-xl font-lilita text-base tracking-wide shadow-lg transition-all duration-200 hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none disabled:shadow-none uppercase";
     
-    // Style cho Equip (Xanh cyan) / Unequip (Đỏ đậm)
     const mainActionStyle = isEquipped 
-        ? 'bg-gradient-to-r from-rose-800 to-red-950 text-slate-200 hover:from-rose-700 hover:to-red-900 hover:text-white hover:shadow-rose-900/40' // Unequip Style
-        : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/30'; // Equip Style
+        ? 'bg-gradient-to-r from-rose-800 to-red-950 text-slate-200 hover:from-rose-700 hover:to-red-900 hover:text-white hover:shadow-rose-900/40' 
+        : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:shadow-cyan-500/30'; 
     
-    // Style cho Recycle (Xám đen)
     const recycleActionStyle = 'bg-gradient-to-r from-slate-600 to-slate-800 text-slate-200 hover:from-slate-500 hover:to-slate-700 hover:text-white hover:shadow-black/50';
 
     return (
         <div className="fixed inset-0 flex items-center justify-center z-50 p-4">
           <div className="fixed inset-0 bg-black/80" onClick={handleCloseDetailModal} />
           <div className={`relative bg-gradient-to-br ${getRarityGradient(ownedSkill.rarity)} p-5 rounded-xl border-2 ${getRarityColor(ownedSkill.rarity)} shadow-2xl w-full max-w-md max-h-[95vh] z-50 flex flex-col`}>
+            {/* Header Modal */}
             <div className="flex-shrink-0 border-b border-gray-700/50 pb-4 mb-4">
               <div className="flex justify-between items-start mb-2">
                 <h3 className={`text-2xl font-bold ${getRarityTextColor(ownedSkill.rarity)}`}>{skill.name}</h3>
-                <button onClick={handleCloseDetailModal} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1"><img src={uiAssets.closeIcon} alt="Đóng" className="w-5 h-5" /></button>
+                <button onClick={handleCloseDetailModal} className="text-gray-500 hover:text-white hover:bg-gray-700/50 rounded-full w-8 h-8 flex items-center justify-center transition-colors -mt-1 -mr-1">
+                    <img src={uiAssets.closeIcon} alt="Đóng" className="w-5 h-5" />
+                </button>
               </div>
               <div className="flex items-center gap-2">
-                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(ownedSkill.rarity)} bg-gray-800/70 border ${getRarityColor(ownedSkill.rarity)} capitalize`}>{getRarityDisplayName(ownedSkill.rarity)}</span>
-                <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">Level {ownedSkill.level}</span>
+                <span className={`px-3 py-1 rounded-full text-xs font-semibold ${getRarityTextColor(ownedSkill.rarity)} bg-gray-800/70 border ${getRarityColor(ownedSkill.rarity)} capitalize`}>
+                    {getRarityDisplayName(ownedSkill.rarity)}
+                </span>
+                <span className="text-xs font-bold text-white bg-slate-700/80 px-3 py-1 rounded-full border border-slate-600">
+                    Level {ownedSkill.level}
+                </span>
               </div>
             </div>
+
+            {/* Body Modal */}
             <div className="flex-1 min-h-0 overflow-y-auto hide-scrollbar pr-2">
               <div className="flex flex-col items-center text-center gap-4">
-                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}><IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} /></div>
+                {/* Icon */}
+                <div className={`w-32 h-32 flex items-center justify-center bg-black/30 rounded-lg border-2 ${getRarityColor(ownedSkill.rarity)} shadow-inner`}>
+                    <IconComponent className={`w-20 h-20 ${getRarityTextColor(ownedSkill.rarity)}`} />
+                </div>
+                
+                {/* Description */}
                 <div className="w-full p-4 bg-black/20 rounded-lg border border-slate-700/50 text-left">
                     <p className="text-slate-300 text-sm leading-relaxed">{skill.description(ownedSkill.level, ownedSkill.rarity)}</p>
                 </div>
-                {skill.baseEffectValue !== undefined && ( <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50"> <div className="flex justify-between"> <span className="text-slate-400">Tỉ lệ Kích Hoạt:</span> <span className="font-semibold text-cyan-300">{getActivationChance(ownedSkill.rarity)}%</span> </div> </div> )}
+                
+                {/* --- DISPLAY ACTIVATION CHANCE (Giao diện mới) --- */}
+                {skill.baseEffectValue !== undefined && ( 
+                    <div className="w-full text-left text-sm p-3 bg-black/20 rounded-lg border border-slate-700/50 flex flex-col gap-2"> 
+                        <div className="flex justify-between items-center border-b border-white/10 pb-2"> 
+                            <span className="text-slate-400 font-semibold">Tỉ lệ Kích Hoạt:</span> 
+                            <span className="font-bold text-cyan-300 text-xl drop-shadow-sm">{totalChance}%</span>
+                        </div> 
+                        
+                        <div className="flex justify-between items-center text-[11px] sm:text-xs">
+                             <div className="flex flex-col sm:flex-row sm:gap-2 text-slate-500 italic">
+                                <span>Base: <span className="text-white font-medium">{baseChance}%</span></span>
+                                <span className="hidden sm:inline">|</span>
+                                <span>Bonus: <span className="text-green-400 font-medium">+{bonusChance}%</span></span>
+                             </div>
+                             
+                             {/* --- MILESTONE NOTE --- */}
+                             <div className="flex items-center gap-1 text-amber-300 font-bold bg-amber-900/20 px-2 py-0.5 rounded border border-amber-500/30 whitespace-nowrap">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-3 h-3">
+                                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
+                                </svg>
+                                <span>+5% / 20 Lv</span>
+                             </div>
+                        </div>
+                    </div> 
+                )}
+                
+                {/* Upgrade Logic */}
                 {isUpgradable && (
                     <div className="w-full mb-4 space-y-2">
                         <div className="relative w-full p-3 rounded-lg transition-colors duration-300 text-left flex items-center justify-between bg-black/20 border border-slate-700/80">
@@ -228,6 +286,8 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
                 )}
               </div>
             </div>
+
+            {/* Footer Buttons */}
             <div className="flex-shrink-0 mt-auto border-t border-gray-700/50 pt-4">
               <div className="flex items-center gap-3">
                 <button 
@@ -251,6 +311,7 @@ const SkillDetailModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     );
 });
 
+// --- COMPONENT CHẾ TẠO THÀNH CÔNG ---
 const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) => {
     const { handleCloseCraftSuccessModal } = useSkillContext();
     const skill = ALL_SKILLS.find(s => s.id === ownedSkill.skillId);
@@ -259,6 +320,10 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     const rarityTextColor = getRarityTextColor(ownedSkill.rarity);
     const rarityColor = getRarityColor(ownedSkill.rarity).replace('border-', ''); 
     const shadowStyle = { boxShadow: `0 0 25px -5px var(--tw-color-${rarityColor}), 0 0 15px -10px var(--tw-color-${rarityColor})` };
+    
+    // Lấy tỉ lệ base để hiển thị kết quả random
+    const baseChance = ownedSkill.baseActivationChance ?? getActivationChanceFallback(ownedSkill.rarity);
+
     return ( 
         <div className="fixed inset-0 flex items-center justify-center z-[100] p-4"> 
             <div className="fixed inset-0 bg-black/80" onClick={handleCloseCraftSuccessModal}></div> 
@@ -283,6 +348,11 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
                         </div>
                         <hr className="border-slate-700/50 my-1" />
                         <p className="text-sm text-slate-300 leading-relaxed">{skill.description(1, ownedSkill.rarity)}</p>
+                        {/* Show Chance Info */}
+                        <div className="mt-2 bg-black/40 rounded px-3 py-1.5 border border-slate-700/50 inline-block mx-auto">
+                            <span className="text-xs text-slate-400 mr-2">Tỉ lệ kích hoạt (Base): </span>
+                            <span className="text-sm font-bold text-cyan-300">{baseChance}%</span>
+                        </div>
                     </div>
 
                 </div> 
@@ -291,6 +361,7 @@ const CraftingSuccessModal = memo(({ ownedSkill }: { ownedSkill: OwnedSkill }) =
     );
 });
 
+// --- COMPONENT MERGE MODAL ---
 const MergeModal = memo(() => {
     const { 
         isMergeModalOpen, 
@@ -340,7 +411,7 @@ const MergeModal = memo(() => {
     );
 });
 
-
+// --- MAIN CONTENT COMPONENT ---
 function SkillScreenContent() {
     const {
         isLoading, gold, isProcessing, ancientBooks, ownedSkills,
@@ -349,10 +420,10 @@ function SkillScreenContent() {
         handleCraftSkill, handleSelectSkill, handleOpenMergeModal, MAX_SKILLS_IN_STORAGE
     } = useSkillContext();
     
-    // --- START: STATE VÀ LOGIC CHO HIỆU ỨNG CRAFTING (Giống Equipment) ---
+    // State cho hiệu ứng Crafting
     const [isCraftingAnimation, setIsCraftingAnimation] = useState(false);
     const [minTimeElapsed, setMinTimeElapsed] = useState(true);
-    const CRAFT_DURATION = 3000; // 3 giây
+    const CRAFT_DURATION = 3000; 
 
     const onCraftClick = useCallback(() => {
         setIsCraftingAnimation(true);
@@ -367,11 +438,8 @@ function SkillScreenContent() {
             return () => clearTimeout(timer);
         }
     }, [isProcessing, minTimeElapsed]);
-    // --- END: LOGIC HIỆU ỨNG CRAFTING ---
 
     const displayGold = isLoading ? 0 : gold;
-
-    // Canvas chỉ hiển thị khi isCraftingAnimation = true
     const showEffect = isCraftingAnimation;
 
     return (
@@ -379,15 +447,13 @@ function SkillScreenContent() {
             className="main-bg relative w-full min-h-screen font-sans text-white overflow-hidden bg-cover bg-center bg-no-repeat"
             style={{ backgroundImage: `url(${SKILL_BG_URL})` }}
         >
-            {/* Overlay nền đen 75% giống Equipment */}
             <div className="absolute inset-0 bg-black/85 pointer-events-none z-0" />
-
             <style>{` .title-glow { text-shadow: 0 0 8px rgba(107, 229, 255, 0.7); } .animate-spin-slow-360 { animation: spin 20s linear infinite; } @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } } .fade-in-down { animation: fadeInDown 0.5s ease-out forwards; transform: translate(-50%, -100%); left: 50%; opacity: 0; } @keyframes fadeInDown { to { opacity: 1; transform: translate(-50%, 0); } } .hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; } `}</style>
 
-            {/* --- COMPONENT HIỆU ỨNG CANVAS --- */}
+            {/* Effect Canvas */}
             <CraftingEffectCanvas isActive={showEffect} />
-            {/* ---------------------------------- */}
 
+            {/* Toasts */}
             <RateLimitToast show={mergeToast.show} message={mergeToast.message} showIcon={false} />
             <RateLimitToast show={craftErrorToast.show} message={craftErrorToast.message} showIcon={false} />
             <RateLimitToast show={equipErrorToast.show} message={equipErrorToast.message} showIcon={false} />
@@ -395,31 +461,32 @@ function SkillScreenContent() {
             
             {message && <div key={messageKey} className="fade-in-down fixed top-5 left-1/2 bg-yellow-500/90 border border-yellow-400 text-slate-900 font-bold py-2 px-6 rounded-lg shadow-lg z-[101]">{message}</div>}
             
-            {/* Chỉ hiện Modal khi không có hiệu ứng chạy */}
+            {/* Modals */}
             {!isCraftingAnimation && selectedSkill && <SkillDetailModal ownedSkill={selectedSkill} />}
             {!isCraftingAnimation && newlyCraftedSkill && <CraftingSuccessModal ownedSkill={newlyCraftedSkill} />}
-            
             <MergeModal />
             
             <div className={`absolute inset-0 z-20 ${isLoading ? '' : 'hidden'}`}>
                 <SkillScreenSkeleton />
             </div>
             
+            {/* Main Content Layout */}
             <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <Header goldValue={displayGold} />
                 <main className="w-full max-w-5xl mx-auto flex flex-col flex-grow min-h-0 gap-4 px-4 pt-4 pb-16 sm:p-6 md:p-8">
+                    {/* Equipped Skills */}
                     <section className="flex-shrink-0 py-4">
                         <div className="flex flex-row justify-center items-center gap-3 sm:gap-5">
                             {equippedSkills.map((skill, index) => (<SkillSlot key={`equipped-${index}`} ownedSkill={skill} onClick={() => skill && handleSelectSkill(skill)} />))}
                         </div>
                     </section>
                     
+                    {/* Crafting Action */}
                     <section className="flex-shrink-0 p-3 bg-black/40 rounded-xl border border-slate-800 flex justify-between items-center">
                         <div className="flex items-center gap-3">
                             <img src={uiAssets.bookIcon} alt="Sách Cổ" className="w-10 h-10" />
                             <div className="flex items-baseline gap-1"><span className="text-xl font-bold text-white">{ancientBooks}</span><span className="text-base text-slate-400">/ {CRAFTING_COST}</span></div>
                         </div>
-                        {/* Cập nhật nút Craft với style mới */}
                         <button 
                             onClick={onCraftClick} 
                             className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-lilita uppercase text-lg tracking-wider py-2 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:scale-100" 
@@ -429,6 +496,7 @@ function SkillScreenContent() {
                         </button>
                     </section>
                     
+                    {/* Storage Inventory */}
                     <section className="w-full p-4 bg-black/40 rounded-xl border border-slate-800 flex flex-col flex-grow min-h-0">
                         <div className="flex justify-between items-center mb-4 flex-shrink-0">
                             <div className="flex items-baseline gap-2">
@@ -462,6 +530,7 @@ function SkillScreenContent() {
     );
 }
 
+// --- MAIN WRAPPER COMPONENT ---
 interface SkillScreenProps {
   onClose: (dataUpdated: boolean, data?: SkillScreenExitData) => void;
   userId: string;
@@ -474,3 +543,4 @@ export default function SkillScreen({ onClose, userId }: SkillScreenProps) {
         </SkillProvider>
     );
 }
+// --- END OF FILE src/home/skill-game/skill-ui.tsx ---
