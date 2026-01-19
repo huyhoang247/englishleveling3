@@ -160,8 +160,9 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   
-  // Xác định xem có phải là Practice 1 không
+  // Xác định các loại Practice
   const isPractice1 = selectedPractice % 100 === 1;
+  const isPractice2 = selectedPractice % 100 === 2; // Biến kiểm tra Practice 2
 
   // --- HÀM RENDER CÂU HỎI ĐẶC BIỆT CHO PRACTICE 1 ---
   const renderPractice1Question = (text: string) => {
@@ -301,8 +302,8 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
                             )}
                             
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                                {/* LOGIC THAY ĐỔI: Sử dụng renderPractice1Question nếu là Practice 1 */}
-                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide" : "text-xl"} font-bold text-white leading-tight`}>
+                                {/* LOGIC THAY ĐỔI: Practice 2 dùng text-lg, Practice 1 đặc biệt, các cái khác text-xl */}
+                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide" : isPractice2 ? "text-lg" : "text-xl"} font-bold text-white leading-tight`}>
                                     {isPractice1 
                                         ? renderPractice1Question(playableQuestions[currentQuestion]?.question)
                                         : playableQuestions[currentQuestion]?.question
