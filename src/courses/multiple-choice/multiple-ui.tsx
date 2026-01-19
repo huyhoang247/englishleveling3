@@ -41,7 +41,6 @@ const XIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg> );
 const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> );
 const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
-const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg> );
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
 const ChevronLeftIcon = ({ className }: { className: string }) => (
@@ -57,68 +56,48 @@ const ChevronRightIcon = ({ className }: { className: string }) => (
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
 
-// --- COMPONENT: POPUP NHẬN THƯỞNG (NEW) ---
+// --- COMPONENT: POPUP NHẬN THƯỞNG (ĐÃ CẬP NHẬT) ---
 const ResourceRewardPopup: React.FC<{ 
     image: string; 
     amount: number; 
     type: string;
     triggerId: number; 
 }> = ({ image, amount, type, triggerId }) => {
-    // Sử dụng key=triggerId ở div cha để React unmount/remount component khi ID thay đổi,
-    // giúp kích hoạt lại animation CSS.
     return (
-        <div key={triggerId} className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
-            <div className="animate-resource-float flex flex-col items-center">
+        // Đặt ở góc dưới bên trái (fixed bottom-8 left-8) để đối xứng với nút Next
+        <div key={triggerId} className="fixed bottom-8 left-8 z-[60] pointer-events-none">
+            <div className="animate-pop-in-left flex items-end">
                 <div className="relative">
-                    {/* Hiệu ứng hào quang */}
-                    <div className="absolute inset-0 bg-yellow-400/40 blur-xl rounded-full scale-150 animate-pulse"></div>
-                    
-                    {/* Hình ảnh vật phẩm */}
+                    {/* Hình ảnh vật phẩm (Không còn hiệu ứng phát sáng nền) */}
                     <img 
                         src={image} 
                         alt={type} 
-                        className="w-24 h-24 object-contain drop-shadow-2xl relative z-10 animate-bounce-custom" 
+                        className="w-24 h-24 object-contain drop-shadow-xl animate-bounce-gentle" 
                     />
                     
                     {/* Badge số lượng */}
-                    <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-600 text-white text-xl font-black px-3 py-1 rounded-full border-2 border-white shadow-lg z-20 min-w-[40px] text-center transform rotate-12">
+                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-lg font-black px-2.5 py-0.5 rounded-full border-2 border-white shadow-md z-20 min-w-[36px] text-center">
                         +{amount}
                     </div>
                 </div>
-                
-                {/* Tên vật phẩm */}
-                <div className="mt-4 text-white font-black text-2xl uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] opacity-0 animate-fade-in-delayed">
-                    {type}
-                </div>
+                {/* Đã xóa phần hiển thị tên vật phẩm */}
             </div>
             
-            {/* Styles cục bộ cho animation */}
             <style jsx>{`
-                @keyframes resource-float {
-                    0% { opacity: 0; transform: scale(0.5) translateY(50px); }
-                    20% { opacity: 1; transform: scale(1.2) translateY(0); }
-                    40% { transform: scale(1) translateY(0); }
-                    80% { opacity: 1; transform: translateY(-50px); }
-                    100% { opacity: 0; transform: translateY(-100px); }
+                @keyframes pop-in-left {
+                    0% { opacity: 0; transform: scale(0) translateX(-40px); }
+                    60% { opacity: 1; transform: scale(1.1) translateX(10px); }
+                    100% { opacity: 1; transform: scale(1) translateX(0); }
                 }
-                @keyframes bounce-custom {
+                @keyframes bounce-gentle {
                     0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-10px); }
+                    50% { transform: translateY(-5px); }
                 }
-                @keyframes fade-in-delayed {
-                    0%, 20% { opacity: 0; transform: translateY(10px); }
-                    40% { opacity: 1; transform: translateY(0); }
-                    80% { opacity: 1; }
-                    100% { opacity: 0; }
+                .animate-pop-in-left {
+                    animation: pop-in-left 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
                 }
-                .animate-resource-float {
-                    animation: resource-float 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-                }
-                .animate-bounce-custom {
-                    animation: bounce-custom 2s infinite ease-in-out;
-                }
-                .animate-fade-in-delayed {
-                    animation: fade-in-delayed 3s forwards;
+                .animate-bounce-gentle {
+                    animation: bounce-gentle 2s infinite ease-in-out;
                 }
             `}</style>
         </div>
@@ -200,7 +179,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
     currentAudioUrl, selectedVoice, handleChangeVoiceDirection,
     isDetailAvailable,
-    // Lấy state rewardDrop từ context để hiển thị popup
     rewardDrop,
   } = useQuiz();
 
@@ -256,7 +234,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
       
-      {/* --- HIỂN THỊ POPUP VẬT PHẨM KHI CÓ REWARD --- */}
+      {/* --- HIỂN THỊ POPUP VẬT PHẨM (GÓC TRÁI DƯỚI) --- */}
       {rewardDrop && (
         <ResourceRewardPopup 
             image={rewardDrop.image} 
