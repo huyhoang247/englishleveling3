@@ -11,6 +11,7 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- IMPORT BOSS & ELEMENTS ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
+// Import thêm ActionState để dùng cho animation
 import BossDisplay, { HeroDisplay, ActionState } from './boss-display.tsx'; 
 
 // --- IMPORT SKILL COMPONENT ---
@@ -225,7 +226,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
         isLoading, error, playerStats, bossStats, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
-        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep, triggerNextTurn
+        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
     const [damages, setDamages] = useState<DamageText[]>([]);
@@ -322,156 +323,146 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, 1200);
     }, []);
 
-    // --- DYNAMIC TURN SEQUENCE LOGIC (THAY THẾ INTERVAL) ---
+    // --- TURN SEQUENCE LOGIC (ĐÃ FIX DELAY) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
-        let timelineCursor = 0; // Con trỏ thời gian để theo dõi animation cuối cùng
 
-        // --- 1. PLAYER PHASE ---
+        // --- 1. PLAYER TURN (Starts at 0ms) ---
         if (playerDmg > 0) {
             // A. Trigger Animation Attack
             setHeroState('attack');
-            setTimeout(() => setHeroState('idle'), 400);
+            setTimeout(() => setHeroState('idle'), 500); // 500ms cho mượt
 
-            const baseFlightTime = 750;
+            const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 3);
+            const dmg2 = playerDmgHit2 || Math.ceil(playerDmg / 3);
+            const dmg3 = playerDmgHit3 || (playerDmg - dmg1 - dmg2);
+
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
-            const orbEffectsToAdd: SkillProps[] = [];
-
-            // Hit 1 Logic (Luôn có nếu có dmg)
-            const timeHit1 = 200 + baseFlightTime;
-            timelineCursor = Math.max(timelineCursor, timeHit1);
-            orbEffectsToAdd.push({ id: now, type: 'player-orb', delay: 200, startPos: shuffledSlots[0] });
             
+            // B. Spawn Orbs
+            const orb1: SkillProps = { id: now, type: 'player-orb', delay: 200, startPos: shuffledSlots[0] };
+            const orb2: SkillProps = { id: now + 1, type: 'player-orb', delay: 400, startPos: shuffledSlots[1] };
+            const orb3: SkillProps = { id: now + 2, type: 'player-orb', delay: 600, startPos: shuffledSlots[2] };
+
+            setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
+
+            // C. Calculate Hit Timing
+            // Flight time = ~750ms (from skill-effect config)
+            const baseFlightTime = 750;
+            const hit1Time = 200 + baseFlightTime; // ~950ms
+            const hit2Time = 400 + baseFlightTime; // ~1150ms
+            const hit3Time = 600 + baseFlightTime; // ~1350ms
+
+            // Hit 1
             setTimeout(() => {
-                addDamageText(`-${formatDamageText(playerDmgHit1)}`, '#ef4444', 'boss', 30); 
-                setVisualBossHp(prev => Math.max(0, prev - playerDmgHit1));
+                addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 30); 
+                setVisualBossHp(prev => Math.max(0, prev - dmg1));
+                setBossState('hit'); // RUNG LẮC BOSS
+            }, hit1Time);
+            setTimeout(() => setBossState('idle'), hit1Time + 400);
+
+            // Hit 2
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 32); 
+                setVisualBossHp(prev => Math.max(0, prev - dmg2));
                 setBossState('hit');
-            }, timeHit1);
-            setTimeout(() => setBossState('idle'), timeHit1 + 400);
+            }, hit2Time);
+            setTimeout(() => setBossState('idle'), hit2Time + 400);
 
-            // Hit 2 Logic
-            if (playerDmgHit2 > 0) {
-                const timeHit2 = 400 + baseFlightTime;
-                timelineCursor = Math.max(timelineCursor, timeHit2);
-                orbEffectsToAdd.push({ id: now + 1, type: 'player-orb', delay: 400, startPos: shuffledSlots[1] });
-                
-                setTimeout(() => {
-                    addDamageText(`-${formatDamageText(playerDmgHit2)}`, '#ef4444', 'boss', 32); 
-                    setVisualBossHp(prev => Math.max(0, prev - playerDmgHit2));
-                    setBossState('hit');
-                }, timeHit2);
-                setTimeout(() => setBossState('idle'), timeHit2 + 400);
-            }
+             // Hit 3
+             setTimeout(() => {
+                addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 40); 
+                setVisualBossHp(prev => Math.max(0, prev - dmg3));
+                setBossState('hit');
+            }, hit3Time);
+            setTimeout(() => setBossState('idle'), hit3Time + 400);
 
-            // Hit 3 Logic
-            if (playerDmgHit3 > 0) {
-                const timeHit3 = 600 + baseFlightTime;
-                timelineCursor = Math.max(timelineCursor, timeHit3);
-                orbEffectsToAdd.push({ id: now + 2, type: 'player-orb', delay: 600, startPos: shuffledSlots[2] });
-
-                setTimeout(() => {
-                    addDamageText(`-${formatDamageText(playerDmgHit3)}`, '#ef4444', 'boss', 40); 
-                    setVisualBossHp(prev => Math.max(0, prev - playerDmgHit3));
-                    setBossState('hit');
-                }, timeHit3);
-                setTimeout(() => setBossState('idle'), timeHit3 + 400);
-            }
-
-            // Apply Orb Effects
-            setOrbEffects(prev => [...prev, ...orbEffectsToAdd]);
-
-            // Cleanup Orbs
+            // Cleanup
             setTimeout(() => {
-                 setOrbEffects(prev => prev.filter(e => !orbEffectsToAdd.find(o => o.id === e.id)));
-                 if (bossStats) {
+                setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
+                if (bossStats) {
                      setVisualBossHp(current => {
                          if(Math.abs(current - bossStats.hp) < 100) return bossStats.hp;
                          return current;
                      });
-                 }
-            }, timelineCursor + 200);
+                }
+            }, hit3Time + 500);
         }
-
+        
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
-
-        // --- 2. BOSS PHASE ---
-        // Boss bắt đầu sau khi Player xong khoảng 500ms
-        const bossStartTime = timelineCursor + 500;
+        
+        // --- 2. BOSS TURN (CHẬM LẠI: Tăng delay từ 1500 -> 2500) ---
+        // Player last hit @ 1350ms. Boss starts @ 2500ms. Nghỉ khoảng 1s.
+        const bossStartDelay = 2500; 
         
         if (bossDmg > 0) {
+            // A. Boss Attack Anim
             setTimeout(() => {
                 setBossState('attack');
-                setTimeout(() => setBossState('idle'), 400);
-            }, bossStartTime);
+                setTimeout(() => setBossState('idle'), 500); // 500ms
+            }, bossStartDelay);
 
-            const baseFlightTime = 750;
             const shuffledBossSlots = [...BOSS_ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
-            const now = Date.now() + 1000; // Offset ID
-            
-            // Chia damage boss thành 3 hit (visual)
+            const now = Date.now() + 100;
+
+            const bOrb1: SkillProps = { id: now + 10, type: 'boss-orb', delay: 200, startPos: shuffledBossSlots[0] };
+            const bOrb2: SkillProps = { id: now + 11, type: 'boss-orb', delay: 400, startPos: shuffledBossSlots[1] };
+            const bOrb3: SkillProps = { id: now + 12, type: 'boss-orb', delay: 600, startPos: shuffledBossSlots[2] };
+
             const bDmg1 = Math.floor(bossDmg * 0.3);
             const bDmg2 = Math.floor(bossDmg * 0.3);
             const bDmg3 = bossDmg - bDmg1 - bDmg2;
 
-            const timeHit1 = bossStartTime + 200 + baseFlightTime;
-            const timeHit2 = bossStartTime + 400 + baseFlightTime;
-            const timeHit3 = bossStartTime + 600 + baseFlightTime;
-            
-            timelineCursor = Math.max(timelineCursor, timeHit3);
-
-            // Add Boss Orbs
+            // B. Boss Orbs
             setTimeout(() => {
-                setOrbEffects(prev => [
-                    ...prev, 
-                    { id: now, type: 'boss-orb', delay: 200, startPos: shuffledBossSlots[0] },
-                    { id: now + 1, type: 'boss-orb', delay: 400, startPos: shuffledBossSlots[1] },
-                    { id: now + 2, type: 'boss-orb', delay: 600, startPos: shuffledBossSlots[2] }
-                ]);
-            }, bossStartTime);
+                setOrbEffects(prev => [...prev, bOrb1, bOrb2, bOrb3]);
+            }, bossStartDelay);
 
-            // Boss Hits Visuals
-            setTimeout(() => { addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 30); setHeroState('hit'); }, timeHit1);
-            setTimeout(() => setHeroState('idle'), timeHit1 + 400);
+            // C. Hit Timing
+            const baseFlightTime = 750;
+            const hit1Time = bossStartDelay + 200 + baseFlightTime;
+            const hit2Time = bossStartDelay + 400 + baseFlightTime;
+            const hit3Time = bossStartDelay + 600 + baseFlightTime;
 
-            setTimeout(() => { addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 32); setHeroState('hit'); }, timeHit2);
-            setTimeout(() => setHeroState('idle'), timeHit2 + 400);
-
-            setTimeout(() => { addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 36); setHeroState('hit'); }, timeHit3);
-            setTimeout(() => setHeroState('idle'), timeHit3 + 400);
-
-            // Cleanup Boss Orbs
+            // Hit 1
             setTimeout(() => {
-                 setOrbEffects(prev => prev.filter(e => e.id !== now && e.id !== now + 1 && e.id !== now + 2));
-            }, timeHit3 + 200);
+                addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 30); 
+                setHeroState('hit'); // RUNG LẮC HERO
+            }, hit1Time);
+            setTimeout(() => setHeroState('idle'), hit1Time + 400);
+
+            // Hit 2
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 32);
+                setHeroState('hit');
+            }, hit2Time);
+            setTimeout(() => setHeroState('idle'), hit2Time + 400);
+
+            // Hit 3
+            setTimeout(() => {
+                addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 36);
+                setHeroState('hit');
+            }, hit3Time);
+            setTimeout(() => setHeroState('idle'), hit3Time + 400);
+
+            // Cleanup
+            setTimeout(() => {
+                 setOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
+            }, hit3Time + 500);
         }
 
         if (bossReflectDmg > 0) {
-            // Phản đòn hiển thị sau cùng
-            const reflectTime = timelineCursor + 300;
-            timelineCursor = Math.max(timelineCursor, reflectTime);
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
-            }, reflectTime); 
+            }, 3000); 
         }
 
-        // --- 3. TRIGGER NEXT TURN ---
-        // Thêm buffer cuối cùng (ví dụ 1000ms) để người chơi kịp nhìn tình huống
-        const totalDuration = timelineCursor + 1000;
-
-        const timer = setTimeout(() => {
-            if(!gameOver && battleState === 'fighting') {
-                triggerNextTurn();
-            }
-        }, totalDuration);
-
-        return () => clearTimeout(timer);
-
-    }, [lastTurnEvents, addDamageText, triggerNextTurn, gameOver, battleState, bossStats]);
+    }, [lastTurnEvents, addDamageText]); 
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
@@ -696,5 +687,3 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
-
-// --- END OF FILE tower-ui.tsx ---
