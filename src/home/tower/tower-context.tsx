@@ -56,7 +56,6 @@ interface BossBattleActions {
     retryCurrentFloor: () => void;
     handleNextFloor: () => void;
     handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } }>;
-    triggerNextTurn: () => void; // Hàm mới để UI gọi
 }
 
 type BossBattleContextType = BossBattleState & BossBattleActions;
@@ -84,7 +83,9 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     const [lastTurnEvents, setLastTurnEvents] = useState<TurnEvents | null>(null);
 
     const initialPlayerStatsRef = useRef<CombatStats | null>(null);
+    const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
     const isEndingGame = useRef(false); 
+    const savedCallback = useRef<() => void>();
 
     // --- FIX AN TOÀN: Đảm bảo luôn lấy được Boss Data hợp lệ ---
     // Sử dụng Math.min/max để index không bao giờ vượt quá mảng BOSS_DATA
@@ -205,6 +206,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         if (isEndingGame.current) return;
         isEndingGame.current = true;
 
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         setGameOver(result);
         setBattleState('finished');
 
@@ -227,9 +229,8 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [currentBossData, game]);
 
-    // Hàm tính toán logic cho 1 lượt
     const runBattleTurn = useCallback(() => {
-        if (!playerStats || !bossStats || gameOver) return;
+        if (!playerStats || !bossStats) return;
 
         const nextTurn = turnCounter + 1;
         const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
@@ -239,22 +240,15 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         setLastTurnEvents({ ...turnEvents, timestamp: Date.now() });
         setCombatLog(prev => [...turnLogs.reverse(), ...prev]);
         setTurnCounter(nextTurn);
-        
         if (winner) {
             endGame(winner);
         }
-    }, [turnCounter, playerStats, bossStats, executeFullTurn, endGame, gameOver]);
-
-    // --- NEW: Hàm UI sẽ gọi khi chạy xong animation ---
-    const triggerNextTurn = useCallback(() => {
-        if (battleState === 'fighting' && !gameOver) {
-            runBattleTurn();
-        }
-    }, [battleState, gameOver, runBattleTurn]);
+    }, [turnCounter, playerStats, bossStats, executeFullTurn, endGame]);
 
     const skipBattle = useCallback(() => {
         if (!playerStats || !bossStats) return;
-        
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+
         setBattleState('finished');
         let tempPlayer = { ...playerStats };
         let tempBoss = { ...bossStats };
@@ -282,15 +276,15 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
         isEndingGame.current = false;
-        
         setPlayerStats(prev => {
             if (!prev) return null;
             return { ...prev, energy: prev.energy - 10 };
         });
-        setBattleState('fighting'); // Effect ở dưới sẽ bắt sự kiện này để chạy turn 1
+        setBattleState('fighting');
     }, [battleState, playerStats]);
 
     const resetAllStateForNewBattle = useCallback(() => {
+        if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
         setPreviousCombatLog(combatLog);
         setCombatLog([]);
         setTurnCounter(0);
@@ -378,6 +372,9 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     }, [playerStats, currentFloor, executeFullTurn, game]);
 
     // --- REACT HOOKS & EFFECTS ---
+    useEffect(() => {
+        savedCallback.current = runBattleTurn;
+    }, [runBattleTurn]);
 
     // --- FIX KHỞI TẠO: Logic tải dữ liệu an toàn ---
     useEffect(() => {
@@ -418,6 +415,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
             setEquippedSkills(skillsDetails as ActiveSkill[]);
     
             // 4. Set Boss Stats ngay lập tức (Sync ngay)
+            // Vì safeFloor đã được tính toán ở trên, truy cập BOSS_DATA là an toàn
             const initialBossData = BOSS_DATA[safeFloor];
             if (initialBossData) {
                 setBossStats(initialBossData.stats);
@@ -455,15 +453,23 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [currentFloor, isLoading, currentBossData, battleState]);
     
-    // --- NEW: Kích hoạt lượt đầu tiên khi vào battle ---
+    // --- CHẬM LẠI: Tăng Interval lên 5500ms (5.5s) ---
     useEffect(() => {
-        if (battleState === 'fighting' && turnCounter === 0 && !gameOver) {
-            const timer = setTimeout(() => {
-                runBattleTurn();
-            }, 100); // Delay nhỏ để đảm bảo UI đã chuyển
-            return () => clearTimeout(timer);
+        if (battleState === 'fighting' && !gameOver) {
+          if(savedCallback.current) {
+            savedCallback.current();
+          }
+
+          battleIntervalRef.current = setInterval(() => {
+              if(savedCallback.current) {
+                savedCallback.current();
+              }
+          }, 5500); // <--- ĐÃ SỬA: 4000 -> 5500 (Cho trận đấu chậm hơn)
         }
-    }, [battleState, turnCounter, gameOver, runBattleTurn]);
+        return () => {
+          if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
+        };
+    }, [battleState, gameOver]);
 
 
     // --- CUNG CẤP VALUE CHO CONTEXT ---
@@ -485,7 +491,6 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         retryCurrentFloor,
         handleNextFloor,
         handleSweep,
-        triggerNextTurn, // Export hàm này để UI gọi
     };
     
     return (
@@ -494,14 +499,3 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         </BossBattleContext.Provider>
     );
 };
-
-// --- CUSTOM HOOK ĐỂ SỬ DỤNG CONTEXT ---
-export const useBossBattle = (): BossBattleContextType => {
-    const context = useContext(BossBattleContext);
-    if (context === undefined) {
-        throw new Error('useBossBattle must be used within a BossBattleProvider');
-    }
-    return context;
-};
-
-// --- END OF FILE tower-context.tsx ---
