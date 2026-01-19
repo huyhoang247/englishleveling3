@@ -1,6 +1,6 @@
 // --- START OF FILE src/home/skill-game/skill-context.tsx ---
 
-import React, { createContext, useState, useMemo, useCallback, useEffect, useContext, ReactNode } from 'react';
+import React, { createContext, useState, useMemo, useCallback, useContext, ReactNode } from 'react';
 import { useGame } from '../../GameContext.tsx'; // IMPORT useGame hook
 import {
     ALL_SKILLS,
@@ -12,6 +12,7 @@ import {
     type Rarity,
     type SkillBlueprint,
     getNextRarity,
+    getRandomBaseActivationChance, // IMPORT MỚI: Hàm random tỉ lệ
 } from './skill-data.tsx';
 import { updateUserSkills } from '../../gameDataService.ts';
 
@@ -114,7 +115,7 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
     const [equippedSkillIds, setEquippedSkillIds] = useState(initialEquippedSkillIds);
 
     // --- STATE QUẢN LÝ GIAO DIỆN ---
-    const [isLoading, setIsLoading] = useState(false); // No longer needs to load
+    const [isLoading, setIsLoading] = useState(false); 
     const [isProcessing, setIsProcessing] = useState(false);
     const [dataHasChanged, setDataHasChanged] = useState(false);
     const [selectedSkill, setSelectedSkill] = useState<OwnedSkill | null>(null);
@@ -137,8 +138,6 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         const timer = setTimeout(() => setMessage(''), 4000);
         return () => clearTimeout(timer);
     }, []);
-
-    // --- FETCH useEffect ĐÃ ĐƯỢC XÓA BỎ ---
 
     // --- DERIVED STATE ---
     const equippedSkills = useMemo(() => {
@@ -241,9 +240,22 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
             setTimeout(() => setCraftErrorToast(prev => ({ ...prev, show: false })), 4000);
             return;
         }
+        
+        // 1. Random Blueprint (Loại kỹ năng)
         const newSkillBlueprint = ALL_SKILLS[Math.floor(Math.random() * ALL_SKILLS.length)];
+        // 2. Random Rarity (Độ hiếm)
         const newRarity = getRandomRarity();
-        const newOwnedSkill: OwnedSkill = { id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, skillId: newSkillBlueprint.id, level: 1, rarity: newRarity };
+        // 3. Random Base Activation Chance dựa trên Rarity (LOGIC MỚI)
+        const newBaseChance = getRandomBaseActivationChance(newRarity);
+
+        const newOwnedSkill: OwnedSkill = { 
+            id: `owned-${Date.now()}-${newSkillBlueprint.id}-${Math.random()}`, 
+            skillId: newSkillBlueprint.id, 
+            level: 1, 
+            rarity: newRarity,
+            baseActivationChance: newBaseChance // Lưu trữ tỉ lệ gốc vào skill
+        };
+
         const newOwnedList = [...ownedSkills, newOwnedSkill];
         const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: 0, booksChange: -CRAFTING_COST });
         if (success) setNewlyCraftedSkill(newOwnedSkill);
@@ -269,6 +281,8 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         if (!skillBlueprint || skillBlueprint.upgradeCost === undefined) { showMessage("Kỹ năng này không thể nâng cấp."); return; }
         const cost = getUpgradeCost(skillBlueprint.upgradeCost, skillToUpgrade.level);
         if (gold < cost) { showMessage(`Không đủ vàng. Cần ${cost.toLocaleString()}.`); return; }
+        
+        // Nâng cấp level, baseActivationChance giữ nguyên (nhưng tổng tỉ lệ sẽ tăng nhờ hàm tính toán trong UI)
         const updatedSkill = { ...skillToUpgrade, level: skillToUpgrade.level + 1 };
         const newOwnedList = ownedSkills.map(s => s.id === skillToUpgrade.id ? updatedSkill : s);
         const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: -cost, booksChange: 0 });
@@ -280,7 +294,17 @@ export const SkillProvider = ({ children, userId, onClose }: SkillProviderProps)
         const skillsToConsume = group.skills.slice(0, 3);
         const skillIdsToConsume = skillsToConsume.map(s => s.id);
         const { level: finalLevel, refundGold } = calculateMergeResult(skillsToConsume, group.blueprint);
-        const newUpgradedSkill: OwnedSkill = { id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`, skillId: group.skillId, level: finalLevel, rarity: group.nextRarity };
+        
+        // Khi hợp nhất lên Rank cao hơn, Random lại tỉ lệ kích hoạt theo Rank mới (LOGIC MỚI)
+        const newBaseChance = getRandomBaseActivationChance(group.nextRarity);
+
+        const newUpgradedSkill: OwnedSkill = { 
+            id: `owned-${Date.now()}-${group.skillId}-${Math.random()}`, 
+            skillId: group.skillId, 
+            level: finalLevel, 
+            rarity: group.nextRarity,
+            baseActivationChance: newBaseChance // Tỉ lệ mới xịn hơn
+        };
         const newOwnedList = ownedSkills.filter(s => !skillIdsToConsume.includes(s.id)).concat(newUpgradedSkill);
         const success = await handleUpdateDatabase({ newOwned: newOwnedList, newEquippedIds: equippedSkillIds, goldChange: refundGold, booksChange: 0 });
         if (success) {
