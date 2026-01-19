@@ -11,11 +11,13 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- IMPORT BOSS & ELEMENTS ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
-// Import thêm ActionState để dùng cho animation
-import BossDisplay, { HeroDisplay, ActionState } from './boss-display.tsx'; 
+// Chỉ giữ lại HealthBar và ActionState từ file cũ
+import { HealthBar, ActionState } from './boss-display.tsx'; 
+import MagicCircle from './thuoc-tinh.tsx';
 
-// --- IMPORT SKILL COMPONENT ---
-import SkillEffect, { SkillStyles, SkillProps } from './skill-effect.tsx';
+// --- IMPORT PIXI RENDERER ---
+import BattleRenderer from './tower-pixi-renderer.tsx';
+import { SkillProps } from './skill-effect.tsx'; // Vẫn cần type SkillProps
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -25,6 +27,7 @@ interface BossBattleWrapperProps {
 }
 
 // --- CONSTANTS ---
+// Giữ nguyên tọa độ logic để tính toán đường bay cho Pixi
 const ORB_SPAWN_SLOTS = [
     { left: '15%', top: '30%' },
     { left: '25%', top: '20%' },
@@ -232,13 +235,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [damages, setDamages] = useState<DamageText[]>([]);
     const damagesRef = useRef<DamageText[]>([]);
     
-    // Skill Effects State
+    // Skill Effects State (Data passed to Pixi)
     const [orbEffects, setOrbEffects] = useState<SkillProps[]>([]);
     
     // Visual Boss HP
     const [visualBossHp, setVisualBossHp] = useState(0);
 
-    // --- ANIMATION STATES ---
+    // --- ANIMATION STATES (Data passed to Pixi) ---
     const [heroState, setHeroState] = useState<ActionState>('idle');
     const [bossState, setBossState] = useState<ActionState>('idle');
 
@@ -264,16 +267,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
     }, [currentBossData?.id]);
 
-    const handleBossImgError = useCallback(() => {
-        if (currentBossData) {
-            const idStr = String(currentBossData.id).padStart(2, '0');
-            const gifPath = `/images/boss/${idStr}.gif`;
-            if (!bossImgSrc.endsWith('.gif')) {
-                setBossImgSrc(gifPath);
-            }
-        }
-    }, [currentBossData, bossImgSrc]);
-
     const displayableCoins = isLoading ? 0 : displayedCoins;
     const animatedCoins = useAnimateValue(displayableCoins);
     const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
@@ -285,7 +278,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss', fontSize: number = 18) => { 
         const id = Date.now() + Math.random();
         
-        let baseX = target === 'player' ? 15 : 75; 
+        // Điều chỉnh vị trí xuất hiện của damage text cho khớp với Pixi Sprite
+        // Hero ở khoảng 25% (left) của container 800px -> 25%
+        // Boss ở khoảng 75% (right) của container 800px -> 75%
+        let baseX = target === 'player' ? 25 : 75; 
         
         const baseY = 55;
         let finalX = baseX + (Math.random() * 12 - 6);
@@ -323,17 +319,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, 1200);
     }, []);
 
-    // --- TURN SEQUENCE LOGIC (ĐÃ FIX DELAY) ---
+    // --- TURN SEQUENCE LOGIC ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // --- 1. PLAYER TURN (Starts at 0ms) ---
+        // --- 1. PLAYER TURN ---
         if (playerDmg > 0) {
             // A. Trigger Animation Attack
             setHeroState('attack');
-            setTimeout(() => setHeroState('idle'), 500); // 500ms cho mượt
+            setTimeout(() => setHeroState('idle'), 500); 
 
             const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 3);
             const dmg2 = playerDmgHit2 || Math.ceil(playerDmg / 3);
@@ -342,7 +338,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
             
-            // B. Spawn Orbs
+            // B. Spawn Orbs (Data sent to Pixi)
             const orb1: SkillProps = { id: now, type: 'player-orb', delay: 200, startPos: shuffledSlots[0] };
             const orb2: SkillProps = { id: now + 1, type: 'player-orb', delay: 400, startPos: shuffledSlots[1] };
             const orb3: SkillProps = { id: now + 2, type: 'player-orb', delay: 600, startPos: shuffledSlots[2] };
@@ -350,17 +346,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
             // C. Calculate Hit Timing
-            // Flight time = ~750ms (from skill-effect config)
             const baseFlightTime = 750;
-            const hit1Time = 200 + baseFlightTime; // ~950ms
-            const hit2Time = 400 + baseFlightTime; // ~1150ms
-            const hit3Time = 600 + baseFlightTime; // ~1350ms
+            const hit1Time = 200 + baseFlightTime; 
+            const hit2Time = 400 + baseFlightTime; 
+            const hit3Time = 600 + baseFlightTime; 
 
             // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 30); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
-                setBossState('hit'); // RUNG LẮC BOSS
+                setBossState('hit'); 
             }, hit1Time);
             setTimeout(() => setBossState('idle'), hit1Time + 400);
 
@@ -396,15 +391,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
         
-        // --- 2. BOSS TURN (CHẬM LẠI: Tăng delay từ 1500 -> 2500) ---
-        // Player last hit @ 1350ms. Boss starts @ 2500ms. Nghỉ khoảng 1s.
+        // --- 2. BOSS TURN ---
         const bossStartDelay = 2500; 
         
         if (bossDmg > 0) {
             // A. Boss Attack Anim
             setTimeout(() => {
                 setBossState('attack');
-                setTimeout(() => setBossState('idle'), 500); // 500ms
+                setTimeout(() => setBossState('idle'), 500);
             }, bossStartDelay);
 
             const shuffledBossSlots = [...BOSS_ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
@@ -432,7 +426,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 30); 
-                setHeroState('hit'); // RUNG LẮC HERO
+                setHeroState('hit'); 
             }, hit1Time);
             setTimeout(() => setHeroState('idle'), hit1Time + 400);
 
@@ -481,7 +475,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     return (
         <>
-            <SkillStyles />
             <style>{`
                 @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
                 .font-lilita { font-family: 'Lilita One', cursive; } 
@@ -599,46 +592,58 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 <main className="w-full h-full flex flex-col justify-center items-center pt-[72px] relative overflow-hidden">
                                     
                                     {/* --- BATTLE STAGE --- */}
-                                    <div className="w-full max-w-6xl mx-auto flex flex-row justify-between items-end px-4 md:px-12 h-[50vh] md:h-[60vh] relative">
+                                    {/* Chứa cả Canvas Pixi và các thành phần UI HTML Overlay */}
+                                    <div className="w-full max-w-6xl mx-auto flex flex-col justify-end items-center px-4 md:px-0 h-[50vh] md:h-[65vh] relative">
                                         
-                                        {/* LEFT: HERO */}
-                                        <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
-                                            <HeroDisplay 
-                                                stats={playerStats} 
-                                                onStatsClick={() => setStatsModalTarget('player')} 
-                                                actionState={heroState} 
-                                            />
-                                        </div>
+                                        {/* 1. PIXI CANVAS LAYER (Nằm dưới cùng) */}
+                                        <div className="absolute inset-0 z-10 flex items-center justify-center">
+                                            <div className="w-full h-full max-w-5xl max-h-[600px] relative">
+                                                {/* Magic Circle (HTML - Nằm sau Boss trong không gian) */}
+                                                 <div className="absolute bottom-[10%] right-[20%] w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
+                                                    <MagicCircle elementKey={bossElement} />
+                                                </div>
 
-                                        {/* RIGHT: BOSS */}
-                                        <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
-                                            <BossDisplay 
-                                                bossId={currentBossData.id}
-                                                name={currentBossData.name}
-                                                element={bossElement}
-                                                hp={visualBossHp} 
-                                                maxHp={bossStats.maxHp}
-                                                imgSrc={bossImgSrc}
-                                                onImgError={handleBossImgError}
-                                                onStatsClick={() => setStatsModalTarget('boss')}
-                                                actionState={bossState} 
-                                            />
-                                        </div>
-
-                                        {/* EFFECTS LAYER */}
-                                        <div className="absolute inset-0 pointer-events-none z-40">
-                                            {/* Render all skills (Player + Boss) via single array */}
-                                            {orbEffects.map(effect => (
-                                                <SkillEffect 
-                                                    key={effect.id} 
-                                                    id={effect.id}
-                                                    type={effect.type}
-                                                    delay={effect.delay}
-                                                    startPos={effect.startPos}
+                                                <BattleRenderer 
+                                                    bossId={currentBossData.id}
+                                                    bossImgSrc={bossImgSrc}
+                                                    heroState={heroState}
+                                                    bossState={bossState}
+                                                    orbEffects={orbEffects}
                                                 />
-                                            ))}
+                                            </div>
+                                        </div>
+
+                                        {/* 2. UI OVERLAY LAYER (Thanh máu, Damage Text) */}
+                                        <div className="absolute inset-0 z-20 pointer-events-none max-w-5xl mx-auto w-full relative">
                                             
-                                            {/* Render Damages Text */}
+                                            {/* Player HP Bar - Định vị theo % để khớp với vị trí Hero trong Pixi (x=200/800 ~ 25%) */}
+                                            <div 
+                                                className="absolute left-[25%] bottom-[35%] md:bottom-[45%] w-32 md:w-48 cursor-pointer pointer-events-auto transform -translate-x-1/2 transition-transform hover:scale-105"
+                                                onClick={() => setStatsModalTarget('player')}
+                                            >
+                                                <HealthBar 
+                                                    current={playerStats.hp} 
+                                                    max={playerStats.maxHp} 
+                                                    colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
+                                                    shadowColor="rgba(132, 204, 22, 0.5)"
+                                                />
+                                            </div>
+
+                                            {/* Boss HP Bar - Định vị theo % để khớp với vị trí Boss trong Pixi (x=600/800 ~ 75%) */}
+                                            <div 
+                                                className="absolute right-[25%] bottom-[45%] md:bottom-[55%] w-40 md:w-60 cursor-pointer pointer-events-auto transform translate-x-1/2 transition-transform hover:scale-105"
+                                                onClick={() => setStatsModalTarget('boss')}
+                                            >
+                                                <HealthBar 
+                                                    current={visualBossHp} 
+                                                    max={bossStats.maxHp} 
+                                                    colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
+                                                    shadowColor="rgba(56, 189, 248, 0.5)" 
+                                                    heightClass="h-6 md:h-8"
+                                                />
+                                            </div>
+
+                                            {/* Damage Text */}
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} data={d} />
                                             ))}
@@ -647,7 +652,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </div>
 
                                     {/* --- ACTION BAR --- */}
-                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-24 z-50">
+                                    <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-12 md:mt-24 z-50">
                                         {battleState === 'idle' ? (
                                             <div className="flex gap-4 items-center">
                                                 <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="transition-all active:scale-95 hover:scale-105 rounded-full relative group">
@@ -687,3 +692,4 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
+// --- END OF FILE tower-ui.tsx ---
