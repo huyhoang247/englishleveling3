@@ -1,4 +1,5 @@
-// VocaMatchContext.tsx
+// --- START OF FILE: voca-match-context.tsx ---
+
 import React, {
   createContext,
   useContext,
@@ -11,10 +12,19 @@ import React, {
 import { useQuizApp, Definition } from '../course-context.tsx'; 
 import { allWordPairs, shuffleArray } from './voca-match-data.ts';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
+import { resourceAssets } from '../../game-assets.ts'; 
 
 interface LeftColumnItem {
   word: string;
   audioUrls: { [key: string]: string } | null;
+}
+
+// Interface cho phần thưởng (Resource Drop)
+interface RewardDrop {
+  type: string;
+  amount: number;
+  image: string;
+  id: number; // Unique ID để reset animation mỗi lần nhận thưởng
 }
 
 interface VocaMatchContextType {
@@ -44,6 +54,7 @@ interface VocaMatchContextType {
   resetGame: () => void;
   onGoBack: () => void;
   allWordPairs: { english: string; vietnamese: string }[];
+  rewardDrop: RewardDrop | null; // State quản lý vật phẩm rơi ra
 }
 
 const GAME_SIZE = 5;
@@ -76,11 +87,9 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     userCoins, 
     masteryCount: masteryCountFromCourse, 
     getOpenedVocab, 
-    // --- START THAY ĐỔI ---
-    // Thay thế getCompletedWords bằng hàm mới đọc từ local
     fetchAllLocalProgress, 
-    // --- END THAY ĐỔI ---
     recordGameSuccess,
+    updateUserResources, // Hàm cập nhật tài nguyên từ course-context
     definitionsMap,
     generateAudioUrlsForWord
   } = useQuizApp();
@@ -110,6 +119,9 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
   const [availableVoices, setAvailableVoices] = useState<string[]>([]);
   const [selectedVoice, setSelectedVoice] = useState('Matilda'); 
 
+  // State mới quản lý phần thưởng rơi ra
+  const [rewardDrop, setRewardDrop] = useState<RewardDrop | null>(null);
+
   const isAudioMatch = useMemo(() => selectedPractice % 100 === 2, [selectedPractice]);
   const gameModeId = useMemo(() => `match-${selectedPractice % 100}`, [selectedPractice]);
 
@@ -126,21 +138,17 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       if (user) {
         setLoading(true);
         try {
-          // --- START THAY ĐỔI LỚN ---
           const [vocabList, localProgress] = await Promise.all([
             getOpenedVocab(),
-            fetchAllLocalProgress() // Gọi hàm mới
+            fetchAllLocalProgress()
           ]);
           
-          // Xử lý dữ liệu local để tạo completedSet
           const completedSet = new Set<string>();
-          // VocaMatch là game từ đơn, nên ta chỉ cần `completedWordsData`
           localProgress.completedWordsData.forEach((item: any) => {
               if (item.gameModes?.[gameModeId]) {
                   completedSet.add(item.word.toLowerCase());
               }
           });
-          // --- END THAY ĐỔI LỚN ---
           
           const userVocabSet = new Set(vocabList.map(v => v.toLowerCase()));
           const allEligiblePairs = allWordPairs.filter(pair => userVocabSet.has(pair.english.toLowerCase()));
@@ -166,7 +174,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       }
     };
     fetchData();
-  }, [user, gameModeId, isAudioMatch, getOpenedVocab, fetchAllLocalProgress, generateAudioUrlsForWord]); // Cập nhật dependency array
+  }, [user, gameModeId, isAudioMatch, getOpenedVocab, fetchAllLocalProgress, generateAudioUrlsForWord]);
 
   const setupNewRound = useCallback(() => {
     const roundStart = currentRound * GAME_SIZE;
@@ -202,6 +210,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setSelectedLeft(null);
     setIncorrectPair(null);
     setLastCorrectDefinition(null);
+    setRewardDrop(null); // Reset reward drop khi bắt đầu round mới
   }, [currentRound, playablePairs, loading, isAudioMatch, generateAudioUrlsForWord]);
 
   useEffect(() => {
@@ -241,7 +250,25 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
       const coinsToAdd = masteryCount * newStreak;
       setSessionCoins(prevCoins => prevCoins + coinsToAdd);
 
+      // --- LOGIC: Rơi vật phẩm (Resources Drop) ---
+      const resourceTypes = ['wood', 'leather', 'ore', 'cloth', 'feather', 'coal'];
+      // Chọn ngẫu nhiên loại vật phẩm
+      const randomType = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
+      // Chọn ngẫu nhiên số lượng từ 1 đến 3 (ít hơn Quiz một chút vì Match nhanh hơn)
+      const randomAmount = Math.floor(Math.random() * 3) + 1;
+
+      // Cập nhật state Reward để hiển thị Popup
+      setRewardDrop({
+        type: randomType,
+        amount: randomAmount,
+        image: resourceAssets[randomType as keyof typeof resourceAssets], // Lấy hình ảnh từ assets
+        id: Date.now() // Sử dụng timestamp làm ID duy nhất
+      });
+
       if (user) {
+        // Cập nhật Resource vào state của User (Context) và Firebase
+        updateUserResources(randomType, randomAmount);
+
         try {
           await recordGameSuccess(gameModeId, selectedLeft, false, coinsToAdd);
         } catch (error) {
@@ -273,6 +300,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     setShowEndScreen(false);
     // Cần phải shuffle lại playablePairs để khi chơi lại sẽ là một thứ tự mới
     setPlayablePairs(shuffleArray(playablePairs));
+    setRewardDrop(null);
   };
   
   const totalPairsInSession = totalEligiblePairs.length;
@@ -307,6 +335,7 @@ export const VocaMatchProvider: React.FC<VocaMatchProviderProps> = ({
     resetGame,
     onGoBack,
     allWordPairs,
+    rewardDrop, // Export state này ra để UI sử dụng
   };
 
   return <VocaMatchContext.Provider value={value}>{children}</VocaMatchContext.Provider>;
