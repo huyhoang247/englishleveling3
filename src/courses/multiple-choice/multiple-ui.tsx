@@ -82,6 +82,13 @@ const ResourceRewardPopup: React.FC<{
             </div>
             
             <style jsx>{`
+                /* IMPORT FONT LILITA ONE */
+                @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+                
+                .font-lilita {
+                    font-family: 'Lilita One', cursive;
+                }
+
                 /* Animation mô phỏng vật phẩm nảy ra từ rương/quái */
                 @keyframes loot-pop {
                     0% { 
