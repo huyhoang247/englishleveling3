@@ -377,7 +377,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
              <button 
                 onClick={handleDetailClick} 
                 disabled={!isDetailAvailable}
-                className="flex items-center justify-center w-14 h-14 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none" 
+                className="flex items-center justify-center w-12 h-12 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none" 
                 aria-label="Xem chi tiết"
              >
                 <img 
