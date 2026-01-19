@@ -194,7 +194,8 @@ const VoiceStepper: React.FC<{
 };
 
 // --- COMPONENT UI CHÍNH ---
-function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
+// Thêm prop selectedPractice để kiểm tra Practice mode
+function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number }) {
   const {
     loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
     timeLeft, playableQuestions, filteredQuizData, shuffledOptions, selectedOption,
@@ -215,6 +216,9 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
 
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  
+  // Xác định xem có phải là Practice 1 không (để thay đổi style câu hỏi)
+  const isPractice1 = selectedPractice % 100 === 1;
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -338,8 +342,10 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                             
                             {/* Question Box */}
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                                {/* UPDATED: Chữ in hoa (uppercase), cỡ chữ nhỏ hơn (text-lg), khoảng cách chữ rộng hơn (tracking-wide) */}
-                                <h2 className="text-lg font-bold text-white leading-tight uppercase tracking-wide">{playableQuestions[currentQuestion]?.question}</h2>
+                                {/* LOGIC THAY ĐỔI: Chỉ áp dụng uppercase và text-lg nếu là Practice 1 */}
+                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide" : "text-xl"} font-bold text-white leading-tight`}>
+                                    {playableQuestions[currentQuestion]?.question}
+                                </h2>
                                 {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
                             </div>
                         </div>
@@ -410,7 +416,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
 export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
   return (
     <QuizProvider selectedPractice={selectedPractice}>
-      <QuizAppUI onGoBack={onGoBack} />
+      {/* Truyền selectedPractice xuống UI để xử lý logic hiển thị */}
+      <QuizAppUI onGoBack={onGoBack} selectedPractice={selectedPractice} />
     </QuizProvider>
   );
 }
