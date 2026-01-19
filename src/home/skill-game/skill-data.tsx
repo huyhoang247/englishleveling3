@@ -4,6 +4,7 @@ import React from 'react';
 import { skillAssets } from '../../game-assets.ts'; // Import tài nguyên tập trung
 
 // --- START: CÁC ICON CHO KỸ NĂNG ---
+// Các component Icon này sử dụng URL từ skillAssets hoặc URL trực tiếp
 export const LifeStealIcon = ({ className = '' }: { className?: string }) => ( 
     <img src={skillAssets.lifeSteal} alt="Life Steal" className={className} /> 
 );
@@ -17,6 +18,7 @@ export const ArmorPenetrationIcon = ({ className = '' }: { className?: string })
     <img src={skillAssets.armorPenetration} alt="Armor Penetration" className={className} /> 
 );
 
+// Icon cho kỹ năng Healing
 const HEALING_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/plus-hp.webp";
 export const HealingIcon = ({ className = '' }: { className?: string }) => ( 
     <img src={HEALING_ICON_URL} alt="Healing" className={className} /> 
@@ -28,6 +30,7 @@ export const HealingIcon = ({ className = '' }: { className?: string }) => (
 export type Rarity = 'E' | 'D' | 'B' | 'A' | 'S' | 'SR';
 export const RARITY_ORDER: Rarity[] = ['E', 'D', 'B', 'A', 'S', 'SR'];
 
+// Helper lấy màu viền dựa trên độ hiếm
 export const getRarityColor = (rarity: Rarity) => { 
     switch(rarity) { 
         case 'E': return 'border-gray-600'; 
@@ -40,6 +43,7 @@ export const getRarityColor = (rarity: Rarity) => {
     } 
 };
 
+// Helper lấy gradient nền dựa trên độ hiếm
 export const getRarityGradient = (rarity: Rarity) => { 
     switch(rarity) { 
         case 'E': return 'from-gray-800/95 to-gray-900/95'; 
@@ -52,6 +56,7 @@ export const getRarityGradient = (rarity: Rarity) => {
     } 
 };
 
+// Helper lấy màu chữ dựa trên độ hiếm
 export const getRarityTextColor = (rarity: Rarity) => { 
     switch(rarity) { 
         case 'E': return 'text-gray-400'; 
@@ -64,6 +69,7 @@ export const getRarityTextColor = (rarity: Rarity) => {
     } 
 };
 
+// Helper lấy tên hiển thị của độ hiếm
 export const getRarityDisplayName = (rarity: Rarity) => { 
     if (!rarity) return 'Unknown Rank'; 
     return `${rarity.toUpperCase()} Rank`; 
@@ -71,6 +77,15 @@ export const getRarityDisplayName = (rarity: Rarity) => {
 
 // --- START: LOGIC TỈ LỆ KÍCH HOẠT MỚI ---
 
+/**
+ * Random tỉ lệ kích hoạt gốc (Base Activation Chance) dựa trên Rank.
+ * Rank E: 1% - 20%
+ * Rank D: 10% - 30%
+ * Rank B: 20% - 40%
+ * Rank A: 30% - 50%
+ * Rank S: 40% - 60%
+ * Rank SR (Tương đương SS/SSR): 60% - 80%
+ */
 export const getRandomBaseActivationChance = (rarity: Rarity): number => {
     let min = 1, max = 20;
     switch (rarity) {
@@ -79,18 +94,26 @@ export const getRandomBaseActivationChance = (rarity: Rarity): number => {
         case 'B': min = 20; max = 40; break;
         case 'A': min = 30; max = 50; break;
         case 'S': min = 40; max = 60; break;
-        case 'SR': min = 60; max = 80; break; 
+        case 'SR': min = 60; max = 80; break; // SR đại diện cho tier cao nhất hiện tại
         default: min = 1; max = 10;
     }
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
+/**
+ * Tính tổng tỉ lệ kích hoạt thực tế.
+ * Công thức: Base Chance + (5% mỗi 20 Level)
+ * Ví dụ: Level 20 -> +5%, Level 40 -> +10%
+ */
 export const calculateTotalActivationChance = (baseChance: number, level: number): number => {
     const bonus = Math.floor(level / 20) * 5;
     return baseChance + bonus;
 };
 
-// Fallback logic cho skill cũ
+/**
+ * Fallback cho các skill cũ chưa có baseActivationChance trong database.
+ * Trả về giá trị trung bình cứng.
+ */
 export const getActivationChanceFallback = (rarity: Rarity) => {
     switch (rarity) {
         case 'E': return 5; 
@@ -103,14 +126,16 @@ export const getActivationChanceFallback = (rarity: Rarity) => {
     }
 };
 
-// --- FIX LỖI IMPORT TẠI ĐÂY ---
-// Export thêm tên cũ trỏ vào hàm fallback để không bị lỗi import ở các file khác
-export const getActivationChance = getActivationChanceFallback; 
-// ------------------------------
+/**
+ * QUAN TRỌNG: Export tên cũ 'getActivationChance' trỏ về hàm fallback.
+ * Điều này giúp tránh lỗi "Attempted import error" ở các file khác chưa cập nhật logic mới.
+ */
+export const getActivationChance = getActivationChanceFallback;
 
 // --- END: LOGIC TỈ LỆ KÍCH HOẠT MỚI ---
 
 
+// Lấy rank tiếp theo (cho tính năng Merge)
 export const getNextRarity = (currentRarity: Rarity): Rarity | null => {
     const currentIndex = RARITY_ORDER.indexOf(currentRarity);
     if (currentIndex === -1 || currentIndex >= RARITY_ORDER.length - 1) {
@@ -119,6 +144,7 @@ export const getNextRarity = (currentRarity: Rarity): Rarity | null => {
     return RARITY_ORDER[currentIndex + 1];
 };
 
+// Random độ hiếm khi chế tạo (Weighted Random)
 export const getRandomRarity = (): Rarity => {
     const rarities = [ 
         { rarity: 'E', weight: 50 }, 
@@ -137,10 +163,12 @@ export const getRandomRarity = (): Rarity => {
     return 'E';
 };
 
+// Tính chi phí nâng cấp level tiếp theo
 export const getUpgradeCost = (baseCost: number, currentLevel: number): number => {
     return Math.floor(baseCost * Math.pow(1.2, currentLevel - 1));
 };
 
+// Tính tổng chi phí để nâng từ level 1 lên toLevel (dùng cho tính năng hoàn trả/tái chế)
 export const getTotalUpgradeCost = (blueprint: SkillBlueprint, toLevel: number): number => {
     if (toLevel <= 1 || !blueprint.upgradeCost) {
         return 0;
@@ -162,7 +190,7 @@ export interface SkillBlueprint {
   icon: (props: { className?: string }) => React.ReactElement;
   baseEffectValue?: number;
   effectValuePerLevel?: number;
-  upgradeCost?: number; 
+  upgradeCost?: number; // Chi phí CƠ BẢN (từ level 1 -> 2)
 }
 
 export interface OwnedSkill {
@@ -170,7 +198,7 @@ export interface OwnedSkill {
   skillId: string;
   level: number;
   rarity: Rarity;
-  baseActivationChance?: number; 
+  baseActivationChance?: number; // Trường mới: Lưu tỉ lệ kích hoạt gốc random được
 }
 
 export const CRAFTING_COST = 10;
