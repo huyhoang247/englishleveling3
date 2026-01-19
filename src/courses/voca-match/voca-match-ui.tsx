@@ -227,7 +227,7 @@ const VocaMatchUI: React.FC = () => {
                         </div>
                     </div>
                     </div>
-                    {isAudioMatch ? <VoiceSelector /> : <p className="text-sm font-semibold text-white/90">Tiến Độ</p>}
+                    {isAudioMatch && <VoiceSelector />}
                 </div>
                 <div className="w-full h-3 bg-gray-700/80 rounded-full overflow-hidden relative">
                     <div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${gameProgress}%` }}>
