@@ -65,6 +65,9 @@ interface QuizAppContextType {
   fetchAndSyncVocabularyData: () => Promise<VocabularyItem[]>;
   // Thêm hàm mới để lấy tiến trình từ local DB
   fetchAllLocalProgress: () => Promise<{ completedWordsData: any[]; completedMultiWordData: any[] }>;
+  
+  // --- NEW: Function to update resources locally ---
+  updateUserResources: (resourceType: string, amount: number) => void;
 
   // --- Vocabulary data and utilities ---
   definitionsMap: { [key: string]: Definition };
@@ -156,12 +159,12 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
           setMasteryCount(data.masteryCards);
           
           // --- Update Resources ---
-          setWood(data.wood);
-          setLeather(data.leather);
-          setOre(data.ore);
-          setCloth(data.cloth);
-          setFeather(data.feather);
-          setCoal(data.coal);
+          setWood(data.wood || 0);
+          setLeather(data.leather || 0);
+          setOre(data.ore || 0);
+          setCloth(data.cloth || 0);
+          setFeather(data.feather || 0);
+          setCoal(data.coal || 0);
         } else {
           setUserCoins(0);
           setMasteryCount(0);
@@ -315,6 +318,21 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     return fetchAllLocalProgressService();
   }, [user]);
 
+  // --- NEW FUNCTION: Update Resources Locally ---
+  const updateUserResources = useCallback((resourceType: string, amount: number) => {
+    switch(resourceType) {
+        case 'wood': setWood(prev => prev + amount); break;
+        case 'leather': setLeather(prev => prev + amount); break;
+        case 'ore': setOre(prev => prev + amount); break;
+        case 'cloth': setCloth(prev => prev + amount); break;
+        case 'feather': setFeather(prev => prev + amount); break;
+        case 'coal': setCoal(prev => prev + amount); break;
+        default: break;
+    }
+    // Ghi chú: Cần bổ sung logic gọi Service để lưu vào Firebase tại đây nếu muốn lưu lâu dài.
+    // Ví dụ: updateResourceService(user.uid, resourceType, amount);
+  }, []);
+
   // --- Giá trị được cung cấp bởi Context ---
   const value: QuizAppContextType = {
     currentView,
@@ -348,6 +366,8 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     updateAchievementData,
     fetchAndSyncVocabularyData,
     fetchAllLocalProgress,
+    updateUserResources, // Export function để component con gọi
+
     // Provide data and utilities
     definitionsMap,
     generateAudioUrlsForWord,
