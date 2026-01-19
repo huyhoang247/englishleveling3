@@ -1,8 +1,7 @@
 // --- START OF FILE: voca-match-ui.tsx ---
 
-// VocaMatchGame.tsx (Refactored to use Context)
 import React, { useMemo, useState } from 'react';
-import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; // Import context
+import { VocaMatchProvider, useVocaMatch } from './voca-match-context.tsx'; 
 import Confetti from '../../ui/fireworks-effect.tsx';
 import VocaMatchLoadingSkeleton from './voca-match-loading.tsx';
 
@@ -11,9 +10,8 @@ import BackButton from '../../ui/back-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx';
 import StreakDisplay from '../../ui/display/streak-display.tsx';
-// uiAssets is not needed for the arrow design, so it can be removed if not used elsewhere.
 
-// --- Interfaces (can be shared or defined here) ---
+// --- Interfaces ---
 interface Definition {
   vietnamese: string;
   english: string;
@@ -25,7 +23,7 @@ interface VocaMatchGameProps {
   selectedPractice: number;
 }
 
-// --- Icons (kept here as they are pure UI) ---
+// --- Icons ---
 const TrophyIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" /><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" /><path d="M4 22h16" /><path d="M10 14.66V22h4v-7.34" /><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z" /></svg>
 );
@@ -38,9 +36,43 @@ const BookmarkIcon = ({ className }: { className: string }) => (
 const AudioIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z" /> </svg>
 );
-const VoiceIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" /></svg>
-);
+
+// --- COMPONENT: POPUP NHẬN THƯỞNG (Resource Drop) ---
+const ResourceRewardPopup: React.FC<{ 
+    image: string; 
+    amount: number; 
+    type: string;
+    triggerId: number; 
+}> = ({ image, amount, type, triggerId }) => {
+    return (
+        <div key={triggerId} className="fixed bottom-20 left-8 z-[60] pointer-events-none">
+            <div className="animate-loot-pop relative">
+                <img src={image} alt={type} className="w-14 h-14 object-contain drop-shadow-lg" />
+                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
+                    x{amount}
+                </div>
+            </div>
+            <style jsx>{`
+                @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+                .font-lilita { font-family: 'Lilita One', cursive; }
+                @keyframes loot-pop {
+                    0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
+                    40% { opacity: 1; transform: scale(1.2) translateY(-30px) rotate(10deg); }
+                    60% { transform: scale(0.95) translateY(0) rotate(-5deg); }
+                    80% { transform: scale(1.05) translateY(-10px) rotate(3deg); }
+                    100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+                }
+                @keyframes fade-in-badge {
+                    0%, 50% { opacity: 0; transform: scale(0); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+                .animate-loot-pop { animation: loot-pop 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+                .animate-fade-in-badge { animation: fade-in-badge 1s ease-out forwards; }
+            `}</style>
+        </div>
+    );
+};
+
 
 // --- UI Sub-components ---
 const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ definition }) => {
@@ -51,7 +83,7 @@ const DefinitionDisplay: React.FC<{ definition: Definition | null }> = ({ defini
 
   return (
     <div className="flex-shrink-0 p-4 pt-0">
-      {/* Loại bỏ backdrop-blur, thay bằng nền trắng đục rõ hơn (bg-white/95 hoặc bg-white) vì đây là popup thông tin quan trọng */}
+      {/* Loại bỏ backdrop-blur, thay bằng nền trắng đục rõ hơn */}
       <div
         key={definition.english}
         className="bg-white border border-indigo-100 rounded-xl p-4 shadow-md animate-fade-in-up"
@@ -104,7 +136,7 @@ const AudioButton: React.FC<{ audioUrl: string | null, onClick: () => void, disa
     );
 };
 
-// --- NEW/MODIFIED: Voice Selector with Arrows ---
+// --- Voice Selector with Arrows ---
 const VoiceSelector: React.FC = () => {
     const { availableVoices, selectedVoice, setSelectedVoice } = useVocaMatch();
 
@@ -122,7 +154,7 @@ const VoiceSelector: React.FC = () => {
         setSelectedVoice(availableVoices[newIndex]);
     };
 
-    // Loại bỏ backdrop-blur, thay bằng bg-black/40 (tương phản tốt trên nền tối)
+    // Loại bỏ backdrop-blur, thay bằng bg-black/40
     return (
         <div className="flex items-center justify-center gap-1 bg-black/40 rounded-md border border-white/30 px-1 py-0.5">
             <button onClick={handlePrev} className="p-1 text-white/80 hover:text-white rounded-full hover:bg-white/20 transition-colors">
@@ -145,7 +177,8 @@ const VocaMatchUI: React.FC = () => {
     loading, showEndScreen, showConfetti, score, gameProgress, pairsCompletedInSession, totalPairsInSession,
     leftColumn, rightColumn, selectedLeft, correctPairs, incorrectPair, lastCorrectDefinition, displayedCoins,
     masteryCount, streak, streakAnimation, isAudioMatch, selectedVoice, handleLeftSelect, handleRightSelect,
-    resetGame, onGoBack, allWordPairs
+    resetGame, onGoBack, allWordPairs,
+    rewardDrop // Lấy thông tin vật phẩm rơi từ Context
   } = useVocaMatch();
 
   const matchedVietnameseWords = useMemo(() => {
@@ -183,8 +216,18 @@ const VocaMatchUI: React.FC = () => {
   const incorrectStyle = 'bg-red-200 ring-2 ring-red-500 animate-shake';
 
   return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="flex flex-col h-full w-full bg-gradient-to-br from-blue-50 to-indigo-100 relative">
       {showConfetti && <Confetti />}
+
+      {/* Hiển thị Popup khi có vật phẩm rơi */}
+      {rewardDrop && (
+        <ResourceRewardPopup 
+            image={rewardDrop.image} 
+            amount={rewardDrop.amount} 
+            type={rewardDrop.type} 
+            triggerId={rewardDrop.id}
+        />
+      )}
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
         <div className="transform scale-90 origin-left">
@@ -198,7 +241,7 @@ const VocaMatchUI: React.FC = () => {
       </header>
 
       <div className="flex-grow p-4 sm:p-6 flex flex-col min-h-0">
-         {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI (Image + Overlay 85%, không blur) */}
+         {/* <<< START: KHỐI HEADER ĐƯỢC THAY ĐỔI */}
         <div className="relative text-white p-4 rounded-xl shadow-lg mb-4 sm:mb-6 flex-shrink-0 overflow-hidden">
             {/* Background Image */}
             <div 
