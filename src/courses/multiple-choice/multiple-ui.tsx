@@ -272,13 +272,13 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
         />
       )}
 
-      {/* --- STYLE RIÊNG CHO FONT BE VIETNAM PRO (PRACTICE 1) --- */}
+      {/* --- STYLE RIÊNG CHO FONT MONTSERRAT (PRACTICE 1) --- */}
       <style jsx>{`
-        /* Import font Be Vietnam Pro để hiển thị tiếng Việt đẹp và hiện đại */
-        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700&display=swap');
+        /* Sử dụng Font Montserrat cho vẻ ngoài hiện đại và dễ đọc */
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap');
         
-        .font-be-vietnam {
-            font-family: 'Be Vietnam Pro', sans-serif;
+        .font-montserrat {
+            font-family: 'Montserrat', sans-serif;
         }
       `}</style>
 
@@ -352,8 +352,8 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
                             
                             {/* Question Box */}
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                                {/* LOGIC THAY ĐỔI: Chỉ áp dụng uppercase, text-lg VÀ font-be-vietnam nếu là Practice 1 */}
-                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide font-be-vietnam" : "text-xl"} font-bold text-white leading-tight`}>
+                                {/* LOGIC THAY ĐỔI: Sử dụng font-montserrat cho Practice 1 */}
+                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide font-montserrat" : "text-xl"} font-bold text-white leading-tight`}>
                                     {playableQuestions[currentQuestion]?.question}
                                 </h2>
                                 {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
