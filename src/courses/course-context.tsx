@@ -38,6 +38,14 @@ interface QuizAppContextType {
   user: User | null;
   userCoins: number;
   masteryCount: number;
+
+  // --- RESOURCES (ADDED) ---
+  wood: number;
+  leather: number;
+  ore: number;
+  cloth: number;
+  feather: number;
+  coal: number;
   
   goBack: () => void;
   goHome: () => void;
@@ -94,6 +102,14 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
   const [userCoins, setUserCoins] = useState(0);
   const [masteryCount, setMasteryCount] = useState(0);
   
+  // --- RESOURCE STATES ---
+  const [wood, setWood] = useState(0);
+  const [leather, setLeather] = useState(0);
+  const [ore, setOre] = useState(0);
+  const [cloth, setCloth] = useState(0);
+  const [feather, setFeather] = useState(0); 
+  const [coal, setCoal] = useState(0);       
+
   const definitionsMap = useMemo(() => {
     const definitions: { [key: string]: Definition } = {};
     const lines = detailedMeaningsText.trim().split('\n');
@@ -131,22 +147,45 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     return () => unsubscribe();
   }, []);
 
-  // Effect lắng nghe dữ liệu người dùng (coins, mastery) real-time
+  // Effect lắng nghe dữ liệu người dùng (coins, mastery, resources) real-time
   useEffect(() => {
     if (user) {
       const unsubscribe = listenToUserData(user.uid, (data) => {
         if (data) {
           setUserCoins(data.coins);
           setMasteryCount(data.masteryCards);
+          
+          // --- Update Resources ---
+          setWood(data.wood);
+          setLeather(data.leather);
+          setOre(data.ore);
+          setCloth(data.cloth);
+          setFeather(data.feather);
+          setCoal(data.coal);
         } else {
           setUserCoins(0);
           setMasteryCount(0);
+          
+          // --- Reset Resources ---
+          setWood(0); 
+          setLeather(0); 
+          setOre(0); 
+          setCloth(0);
+          setFeather(0);
+          setCoal(0);
         }
       });
       return () => unsubscribe();
     } else {
       setUserCoins(0);
       setMasteryCount(0);
+      // --- Reset Resources when no user ---
+      setWood(0); 
+      setLeather(0); 
+      setOre(0); 
+      setCloth(0);
+      setFeather(0);
+      setCoal(0);
     }
   }, [user]);
 
@@ -285,6 +324,15 @@ export const QuizAppProvider: React.FC<QuizAppProviderProps> = ({ children }) =>
     user,
     userCoins,
     masteryCount,
+
+    // --- EXPORT RESOURCES ---
+    wood,
+    leather,
+    ore,
+    cloth,
+    feather,
+    coal,
+
     goBack,
     goHome,
     setCurrentView,
