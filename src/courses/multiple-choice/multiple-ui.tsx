@@ -64,40 +64,44 @@ const ResourceRewardPopup: React.FC<{
     triggerId: number; 
 }> = ({ image, amount, type, triggerId }) => {
     return (
-        // Đặt ở góc dưới bên trái (fixed bottom-8 left-8) để đối xứng với nút Next
+        // Vị trí: Cố định góc dưới bên trái, cùng hàng với các nút bên phải
         <div key={triggerId} className="fixed bottom-8 left-8 z-[60] pointer-events-none">
-            <div className="animate-pop-in-left flex items-end">
-                <div className="relative">
-                    {/* Hình ảnh vật phẩm (Không còn hiệu ứng phát sáng nền) */}
+            {/* Animation container: Rơi xuống và nảy */}
+            <div className="animate-item-drop relative">
+                <div className="animate-float-gentle">
+                    {/* Hình ảnh vật phẩm: Nhỏ hơn (w-14 h-14 ~ 56px) */}
                     <img 
                         src={image} 
                         alt={type} 
-                        className="w-24 h-24 object-contain drop-shadow-xl animate-bounce-gentle" 
+                        className="w-14 h-14 object-contain drop-shadow-lg" 
                     />
                     
-                    {/* Badge số lượng */}
-                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-red-500 to-pink-500 text-white text-lg font-black px-2.5 py-0.5 rounded-full border-2 border-white shadow-md z-20 min-w-[36px] text-center">
-                        +{amount}
+                    {/* Badge số lượng: Nền trắng, chữ đen, định dạng x3 */}
+                    <div className="absolute -bottom-1 -right-1 bg-white/95 text-black text-xs font-bold px-1.5 py-0.5 rounded border border-gray-300 shadow-sm min-w-[24px] text-center">
+                        x{amount}
                     </div>
                 </div>
-                {/* Đã xóa phần hiển thị tên vật phẩm */}
             </div>
             
             <style jsx>{`
-                @keyframes pop-in-left {
-                    0% { opacity: 0; transform: scale(0) translateX(-40px); }
-                    60% { opacity: 1; transform: scale(1.1) translateX(10px); }
-                    100% { opacity: 1; transform: scale(1) translateX(0); }
+                /* Hiệu ứng rơi từ trên xuống giống game */
+                @keyframes item-drop {
+                    0% { opacity: 0; transform: translateY(-50px) scale(0.5); }
+                    50% { opacity: 1; transform: translateY(0) scale(1.1); }
+                    70% { transform: translateY(-10px) scale(0.95); }
+                    100% { opacity: 1; transform: translateY(0) scale(1); }
                 }
-                @keyframes bounce-gentle {
+                /* Hiệu ứng lơ lửng nhẹ sau khi rơi xuống */
+                @keyframes float-gentle {
                     0%, 100% { transform: translateY(0); }
-                    50% { transform: translateY(-5px); }
+                    50% { transform: translateY(-3px); }
                 }
-                .animate-pop-in-left {
-                    animation: pop-in-left 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+                .animate-item-drop {
+                    animation: item-drop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
                 }
-                .animate-bounce-gentle {
-                    animation: bounce-gentle 2s infinite ease-in-out;
+                .animate-float-gentle {
+                    animation: float-gentle 2s ease-in-out infinite;
+                    animation-delay: 0.6s; /* Chờ rơi xong mới lơ lửng */
                 }
             `}</style>
         </div>
