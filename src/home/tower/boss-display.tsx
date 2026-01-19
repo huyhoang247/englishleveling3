@@ -2,16 +2,62 @@
 
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
-import { CombatStats } from './tower-context.tsx'; // Import type để dùng cho Hero
+import { CombatStats } from './tower-context.tsx';
 
-// --- 1. HEALTH BAR COMPONENT (Dùng chung cho cả Hero và Boss) ---
-// Update: Thêm prop heightClass để tùy chỉnh độ cao (độ to) của thanh máu
+// --- TYPES ---
+export type ActionState = 'idle' | 'attack' | 'hit' | 'dying';
+
+// --- 0. ANIMATION STYLES & CONFIG ---
+// Component này chứa CSS Keyframes cho hiệu ứng "Game Juice"
+const CharacterAnimations = () => (
+    <style>{`
+        /* Rung lắc + Chớp sáng khi bị đánh (Hit Reaction) */
+        @keyframes shake-hit {
+            0%, 100% { transform: translateX(0); filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
+            10%, 90% { transform: translateX(-5px); }
+            20%, 80% { transform: translateX(5px); }
+            30%, 50%, 70% { 
+                transform: translateX(-5px); 
+                /* Hiệu ứng Flash: Sáng rực + hơi đỏ/cam */
+                filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3); 
+            }
+            40%, 60% { transform: translateX(5px); }
+        }
+        .animate-char-hit { 
+            animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both; 
+        }
+
+        /* Player tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang phải */
+        @keyframes lunge-right {
+            0% { transform: translateX(0) scale(1); }
+            20% { transform: translateX(-15px) scale(0.95); } /* Windup */
+            50% { transform: translateX(40px) scale(1.1); }   /* Strike */
+            100% { transform: translateX(0) scale(1); }       /* Recovery */
+        }
+        .animate-char-attack-right { 
+            animation: lunge-right 0.4s ease-in-out; 
+        }
+
+        /* Boss tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang trái */
+        @keyframes lunge-left {
+            0% { transform: translateX(0) scale(1); }
+            20% { transform: translateX(15px) scale(0.95); }  /* Windup */
+            50% { transform: translateX(-40px) scale(1.1); }  /* Strike */
+            100% { transform: translateX(0) scale(1); }       /* Recovery */
+        }
+        .animate-char-attack-left { 
+            animation: lunge-left 0.4s ease-in-out; 
+        }
+    `}</style>
+);
+
+// --- 1. HEALTH BAR COMPONENT ---
 export const HealthBar = memo(({ 
     current, 
     max, 
     colorGradient, 
     shadowColor, 
-    heightClass = "h-5 md:h-6" // Default height (dùng cho Hero)
+    heightClass = "h-5 md:h-6" 
 }: { 
     current: number, 
     max: number, 
@@ -21,15 +67,13 @@ export const HealthBar = memo(({
 }) => {
     const scale = Math.max(0, current / max);
     return (
-        <div className="w-full">
-            {/* Update: Đổi rounded-full thành rounded-lg để giảm độ bo tròn */}
+        <div className="w-full transition-all duration-300">
             <div className={`relative w-full ${heightClass} bg-black/60 rounded-lg border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
                 <div
-                    // Update: Đổi rounded-full thành rounded-md để khớp với rounded-lg bên ngoài (trừ đi padding)
-                    className={`h-full rounded-md transition-transform duration-500 ease-out origin-left ${colorGradient}`}
+                    className={`h-full rounded-md transition-transform duration-300 ease-out origin-left ${colorGradient}`}
                     style={{
                         transform: `scaleX(${scale})`,
-                        boxShadow: `0 0 8px ${shadowColor}, 0 0 12px ${shadowColor}`
+                        boxShadow: `0 0 10px ${shadowColor}`
                     }}>
                 </div>
                 <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10">
@@ -40,14 +84,24 @@ export const HealthBar = memo(({
     );
 });
 
-// --- 2. HERO DISPLAY COMPONENT (Đã sửa lỗi click full màn hình) ---
-export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, onStatsClick: () => void }) => {
-    // URL ảnh Hero (Size gốc: 3132x2946 -> Resize: 1252x1178)
+// --- 2. HERO DISPLAY COMPONENT ---
+interface HeroDisplayProps {
+    stats: CombatStats;
+    onStatsClick: () => void;
+    actionState?: ActionState; // Prop mới để kích hoạt hiệu ứng
+}
+
+export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
     const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
 
+    // Chọn class animation dựa trên actionState
+    let animClass = '';
+    if (actionState === 'hit') animClass = 'animate-char-hit';
+    if (actionState === 'attack') animClass = 'animate-char-attack-right';
+
     return (
-        // LƯU Ý: Đã xóa onClick ở thẻ cha này để tránh click nhầm vào khoảng trống
-        <div className="flex flex-col items-center justify-end h-full w-full">
+        <div className="flex flex-col items-center justify-end h-full w-full relative">
+             <CharacterAnimations />
              <style>{`
                 .hero-sprite-wrapper {
                     /* Frame Size Grid 6x6 */
@@ -56,13 +110,13 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                     overflow: hidden;
                     position: relative;
                     
-                    /* Scale 0.85 để ảnh nhỏ lại và sắc nét */
+                    /* Scale 0.85 */
                     transform: scale(0.85); 
                     transform-origin: bottom center;
 
-                    /* Tối ưu render */
+                    /* Tối ưu render pixel art */
+                    image-rendering: pixelated;
                     image-rendering: -webkit-optimize-contrast;
-                    image-rendering: crisp-edges;
                 }
                 
                 .hero-sprite-sheet {
@@ -94,32 +148,38 @@ export const HeroDisplay = memo(({ stats, onStatsClick }: { stats: CombatStats, 
                 }
             `}</style>
             
-            {/* LƯU Ý: Đã chuyển onClick vào thẻ con này để chỉ click được vào vùng Hero */}
+            {/* 
+               Container định vị vị trí đứng. 
+               LƯU Ý: Không apply animation 'transform' vào đây để tránh xung đột với translate-x 
+            */}
             <div 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                
                 {/* 
-                    HP Bar Hero
-                    Vị trí: Dịch xuống dưới (translate-y dương) để lấp vào khoảng trống trên đầu Sprite
+                    WRAPPER ANIMATION:
+                    Thẻ này chịu trách nhiệm rung lắc/di chuyển. 
+                    Nó bao bọc cả Thanh máu + Sprite để cả 2 cùng chuyển động.
                 */}
-                <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24">
-                     <HealthBar 
-                        current={stats.hp} 
-                        max={stats.maxHp} 
-                        colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
-                        shadowColor="rgba(132, 204, 22, 0.5)"
-                        // Hero dùng size mặc định
-                    />
+                <div className={animClass}>
+                    
+                    {/* HP Bar */}
+                    <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24 transition-transform duration-200 group-hover:scale-105">
+                         <HealthBar 
+                            current={stats.hp} 
+                            max={stats.maxHp} 
+                            colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
+                            shadowColor="rgba(132, 204, 22, 0.5)"
+                        />
+                    </div>
+
+                    {/* Sprite */}
+                    <div className="hero-sprite-wrapper z-10">
+                        <div className="hero-sprite-sheet"></div>
+                    </div>
                 </div>
 
-                {/* Sprite */}
-                <div className="hero-sprite-wrapper z-10">
-                    <div className="hero-sprite-sheet"></div>
-                </div>
-
-                {/* Shadow */}
+                {/* Shadow (Bóng đổ không nên rung lắc theo người) */}
                 <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
             </div>
@@ -172,6 +232,7 @@ interface BossDisplayProps {
     imgSrc: string;
     onImgError: () => void;
     onStatsClick: () => void;
+    actionState?: ActionState; // Prop mới
 }
 
 export const BossDisplay = memo(({
@@ -182,9 +243,15 @@ export const BossDisplay = memo(({
     maxHp,
     imgSrc,
     onImgError,
-    onStatsClick
+    onStatsClick,
+    actionState = 'idle'
 }: BossDisplayProps) => {
     const isSpriteBoss = [1, 3, 4, 6, 8, 50].includes(bossId);
+
+    // Chọn class animation
+    let animClass = '';
+    if (actionState === 'hit') animClass = 'animate-char-hit';
+    if (actionState === 'attack') animClass = 'animate-char-attack-left';
 
     return (
         <div className="w-full flex flex-col items-center justify-end h-full">
@@ -246,46 +313,49 @@ export const BossDisplay = memo(({
                 }
             `}</style>
 
+            {/* Container định vị chính */}
             <div 
-                className="relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group transition-transform duration-300 z-10" 
+                className="relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group z-10" 
                 onClick={onStatsClick}
             >
-                {/* Visual Anchor/Shadow at feet */}
+                {/* Visual Anchor/Shadow at feet - Không rung lắc */}
                 <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
-                {/* Magic Circle - Positioned behind boss */}
+                {/* Magic Circle - Không rung lắc */}
                 <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
 
                 {/* 
-                    HP Bar Boss
-                    Update: 
-                    1. Tăng margin-bottom (mb-6 md:mb-10) để dịch thanh máu LÊN TRÊN.
-                    2. Đổi màu gradient sang Xanh dương đậm -> Xanh da trời.
+                    WRAPPER ANIMATION: 
+                    Chứa HP Bar và Hình ảnh Boss để cùng rung lắc/di chuyển 
                 */}
-                <div className="w-40 md:w-60 z-20 mb-6 md:mb-10">
-                    <HealthBar 
-                        current={hp} 
-                        max={maxHp} 
-                        colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
-                        shadowColor="rgba(56, 189, 248, 0.5)" 
-                        heightClass="h-6 md:h-8" // Giữ nguyên độ dày
-                    />
-                </div>
-
-                {/* Sprite Render */}
-                <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
-                    {isSpriteBoss ? (
-                        <BossSprite bossId={bossId} />
-                    ) : (
-                        <img 
-                            src={imgSrc} 
-                            alt={name} 
-                            onError={onImgError}
-                            className="max-w-full max-h-full object-contain drop-shadow-2xl boss-render-optimize animate-pulse-slow" 
+                <div className={animClass}>
+                    
+                    {/* HP Bar Boss */}
+                    <div className="w-40 md:w-60 z-20 mb-6 md:mb-10 transition-transform duration-200 group-hover:scale-105">
+                        <HealthBar 
+                            current={hp} 
+                            max={maxHp} 
+                            colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
+                            shadowColor="rgba(56, 189, 248, 0.5)" 
+                            heightClass="h-6 md:h-8"
                         />
-                    )}
+                    </div>
+
+                    {/* Sprite Render */}
+                    <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
+                        {isSpriteBoss ? (
+                            <BossSprite bossId={bossId} />
+                        ) : (
+                            <img 
+                                src={imgSrc} 
+                                alt={name} 
+                                onError={onImgError}
+                                className="max-w-full max-h-full object-contain drop-shadow-2xl boss-render-optimize animate-pulse-slow" 
+                            />
+                        )}
+                    </div>
                 </div>
                 
             </div>
