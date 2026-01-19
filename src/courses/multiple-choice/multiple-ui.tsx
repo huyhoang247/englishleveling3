@@ -56,7 +56,7 @@ const ChevronRightIcon = ({ className }: { className: string }) => (
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
 
-// --- COMPONENT: POPUP NHẬN THƯỞNG (ĐÃ CẬP NHẬT) ---
+// --- COMPONENT: POPUP NHẬN THƯỞNG ---
 const ResourceRewardPopup: React.FC<{ 
     image: string; 
     amount: number; 
@@ -64,65 +64,29 @@ const ResourceRewardPopup: React.FC<{
     triggerId: number; 
 }> = ({ image, amount, type, triggerId }) => {
     return (
-        // Vị trí: Cố định góc dưới bên trái
         <div key={triggerId} className="fixed bottom-8 left-8 z-[60] pointer-events-none">
-            {/* Hiệu ứng nảy (Loot Pop) */}
             <div className="animate-loot-pop relative">
-                {/* Hình ảnh vật phẩm */}
-                <img 
-                    src={image} 
-                    alt={type} 
-                    className="w-14 h-14 object-contain drop-shadow-lg" 
-                />
-                
-                {/* Badge số lượng: Nền đen opacity 80%, chữ trắng, font-lilita */}
+                <img src={image} alt={type} className="w-14 h-14 object-contain drop-shadow-lg" />
                 <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
                     x{amount}
                 </div>
             </div>
-            
             <style jsx>{`
-                /* IMPORT FONT LILITA ONE */
                 @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-                
-                .font-lilita {
-                    font-family: 'Lilita One', cursive;
-                }
-
-                /* Animation mô phỏng vật phẩm nảy ra từ rương/quái */
+                .font-lilita { font-family: 'Lilita One', cursive; }
                 @keyframes loot-pop {
-                    0% { 
-                        opacity: 0;
-                        transform: scale(0) translateY(50px) rotate(-45deg); 
-                    }
-                    40% { 
-                        opacity: 1;
-                        transform: scale(1.2) translateY(-30px) rotate(10deg); 
-                    }
-                    60% { 
-                        transform: scale(0.95) translateY(0) rotate(-5deg);
-                    }
-                    80% { 
-                        transform: scale(1.05) translateY(-10px) rotate(3deg);
-                    }
-                    100% { 
-                        opacity: 1;
-                        transform: scale(1) translateY(0) rotate(0deg); 
-                    }
+                    0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
+                    40% { opacity: 1; transform: scale(1.2) translateY(-30px) rotate(10deg); }
+                    60% { transform: scale(0.95) translateY(0) rotate(-5deg); }
+                    80% { transform: scale(1.05) translateY(-10px) rotate(3deg); }
+                    100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
                 }
-
                 @keyframes fade-in-badge {
                     0%, 50% { opacity: 0; transform: scale(0); }
                     100% { opacity: 1; transform: scale(1); }
                 }
-
-                .animate-loot-pop {
-                    animation: loot-pop 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-                }
-                
-                .animate-fade-in-badge {
-                    animation: fade-in-badge 1s ease-out forwards;
-                }
+                .animate-loot-pop { animation: loot-pop 1s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+                .animate-fade-in-badge { animation: fade-in-badge 1s ease-out forwards; }
             `}</style>
         </div>
     );
@@ -156,45 +120,24 @@ const VoiceStepper: React.FC<{
   }
   return (
     <div className="flex items-center justify-center gap-2 bg-black/50 p-1 rounded-full border border-white/25">
-      <button 
-        onClick={() => onNavigate('previous')} 
-        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
-        aria-label="Giọng đọc trước"
-      >
+      <button onClick={() => onNavigate('previous')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc trước">
         <ChevronLeftIcon className="w-3 h-3 text-white/80" />
       </button>
-      
       <div className="text-center w-20 overflow-hidden">
-         <span 
-            key={currentVoice}
-            className="text-xs font-semibold text-white animate-fade-in-short"
-         >
-            {currentVoice}
-        </span>
+         <span key={currentVoice} className="text-xs font-semibold text-white animate-fade-in-short">{currentVoice}</span>
       </div>
-
-      <button 
-        onClick={() => onNavigate('next')} 
-        className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200"
-        aria-label="Giọng đọc tiếp theo"
-      >
+      <button onClick={() => onNavigate('next')} className="flex items-center justify-center w-6 h-6 rounded-full hover:bg-white/20 transition-colors duration-200" aria-label="Giọng đọc tiếp theo">
         <ChevronRightIcon className="w-3 h-3 text-white/80" />
       </button>
       <style jsx>{`
-        @keyframes fade-in-short {
-          from { opacity: 0; transform: translateY(5px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in-short {
-          animation: fade-in-short 0.25s ease-out forwards;
-        }
+        @keyframes fade-in-short { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+        .animate-fade-in-short { animation: fade-in-short 0.25s ease-out forwards; }
       `}</style>
     </div>
   );
 };
 
 // --- COMPONENT UI CHÍNH ---
-// Thêm prop selectedPractice để kiểm tra Practice mode
 function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number }) {
   const {
     loading, showScore, currentQuestion, score, coins, streak, masteryCount, streakAnimation,
@@ -217,8 +160,30 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
   const audioRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
   
-  // Xác định xem có phải là Practice 1 không (để thay đổi style câu hỏi)
+  // Xác định xem có phải là Practice 1 không
   const isPractice1 = selectedPractice % 100 === 1;
+
+  // --- HÀM RENDER CÂU HỎI ĐẶC BIỆT CHO PRACTICE 1 ---
+  const renderPractice1Question = (text: string) => {
+      // Tách chuỗi dựa trên dấu ngoặc kép. VD: TỪ "TRY" LÀ GÌ -> ['TỪ ', '"TRY"', ' LÀ GÌ']
+      const parts = text.split(/(".*?")/g);
+      
+      return parts.map((part, index) => {
+          // Kiểm tra xem phần này có phải là từ trong ngoặc kép không
+          if (part.startsWith('"') && part.endsWith('"')) {
+              // Loại bỏ dấu ngoặc kép ở đầu và cuối
+              const cleanWord = part.slice(1, -1);
+              // Render từ đó với màu xanh dương sáng (blue-300)
+              return (
+                  <span key={index} className="text-blue-300 mx-1">
+                      {cleanWord}
+                  </span>
+              );
+          }
+          // Các phần văn bản bình thường
+          return <span key={index}>{part}</span>;
+      });
+  };
 
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
@@ -262,7 +227,6 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
       
-      {/* --- HIỂN THỊ POPUP VẬT PHẨM (GÓC TRÁI DƯỚI) --- */}
       {rewardDrop && (
         <ResourceRewardPopup 
             image={rewardDrop.image} 
@@ -271,16 +235,6 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
             triggerId={rewardDrop.id}
         />
       )}
-
-      {/* --- STYLE RIÊNG CHO FONT MONTSERRAT (PRACTICE 1) --- */}
-      <style jsx>{`
-        /* Sử dụng Font Montserrat cho vẻ ngoài hiện đại và dễ đọc */
-        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&display=swap');
-        
-        .font-montserrat {
-            font-family: 'Montserrat', sans-serif;
-        }
-      `}</style>
 
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0 z-50">
         <div className="transform scale-90 origin-left">
@@ -320,13 +274,10 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
                             backgroundPosition: 'center',
                         }}
                     />
-                    {/* Overlay Black 85% */}
                     <div className="absolute inset-0 bg-black/85 z-0" />
 
-                    {/* Content Wrapper */}
                     <div className="relative z-10">
                         <div className="flex justify-between items-center mb-4">
-                            {/* Counter */}
                             <div className="relative"><div className="bg-black/40 rounded-lg px-2 py-1 shadow-inner border border-white/20"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
                             <div className="flex items-center gap-2">
                                 <button onClick={handleHintClick} disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0} className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30" aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hint.webp" alt="Hint" className="w-4 h-4" /><span className="text-yellow-300">{HINT_COST}</span><div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div></button>
@@ -336,7 +287,6 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
                         <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                         
                         <div className="relative">
-                            {/* Audio Controls */}
                             {currentAudioUrl && (
                             <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3">
                                 <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/50 border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
@@ -350,11 +300,13 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
                             </div>
                             )}
                             
-                            {/* Question Box */}
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                                {/* LOGIC THAY ĐỔI: Sử dụng font-montserrat cho Practice 1 */}
-                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide font-montserrat" : "text-xl"} font-bold text-white leading-tight`}>
-                                    {playableQuestions[currentQuestion]?.question}
+                                {/* LOGIC THAY ĐỔI: Sử dụng renderPractice1Question nếu là Practice 1 */}
+                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide" : "text-xl"} font-bold text-white leading-tight`}>
+                                    {isPractice1 
+                                        ? renderPractice1Question(playableQuestions[currentQuestion]?.question)
+                                        : playableQuestions[currentQuestion]?.question
+                                    }
                                 </h2>
                                 {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
                             </div>
@@ -388,7 +340,6 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
       </main>
       
       {showNextButton && (playableQuestions.length > 0) && (
-        // Đã dịch xuống bottom-4 theo yêu cầu trước đó
         <div className="fixed bottom-4 right-8 z-50 flex items-center gap-3">
           <div className="group relative">
              <button 
@@ -426,7 +377,6 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
 export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () => void; selectedPractice: number; }) {
   return (
     <QuizProvider selectedPractice={selectedPractice}>
-      {/* Truyền selectedPractice xuống UI để xử lý logic hiển thị */}
       <QuizAppUI onGoBack={onGoBack} selectedPractice={selectedPractice} />
     </QuizProvider>
   );
