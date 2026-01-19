@@ -91,6 +91,35 @@ export const updateUserMastery = async (userId: string, amount: number): Promise
 };
 
 /**
+ * [MỚI] Cập nhật số lượng tài nguyên (nguyên liệu) cho người dùng trên Firestore.
+ * Hàm này giúp đồng bộ vật phẩm nhận được từ Quiz lên Firebase.
+ * @param userId - ID người dùng.
+ * @param resourceType - Loại tài nguyên ('wood', 'leather', 'ore', 'cloth', 'feather', 'coal').
+ * @param amount - Số lượng cộng thêm.
+ */
+export const updateUserResourceService = async (userId: string, resourceType: string, amount: number): Promise<void> => {
+  if (!userId || amount === 0) return;
+
+  const validResources = ['wood', 'leather', 'ore', 'cloth', 'feather', 'coal'];
+  if (!validResources.includes(resourceType)) {
+    console.error(`Invalid resource type passed to service: ${resourceType}`);
+    return;
+  }
+
+  const userDocRef = doc(db, 'users', userId);
+  try {
+    // Sử dụng computed property name [resourceType] để cập nhật trường tương ứng
+    await updateDoc(userDocRef, {
+      [resourceType]: increment(amount)
+    });
+    // console.log(`Synced ${amount} ${resourceType} to Firebase for user ${userId}`);
+  } catch (error) {
+    console.error(`Failed to update resource ${resourceType} for user ${userId}:`, error);
+    throw error;
+  }
+};
+
+/**
  * Lấy danh sách từ vựng đã mở của người dùng từ IndexedDB.
  * @param userId - ID của người dùng (giữ lại để nhất quán API, nhưng không dùng đến).
  * @returns {Promise<string[]>} Mảng các từ vựng đã mở.
