@@ -56,7 +56,7 @@ const ChevronRightIcon = ({ className }: { className: string }) => (
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
 
-// --- COMPONENT: POPUP NHẬN THƯỞNG (ĐÃ CẬP NHẬT ANIMATION GAME) ---
+// --- COMPONENT: POPUP NHẬN THƯỞNG (ĐÃ CẬP NHẬT) ---
 const ResourceRewardPopup: React.FC<{ 
     image: string; 
     amount: number; 
@@ -68,15 +68,15 @@ const ResourceRewardPopup: React.FC<{
         <div key={triggerId} className="fixed bottom-8 left-8 z-[60] pointer-events-none">
             {/* Hiệu ứng nảy (Loot Pop) */}
             <div className="animate-loot-pop relative">
-                {/* Hình ảnh vật phẩm: w-14 h-14 (56px) */}
+                {/* Hình ảnh vật phẩm */}
                 <img 
                     src={image} 
                     alt={type} 
                     className="w-14 h-14 object-contain drop-shadow-lg" 
                 />
                 
-                {/* Badge số lượng: Nền trắng đục, chữ đen, format x3 */}
-                <div className="absolute -bottom-1 -right-1 bg-white/90 text-black text-xs font-bold px-1.5 py-0.5 rounded border border-gray-300 shadow-sm min-w-[24px] text-center animate-fade-in-badge">
+                {/* Badge số lượng: Nền đen opacity 80%, chữ trắng, font-lilita */}
+                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
                     x{amount}
                 </div>
             </div>
@@ -90,17 +90,17 @@ const ResourceRewardPopup: React.FC<{
                     }
                     40% { 
                         opacity: 1;
-                        transform: scale(1.2) translateY(-30px) rotate(10deg); /* Nảy lên cao quá đà */
+                        transform: scale(1.2) translateY(-30px) rotate(10deg); 
                     }
                     60% { 
-                        transform: scale(0.95) translateY(0) rotate(-5deg); /* Chạm đất và hơi bẹt lại */
+                        transform: scale(0.95) translateY(0) rotate(-5deg);
                     }
                     80% { 
-                        transform: scale(1.05) translateY(-10px) rotate(3deg); /* Nảy nhẹ lên lần 2 */
+                        transform: scale(1.05) translateY(-10px) rotate(3deg);
                     }
                     100% { 
                         opacity: 1;
-                        transform: scale(1) translateY(0) rotate(0deg); /* Đứng yên */
+                        transform: scale(1) translateY(0) rotate(0deg); 
                     }
                 }
 
@@ -110,7 +110,6 @@ const ResourceRewardPopup: React.FC<{
                 }
 
                 .animate-loot-pop {
-                    /* Thời gian 1s để mượt hơn, cubic-bezier tạo cảm giác vật lý */
                     animation: loot-pop 1s cubic-bezier(0.25, 1, 0.5, 1) forwards;
                 }
                 
