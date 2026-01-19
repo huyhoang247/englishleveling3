@@ -282,22 +282,28 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* --- BOSS CONFIGURATIONS --- */
-                .boss-size-01 { width: 441px; height: 442px; transform: scale(0.6); }
-                .boss-anim-01 { width: 2646px; height: 2652px; background-size: 2646px 2652px; animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite; }
-                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -2646px; } }
-                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -2652px; } }
+                /* --- BOSS 01 CONFIGURATION (Updated Size: 1323x1326) --- */
+                .boss-size-01 { width: 220.5px; height: 221px; transform: scale(1); }
+                .boss-anim-01 { 
+                    width: 1323px; height: 1326px; background-size: 1323px 1326px; 
+                    animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite; 
+                }
+                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -1323px; } }
+                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -1326px; } }
 
+                /* --- BOSS 03 CONFIGURATION --- */
                 .boss-size-03 { width: 513px; height: 399px; transform: scale(0.55); }
                 .boss-anim-03 { width: 3078px; height: 2394px; background-size: 3078px 2394px; animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; }
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
 
+                /* --- BOSS 04 CONFIGURATION --- */
                 .boss-size-04 { width: 300.5px; height: 332px; transform: scale(0.9); }
                 .boss-anim-04 { width: 1803px; height: 1992px; background-size: 1803px 1992px; animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; }
                 @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
                 @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
 
+                /* --- BOSS 06 CONFIGURATION --- */
                 .boss-size-06 { width: 266px; height: 230px; transform: scale(1.1); }
                 .boss-anim-06 { width: 1596px; height: 1380px; background-size: 1596px 1380px; animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; }
                 @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
@@ -306,7 +312,7 @@ export const BossDisplay = memo(({
                 /* Mobile Adjustments */
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
-                    .boss-size-01 { transform: scale(0.4); }
+                    .boss-size-01 { transform: scale(0.8); } /* Scale 0.8 for mobile */
                     .boss-size-03 { transform: scale(0.35); }
                     .boss-size-04 { transform: scale(0.6); }
                     .boss-size-06 { transform: scale(0.7); }
