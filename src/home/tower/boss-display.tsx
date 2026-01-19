@@ -30,23 +30,23 @@ const CharacterAnimations = () => (
         /* Player tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang phải */
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(-15px) scale(0.95); } /* Windup */
-            50% { transform: translateX(40px) scale(1.1); }   /* Strike */
+            20% { transform: translateX(-20px) scale(0.95); } /* Windup */
+            50% { transform: translateX(120px) scale(1.1); }  /* Strike - Increased Distance */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-right { 
-            animation: lunge-right 0.4s ease-in-out; 
+            animation: lunge-right 0.5s ease-in-out; 
         }
 
         /* Boss tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang trái */
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(15px) scale(0.95); }  /* Windup */
-            50% { transform: translateX(-40px) scale(1.1); }  /* Strike */
+            20% { transform: translateX(20px) scale(0.95); }  /* Windup */
+            50% { transform: translateX(-120px) scale(1.1); } /* Strike - Increased Distance */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-left { 
-            animation: lunge-left 0.4s ease-in-out; 
+            animation: lunge-left 0.5s ease-in-out; 
         }
     `}</style>
 );
