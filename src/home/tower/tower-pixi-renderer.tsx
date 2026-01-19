@@ -101,7 +101,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 hero.play();
                 
                 // Tạo Shadow (Bóng đổ)
-                const shadowTex = await PIXI.Assets.load(`${BASE_URL}/images/shadow.png`);
+                const shadowTex = await PIXI.Assets.load(`${BASE_URL}/images/hero.webp`);
                 const shadow = new PIXI.Sprite(shadowTex);
                 shadow.anchor.set(0.5);
                 shadow.y = -10;
