@@ -226,7 +226,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
         isLoading, error, playerStats, bossStats, previousCombatLog, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
-        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
+        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep,
+        triggerNextTurn // <--- LẤY HÀM NÀY TỪ CONTEXT
     } = useBossBattle();
 
     const [damages, setDamages] = useState<DamageText[]>([]);
@@ -323,11 +324,17 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, 1200);
     }, []);
 
-    // --- TURN SEQUENCE LOGIC (ĐÃ FIX DELAY) ---
+    // --- TURN SEQUENCE LOGIC (EVENT BASED) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
+        // Nếu game kết thúc hoặc không còn đánh nhau, không tính tiếp
+        if (battleState !== 'fighting' || gameOver) return;
+        
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
+
+        // Biến này để tính thời gian kết thúc của hoạt ảnh dài nhất trong lượt
+        let maxAnimationDuration = 0;
 
         // --- 1. PLAYER TURN (Starts at 0ms) ---
         if (playerDmg > 0) {
@@ -380,7 +387,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit3Time);
             setTimeout(() => setBossState('idle'), hit3Time + 400);
 
-            // Cleanup
+            // Cleanup Orbs
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
                 if (bossStats) {
@@ -390,14 +397,18 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                      });
                 }
             }, hit3Time + 500);
+
+            // Cập nhật thời gian hoạt ảnh dài nhất cho Player
+            // Hit 3 (1350ms) + 400ms buffer cho damage text bay lên
+            maxAnimationDuration = Math.max(maxAnimationDuration, 1750);
         }
         
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
         }
         
-        // --- 2. BOSS TURN (Đã giảm delay từ 2200 -> 1500) ---
-        // Player last hit @ 1350ms. Boss starts @ 1500ms. Rất mượt.
+        // --- 2. BOSS TURN ---
+        // Player last hit @ 1350ms. Boss starts @ 1500ms.
         const bossStartDelay = 1500; 
         
         if (bossDmg > 0) {
@@ -450,19 +461,35 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit3Time);
             setTimeout(() => setHeroState('idle'), hit3Time + 400);
 
-            // Cleanup
+            // Cleanup Orbs
             setTimeout(() => {
                  setOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
             }, hit3Time + 500);
+
+            // Cập nhật thời gian hoạt ảnh dài nhất cho Boss
+            // Hit 3 time (~2850ms)
+            maxAnimationDuration = Math.max(maxAnimationDuration, 2850);
         }
 
         if (bossReflectDmg > 0) {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
             }, 3000); 
+            // Reflect xảy ra muộn nhất (3000ms), thêm buffer 500ms
+            maxAnimationDuration = Math.max(maxAnimationDuration, 3500);
         }
 
-    }, [lastTurnEvents, addDamageText]); 
+        // --- 3. TRIGGER NEXT TURN ---
+        // Gọi lượt tiếp theo sau khi hoạt ảnh dài nhất kết thúc + 800ms nghỉ ngơi
+        const nextTurnDelay = maxAnimationDuration + 800;
+        
+        const nextTurnTimer = setTimeout(() => {
+             triggerNextTurn();
+        }, nextTurnDelay);
+
+        return () => clearTimeout(nextTurnTimer);
+
+    }, [lastTurnEvents, addDamageText, triggerNextTurn, battleState, gameOver, bossStats]); 
 
     const handleSweepClick = async () => {
         setIsSweeping(true);
