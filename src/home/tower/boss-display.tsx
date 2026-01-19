@@ -110,14 +110,12 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     overflow: hidden;
                     position: relative;
                     
-                    /* Scale Default (Desktop) */
+                    /* Desktop Scale */
                     transform: scale(0.85); 
                     transform-origin: bottom center;
 
-                    /* Tối ưu render pixel art - Giúp scale 0.5 cực nét */
-                    image-rendering: pixelated;
-                    image-rendering: -moz-crisp-edges;
-                    image-rendering: crisp-edges;
+                    /* Render mặc định (Optimize contrast) */
+                    image-rendering: -webkit-optimize-contrast;
                 }
                 
                 .hero-sprite-sheet {
@@ -142,7 +140,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     to { background-position-y: -1178px; }
                 }
 
-                /* Mobile Adjustment - Scale 0.5 */
+                /* Mobile Adjustments - Hero Scale 0.5 */
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
                         transform: scale(0.5); 
@@ -152,6 +150,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
             
             {/* 
                Container định vị vị trí đứng. 
+               LƯU Ý: Không apply animation 'transform' vào đây để tránh xung đột với translate-x 
             */}
             <div 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
@@ -164,7 +163,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                 */}
                 <div className={animClass}>
                     
-                    {/* HP Bar */}
+                    {/* HP Bar - Đã thêm translate-x-6 để dịch sang phải */}
                     <div className="w-32 md:w-48 z-20 translate-y-16 md:translate-y-24 translate-x-6 transition-transform duration-200 group-hover:scale-105">
                          <HealthBar 
                             current={stats.hp} 
@@ -180,7 +179,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     </div>
                 </div>
 
-                {/* Shadow */}
+                {/* Shadow (Bóng đổ không nên rung lắc theo người) */}
                 <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
             </div>
@@ -258,10 +257,8 @@ export const BossDisplay = memo(({
         <div className="w-full flex flex-col items-center justify-end h-full">
             <style>{`
                 .boss-render-optimize {
-                    /* Dùng pixelated thay vì optimize-contrast để nét khi scale 0.5 */
-                    image-rendering: pixelated;
-                    image-rendering: -moz-crisp-edges;
-                    image-rendering: crisp-edges;
+                    /* Render mặc định (Optimize contrast) */
+                    image-rendering: -webkit-optimize-contrast;
                     transform: translateZ(0);
                 }
                 .boss-sprite-wrapper {
@@ -328,10 +325,10 @@ export const BossDisplay = memo(({
                 className="relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group z-10" 
                 onClick={onStatsClick}
             >
-                {/* Visual Anchor/Shadow at feet */}
+                {/* Visual Anchor/Shadow at feet - Không rung lắc */}
                 <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
 
-                {/* Magic Circle */}
+                {/* Magic Circle - Không rung lắc */}
                 <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
