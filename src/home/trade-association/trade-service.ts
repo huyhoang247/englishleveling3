@@ -46,6 +46,7 @@ const getSeededRange = (seed: string, min: number, max: number): number => {
 };
 
 const getDailyPrice = (resourceType: string): number => {
+    // Seed kết hợp ngày + tên tài nguyên nên giá mỗi loại sẽ khác nhau
     return getSeededRange(getVnDateString() + resourceType, 5, 20);
 };
 
@@ -60,7 +61,7 @@ const getDailyStoneTrade = (): TradeOption => {
     const tierIndex = pseudoRandom(dateStr + 'stoneTier') % 3;
     const selectedTier = tiers[tierIndex];
 
-    // 2. Xác định số lượng
+    // 2. Xác định khoảng số lượng (Min/Max) dựa trên độ hiếm
     let minQ = 5, maxQ = 15;
     let title = "Basic Upgrade Cache";
     
@@ -72,9 +73,12 @@ const getDailyStoneTrade = (): TradeOption => {
         title = "Legendary Upgrade Cache";
     }
 
-    const quantity = getSeededRange(dateStr + 'stoneQty', minQ, maxQ);
+    // --- SỬA ĐỔI: Tính 2 số lượng riêng biệt bằng seed khác nhau ---
+    // Seed 'stoneQty1' cho nguyên liệu đầu, 'stoneQty2' cho nguyên liệu sau
+    const quantity1 = getSeededRange(dateStr + 'stoneQty1', minQ, maxQ);
+    const quantity2 = getSeededRange(dateStr + 'stoneQty2', minQ, maxQ);
 
-    // 3. Chọn nguyên liệu
+    // 3. Chọn nguyên liệu ngẫu nhiên từ pool
     const commonPool: {type: ResourceType, name: string}[] = [
         { type: 'wood', name: 'Wood' },
         { type: 'leather', name: 'Leather' },
@@ -94,8 +98,8 @@ const getDailyStoneTrade = (): TradeOption => {
         title: title,
         description: `Daily Special: ${selectedTier.charAt(0).toUpperCase() + selectedTier.slice(1)} Stone`,
         ingredients: [
-            { type: commonIng.type, name: commonIng.name, amount: quantity },
-            { type: rareIng.type, name: rareIng.name, amount: quantity }
+            { type: commonIng.type, name: commonIng.name, amount: quantity1 },
+            { type: rareIng.type, name: rareIng.name, amount: quantity2 }
         ],
         receiveType: 'stone',
         receiveSubType: selectedTier,
