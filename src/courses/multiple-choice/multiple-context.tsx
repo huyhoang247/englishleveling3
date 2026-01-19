@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback } from 'react';
 import { useQuizApp } from '../course-context.tsx';
+import { resourceAssets } from '../../game-assets.ts'; 
 
 // --- CÁC HÀM TIỆN ÍCH VÀ INTERFACE ---
 const shuffleArray = (array: any[]) => {
@@ -19,6 +20,14 @@ const countWords = (str: string): number => {
 };
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
+
+// Interface cho phần thưởng (Resource Drop)
+interface RewardDrop {
+  type: string;
+  amount: number;
+  image: string;
+  id: number; // Unique ID để reset animation mỗi lần nhận thưởng
+}
 
 // --- ĐỊNH NGHĨA TYPE CHO CONTEXT ---
 interface QuizContextType {
@@ -47,6 +56,9 @@ interface QuizContextType {
   
   // New State for Detail Button Fix
   isDetailAvailable: boolean;
+
+  // New State for Reward Drop (Vật phẩm rơi ra)
+  rewardDrop: RewardDrop | null;
 
   // Actions / Handlers
   handleAnswer: (selectedAnswer: string) => void;
@@ -77,6 +89,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchAllLocalProgress, 
     recordGameSuccess,
     updateUserCoins,
+    updateUserResources, // Hàm cập nhật tài nguyên từ course-context
     fetchOrCreateUser,
     definitionsMap,
     exampleData,
@@ -110,6 +123,9 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [detailData, setDetailData] = useState<Definition | null>(null);
   const [currentQuestionWord, setCurrentQuestionWord] = useState<string | null>(null);
   const [selectedVoice, setSelectedVoice] = useState<string>('Matilda');
+  
+  // State mới quản lý phần thưởng rơi ra
+  const [rewardDrop, setRewardDrop] = useState<RewardDrop | null>(null);
 
   // Sync local UI state with the global state from context
   useEffect(() => { setCoins(userCoins); }, [userCoins]);
@@ -143,7 +159,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return null;
   }, [currentQuestion, playableQuestions, selectedVoice]);
 
-  // --- LOGIC MỚI: Tính toán xem có thể hiển thị nút Detail hay không ---
+  // Tính toán xem có thể hiển thị nút Detail hay không
   const isDetailAvailable = useMemo(() => {
     if (!currentQuestionWord) return false;
     // Kiểm tra xem từ hiện tại có trong từ điển không
@@ -327,6 +343,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setPlayableQuestions(shuffleArray(newRemainingQuestions));
     setCurrentQuestion(0); setScore(0); setShowScore(false); setSelectedOption(null); setAnswered(false); setStreak(0); setTimeLeft(TOTAL_TIME); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
     setSelectedVoice('Matilda');
+    setRewardDrop(null); // Reset reward drop khi reset quiz
   }, [playableQuestions, currentQuestion, filteredQuizData, userVocabulary]);
 
   useEffect(() => {
@@ -359,16 +376,45 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => clearInterval(timerId);
   }, [currentQuestion, answered, showScore, playableQuestions.length, loading]);
 
+  // --- HÀM XỬ LÝ TRẢ LỜI CÂU HỎI (ĐÃ CẬP NHẬT LOGIC DROP RESOURCES) ---
   const handleAnswer = async (selectedAnswer: string) => {
     if (answered || playableQuestions.length === 0) return;
     setSelectedOption(selectedAnswer);
     setAnswered(true);
     const currentQuizItem = playableQuestions[currentQuestion];
     const isCorrect = selectedAnswer === currentQuizItem.correctAnswer;
+    
     if (isCorrect) {
-      setShowConfetti(true); setScore(prev => prev + 1); const newStreak = streak + 1; setStreak(newStreak); const coinsToAdd = masteryCount * newStreak;
+      setShowConfetti(true); 
+      setScore(prev => prev + 1); 
+      const newStreak = streak + 1; 
+      setStreak(newStreak); 
+      const coinsToAdd = masteryCount * newStreak;
+
+      // --- LOGIC: Rơi vật phẩm (Resources Drop) ---
+      const resourceTypes = ['wood', 'leather', 'ore', 'cloth', 'feather', 'coal'];
+      // Chọn ngẫu nhiên loại vật phẩm
+      const randomType = resourceTypes[Math.floor(Math.random() * resourceTypes.length)];
+      // Chọn ngẫu nhiên số lượng từ 1 đến 5
+      const randomAmount = Math.floor(Math.random() * 5) + 1;
+
+      // Cập nhật state Reward để hiển thị Popup
+      setRewardDrop({
+        type: randomType,
+        amount: randomAmount,
+        image: resourceAssets[randomType as keyof typeof resourceAssets], // Lấy hình ảnh từ assets
+        id: Date.now() // Sử dụng timestamp làm ID duy nhất
+      });
+
+      // Cập nhật Resource vào state của User (Context)
+      if (user) {
+         updateUserResources(randomType, randomAmount);
+      }
+
+      // Tiếp tục logic cộng coin và hiển thị hiệu ứng
       if (coinsToAdd > 0) { setCoins(prevCoins => prevCoins + coinsToAdd); }
       if (newStreak >= 1) { setStreakAnimation(true); setTimeout(() => setStreakAnimation(false), 1500); }
+      
       if (user && currentQuestionWord) {
         try {
           const gameModeId = `quiz-${selectedPractice}`;
@@ -379,7 +425,10 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
       setTimeout(() => { setShowConfetti(false); setShowNextButton(true); }, 4000);
-    } else { setStreak(0); setShowNextButton(true); }
+    } else { 
+        setStreak(0); 
+        setShowNextButton(true); 
+    }
   };
 
   const handleHintClick = async () => {
@@ -408,6 +457,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (nextQuestion < playableQuestions.length) {
       setCurrentQuestion(nextQuestion); setSelectedOption(null); setAnswered(false); setShowNextButton(false); setHintUsed(false); setHiddenOptions([]);
       setSelectedVoice('Matilda');
+      setRewardDrop(null); // Reset trạng thái nhận thưởng khi qua câu mới
     } else { setShowScore(true); }
   };
 
@@ -432,6 +482,7 @@ export const QuizProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handleChangeVoiceDirection,
     // Provide the new state
     isDetailAvailable,
+    rewardDrop, // Xuất state phần thưởng ra Context
   };
 
   return (
