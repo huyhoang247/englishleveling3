@@ -56,7 +56,7 @@ interface BossBattleActions {
     retryCurrentFloor: () => void;
     handleNextFloor: () => void;
     handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } }>;
-    triggerNextTurn: () => void; // Hàm mới để UI gọi khi hết animation
+    triggerNextTurn: () => void; // Hàm mới để UI gọi
 }
 
 type BossBattleContextType = BossBattleState & BossBattleActions;
@@ -227,9 +227,9 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [currentBossData, game]);
 
+    // Hàm tính toán logic cho 1 lượt
     const runBattleTurn = useCallback(() => {
-        // Chỉ chạy nếu đang trong trạng thái chiến đấu và game chưa kết thúc
-        if (battleState !== 'fighting' || gameOver || !playerStats || !bossStats) return;
+        if (!playerStats || !bossStats || gameOver) return;
 
         const nextTurn = turnCounter + 1;
         const { player: newPlayer, boss: newBoss, turnLogs, winner, turnEvents } = executeFullTurn(playerStats, bossStats, nextTurn);
@@ -243,7 +243,14 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         if (winner) {
             endGame(winner);
         }
-    }, [turnCounter, playerStats, bossStats, executeFullTurn, endGame, battleState, gameOver]);
+    }, [turnCounter, playerStats, bossStats, executeFullTurn, endGame, gameOver]);
+
+    // --- NEW: Hàm UI sẽ gọi khi chạy xong animation ---
+    const triggerNextTurn = useCallback(() => {
+        if (battleState === 'fighting' && !gameOver) {
+            runBattleTurn();
+        }
+    }, [battleState, gameOver, runBattleTurn]);
 
     const skipBattle = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -274,41 +281,14 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
     
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
-        
         isEndingGame.current = false;
         
-        // Trừ năng lượng
         setPlayerStats(prev => {
             if (!prev) return null;
             return { ...prev, energy: prev.energy - 10 };
         });
-        
-        // Chuyển trạng thái
-        setBattleState('fighting');
-        
-        // Kích hoạt ngay lượt đầu tiên sau một khoảng delay cực ngắn
-        // Để đảm bảo state 'fighting' đã được cập nhật
-        setTimeout(() => {
-            // Chúng ta không gọi runBattleTurn trực tiếp ở đây vì nó phụ thuộc vào state cũ
-            // Mà gọi thông qua setter để đảm bảo logic
-            setTurnCounter(prev => {
-                if (prev === 0) return 0; // Trigger effect elsewhere if needed
-                return prev;
-            });
-        }, 100);
-
+        setBattleState('fighting'); // Effect ở dưới sẽ bắt sự kiện này để chạy turn 1
     }, [battleState, playerStats]);
-
-    // Effect phụ trợ để kích hoạt lượt đầu tiên khi startGame được gọi
-    // Điều này giúp tránh việc gọi runBattleTurn trong startGame khi state chưa kịp update
-    useEffect(() => {
-        if (battleState === 'fighting' && turnCounter === 0 && !gameOver) {
-            const timer = setTimeout(() => {
-                runBattleTurn();
-            }, 100);
-            return () => clearTimeout(timer);
-        }
-    }, [battleState, turnCounter, gameOver, runBattleTurn]);
 
     const resetAllStateForNewBattle = useCallback(() => {
         setPreviousCombatLog(combatLog);
@@ -475,6 +455,17 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [currentFloor, isLoading, currentBossData, battleState]);
     
+    // --- NEW: Kích hoạt lượt đầu tiên khi vào battle ---
+    useEffect(() => {
+        if (battleState === 'fighting' && turnCounter === 0 && !gameOver) {
+            const timer = setTimeout(() => {
+                runBattleTurn();
+            }, 100); // Delay nhỏ để đảm bảo UI đã chuyển
+            return () => clearTimeout(timer);
+        }
+    }, [battleState, turnCounter, gameOver, runBattleTurn]);
+
+
     // --- CUNG CẤP VALUE CHO CONTEXT ---
     const value: BossBattleContextType = {
         isLoading,
@@ -494,7 +485,7 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         retryCurrentFloor,
         handleNextFloor,
         handleSweep,
-        triggerNextTurn: runBattleTurn, // Expose hàm này để UI gọi khi hết animation
+        triggerNextTurn, // Export hàm này để UI gọi
     };
     
     return (
