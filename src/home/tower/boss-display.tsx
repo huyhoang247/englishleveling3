@@ -31,7 +31,7 @@ const CharacterAnimations = () => (
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
             20% { transform: translateX(-20px) scale(0.95); } /* Windup */
-            50% { transform: translateX(90px) scale(1.1); }   /* Strike - Đã giảm xuống 90px */
+            50% { transform: translateX(70px) scale(1.1); }   /* Strike - Đã giảm xuống 70px */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-right { 
@@ -42,7 +42,7 @@ const CharacterAnimations = () => (
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
             20% { transform: translateX(20px) scale(0.95); }  /* Windup */
-            50% { transform: translateX(-90px) scale(1.1); }  /* Strike - Đã giảm xuống -90px */
+            50% { transform: translateX(-70px) scale(1.1); }  /* Strike - Đã giảm xuống -70px */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-left { 
