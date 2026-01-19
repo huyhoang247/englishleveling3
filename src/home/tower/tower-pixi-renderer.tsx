@@ -6,10 +6,12 @@ import { ActionState } from './boss-display.tsx';
 import { SkillProps } from './skill-effect.tsx';
 
 // --- CONSTANTS ---
-// Độ phân giải nội bộ của game (Luôn giữ cố định để tính toán tọa độ)
 const STAGE_WIDTH = 800;
 const STAGE_HEIGHT = 450;
 const GROUND_Y = 380; // Vị trí chân nhân vật
+
+// Đường dẫn gốc giống trong utils để xử lý ảnh Boss động
+const BASE_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/main/src/assets";
 
 // --- TYPES ---
 interface BattleRendererProps {
@@ -63,7 +65,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 backgroundAlpha: 0, // Nền trong suốt
                 antialias: true,
                 preference: 'webgl', // Ưu tiên WebGL
-                autoDensity: true,   // Hỗ trợ màn hình retina/high dpi
+                autoDensity: true,
                 resolution: window.devicePixelRatio || 1,
             });
 
@@ -74,11 +76,10 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
 
             // --- FIX RESPONSIVE MOBILE ---
             // Thiết lập CSS cho thẻ Canvas để nó tự co giãn theo container cha
-            // nhưng vẫn giữ nguyên tỷ lệ khung hình và độ phân giải nội bộ.
             app.canvas.style.width = "100%";
             app.canvas.style.height = "100%";
-            app.canvas.style.objectFit = "contain"; // Quan trọng: Giữ tỷ lệ ảnh, không bị méo hay cắt
-            app.canvas.style.display = "block"; // Xóa khoảng trắng mặc định của inline element
+            app.canvas.style.objectFit = "contain"; // Quan trọng: Giữ tỷ lệ ảnh, không bị méo
+            app.canvas.style.display = "block";
 
             // Gắn Canvas vào thẻ DIV
             canvasContainerRef.current.appendChild(app.canvas as HTMLCanvasElement);
@@ -100,7 +101,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 hero.play();
                 
                 // Tạo Shadow (Bóng đổ)
-                const shadowTex = await PIXI.Assets.load("https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.png");
+                const shadowTex = await PIXI.Assets.load(`${BASE_URL}/images/shadow.png`);
                 const shadow = new PIXI.Sprite(shadowTex);
                 shadow.anchor.set(0.5);
                 shadow.y = -10;
@@ -133,7 +134,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 (bossRef as any).container = bossContainer;
 
             } catch (e) {
-                console.error("Failed to load Pixi assets:", e);
+                console.error("Failed to load Hero assets:", e);
             }
         };
 
@@ -159,11 +160,23 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
              // Xóa boss cũ
              container.removeChildren();
              
+             // Xử lý URL boss: Nếu là đường dẫn tương đối (ví dụ /images/boss/01.webp), thêm BASE_URL vào
+             let finalBossUrl = bossImgSrc;
+             if (bossImgSrc.startsWith('/')) {
+                 // Loại bỏ dấu / ở đầu để nối chuỗi cho đẹp nếu cần, hoặc nối trực tiếp
+                 finalBossUrl = `${BASE_URL}${bossImgSrc.replace('/src/assets', '')}`; 
+                 // Fix trường hợp đường dẫn trong bossImgSrc là /images/boss/... mà BASE_URL đã trỏ tới assets
+                 if (bossImgSrc.startsWith('/images')) {
+                     finalBossUrl = `${BASE_URL}${bossImgSrc}`;
+                 }
+             }
+
+             // Config cho từng loại boss
              const bConf = BOSS_SPRITE_CONFIG[bossId] || BOSS_SPRITE_CONFIG[0];
              
              try {
                 // Load ảnh Boss mới
-                const tex = await PIXI.Assets.load(bossImgSrc);
+                const tex = await PIXI.Assets.load(finalBossUrl);
                 const frames = getTexturesFromSheet(tex, bConf.width, bConf.height, bConf.cols, bConf.rows);
                 
                 const sprite = new PIXI.AnimatedSprite(frames) as CustomSprite;
@@ -174,7 +187,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 sprite.play();
                 
                 // Shadow Boss
-                const shadowTex = await PIXI.Assets.load("https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.png");
+                const shadowTex = await PIXI.Assets.load(`${BASE_URL}/images/shadow.png`);
                 const shadow = new PIXI.Sprite(shadowTex);
                 shadow.anchor.set(0.5);
                 shadow.scale.set(0.7, 0.25);
@@ -186,7 +199,11 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
                 
                 bossRef.current = sprite;
              } catch (e) {
-                 console.log("Boss asset loading...", e);
+                 console.error("Failed to load Boss assets:", finalBossUrl, e);
+                 // Fallback: Nếu không load được sprite, vẽ hình chữ nhật đỏ để debug
+                 const graphics = new PIXI.Graphics().rect(0, 0, 100, 100).fill(0xff0000);
+                 graphics.x = -50; graphics.y = -100;
+                 container.addChild(graphics);
              }
         };
         updateBoss();
@@ -347,7 +364,7 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
         };
     }, [orbEffects]);
 
-    // Trả về thẻ DIV để chứa Canvas, style full width/height để cha quản lý kích thước
+    // Trả về thẻ DIV để chứa Canvas
     return <div ref={canvasContainerRef} className="w-full h-full flex items-center justify-center" />;
 };
 
