@@ -5,6 +5,11 @@ import { BOSS_SPRITE_CONFIG, HERO_CONFIG, SKILL_CONFIG, getTexturesFromSheet } f
 import { ActionState } from './boss-display.tsx';
 import { SkillProps } from './skill-effect.tsx';
 
+// --- CONSTANTS ---
+const STAGE_WIDTH = 800;
+const STAGE_HEIGHT = 450;
+const GROUND_Y = 380; // Vị trí chân nhân vật trên canvas
+
 // --- TYPES ---
 interface BattleRendererProps {
     bossId: number;
@@ -14,9 +19,18 @@ interface BattleRendererProps {
     orbEffects: SkillProps[];
 }
 
-const STAGE_WIDTH = 800;
-const STAGE_HEIGHT = 450;
-const GROUND_Y = 380;
+// Interface mở rộng để gắn dữ liệu tùy chỉnh vào Sprite
+interface CustomSprite extends PIXI.AnimatedSprite {
+    customData?: {
+        startX: number;
+        startY: number;
+        targetX: number;
+        targetY: number;
+        progress: number;
+        type: string;
+    };
+    parentContainer?: PIXI.Container;
+}
 
 const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }: BattleRendererProps) => {
     // Ref để gắn Canvas vào DOM
@@ -24,235 +38,294 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
     
     // Refs để lưu trữ các object của Pixi nhằm cập nhật sau này
     const appRef = useRef<PIXI.Application | null>(null);
-    const heroRef = useRef<PIXI.AnimatedSprite | null>(null);
-    const bossRef = useRef<PIXI.AnimatedSprite | null>(null);
-    const projectilesRef = useRef<Map<number, PIXI.AnimatedSprite>>(new Map()); // Map lưu các skill đang bay
+    const heroRef = useRef<CustomSprite | null>(null);
+    const bossRef = useRef<CustomSprite | null>(null);
+    
+    // Map lưu các skill đang bay để quản lý animation
+    const projectilesRef = useRef<Map<number, CustomSprite>>(new Map());
 
-    // --- 1. INIT PIXI APP (Chạy 1 lần) ---
+    // --- 1. INIT PIXI APP (Chạy 1 lần khi mount) ---
     useEffect(() => {
         if (!canvasContainerRef.current) return;
 
-        // Khởi tạo App
-        const app = new PIXI.Application({
-            width: STAGE_WIDTH,
-            height: STAGE_HEIGHT,
-            backgroundAlpha: 0, // Trong suốt
-            antialias: true,
-        });
+        // Cờ kiểm tra component còn mount không (tránh lỗi React Strict Mode)
+        let isMounted = true;
 
-        // Gắn vào DOM
-        canvasContainerRef.current.appendChild(app.view as HTMLCanvasElement);
-        appRef.current = app;
+        // Tạo Application
+        const app = new PIXI.Application();
 
-        // --- SETUP HERO ---
-        const heroTex = PIXI.BaseTexture.from(HERO_CONFIG.url);
-        const loadHero = () => {
-            const frames = getTexturesFromSheet(heroTex, HERO_CONFIG.width, HERO_CONFIG.height, HERO_CONFIG.cols, HERO_CONFIG.rows);
-            const hero = new PIXI.AnimatedSprite(frames);
-            hero.anchor.set(0.5, 1);
-            hero.x = 200;
-            hero.y = GROUND_Y;
-            hero.animationSpeed = 0.2;
-            hero.scale.set(HERO_CONFIG.scale);
-            hero.play();
-            
-            // Shadow Hero
-            const shadow = PIXI.Sprite.from("https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.png");
-            shadow.anchor.set(0.5);
-            shadow.y = -10; // Relative to hero feet
-            shadow.scale.set(0.5, 0.2);
-            shadow.alpha = 0.4;
-            shadow.tint = 0x000000;
-            
-            // Container để chứa shadow + hero
-            const container = new PIXI.Container();
-            container.x = 200; 
-            container.y = GROUND_Y;
-            container.addChild(shadow); 
-            // Reset local pos của hero trong container
-            hero.x = 0; hero.y = 0; 
-            container.addChild(hero);
+        const initApp = async () => {
+            // PixiJS v8: Init là bất đồng bộ
+            await app.init({
+                width: STAGE_WIDTH,
+                height: STAGE_HEIGHT,
+                backgroundAlpha: 0, // Nền trong suốt
+                antialias: true,
+                preference: 'webgl' // Ưu tiên WebGL
+            });
 
-            app.stage.addChild(container);
-            heroRef.current = hero; // Lưu ref để update animation
-            // Hack: Lưu container vào ref của hero để di chuyển cả cụm
-            (heroRef.current as any).parentContainer = container; 
+            // Nếu component đã unmount trong lúc init, hủy app ngay
+            if (!isMounted || !canvasContainerRef.current) {
+                app.destroy(true);
+                return;
+            }
+
+            // Gắn Canvas vào thẻ DIV
+            canvasContainerRef.current.appendChild(app.canvas as HTMLCanvasElement);
+            appRef.current = app;
+
+            // --- SETUP HERO (NGƯỜI CHƠI) ---
+            try {
+                // Load Texture
+                const heroTex = await PIXI.Assets.load(HERO_CONFIG.url);
+                const frames = getTexturesFromSheet(heroTex, HERO_CONFIG.width, HERO_CONFIG.height, HERO_CONFIG.cols, HERO_CONFIG.rows);
+                
+                // Tạo Sprite
+                const hero = new PIXI.AnimatedSprite(frames) as CustomSprite;
+                hero.anchor.set(0.5, 1);
+                hero.x = 200;
+                hero.y = GROUND_Y;
+                hero.animationSpeed = 0.2;
+                hero.scale.set(HERO_CONFIG.scale);
+                hero.play();
+                
+                // Tạo Shadow (Bóng đổ)
+                const shadowTex = await PIXI.Assets.load("https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.png");
+                const shadow = new PIXI.Sprite(shadowTex);
+                shadow.anchor.set(0.5);
+                shadow.y = -10;
+                shadow.scale.set(0.5, 0.2);
+                shadow.alpha = 0.4;
+                shadow.tint = 0x000000;
+                
+                // Gom nhóm vào Container để di chuyển cả bóng lẫn người
+                const container = new PIXI.Container();
+                container.x = 200; 
+                container.y = GROUND_Y;
+                container.addChild(shadow); 
+                // Reset vị trí local của hero trong container về 0
+                hero.x = 0; hero.y = 0; 
+                container.addChild(hero);
+
+                app.stage.addChild(container);
+                
+                heroRef.current = hero; 
+                // Lưu tham chiếu container vào hero để dễ truy cập khi animate
+                hero.parentContainer = container; 
+
+                // --- SETUP BOSS CONTAINER (Placeholder) ---
+                const bossContainer = new PIXI.Container();
+                bossContainer.x = 600;
+                bossContainer.y = GROUND_Y;
+                app.stage.addChild(bossContainer);
+                
+                // Lưu container boss vào ref tạm thời (sử dụng 'any' để bypass type check nhanh)
+                (bossRef as any).container = bossContainer;
+
+            } catch (e) {
+                console.error("Failed to load Pixi assets:", e);
+            }
         };
-        if (heroTex.valid) loadHero(); else heroTex.once('loaded', loadHero);
 
-        // --- SETUP BOSS (Placeholder container) ---
-        const bossContainer = new PIXI.Container();
-        bossContainer.x = 600;
-        bossContainer.y = GROUND_Y;
-        app.stage.addChild(bossContainer);
-        // Lưu tạm vào ref để useEffect sau xử lý load texture boss
-        (bossRef as any).container = bossContainer;
+        initApp();
 
-        // --- CLEANUP ---
+        // Cleanup function
         return () => {
-            app.destroy(true, { children: true, texture: false, baseTexture: false });
-            appRef.current = null;
+            isMounted = false;
+            if (appRef.current) {
+                // Hủy app và toàn bộ children, texture
+                appRef.current.destroy(true, { children: true, texture: false, textureSource: false });
+                appRef.current = null;
+            }
         };
     }, []);
 
-    // --- 2. UPDATE BOSS TEXTURE & ID ---
+    // --- 2. UPDATE BOSS (Khi ID hoặc Ảnh thay đổi) ---
     useEffect(() => {
         if (!appRef.current || !(bossRef as any).container) return;
-        const container = (bossRef as any).container as PIXI.Container;
         
-        // Xóa boss cũ
-        container.removeChildren();
-        
-        // Config boss
-        const bConf = BOSS_SPRITE_CONFIG[bossId] || BOSS_SPRITE_CONFIG[0];
-        
-        // Load Texture Boss
-        const tex = PIXI.BaseTexture.from(bossImgSrc);
-        const setupBossSprite = () => {
-            const frames = getTexturesFromSheet(tex, bConf.width, bConf.height, bConf.cols, bConf.rows);
-            const sprite = new PIXI.AnimatedSprite(frames);
-            sprite.anchor.set(0.5, 1);
-            sprite.scale.set(-bConf.scale, bConf.scale); // Lật mặt boss sang trái
-            sprite.animationSpeed = 0.2;
-            sprite.play();
-            
-            // Shadow Boss
-            const shadow = PIXI.Sprite.from("https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.png");
-            shadow.anchor.set(0.5);
-            shadow.scale.set(0.7, 0.25);
-            shadow.alpha = 0.4;
-            shadow.tint = 0x000000;
-
-            container.addChild(shadow);
-            container.addChild(sprite);
-            bossRef.current = sprite;
+        const updateBoss = async () => {
+             const container = (bossRef as any).container as PIXI.Container;
+             // Xóa boss cũ
+             container.removeChildren();
+             
+             const bConf = BOSS_SPRITE_CONFIG[bossId] || BOSS_SPRITE_CONFIG[0];
+             
+             try {
+                // Load ảnh Boss mới
+                const tex = await PIXI.Assets.load(bossImgSrc);
+                const frames = getTexturesFromSheet(tex, bConf.width, bConf.height, bConf.cols, bConf.rows);
+                
+                const sprite = new PIXI.AnimatedSprite(frames) as CustomSprite;
+                sprite.anchor.set(0.5, 1);
+                // Lật ngược sprite (scale X âm) để boss quay mặt sang trái
+                sprite.scale.set(-bConf.scale, bConf.scale);
+                sprite.animationSpeed = 0.2;
+                sprite.play();
+                
+                // Shadow Boss
+                const shadowTex = await PIXI.Assets.load("https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/shadow.png");
+                const shadow = new PIXI.Sprite(shadowTex);
+                shadow.anchor.set(0.5);
+                shadow.scale.set(0.7, 0.25);
+                shadow.alpha = 0.4;
+                shadow.tint = 0x000000;
+    
+                container.addChild(shadow);
+                container.addChild(sprite);
+                
+                bossRef.current = sprite;
+             } catch (e) {
+                 // Có thể thêm xử lý lỗi ảnh ở đây nếu cần
+                 console.log("Boss asset loading...", e);
+             }
         };
-
-        if (tex.valid) setupBossSprite(); else tex.once('loaded', setupBossSprite);
+        updateBoss();
 
     }, [bossId, bossImgSrc]);
 
-    // --- 3. HANDLE ANIMATION STATES (Hit/Attack) ---
+    // --- 3. ANIMATION LOOP (Xử lý rung lắc, tấn công) ---
     useEffect(() => {
         const app = appRef.current;
         if (!app) return;
 
-        // Hàm xử lý hiệu ứng lắc/tấn công mỗi khung hình
         const animateTick = () => {
-            // --- HERO ---
-            if (heroRef.current && (heroRef.current as any).parentContainer) {
-                const container = (heroRef.current as any).parentContainer;
+            // --- HERO ANIMATION ---
+            if (heroRef.current && heroRef.current.parentContainer) {
+                const container = heroRef.current.parentContainer;
                 const baseX = 200;
 
                 if (heroState === 'hit') {
+                    // Rung lắc ngẫu nhiên
                     container.x = baseX + (Math.random() * 10 - 5);
-                    container.filters = [new PIXI.ColorMatrixFilter()];
-                    (container.filters[0] as PIXI.ColorMatrixFilter).brightness(1.5, false);
+                    // Pixi v8 ColorMatrixFilter (Optional: tint đỏ/trắng khi bị đánh)
+                    // container.tint = 0xffaaaa; 
                 } else if (heroState === 'attack') {
-                     container.x += ((baseX + 60) - container.x) * 0.2; // Lướt tới
-                     container.filters = [];
+                     // Lướt tới (Interpolation)
+                     container.x += ((baseX + 60) - container.x) * 0.2;
+                     // container.tint = 0xffffff;
                 } else {
-                     container.x += (baseX - container.x) * 0.1; // Về chỗ cũ
-                     container.filters = [];
+                     // Trở về vị trí cũ
+                     container.x += (baseX - container.x) * 0.1;
+                     // container.tint = 0xffffff;
                 }
             }
 
-            // --- BOSS ---
+            // --- BOSS ANIMATION ---
             if ((bossRef as any).container) {
                 const container = (bossRef as any).container;
                 const baseX = 600;
 
                 if (bossState === 'hit') {
                     container.x = baseX + (Math.random() * 10 - 5);
-                    // Flash effect logic...
                 } else if (bossState === 'attack') {
-                    container.x += ((baseX - 60) - container.x) * 0.2; // Lướt tới (sang trái)
+                    // Lướt sang trái (trừ X)
+                    container.x += ((baseX - 60) - container.x) * 0.2;
                 } else {
                     container.x += (baseX - container.x) * 0.1;
                 }
             }
         };
 
+        // Thêm hàm vào vòng lặp Pixi Ticker
         app.ticker.add(animateTick);
-        return () => {
-            app.ticker.remove(animateTick);
-        };
-    }, [heroState, bossState]); // Re-bind ticker khi state đổi
 
-    // --- 4. HANDLE SKILLS/PROJECTILES ---
+        // Cleanup khi state thay đổi hoặc unmount
+        return () => {
+            if (app && app.ticker) app.ticker.remove(animateTick);
+        };
+    }, [heroState, bossState]);
+
+    // --- 4. PROJECTILES (KỸ NĂNG/ĐẠN BAY) ---
     useEffect(() => {
         const app = appRef.current;
         if (!app) return;
 
-        // Kiểm tra xem có orb mới nào chưa được render không
+        // A. TẠO ĐẠN MỚI
         orbEffects.forEach(orb => {
+            // Nếu ID chưa tồn tại trong Map thì tạo mới
             if (!projectilesRef.current.has(orb.id)) {
-                // Tạo mới Orb
                 const config = SKILL_CONFIG[orb.type];
-                const tex = PIXI.BaseTexture.from(config.url);
                 
-                const createOrb = () => {
-                    const frames = getTexturesFromSheet(tex, config.frameWidth, config.frameHeight, config.cols, config.rows);
-                    const sprite = new PIXI.AnimatedSprite(frames);
-                    sprite.anchor.set(0.5);
-                    sprite.animationSpeed = 0.5;
-                    sprite.play();
-                    
-                    // Tính toán vị trí
-                    const startX = (parseFloat(orb.startPos.left) / 100) * STAGE_WIDTH;
-                    const startY = (parseFloat(orb.startPos.top) / 100) * STAGE_HEIGHT;
-                    const targetX = orb.type === 'player-orb' ? 600 : 200;
-                    const targetY = 300;
+                const createOrb = async () => {
+                    try {
+                        const tex = await PIXI.Assets.load(config.url);
+                        const frames = getTexturesFromSheet(tex, config.frameWidth, config.frameHeight, config.cols, config.rows);
+                        
+                        const sprite = new PIXI.AnimatedSprite(frames) as CustomSprite;
+                        sprite.anchor.set(0.5);
+                        sprite.animationSpeed = 0.5;
+                        sprite.play();
+                        
+                        // Tính toán tọa độ Pixel
+                        const startX = (parseFloat(orb.startPos.left) / 100) * STAGE_WIDTH;
+                        const startY = (parseFloat(orb.startPos.top) / 100) * STAGE_HEIGHT;
+                        
+                        // Xác định mục tiêu (Player bắn Boss, Boss bắn Player)
+                        const targetX = orb.type === 'player-orb' ? 600 : 200;
+                        const targetY = 300; // Ngang bụng
 
-                    sprite.x = startX;
-                    sprite.y = startY;
+                        sprite.x = startX;
+                        sprite.y = startY;
 
-                    // Lưu dữ liệu để animate
-                    (sprite as any).customData = {
-                        startX, startY, targetX, targetY,
-                        progress: 0,
-                        type: orb.type
-                    };
+                        // Gắn dữ liệu để tính toán quỹ đạo
+                        sprite.customData = {
+                            startX, startY, targetX, targetY,
+                            progress: 0,
+                            type: orb.type
+                        };
 
-                    app.stage.addChild(sprite);
-                    projectilesRef.current.set(orb.id, sprite);
+                        app.stage.addChild(sprite);
+                        projectilesRef.current.set(orb.id, sprite);
+                    } catch (e) {
+                        console.error("Failed load orb", e);
+                    }
                 };
-
-                if (tex.valid) createOrb(); else tex.once('loaded', createOrb);
+                createOrb();
             }
         });
 
-        // Loop animation cho đạn
-        const projectileTick = (delta: number) => {
+        // B. CẬP NHẬT VỊ TRÍ ĐẠN (BAY)
+        const projectileTick = (ticker: PIXI.Ticker) => {
+            const delta = ticker.deltaTime; // Pixi v8 cung cấp delta time
             const toRemove: number[] = [];
 
             projectilesRef.current.forEach((sprite, id) => {
-                const data = (sprite as any).customData;
-                data.progress += 0.025 * delta; // Tốc độ bay
+                const data = sprite.customData;
+                if (!data) return;
+
+                // Tăng tiến độ (Tốc độ bay)
+                data.progress += 0.025 * delta;
 
                 if (data.progress >= 1) {
                     data.progress = 1;
                     toRemove.push(id);
-                    sprite.alpha = 0;
+                    sprite.alpha = 0; // Ẩn ngay khi đến đích
                 }
 
-                // Bezier Logic
+                // TÍNH TOÁN QUỸ ĐẠO BEZIER (Đường cong)
                 const t = data.progress;
-                const p0 = { x: data.startX, y: data.startY };
-                const p2 = { x: data.targetX, y: data.targetY };
+                const p0 = { x: data.startX, y: data.startY }; // Điểm đầu
+                const p2 = { x: data.targetX, y: data.targetY }; // Điểm cuối
+                // Điểm điều khiển (ở giữa và cao hơn để tạo đường vòng cung)
                 const p1 = { x: (p0.x + p2.x) / 2, y: Math.min(p0.y, p2.y) - 100 };
 
+                // Công thức Quadratic Bezier
                 sprite.x = Math.pow(1-t, 2) * p0.x + 2 * (1-t) * t * p1.x + Math.pow(t, 2) * p2.x;
                 sprite.y = Math.pow(1-t, 2) * p0.y + 2 * (1-t) * t * p1.y + Math.pow(t, 2) * p2.y;
                 
-                // Scale Effect
+                // HIỆU ỨNG SCALE (Zoom in lúc đầu, Zoom out/Impact lúc cuối)
                 const scaleBase = SKILL_CONFIG[data.type as keyof typeof SKILL_CONFIG].scale;
-                if (t < 0.1) sprite.scale.set(t * 10 * scaleBase);
-                else if (t > 0.9) sprite.scale.set((1 + (t-0.9)*5) * scaleBase);
-                else sprite.scale.set(scaleBase);
+                if (t < 0.1) {
+                    sprite.scale.set(t * 10 * scaleBase);
+                } else if (t > 0.9) {
+                    sprite.scale.set((1 + (t-0.9)*5) * scaleBase);
+                } else {
+                    sprite.scale.set(scaleBase);
+                }
             });
 
-            // Cleanup xong animation
+            // Xóa các đạn đã bay xong
             toRemove.forEach(id => {
                 const sprite = projectilesRef.current.get(id);
                 if (sprite) {
@@ -265,11 +338,11 @@ const BattleRenderer = ({ bossId, bossImgSrc, heroState, bossState, orbEffects }
 
         app.ticker.add(projectileTick);
         return () => {
-            app.ticker.remove(projectileTick);
+            if (app && app.ticker) app.ticker.remove(projectileTick);
         };
     }, [orbEffects]);
 
-    // Render 1 cái thẻ div để chứa canvas
+    // Trả về thẻ DIV để chứa Canvas
     return <div ref={canvasContainerRef} className="w-full h-full" />;
 };
 
