@@ -272,6 +272,16 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
         />
       )}
 
+      {/* --- STYLE RIÊNG CHO FONT BE VIETNAM PRO (PRACTICE 1) --- */}
+      <style jsx>{`
+        /* Import font Be Vietnam Pro để hiển thị tiếng Việt đẹp và hiện đại */
+        @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@700&display=swap');
+        
+        .font-be-vietnam {
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+      `}</style>
+
       <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0 z-50">
         <div className="transform scale-90 origin-left">
           <BackButton onClick={onGoBack} label="" title="Quay lại" />
@@ -342,8 +352,8 @@ function QuizAppUI({ onGoBack, selectedPractice }: { onGoBack: () => void; selec
                             
                             {/* Question Box */}
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
-                                {/* LOGIC THAY ĐỔI: Chỉ áp dụng uppercase và text-lg nếu là Practice 1 */}
-                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide" : "text-xl"} font-bold text-white leading-tight`}>
+                                {/* LOGIC THAY ĐỔI: Chỉ áp dụng uppercase, text-lg VÀ font-be-vietnam nếu là Practice 1 */}
+                                <h2 className={`${isPractice1 ? "text-lg uppercase tracking-wide font-be-vietnam" : "text-xl"} font-bold text-white leading-tight`}>
                                     {playableQuestions[currentQuestion]?.question}
                                 </h2>
                                 {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
