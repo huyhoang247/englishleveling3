@@ -371,7 +371,8 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
       </main>
       
       {showNextButton && (playableQuestions.length > 0) && (
-        <div className="fixed bottom-8 right-8 z-50 flex items-center gap-3">
+        // Đã dịch xuống bottom-4 theo yêu cầu trước đó
+        <div className="fixed bottom-4 right-8 z-50 flex items-center gap-3">
           <div className="group relative">
              <button 
                 onClick={handleDetailClick} 
