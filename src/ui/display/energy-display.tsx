@@ -1,4 +1,5 @@
 import React from 'react';
+import { bossBattleAssets } from '../../game-assets.ts';
 
 // Define the props for the EnergyDisplay component
 interface EnergyDisplayProps {
@@ -39,10 +40,9 @@ const EnergyDisplay: React.FC<EnergyDisplayProps> = ({ currentEnergy, maxEnergy,
         {/* Energy Icon */}
         <div className="relative mr-1 flex items-center justify-center">
           <img
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/icon/Picsart_25-07-27_08-51-26-493.png"
+            src={bossBattleAssets.energyIcon}
             alt="Energy Orb Icon"
             className="w-4 h-4"
-            // Thuộc tính style đã được xóa ở đây để icon không bị đổi màu
             onError={(e) => {
               const target = e.target as HTMLImageElement;
               target.onerror = null; // Prevent infinite loop
