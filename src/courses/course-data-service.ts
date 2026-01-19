@@ -9,7 +9,6 @@ import {
 import { localDB, ICompletedWord, ICompletedMultiWord, VocabularyItem } from '../local-data/local-vocab-db.ts'; 
 
 // Import dữ liệu local khác
-// ĐÃ XÓA: import quizData from './multiple-choice/multiple-data.ts'; (Không còn sử dụng)
 import { exampleData } from '../voca-data/example-data.ts';
 import { allWordPairs } from './voca-match/voca-match-data.ts';
 
@@ -35,7 +34,14 @@ export const fetchOrCreateUser = async (userId: string) => {
       // Khởi tạo các trường milestone và rewards để tránh lỗi khi truy cập
       claimedDailyGoals: {},
       claimedVocabMilestones: [],
-      claimedQuizRewards: {}
+      claimedQuizRewards: {},
+      // Khởi tạo nguyên liệu mặc định
+      wood: 0,
+      leather: 0,
+      ore: 0,
+      cloth: 0,
+      feather: 0,
+      coal: 0
     };
     await setDoc(userDocRef, newUser);
     return newUser;
@@ -175,10 +181,17 @@ export const fetchGameInitialData = async (userId: string, gameModeId: string, i
 
 /**
  * Interface cho dữ liệu cốt lõi của người dùng được lắng nghe.
+ * Cập nhật: Thêm các loại nguyên liệu.
  */
 export interface UserCoreData {
   coins: number;
   masteryCards: number;
+  wood: number;
+  leather: number;
+  ore: number;
+  cloth: number;
+  feather: number;
+  coal: number;
 }
 
 /**
@@ -201,6 +214,13 @@ export const listenToUserData = (userId: string, callback: (data: UserCoreData |
       callback({
         coins: data.coins || 0,
         masteryCards: data.masteryCards || 0,
+        // Mapping Resources
+        wood: data.wood || 0,
+        leather: data.leather || 0,
+        ore: data.ore || 0,
+        cloth: data.cloth || 0,
+        feather: data.feather || 0,
+        coal: data.coal || 0,
       });
     } else {
       callback(null);
