@@ -12,6 +12,7 @@ import QuizLoadingSkeleton from './multiple-loading.tsx';
 
 // --- CÁC COMPONENT CON & ICONS ---
 const optionLabels = ['A', 'B', 'C', 'D'];
+
 const CountdownTimer: React.FC<{ timeLeft: number; totalTime: number }> = memo(({ timeLeft, totalTime }) => { 
     const radius = 20; 
     const circumference = 2 * Math.PI * radius; 
@@ -40,12 +41,89 @@ const XIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www
 const RefreshIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 0 1-9 9c-2.646 0-5.13-.999-7.03-2.768m0 0L3 16m-1.97 2.232L5 21"></path><path d="M3 12a9 9 0 0 1 9-9c-2.646 0 5.13.999 7.03 2.768m0 0L21 8m1.97-2.232L19 3"></path></svg> );
 const AwardIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg> );
 const TrophyIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V22h4v-7.34"/><path d="M12 14.66L15.45 8.3A3 3 0 0 0 12.95 4h-1.9a3 3 0 0 0-2.5 4.3Z"/></svg> );
-// BookmarkIcon không còn được sử dụng trong giao diện mới nhưng giữ lại để tránh lỗi nếu có reference khác
 const BookmarkIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z" /></svg> );
 const PauseIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"></path></svg> );
 const VolumeUpIcon = ({ className }: { className: string }) => ( <svg xmlns="http://www.w3.org/2000/svg" className={className} viewBox="0 0 24 24" fill="currentColor"><path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"></path></svg> );
+const ChevronLeftIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+    </svg>
+);
+const ChevronRightIcon = ({ className }: { className: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+    </svg>
+);
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
+
+// --- COMPONENT: POPUP NHẬN THƯỞNG (NEW) ---
+const ResourceRewardPopup: React.FC<{ 
+    image: string; 
+    amount: number; 
+    type: string;
+    triggerId: number; 
+}> = ({ image, amount, type, triggerId }) => {
+    // Sử dụng key=triggerId ở div cha để React unmount/remount component khi ID thay đổi,
+    // giúp kích hoạt lại animation CSS.
+    return (
+        <div key={triggerId} className="absolute inset-0 flex items-center justify-center pointer-events-none z-[60]">
+            <div className="animate-resource-float flex flex-col items-center">
+                <div className="relative">
+                    {/* Hiệu ứng hào quang */}
+                    <div className="absolute inset-0 bg-yellow-400/40 blur-xl rounded-full scale-150 animate-pulse"></div>
+                    
+                    {/* Hình ảnh vật phẩm */}
+                    <img 
+                        src={image} 
+                        alt={type} 
+                        className="w-24 h-24 object-contain drop-shadow-2xl relative z-10 animate-bounce-custom" 
+                    />
+                    
+                    {/* Badge số lượng */}
+                    <div className="absolute -bottom-2 -right-2 bg-gradient-to-r from-yellow-400 to-orange-600 text-white text-xl font-black px-3 py-1 rounded-full border-2 border-white shadow-lg z-20 min-w-[40px] text-center transform rotate-12">
+                        +{amount}
+                    </div>
+                </div>
+                
+                {/* Tên vật phẩm */}
+                <div className="mt-4 text-white font-black text-2xl uppercase tracking-wider drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] opacity-0 animate-fade-in-delayed">
+                    {type}
+                </div>
+            </div>
+            
+            {/* Styles cục bộ cho animation */}
+            <style jsx>{`
+                @keyframes resource-float {
+                    0% { opacity: 0; transform: scale(0.5) translateY(50px); }
+                    20% { opacity: 1; transform: scale(1.2) translateY(0); }
+                    40% { transform: scale(1) translateY(0); }
+                    80% { opacity: 1; transform: translateY(-50px); }
+                    100% { opacity: 0; transform: translateY(-100px); }
+                }
+                @keyframes bounce-custom {
+                    0%, 100% { transform: translateY(0); }
+                    50% { transform: translateY(-10px); }
+                }
+                @keyframes fade-in-delayed {
+                    0%, 20% { opacity: 0; transform: translateY(10px); }
+                    40% { opacity: 1; transform: translateY(0); }
+                    80% { opacity: 1; }
+                    100% { opacity: 0; }
+                }
+                .animate-resource-float {
+                    animation: resource-float 3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                }
+                .animate-bounce-custom {
+                    animation: bounce-custom 2s infinite ease-in-out;
+                }
+                .animate-fade-in-delayed {
+                    animation: fade-in-delayed 3s forwards;
+                }
+            `}</style>
+        </div>
+    );
+};
 
 const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> = ({ data, onClose }) => { 
     if (!data) return null; 
@@ -65,17 +143,6 @@ const DetailPopup: React.FC<{ data: Definition | null; onClose: () => void; }> =
     ); 
 };
 
-const ChevronLeftIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-    </svg>
-);
-const ChevronRightIcon = ({ className }: { className: string }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-    </svg>
-);
-
 const VoiceStepper: React.FC<{
   currentVoice: string;
   onNavigate: (direction: 'next' | 'previous') => void;
@@ -84,8 +151,6 @@ const VoiceStepper: React.FC<{
   if (availableVoiceCount <= 1) {
     return null;
   }
-
-  // Sử dụng bg-black/50 thay vì backdrop-blur để tối ưu hiệu năng
   return (
     <div className="flex items-center justify-center gap-2 bg-black/50 p-1 rounded-full border border-white/25">
       <button 
@@ -133,11 +198,10 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
     answered, showNextButton, hintUsed, hiddenOptions, currentQuestionWord,
     handleAnswer, handleHintClick, handleNextQuestion, resetQuiz, handleDetailClick,
     showDetailPopup, detailData, onCloseDetailPopup, showConfetti,
-    currentAudioUrl,
-    selectedVoice,
-    handleChangeVoiceDirection,
-    // Lấy biến này từ context để sửa lỗi nút Detail
+    currentAudioUrl, selectedVoice, handleChangeVoiceDirection,
     isDetailAvailable,
+    // Lấy state rewardDrop từ context để hiển thị popup
+    rewardDrop,
   } = useQuiz();
 
   const displayedCoins = useAnimateValue(coins, 500);
@@ -187,12 +251,22 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
   if (loading) return <QuizLoadingSkeleton />;
   
   return (
-    <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100">
+    <div className="flex flex-col h-full w-full bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 relative">
       <audio ref={audioRef} src={currentAudioUrl || ''} key={currentAudioUrl} preload="auto" className="hidden" />
       {showConfetti && <Confetti />}
       {showDetailPopup && <DetailPopup data={detailData} onClose={onCloseDetailPopup} />}
+      
+      {/* --- HIỂN THỊ POPUP VẬT PHẨM KHI CÓ REWARD --- */}
+      {rewardDrop && (
+        <ResourceRewardPopup 
+            image={rewardDrop.image} 
+            amount={rewardDrop.amount} 
+            type={rewardDrop.type} 
+            triggerId={rewardDrop.id}
+        />
+      )}
 
-      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0">
+      <header className="w-full h-10 flex items-center justify-between px-4 bg-black/90 border-b border-white/20 flex-shrink-0 z-50">
         <div className="transform scale-90 origin-left">
           <BackButton onClick={onGoBack} label="" title="Quay lại" />
         </div>
@@ -203,7 +277,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
         </div>
       </header>
       
-      <main className="flex-grow overflow-y-auto flex justify-center p-4">
+      <main className="flex-grow overflow-y-auto flex justify-center p-4 relative z-10">
         <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl overflow-hidden border border-gray-100">
           {showScore ? (
               <div className="p-10 text-center">
@@ -236,7 +310,7 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                     {/* Content Wrapper */}
                     <div className="relative z-10">
                         <div className="flex justify-between items-center mb-4">
-                            {/* Sử dụng bg-black/40 thay vì backdrop-blur */}
+                            {/* Counter */}
                             <div className="relative"><div className="bg-black/40 rounded-lg px-2 py-1 shadow-inner border border-white/20"><div className="flex items-center"><span className="text-sm font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-200 via-purple-200 to-pink-200">{totalCompletedBeforeSession + currentQuestion + 1}</span><span className="mx-0.5 text-white/70 text-xs">/</span><span className="text-xs text-white/50">{filteredQuizData.length}</span></div></div></div>
                             <div className="flex items-center gap-2">
                                 <button onClick={handleHintClick} disabled={hintUsed || answered || coins < HINT_COST || playableQuestions.length === 0} className="group relative flex items-center justify-center gap-1.5 bg-white/10 border border-white/20 rounded-lg px-2 py-1 text-xs font-bold text-white transition-all duration-200 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-white/25 active:enabled:bg-white/30" aria-label={`Sử dụng gợi ý (tốn ${HINT_COST} vàng)`}><img src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hint.webp" alt="Hint" className="w-4 h-4" /><span className="text-yellow-300">{HINT_COST}</span><div className="absolute -top-1 -right-1 w-1 h-1 bg-yellow-300 rounded-full animate-pulse-fast group-disabled:hidden"></div></button>
@@ -246,10 +320,9 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                         <div className="w-full h-3 bg-gray-700 rounded-full overflow-hidden relative mb-6"><div className="h-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 transition-all duration-300 ease-out" style={{ width: `${quizProgress}%` }}><div className="absolute top-0 h-1 w-full bg-white opacity-30"></div></div></div>
                         
                         <div className="relative">
-                            {/* Thanh điều khiển âm thanh được đặt ở trên cùng */}
+                            {/* Audio Controls */}
                             {currentAudioUrl && (
                             <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-3">
-                                {/* Sử dụng bg-black/50 thay vì backdrop-blur */}
                                 <button onClick={togglePlay} className={`flex items-center justify-center w-8 h-8 rounded-full bg-black/50 border border-white/25 transition-transform duration-200 hover:scale-110 active:scale-100 ${isPlaying ? 'animate-pulse' : ''}`} aria-label={isPlaying ? 'Pause audio' : 'Play audio'}>
                                 { isPlaying ? <PauseIcon className="w-4 h-4 text-white" /> : <VolumeUpIcon className="w-4 h-4 text-white/80" /> }
                                 </button>
@@ -261,10 +334,9 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
                             </div>
                             )}
                             
-                            {/* Hợp nhất logic hiển thị câu hỏi - Sử dụng bg-black/40 thay vì backdrop-blur */}
+                            {/* Question Box */}
                             <div className="bg-black/40 rounded-lg p-4 shadow-lg border border-white/25 relative overflow-hidden mb-1 min-h-[140px] flex flex-col justify-center">
                                 <h2 className="text-xl font-bold text-white leading-tight">{playableQuestions[currentQuestion]?.question}</h2>
-                                {/* Chỉ hiển thị dịch nghĩa nếu nó tồn tại trong dữ liệu câu hỏi */}
                                 {playableQuestions[currentQuestion]?.vietnamese && <p className="text-white/80 text-sm mt-2 italic">{playableQuestions[currentQuestion]?.vietnamese}</p>}
                             </div>
                         </div>
@@ -301,7 +373,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
           <div className="group relative">
              <button 
                 onClick={handleDetailClick} 
-                // Sử dụng biến isDetailAvailable thay vì detailData để nút không bị disabled lúc đầu
                 disabled={!isDetailAvailable}
                 className="flex items-center justify-center w-14 h-14 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none focus:outline-none" 
                 aria-label="Xem chi tiết"
@@ -314,7 +385,6 @@ function QuizAppUI({ onGoBack }: { onGoBack: () => void }) {
             </button>
             <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 bg-gray-800 text-white text-xs font-semibold rounded-md opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap">Chi tiết<svg className="absolute text-gray-800 h-2 w-full left-0 top-full" x="0px" y="0px" viewBox="0 0 255 255" xmlSpace="preserve"><polygon className="fill-current" points="0,0 127.5,127.5 255,0"/></svg></div>
           </div>
-          {/* --- NÚT NEXT MỚI DẠNG HÌNH ẢNH (KÍCH THƯỚC LỚN HƠN: w-28 h-28) --- */}
           <button 
             onClick={handleNextQuestion} 
             className="flex items-center justify-center w-28 h-28 transition-transform duration-300 ease-in-out hover:scale-110 active:scale-95 focus:outline-none" 
@@ -340,4 +410,3 @@ export default function QuizApp({ onGoBack, selectedPractice }: { onGoBack: () =
     </QuizProvider>
   );
 }
-// --- END OF FILE: multiple-ui.tsx ---
