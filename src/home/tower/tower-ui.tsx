@@ -118,7 +118,7 @@ const LootItem = memo(({ item }: { item: LootItemData }) => {
                 {/* Vật phẩm nhỏ w-10 (40px) */}
                 <img src={item.image} alt="Loot" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
                 
-                {/* Đã sửa: bg-black/50 (50% opacity) để đỡ che vật phẩm */}
+                {/* Opacity 50% để đỡ che vật phẩm */}
                 <div className="absolute -bottom-1 -right-1 bg-black/50 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[24px] text-center animate-fade-in-badge tracking-wide z-10">
                     x{item.amount}
                 </div>
@@ -412,9 +412,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         // 4. Sequence Collect: Duyệt qua từng item
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 12)
-                                // Màu trắng, KHÔNG viền đen
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 5, 1000, "uppercase tracking-wide");
+                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 3)
+                                // Đã sửa từ item.y - 5 thành item.y - 3 để sát vật phẩm hơn
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 3, 1000, "uppercase tracking-wide");
                                 
                                 // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
