@@ -214,9 +214,23 @@ const ScopedStyles = () => (
         }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         
-        /* Style cho giá sale */
-        .vocabulary-chest-root .old-price { text-decoration: line-through; opacity: 0.6; font-size: 0.75rem; color: #e2e8f0; margin-right: 4px; font-family: 'Roboto', sans-serif; /* Giá cũ giữ font thường cho dễ đọc khi gạch ngang */ }
-        .vocabulary-chest-root .new-price { color: #fef08a; font-weight: 800; font-size: 1.1rem; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); font-family: "Lilita One", sans-serif; }
+        /* Style cho giá sale: MÀU TRẮNG, FONT LILITA */
+        .vocabulary-chest-root .old-price { 
+            text-decoration: line-through; 
+            opacity: 0.7; 
+            font-size: 0.75rem; 
+            color: #ffffff; /* Màu trắng */
+            margin-right: 4px; 
+            font-family: "Lilita One", sans-serif; /* Font Lilita */
+            text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+        }
+        .vocabulary-chest-root .new-price { 
+            color: #ffffff; /* Màu trắng */
+            font-weight: 800; 
+            font-size: 1.1rem; 
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 1px 1px 2px rgba(0,0,0,0.8);
+            font-family: "Lilita One", sans-serif; /* Font Lilita */
+        }
 
         /* --- ANIMATIONS LOADING & PROCESSING --- */
         @keyframes vocabulary-chest-processing-pulse { 50% { transform: scale(1.02); } }
