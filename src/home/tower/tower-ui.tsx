@@ -115,9 +115,9 @@ const LootItem = memo(({ item }: { item: LootItemData }) => {
             }}
         >
             <div className="animate-loot-pop relative">
-                {/* Vật phẩm nhỏ w-14 */}
-                <img src={item.image} alt="Loot" className="w-14 h-14 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" />
-                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide z-10">
+                {/* Vật phẩm nhỏ w-10 (40px) thay vì w-14 */}
+                <img src={item.image} alt="Loot" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
+                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[24px] text-center animate-fade-in-badge tracking-wide z-10">
                     x{item.amount}
                 </div>
             </div>
