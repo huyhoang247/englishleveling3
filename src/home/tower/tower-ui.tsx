@@ -108,7 +108,7 @@ interface LootItemData {
 const LootItem = memo(({ item }: { item: LootItemData }) => {
     return (
         <div 
-            className={`absolute transition-all duration-500 transform -translate-x-1/2 -translate-y-1/2 z-[100] ${item.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+            className={`absolute transition-all duration-500 transform -translate-x-1/2 -translate-y-1/2 z-40 ${item.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
             style={{ 
                 left: `${item.x}%`, 
                 top: `${item.y}%`,
@@ -362,9 +362,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     if(rewards.coins > 0) itemCount++;
                     if(rewards.energy > 0) itemCount++;
 
-                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 90%-95%)
-                    // Lưu ý: LootItem được render ở lớp fixed ngoài cùng nên tọa độ Y là tọa độ màn hình.
-                    // Đã điều chỉnh Y từ 92 xuống 90 để đảm bảo hiển thị đẹp ở cuối màn hình.
+                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
+                    // Lưu ý: LootItem được render ở main container (full screen) nên Y tính theo toàn màn hình.
+                    // Nút Fight ở tầm 75-80%, nên đặt Loot ở 82% trở xuống.
                     
                     // Generate Coins Loot
                     if (rewards.coins > 0) {
@@ -378,7 +378,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             image: bossBattleAssets.coinIcon,
                             amount: rewards.coins,
                             x: minX + Math.random() * (maxX - minX), 
-                            y: 90 + Math.random() * 5,
+                            y: 82 + Math.random() * 10,
                             isVisible: true
                         });
                     }
@@ -394,7 +394,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             image: bossBattleAssets.energyIcon,
                             amount: rewards.energy,
                             x: minX + Math.random() * (maxX - minX),
-                            y: 90 + Math.random() * 5,
+                            y: 82 + Math.random() * 10,
                             isVisible: true
                         });
                     }
@@ -410,10 +410,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         // 4. Sequence Collect: Duyệt qua từng item
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 2.5)
+                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 12)
                                 // Màu trắng, KHÔNG viền đen
-                                // Đã điều chỉnh offset từ -3 xuống -2.5 để chữ sát hơn
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 2.5, 1000, "uppercase tracking-wide");
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 5, 1000, "uppercase tracking-wide");
                                 
                                 // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
@@ -844,14 +843,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* DEFEAT MODAL */}
                                     {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
 
+                                    {/* LOOT ANIMATION LAYER (Rendered relative to full screen main to be below Action Bar) */}
+                                    <div className="absolute inset-0 pointer-events-none z-50">
+                                        {lootItems.map(item => (
+                                            <LootItem key={item.id} item={item} />
+                                        ))}
+                                    </div>
                                 </main>
-
-                                {/* LOOT ANIMATION LAYER (Rendered as fixed overlay to prevent being hidden by main/footer) */}
-                                <div className="fixed inset-0 pointer-events-none z-[100]">
-                                    {lootItems.map(item => (
-                                        <LootItem key={item.id} item={item} />
-                                    ))}
-                                </div>
                             </>
                         )}
                     </div>
