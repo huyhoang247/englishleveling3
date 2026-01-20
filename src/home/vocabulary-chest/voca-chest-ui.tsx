@@ -150,15 +150,16 @@ const ScopedStyles = () => (
         
         .vocabulary-chest-root .remaining-count-container { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
         
-        /* --- REMAINING COUNT TEXT --- */
+        /* --- REMAINING COUNT TEXT (UPDATED) --- */
         .vocabulary-chest-root .remaining-count-text { 
             color: #c5b8d9; 
             font-weight: 500; 
-            font-size: 0.85rem; 
+            font-size: 0.75rem; /* Cỡ chữ nhỏ hơn */
             margin: 0; 
             text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
             font-family: "Lilita One", sans-serif; /* Font Lilita */
             letter-spacing: 0.5px;
+            text-transform: uppercase; /* In hoa */
         }
         
         .vocabulary-chest-root .highlight-yellow { color: #facc15; font-weight: bold; }
@@ -443,7 +444,7 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     </div>
                     <div className="remaining-count-container">
                         <p className="remaining-count-text">
-                            {isComingSoon ? "Coming Soon" : <>Remaining: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> cards</>}
+                            {isComingSoon ? "COMING SOON" : <>REMAINING: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> CARDS</>}
                         </p>
                         {isSaleActive && (
                             <span className="sale-count-text">
