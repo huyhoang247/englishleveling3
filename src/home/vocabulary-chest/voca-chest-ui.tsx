@@ -149,7 +149,18 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-help-icon:hover { background-color: rgba(0, 0, 0, 0.5); }
         
         .vocabulary-chest-root .remaining-count-container { text-align: right; display: flex; flex-direction: column; align-items: flex-end; }
-        .vocabulary-chest-root .remaining-count-text { color: #c5b8d9; font-weight: 500; font-size: 0.85rem; margin: 0; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        
+        /* --- REMAINING COUNT TEXT --- */
+        .vocabulary-chest-root .remaining-count-text { 
+            color: #c5b8d9; 
+            font-weight: 500; 
+            font-size: 0.85rem; 
+            margin: 0; 
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5); 
+            font-family: "Lilita One", sans-serif; /* Font Lilita */
+            letter-spacing: 0.5px;
+        }
+        
         .vocabulary-chest-root .highlight-yellow { color: #facc15; font-weight: bold; }
         .vocabulary-chest-root .sale-count-text { color: #f87171; font-size: 0.7rem; font-weight: 700; margin-top: 2px; text-transform: uppercase; letter-spacing: 0.5px; animation: pulse-text 2s infinite; }
         @keyframes pulse-text { 0%, 100% { opacity: 1; } 50% { opacity: 0.7; } }
@@ -184,7 +195,6 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         
         /* --- TAG SỐ LƯỢNG (X1, X4) --- */
-        /* Cập nhật font Lilita, kích thước nhỏ */
         .vocabulary-chest-root .quantity-tag {
             position: absolute;
             top: 5px;
@@ -201,7 +211,6 @@ const ScopedStyles = () => (
         }
 
         /* --- HIỂN THỊ GIÁ --- */
-        /* Cập nhật font Lilita cho giá */
         .vocabulary-chest-root .button-price-box { 
             display: flex; 
             align-items: center; 
@@ -219,17 +228,17 @@ const ScopedStyles = () => (
             text-decoration: line-through; 
             opacity: 0.7; 
             font-size: 0.75rem; 
-            color: #ffffff; /* Màu trắng */
+            color: #ffffff; 
             margin-right: 4px; 
-            font-family: "Lilita One", sans-serif; /* Font Lilita */
+            font-family: "Lilita One", sans-serif;
             text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
         }
         .vocabulary-chest-root .new-price { 
-            color: #ffffff; /* Màu trắng */
+            color: #ffffff; 
             font-weight: 800; 
             font-size: 1.1rem; 
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.5), 1px 1px 2px rgba(0,0,0,0.8);
-            font-family: "Lilita One", sans-serif; /* Font Lilita */
+            font-family: "Lilita One", sans-serif; 
         }
 
         /* --- ANIMATIONS LOADING & PROCESSING --- */
@@ -434,7 +443,7 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     </div>
                     <div className="remaining-count-container">
                         <p className="remaining-count-text">
-                            {isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}
+                            {isComingSoon ? "Coming Soon" : <>Remaining: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> cards</>}
                         </p>
                         {isSaleActive && (
                             <span className="sale-count-text">
