@@ -362,8 +362,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     if(rewards.coins > 0) itemCount++;
                     if(rewards.energy > 0) itemCount++;
 
-                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 75%-85%)
-                    // Chia màn hình thành các phần để tránh chồng chéo
+                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
+                    // Lưu ý: LootItem được render ở main container (full screen) nên Y tính theo toàn màn hình.
+                    // Nút Fight ở tầm 75-80%, nên đặt Loot ở 82% trở xuống.
                     
                     // Generate Coins Loot
                     if (rewards.coins > 0) {
@@ -377,7 +378,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             image: bossBattleAssets.coinIcon,
                             amount: rewards.coins,
                             x: minX + Math.random() * (maxX - minX), 
-                            y: 75 + Math.random() * 10,
+                            y: 82 + Math.random() * 10,
                             isVisible: true
                         });
                     }
@@ -393,7 +394,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             image: bossBattleAssets.energyIcon,
                             amount: rewards.energy,
                             x: minX + Math.random() * (maxX - minX),
-                            y: 75 + Math.random() * 10,
+                            y: 82 + Math.random() * 10,
                             isVisible: true
                         });
                     }
@@ -411,7 +412,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             setTimeout(() => {
                                 // Hiện chữ COLLECTED ngay trên đầu item (item.y - 12)
                                 // Màu trắng, KHÔNG viền đen
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 12, 1000, "uppercase tracking-wide");
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 5, 1000, "uppercase tracking-wide");
                                 
                                 // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
@@ -807,11 +808,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} data={d} />
                                             ))}
-
-                                            {/* LOOT ANIMATION LAYER (Individual Items) */}
-                                            {lootItems.map(item => (
-                                                <LootItem key={item.id} item={item} />
-                                            ))}
                                         </div>
 
                                     </div>
@@ -846,6 +842,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                                     {/* DEFEAT MODAL */}
                                     {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
+
+                                    {/* LOOT ANIMATION LAYER (Rendered relative to full screen main to be below Action Bar) */}
+                                    <div className="absolute inset-0 pointer-events-none z-50">
+                                        {lootItems.map(item => (
+                                            <LootItem key={item.id} item={item} />
+                                        ))}
+                                    </div>
                                 </main>
                             </>
                         )}
