@@ -55,23 +55,31 @@ interface DamageText {
     id: number;
     text: string;
     color: string;
-    x: number;
-    y: number;
+    x: number; // Percent
+    y: number; // Percent
     fontSize: number;
     className?: string; 
+    duration?: number; // Custom duration support
 }
 
 const FloatingText = memo(({ data }: { data: DamageText }) => {
+  // Nếu là Victory (duration dài), dùng animation khác
+  const animClass = data.duration && data.duration > 2000 
+      ? "animate-victory-pulse" 
+      : "animate-float-up";
+
   return (
     <div 
         key={data.id} 
-        className={`absolute font-lilita animate-float-up pointer-events-none z-50 whitespace-nowrap ${data.className || ''}`}
+        className={`absolute font-lilita pointer-events-none z-50 whitespace-nowrap ${animClass} ${data.className || ''}`}
         style={{ 
             left: `${data.x}%`, 
             top: `${data.y}%`,
             color: data.color,
             fontSize: `${data.fontSize}px`,
-            textShadow: '2px 2px 0px #000' // Stroke effect for readability
+            // Nếu là Victory thì căn giữa tuyệt đối tại điểm neo
+            transform: data.duration && data.duration > 2000 ? 'translate(-50%, -50%)' : undefined,
+            textShadow: '3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
         }}
     >
         {data.text}
@@ -79,61 +87,33 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
   );
 });
 
-// --- NEW COMPONENT: LOOT ITEM ---
-const LootItem = memo(({ image, amount, delayIndex, isFading }: { image: string, amount: number, delayIndex: number, isFading: boolean }) => {
+// --- LOOT ITEM DEFINITION ---
+interface LootItemData {
+    id: number;
+    image: string;
+    amount: number;
+    x: number; // Random position X
+    y: number; // Random position Y
+    isVisible: boolean;
+}
+
+// --- LOOT ITEM COMPONENT ---
+const LootItem = memo(({ item }: { item: LootItemData }) => {
     return (
         <div 
-            className={`relative flex-shrink-0 transition-opacity duration-500 ${isFading ? 'opacity-0' : 'opacity-100'}`}
-            style={{ animationDelay: `${delayIndex * 0.15}s` }}
+            className={`absolute transition-all duration-500 transform -translate-x-1/2 -translate-y-1/2 z-40 ${item.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
+            style={{ 
+                left: `${item.x}%`, 
+                top: `${item.y}%`,
+            }}
         >
             <div className="animate-loot-pop relative">
-                {/* Giảm kích thước icon xuống w-14 h-14 */}
-                <img src={image} alt="Loot" className="w-14 h-14 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+                {/* Vật phẩm nhỏ w-14 */}
+                <img src={item.image} alt="Loot" className="w-14 h-14 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.6)]" />
                 <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide z-10">
-                    x{amount}
+                    x{item.amount}
                 </div>
             </div>
-        </div>
-    );
-});
-
-// --- LOOT DISPLAY CONTAINER ---
-const LootDisplay = memo(({ rewards, isFading }: { rewards: { coins: number; energy: number }, isFading: boolean }) => {
-    return (
-        // Dịch chuyển vị trí loot lên trên: top-[35%]
-        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-6 z-50 pointer-events-none">
-            <style>{`
-                @keyframes loot-pop {
-                    0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
-                    40% { opacity: 1; transform: scale(1.2) translateY(-30px) rotate(10deg); }
-                    60% { transform: scale(0.95) translateY(0) rotate(-5deg); }
-                    80% { transform: scale(1.05) translateY(-10px) rotate(3deg); }
-                    100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
-                }
-                @keyframes fade-in-badge {
-                    0%, 50% { opacity: 0; transform: scale(0); }
-                    100% { opacity: 1; transform: scale(1); }
-                }
-                .animate-loot-pop { animation: loot-pop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-                .animate-fade-in-badge { animation: fade-in-badge 0.8s ease-out forwards; }
-            `}</style>
-            
-            {rewards.coins > 0 && (
-                <LootItem 
-                    image={bossBattleAssets.coinIcon} 
-                    amount={rewards.coins} 
-                    delayIndex={0} 
-                    isFading={isFading}
-                />
-            )}
-            {rewards.energy > 0 && (
-                <LootItem 
-                    image={bossBattleAssets.energyIcon} 
-                    amount={rewards.energy} 
-                    delayIndex={1}
-                    isFading={isFading}
-                />
-            )}
         </div>
     );
 });
@@ -304,8 +284,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     // States quản lý sequence chiến thắng
     const [sequenceState, setSequenceState] = useState<'none' | 'victory_sequence'>('none'); 
-    const [showLoot, setShowLoot] = useState(false);
-    const [lootFading, setLootFading] = useState(false);
+    
+    // Thay đổi cấu trúc quản lý Loot: dùng mảng LootItemData để quản lý vị trí từng món
+    const [lootItems, setLootItems] = useState<LootItemData[]>([]);
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -315,64 +296,45 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
-    // --- LOGIC HIỂN THỊ DAMAGE / COLLECTED TEXT ---
-    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss' | 'center' | 'top-center', fontSize: number = 18) => { 
+    // --- LOGIC HIỂN THỊ DAMAGE / COLLECTED / VICTORY ---
+    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss' | 'custom', fontSize: number = 18, customX?: number, customY?: number, duration: number = 1200, className: string = '') => { 
         const id = Date.now() + Math.random();
         
-        let baseX = 50; // default center
-        if (target === 'player') baseX = 15;
-        if (target === 'boss') baseX = 75;
-        
-        const baseY = 55; // default Y
-        
-        // Randomize vị trí một chút
-        let finalX = baseX + (Math.random() * 12 - 6);
-        
-        // Nếu là 'center' (Collected) hoặc 'top-center' (Victory), spread rộng hơn
-        if (target === 'center' || target === 'top-center') {
-             finalX = baseX + (Math.random() * 10 - 5);
-        }
+        let finalX = 50;
+        let finalY = 50;
 
-        let finalY = baseY + (Math.random() * 10 - 5);
-        
-        // Căn chỉnh chiều cao đặc biệt cho Loot
-        if (target === 'center') finalY = 40; // Ngay trên loot một chút
-        if (target === 'top-center') finalY = 30; // Cao hơn loot (cho chữ VICTORY)
+        if (target === 'player') {
+            finalX = 15 + (Math.random() * 12 - 6);
+            finalY = 55 + (Math.random() * 10 - 5);
+        } else if (target === 'boss') {
+            finalX = 75 + (Math.random() * 12 - 6);
+            finalY = 55 + (Math.random() * 10 - 5);
+        } else if (target === 'custom' && customX !== undefined && customY !== undefined) {
+            finalX = customX;
+            finalY = customY;
+        }
 
         const isHeal = text.startsWith('+');
-        if (isHeal) finalY -= 8;
+        if (isHeal && target !== 'custom') finalY -= 8;
 
-        const checkLimit = 15;
-        let count = 0;
-        for (let i = damagesRef.current.length - 1; i >= 0; i--) {
-            if (count >= checkLimit) break;
-            const existing = damagesRef.current[i];
-            const dx = Math.abs(existing.x - finalX);
-            const dy = Math.abs(existing.y - finalY);
-            if (dx < 8 && dy < 8) {
-                finalY = existing.y - (6 + Math.random() * 2); 
-                if (finalX > existing.x) finalX += (4 + Math.random() * 2); 
-                else finalX -= (4 + Math.random() * 2);
-            }
-            count++;
-        }
-
-        const newText: DamageText = { id, text, color, x: finalX, y: finalY, fontSize };
+        const newText: DamageText = { id, text, color, x: finalX, y: finalY, fontSize, duration, className };
+        
         setDamages(prev => {
             const updated = [...prev, newText];
             damagesRef.current = updated;
             return updated;
         });
+        
         setTimeout(() => {
             setDamages(prev => {
                 const updated = prev.filter(d => d.id !== id);
                 damagesRef.current = updated;
                 return updated;
             });
-        }, 1200);
+        }, duration);
     }, []);
 
-    // --- EFFECT: HANDLE VICTORY SEQUENCE ---
+    // --- EFFECT: HANDLE VICTORY SEQUENCE (UPDATED LOGIC) ---
     useEffect(() => {
         // Trigger chỉ khi thắng và chưa bắt đầu sequence
         if (gameOver === 'win' && sequenceState === 'none') {
@@ -381,39 +343,73 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             if (!isLastBoss) {
                 setSequenceState('victory_sequence');
                 
-                // 1. Boss bắt đầu chết (1.5s)
+                // 1. Boss chết (1.5s)
                 setBossState('dying');
 
-                // 2. Khi boss vừa chết xong -> Hiện Loot
+                // 2. Sau khi boss chết xong -> Generate Loot & Show Victory
                 setTimeout(() => {
-                    setShowLoot(true);
-                    setLootFading(false);
+                    const rewards = currentBossData.rewards;
+                    const newLootItems: LootItemData[] = [];
                     
-                    // Hiện ngay chữ VICTORY ở trên đầu
-                    addDamageText("VICTORY", "#FFFFFF", "top-center", 24);
+                    // Generate Coins Loot
+                    if (rewards.coins > 0) {
+                        newLootItems.push({
+                            id: Date.now() + 1,
+                            image: bossBattleAssets.coinIcon,
+                            amount: rewards.coins,
+                            x: 50 + (Math.random() * 20 - 10), // Random quanh 50%
+                            y: 40 + (Math.random() * 10 - 5),  // Random quanh 40%
+                            isVisible: true
+                        });
+                    }
+                    // Generate Energy Loot
+                    if (rewards.energy > 0) {
+                        newLootItems.push({
+                            id: Date.now() + 2,
+                            image: bossBattleAssets.energyIcon,
+                            amount: rewards.energy,
+                            x: 50 + (Math.random() * 20 - 10), // Random quanh 50% (khác vị trí coin)
+                            y: 40 + (Math.random() * 10 - 5),
+                            isVisible: true
+                        });
+                    }
 
-                    // 3. Đợi khoảng 1.5s (lúc chữ Victory bay mất)
+                    setLootItems(newLootItems);
+
+                    // SHOW VICTORY TEXT: Chính giữa (50, 50), To (text-6xl), 3s duration
+                    addDamageText("VICTORY", "#fde047", "custom", 60, 50, 50, 3000, "font-outline drop-shadow-xl");
+
+                    // 3. Đợi 3s (cho chữ VICTORY bay hết)
                     setTimeout(() => {
-                        // a. Hiện chữ "COLLECTED" nhỏ hơn, màu trắng
-                        addDamageText("COLLECTED", "#FFFFFF", "center", 14);
-
-                        // b. Loot bắt đầu mờ đi ngay sau đó
-                        setTimeout(() => {
-                            setLootFading(true);
-                            
-                            // c. Chuyển tầng sau khi loot mờ xong
+                        
+                        // 4. Sequence Collect: Duyệt qua từng item, hiện chữ Collected rồi xóa item
+                        newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                setShowLoot(false);
-                                handleNextFloor();
-                                setBossState('appearing');
+                                // Hiện chữ COLLECTED ngay trên đầu item (y - 10)
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 10, 1000, "uppercase tracking-wide");
+                                
+                                // Ẩn item sau khi text hiện lên (hoặc đồng bộ biến mất)
+                                // Ở đây delay nhỏ 1 xíu để text hiện ra rồi item mới mất
                                 setTimeout(() => {
-                                    setBossState('idle');
-                                    setSequenceState('none');
-                                }, 1200);
-                            }, 800); // Wait for loot fade
-                        }, 500); // Delay ngắn sau khi hiện chữ Collected thì loot mới mờ
+                                     setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
+                                }, 300);
 
-                    }, 1500); // Thời gian chờ Victory bay hết (khoảng 1.2-1.5s)
+                            }, index * 400); // So le thời gian mỗi item khoảng 400ms
+                        });
+
+                        // 5. Kết thúc sequence, chuyển tầng
+                        const totalDelay = newLootItems.length * 400 + 800; // Đợi hết loot biến mất
+                        setTimeout(() => {
+                            setLootItems([]); // Clean up
+                            handleNextFloor();
+                            setBossState('appearing');
+                            setTimeout(() => {
+                                setBossState('idle');
+                                setSequenceState('none');
+                            }, 1200);
+                        }, totalDelay);
+
+                    }, 3000); // Thời gian chờ Victory (3s)
 
                 }, 1200); // Thời gian animation 'dying' của Boss
 
@@ -611,13 +607,24 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .font-sans { font-family: sans-serif; } 
                 .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
                 .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
-                
+                .font-outline { -webkit-text-stroke: 1px #854d0e; text-shadow: 0 4px 6px rgba(0,0,0,0.3); } /* Thêm outline cho chữ Victory */
+
                 @keyframes float-up { 
                     0% { transform: translateY(0) scale(1); opacity: 1; } 
                     20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
                     100% { transform: translateY(-80px) scale(1); opacity: 0; } 
                 } 
                 .animate-float-up { animation: float-up 1.2s ease-out forwards; } 
+                
+                /* Animation riêng cho Victory: Zoom nhẹ rồi đứng im, sau đó fade out */
+                @keyframes victory-pulse {
+                    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+                    20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+                    30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                    80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                    100% { transform: translate(-50%, -60%) scale(1.1); opacity: 0; }
+                }
+                .animate-victory-pulse { animation: victory-pulse 3s ease-in-out forwards; }
 
                 @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } 
                 .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } 
@@ -634,6 +641,20 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .btn-shine:hover:not(:disabled)::before { left: 125%; }
                 @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
                 .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+                
+                @keyframes loot-pop {
+                    0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
+                    40% { opacity: 1; transform: scale(1.2) translateY(-30px) rotate(10deg); }
+                    60% { transform: scale(0.95) translateY(0) rotate(-5deg); }
+                    80% { transform: scale(1.05) translateY(-10px) rotate(3deg); }
+                    100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+                }
+                @keyframes fade-in-badge {
+                    0%, 50% { opacity: 0; transform: scale(0); }
+                    100% { opacity: 1; transform: scale(1); }
+                }
+                .animate-loot-pop { animation: loot-pop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+                .animate-fade-in-badge { animation: fade-in-badge 0.8s ease-out forwards; }
             `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
@@ -759,15 +780,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 />
                                             ))}
                                             
-                                            {/* Render Damages & "Collected" Text */}
+                                            {/* Render Damages & Text */}
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} data={d} />
                                             ))}
 
-                                            {/* LOOT ANIMATION LAYER */}
-                                            {showLoot && currentBossData.rewards && (
-                                                <LootDisplay rewards={currentBossData.rewards} isFading={lootFading} />
-                                            )}
+                                            {/* LOOT ANIMATION LAYER (Individual Items) */}
+                                            {lootItems.map(item => (
+                                                <LootItem key={item.id} item={item} />
+                                            ))}
                                         </div>
 
                                     </div>
