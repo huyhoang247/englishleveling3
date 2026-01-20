@@ -41,6 +41,7 @@ const BOSS_ORB_SPAWN_SLOTS = [
 const SKIP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/skip-battle.webp";
 const SWEEP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/sweep-battle.webp";
 const FIGHT_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fight.webp";
+const BOSS_REWARDS_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/boss-rewards.webp";
 const BACKGROUND_IMAGE = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-tower.webp";
 
 // --- UI ICONS ---
@@ -735,8 +736,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 {/* --- RIGHT UTILITY BUTTONS --- */}
                                 <div className="absolute top-16 right-4 z-20 flex flex-col items-end gap-2">
                                      <div className="flex gap-2">
-                                        <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-9 h-9 p-2 bg-slate-800/90 hover:bg-slate-700/90 rounded-full border border-slate-600 hover:border-yellow-400 active:scale-95 shadow-md disabled:opacity-50" title="Rewards">
-                                            <img src={bossBattleAssets.rewardsIcon} alt="Rewards" className="w-full h-full object-contain" />
+                                        <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-12 h-12 transition-all active:scale-95 hover:scale-105 disabled:opacity-50" title="Rewards">
+                                            <img src={BOSS_REWARDS_ICON} alt="Rewards" className="w-full h-full object-contain drop-shadow-md" />
                                         </button>
                                      </div>
                                 </div>
