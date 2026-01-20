@@ -68,6 +68,12 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
       ? "animate-victory-pulse" 
       : "animate-float-up";
 
+  // Xử lý shadow: Nếu là "COLLECTED" thì không dùng viền đen đậm, dùng shadow nhẹ
+  const isCollected = data.text === 'COLLECTED';
+  const textShadowStyle = isCollected 
+      ? '0px 2px 4px rgba(0,0,0,0.5)' // Shadow nhẹ cho Collected
+      : '3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'; // Viền đen đậm cho Damage/Victory
+
   return (
     <div 
         key={data.id} 
@@ -79,7 +85,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             fontSize: `${data.fontSize}px`,
             // Nếu là Victory thì căn giữa tuyệt đối tại điểm neo
             transform: data.duration && data.duration > 2000 ? 'translate(-50%, -50%)' : undefined,
-            textShadow: '3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'
+            textShadow: textShadowStyle
         }}
     >
         {data.text}
@@ -368,7 +374,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             id: Date.now() + 2,
                             image: bossBattleAssets.energyIcon,
                             amount: rewards.energy,
-                            x: 50 + (Math.random() * 20 - 10), // Random quanh 50% (khác vị trí coin)
+                            x: 50 + (Math.random() * 20 - 10), // Random quanh 50%
                             y: 40 + (Math.random() * 10 - 5),
                             isVisible: true
                         });
@@ -376,25 +382,24 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                     setLootItems(newLootItems);
 
-                    // SHOW VICTORY TEXT: Chính giữa (50, 50), To (text-6xl), 3s duration
-                    addDamageText("VICTORY", "#fde047", "custom", 60, 50, 50, 3000, "font-outline drop-shadow-xl");
+                    // SHOW VICTORY TEXT: Chính giữa (50), Đặt dưới Header (18%), Cỡ chữ vừa phải (48)
+                    addDamageText("VICTORY", "#fde047", "custom", 48, 50, 18, 3000, "font-outline drop-shadow-xl");
 
                     // 3. Đợi 3s (cho chữ VICTORY bay hết)
                     setTimeout(() => {
                         
-                        // 4. Sequence Collect: Duyệt qua từng item, hiện chữ Collected rồi xóa item
+                        // 4. Sequence Collect: Duyệt qua từng item
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                // Hiện chữ COLLECTED ngay trên đầu item (y - 10)
+                                // Hiện chữ COLLECTED ngay trên đầu item, không viền đen
                                 addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 10, 1000, "uppercase tracking-wide");
                                 
-                                // Ẩn item sau khi text hiện lên (hoặc đồng bộ biến mất)
-                                // Ở đây delay nhỏ 1 xíu để text hiện ra rồi item mới mất
+                                // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
                                      setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
                                 }, 300);
 
-                            }, index * 400); // So le thời gian mỗi item khoảng 400ms
+                            }, index * 400); // So le thời gian mỗi item
                         });
 
                         // 5. Kết thúc sequence, chuyển tầng
@@ -607,7 +612,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 .font-sans { font-family: sans-serif; } 
                 .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
                 .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
-                .font-outline { -webkit-text-stroke: 1px #854d0e; text-shadow: 0 4px 6px rgba(0,0,0,0.3); } /* Thêm outline cho chữ Victory */
+                .font-outline { -webkit-text-stroke: 1px #854d0e; text-shadow: 0 4px 6px rgba(0,0,0,0.3); } 
 
                 @keyframes float-up { 
                     0% { transform: translateY(0) scale(1); opacity: 1; } 
@@ -616,7 +621,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 } 
                 .animate-float-up { animation: float-up 1.2s ease-out forwards; } 
                 
-                /* Animation riêng cho Victory: Zoom nhẹ rồi đứng im, sau đó fade out */
                 @keyframes victory-pulse {
                     0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
                     20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
