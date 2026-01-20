@@ -59,20 +59,21 @@ interface DamageText {
     y: number; // Percent
     fontSize: number;
     className?: string; 
-    duration?: number; // Custom duration support
+    duration?: number; 
 }
 
 const FloatingText = memo(({ data }: { data: DamageText }) => {
-  // Nếu là Victory (duration dài), dùng animation khác
   const animClass = data.duration && data.duration > 2000 
       ? "animate-victory-pulse" 
       : "animate-float-up";
 
-  // Xử lý shadow: Nếu là "COLLECTED" thì không dùng viền đen đậm, dùng shadow nhẹ
-  const isCollected = data.text === 'COLLECTED';
-  const textShadowStyle = isCollected 
-      ? '0px 2px 4px rgba(0,0,0,0.5)' // Shadow nhẹ cho Collected
-      : '3px 3px 0px #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000'; // Viền đen đậm cho Damage/Victory
+  // Logic Shadow:
+  // - Victory: Glow nhẹ màu đen để nổi trên nền sáng/tối.
+  // - Còn lại (Damage, Collected): KHÔNG dùng shadow/stroke (theo yêu cầu).
+  const isVictory = data.text === 'VICTORY';
+  const textShadowStyle = isVictory 
+      ? '0px 0px 8px rgba(0,0,0,0.6)' 
+      : 'none';
 
   return (
     <div 
@@ -83,9 +84,9 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             top: `${data.y}%`,
             color: data.color,
             fontSize: `${data.fontSize}px`,
-            // Nếu là Victory thì căn giữa tuyệt đối tại điểm neo
             transform: data.duration && data.duration > 2000 ? 'translate(-50%, -50%)' : undefined,
-            textShadow: textShadowStyle
+            textShadow: textShadowStyle,
+            fontWeight: 'bold'
         }}
     >
         {data.text}
@@ -357,33 +358,50 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     const rewards = currentBossData.rewards;
                     const newLootItems: LootItemData[] = [];
                     
+                    let itemCount = 0;
+                    if(rewards.coins > 0) itemCount++;
+                    if(rewards.energy > 0) itemCount++;
+
+                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 75%-85%)
+                    // Chia màn hình thành các phần để tránh chồng chéo
+                    
                     // Generate Coins Loot
                     if (rewards.coins > 0) {
+                        // Nếu có 2 item thì coin nằm bên trái (15% - 45%)
+                        // Nếu chỉ 1 item thì coin nằm giữa (35% - 65%)
+                        const minX = itemCount > 1 ? 20 : 40;
+                        const maxX = itemCount > 1 ? 45 : 60;
+                        
                         newLootItems.push({
                             id: Date.now() + 1,
                             image: bossBattleAssets.coinIcon,
                             amount: rewards.coins,
-                            x: 50 + (Math.random() * 20 - 10), // Random quanh 50%
-                            y: 40 + (Math.random() * 10 - 5),  // Random quanh 40%
+                            x: minX + Math.random() * (maxX - minX), 
+                            y: 75 + Math.random() * 10,
                             isVisible: true
                         });
                     }
+                    
                     // Generate Energy Loot
                     if (rewards.energy > 0) {
+                        // Energy nằm bên phải (55% - 85%)
+                        const minX = 55;
+                        const maxX = 80;
+
                         newLootItems.push({
                             id: Date.now() + 2,
                             image: bossBattleAssets.energyIcon,
                             amount: rewards.energy,
-                            x: 50 + (Math.random() * 20 - 10), // Random quanh 50%
-                            y: 40 + (Math.random() * 10 - 5),
+                            x: minX + Math.random() * (maxX - minX),
+                            y: 75 + Math.random() * 10,
                             isVisible: true
                         });
                     }
 
                     setLootItems(newLootItems);
 
-                    // SHOW VICTORY TEXT: Chính giữa (50), Đặt dưới Header (18%), Cỡ chữ vừa phải (48)
-                    addDamageText("VICTORY", "#fde047", "custom", 48, 50, 18, 3000, "font-outline drop-shadow-xl");
+                    // SHOW VICTORY TEXT: Chính giữa (50), Dưới Header (15%), Màu Trắng, Cỡ vừa (40)
+                    addDamageText("VICTORY", "#FFFFFF", "custom", 40, 50, 15, 3000, "font-outline drop-shadow-xl");
 
                     // 3. Đợi 3s (cho chữ VICTORY bay hết)
                     setTimeout(() => {
@@ -391,8 +409,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         // 4. Sequence Collect: Duyệt qua từng item
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                // Hiện chữ COLLECTED ngay trên đầu item, không viền đen
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 10, 1000, "uppercase tracking-wide");
+                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 12)
+                                // Màu trắng, KHÔNG viền đen
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 12, 1000, "uppercase tracking-wide");
                                 
                                 // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
