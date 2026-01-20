@@ -11,7 +11,6 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- IMPORT BOSS & ELEMENTS ---
 import { ELEMENTS, ElementKey } from './thuoc-tinh.tsx';
-// Import thêm ActionState để dùng cho animation
 import BossDisplay, { HeroDisplay, ActionState } from './boss-display.tsx'; 
 
 // --- IMPORT SKILL COMPONENT ---
@@ -77,6 +76,43 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
         {data.text}
     </div>
   );
+});
+
+// --- NEW COMPONENT: LOOT DISPLAY ---
+// Hiển thị vật phẩm rơi ra giữa màn hình khi Boss chết
+const LootDisplay = memo(({ rewards }: { rewards: { coins: number; energy: number } }) => {
+    return (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center z-50 pointer-events-none">
+            <style>{`
+                @keyframes loot-pop {
+                    0% { transform: scale(0) translateY(20px); opacity: 0; }
+                    40% { transform: scale(1.2) translateY(-10px); opacity: 1; }
+                    100% { transform: scale(1) translateY(0); opacity: 1; }
+                }
+                @keyframes loot-float-fade {
+                    0% { transform: translateY(0); opacity: 1; }
+                    100% { transform: translateY(-50px); opacity: 0; }
+                }
+                .animate-loot-pop { animation: loot-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+                .animate-loot-fade { animation: loot-float-fade 0.8s ease-in forwards 1.2s; }
+            `}</style>
+            
+            <div className="flex gap-6 animate-loot-pop animate-loot-fade">
+                {rewards.coins > 0 && (
+                    <div className="flex flex-col items-center gap-1">
+                        <img src={bossBattleAssets.coinIcon} alt="Coin" className="w-16 h-16 drop-shadow-[0_0_10px_rgba(253,224,71,0.6)]" />
+                        <span className="text-2xl font-bold text-yellow-300 text-shadow-sm">+{rewards.coins}</span>
+                    </div>
+                )}
+                {rewards.energy > 0 && (
+                    <div className="flex flex-col items-center gap-1">
+                        <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-16 h-16 drop-shadow-[0_0_10px_rgba(34,211,238,0.6)]" />
+                        <span className="text-2xl font-bold text-cyan-300 text-shadow-sm">+{rewards.energy}</span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
 });
 
 // --- MODALS ---
@@ -237,11 +273,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     // Visual HP States
     const [visualBossHp, setVisualBossHp] = useState(0);
-    const [visualPlayerHp, setVisualPlayerHp] = useState(0); // THÊM DÒNG NÀY
+    const [visualPlayerHp, setVisualPlayerHp] = useState(0);
 
-    // --- ANIMATION STATES ---
+    // --- ANIMATION & SEQUENCE STATES ---
     const [heroState, setHeroState] = useState<ActionState>('idle');
     const [bossState, setBossState] = useState<ActionState>('idle');
+    
+    // State quản lý chuỗi animation thắng trận
+    const [sequenceState, setSequenceState] = useState<'none' | 'victory_sequence'>('none'); 
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showLogModal, setShowLogModal] = useState(false);
@@ -251,17 +290,57 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
+    // --- EFFECT: HANDLE VICTORY SEQUENCE (KEY LOGIC CHANGE) ---
+    useEffect(() => {
+        // Chỉ kích hoạt khi thắng và chưa bắt đầu chuỗi animation
+        if (gameOver === 'win' && sequenceState === 'none') {
+            const isLastBoss = currentFloor === BOSS_DATA.length - 1;
+
+            if (!isLastBoss) {
+                // Nếu chưa phải boss cuối cùng -> Chạy hiệu ứng chuyển cảnh
+                setSequenceState('victory_sequence');
+                
+                // 1. Boss chết (thu nhỏ, xoay, mờ)
+                setBossState('dying');
+
+                // 2. Sau khi animation chết xong (khoảng 1.2s), gọi Next Floor và hiện Loot
+                setTimeout(() => {
+                    // Cập nhật tầng mới trong Context (reset game state)
+                    handleNextFloor(); 
+                    
+                    // 3. Sau một khoảng thời gian chờ Loot bay lên (pop: 0.5s + delay: 0.8s), Boss mới xuất hiện
+                    setTimeout(() => {
+                        setBossState('appearing');
+                        
+                        // 4. Sau khi boss xuất hiện xong (animation appearing ~1.2s) -> Trở về trạng thái chiến đấu
+                        setTimeout(() => {
+                            setBossState('idle');
+                            setSequenceState('none');
+                        }, 1200); 
+
+                    }, 1500); // Delay để Loot hiện rõ rồi boss mới hiện
+
+                }, 1200); // Delay khớp với animation 'dying'
+
+            }
+            // Nếu là Last Boss -> Không làm gì cả, Modal Victory sẽ được render ở dưới như cũ
+        }
+    }, [gameOver, currentFloor, handleNextFloor, sequenceState]);
+
     // --- SYNC VISUAL HP ---
     useEffect(() => {
         // Sync Boss
         if (bossStats && (battleState === 'idle' || visualBossHp === 0)) {
-            setVisualBossHp(bossStats.hp);
+             // Chỉ sync lại khi không đang trong chuỗi chuyển cảnh để tránh glitch HP bar boss mới đè lên boss cũ đang chết
+             if (sequenceState !== 'victory_sequence') {
+                setVisualBossHp(bossStats.hp);
+             }
         }
-        // Sync Player - THÊM PHẦN NÀY
+        // Sync Player
         if (playerStats && (battleState === 'idle' || visualPlayerHp === 0)) {
             setVisualPlayerHp(playerStats.hp);
         }
-    }, [bossStats, playerStats, battleState, currentFloor]);
+    }, [bossStats, playerStats, battleState, currentFloor, sequenceState]);
 
     useEffect(() => {
         if (currentBossData) {
@@ -329,17 +408,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, 1200);
     }, []);
 
-    // --- TURN SEQUENCE LOGIC (ĐÃ FIX DELAY) ---
+    // --- TURN SEQUENCE LOGIC ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
         const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
 
-        // --- 1. PLAYER TURN (Starts at 0ms) ---
+        // --- 1. PLAYER TURN ---
         if (playerDmg > 0) {
-            // A. Trigger Animation Attack
             setHeroState('attack');
-            setTimeout(() => setHeroState('idle'), 500); // 500ms cho mượt
+            setTimeout(() => setHeroState('idle'), 500); 
 
             const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 3);
             const dmg2 = playerDmgHit2 || Math.ceil(playerDmg / 3);
@@ -348,25 +426,22 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const shuffledSlots = [...ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
             const now = Date.now();
             
-            // B. Spawn Orbs
             const orb1: SkillProps = { id: now, type: 'player-orb', delay: 200, startPos: shuffledSlots[0] };
             const orb2: SkillProps = { id: now + 1, type: 'player-orb', delay: 400, startPos: shuffledSlots[1] };
             const orb3: SkillProps = { id: now + 2, type: 'player-orb', delay: 600, startPos: shuffledSlots[2] };
 
             setOrbEffects(prev => [...prev, orb1, orb2, orb3]);
 
-            // C. Calculate Hit Timing
-            // Flight time = ~750ms (from skill-effect config)
             const baseFlightTime = 750;
-            const hit1Time = 200 + baseFlightTime; // ~950ms
-            const hit2Time = 400 + baseFlightTime; // ~1150ms
-            const hit3Time = 600 + baseFlightTime; // ~1350ms
+            const hit1Time = 200 + baseFlightTime;
+            const hit2Time = 400 + baseFlightTime;
+            const hit3Time = 600 + baseFlightTime;
 
             // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg1)}`, '#ef4444', 'boss', 30); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
-                setBossState('hit'); // RUNG LẮC BOSS
+                setBossState('hit'); 
             }, hit1Time);
             setTimeout(() => setBossState('idle'), hit1Time + 400);
 
@@ -384,35 +459,27 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 setVisualBossHp(prev => Math.max(0, prev - dmg3));
                 setBossState('hit');
             }, hit3Time);
-            setTimeout(() => setBossState('idle'), hit3Time + 400);
-
+            
             // Cleanup Boss HP
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
-                if (bossStats) {
-                     setVisualBossHp(current => {
-                         if(Math.abs(current - bossStats.hp) < 100) return bossStats.hp;
-                         return current;
-                     });
-                }
+                // Nếu boss chưa chết sau hit cuối thì trả về idle (nếu boss chết thì context sẽ set gameOver)
+                setBossState(prev => prev === 'hit' ? 'idle' : prev); 
             }, hit3Time + 500);
         }
         
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
-             // THÊM: Cập nhật visual máu khi hồi
              setVisualPlayerHp(prev => prev + playerHeal);
         }
         
-        // --- 2. BOSS TURN (CHẬM LẠI: Tăng delay từ 1500 -> 2500) ---
-        // Player last hit @ 1350ms. Boss starts @ 2500ms. Nghỉ khoảng 1s.
+        // --- 2. BOSS TURN ---
         const bossStartDelay = 2500; 
         
         if (bossDmg > 0) {
-            // A. Boss Attack Anim
             setTimeout(() => {
                 setBossState('attack');
-                setTimeout(() => setBossState('idle'), 500); // 500ms
+                setTimeout(() => setBossState('idle'), 500);
             }, bossStartDelay);
 
             const shuffledBossSlots = [...BOSS_ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
@@ -426,48 +493,38 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const bDmg2 = Math.floor(bossDmg * 0.3);
             const bDmg3 = bossDmg - bDmg1 - bDmg2;
 
-            // B. Boss Orbs
             setTimeout(() => {
                 setOrbEffects(prev => [...prev, bOrb1, bOrb2, bOrb3]);
             }, bossStartDelay);
 
-            // C. Hit Timing
             const baseFlightTime = 750;
             const hit1Time = bossStartDelay + 200 + baseFlightTime;
             const hit2Time = bossStartDelay + 400 + baseFlightTime;
             const hit3Time = bossStartDelay + 600 + baseFlightTime;
 
-            // Hit 1
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 30); 
-                setHeroState('hit'); // RUNG LẮC HERO
-                // THÊM: Trừ máu Player visual
+                setHeroState('hit');
                 setVisualPlayerHp(prev => Math.max(0, prev - bDmg1));
             }, hit1Time);
             setTimeout(() => setHeroState('idle'), hit1Time + 400);
 
-            // Hit 2
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 32);
                 setHeroState('hit');
-                // THÊM: Trừ máu Player visual
                 setVisualPlayerHp(prev => Math.max(0, prev - bDmg2));
             }, hit2Time);
             setTimeout(() => setHeroState('idle'), hit2Time + 400);
 
-            // Hit 3
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 36);
                 setHeroState('hit');
-                // THÊM: Trừ máu Player visual
                 setVisualPlayerHp(prev => Math.max(0, prev - bDmg3));
             }, hit3Time);
             setTimeout(() => setHeroState('idle'), hit3Time + 400);
 
-            // Cleanup & Sync
             setTimeout(() => {
                  setOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
-                 // THÊM: Đồng bộ chính xác máu thật
                  if(playerStats) {
                      setVisualPlayerHp(current => {
                          if(Math.abs(current - playerStats.hp) < 100) return playerStats.hp;
@@ -480,7 +537,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (bossReflectDmg > 0) {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
-                // THÊM: Trừ máu khi bị phản dame
                 setVisualPlayerHp(prev => Math.max(0, prev - bossReflectDmg));
             }, 3000); 
         }
@@ -627,7 +683,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         {/* LEFT: HERO */}
                                         <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
                                             <HeroDisplay 
-                                                // MODIFIED: Truyền visualPlayerHp thay vì hp gốc để animation mượt
                                                 stats={playerStats ? { ...playerStats, hp: visualPlayerHp } : playerStats}
                                                 onStatsClick={() => setStatsModalTarget('player')} 
                                                 actionState={heroState} 
@@ -666,13 +721,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             {damages.map(d => (
                                                 <FloatingText key={d.id} data={d} />
                                             ))}
+
+                                            {/* LOOT ANIMATION LAYER - Chỉ hiện khi đang chạy chuỗi Victory Sequence */}
+                                            {sequenceState === 'victory_sequence' && currentBossData.rewards && (
+                                                <LootDisplay rewards={currentBossData.rewards} />
+                                            )}
                                         </div>
 
                                     </div>
 
                                     {/* --- ACTION BAR --- */}
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-24 z-50">
-                                        {battleState === 'idle' ? (
+                                        {/* Chỉ hiện nút Fight khi Battle Idle VÀ không đang trong chuỗi animation thắng */}
+                                        {battleState === 'idle' && sequenceState === 'none' ? (
                                             <div className="flex gap-4 items-center">
                                                 <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="transition-all active:scale-95 hover:scale-105 rounded-full relative group">
                                                     <img src={FIGHT_ICON} alt="Fight" className="w-36 h-auto object-contain" />
@@ -683,7 +744,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 </button>
                                             </div>
                                         ) : (
-                                            !gameOver && (
+                                            // Ẩn nút Skip khi đã thắng/thua để tránh glitch animation
+                                            !gameOver && battleState === 'fighting' && (
                                                 <button onClick={skipBattle} className="transition-all active:scale-95 hover:scale-105 rounded-full" title="Skip Battle">
                                                     <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-36 h-auto object-contain" />
                                                 </button>
@@ -691,7 +753,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         )}
                                     </div>
     
-                                    {gameOver === 'win' && (<VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={currentFloor === BOSS_DATA.length - 1} rewards={currentBossData.rewards} />)}
+                                    {/* VICTORY MODAL - Chỉ hiện khi là Boss cuối cùng */}
+                                    {gameOver === 'win' && currentFloor === BOSS_DATA.length - 1 && (
+                                        <VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={true} rewards={currentBossData.rewards} />
+                                    )}
+
+                                    {/* DEFEAT MODAL */}
                                     {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
                                 </main>
                             </>
