@@ -287,14 +287,15 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* --- BOSS 01 CONFIGURATION (Updated Size: 1323x1326) --- */
-                .boss-size-01 { width: 220.5px; height: 221px; transform: scale(1); }
+                /* --- BOSS 01 CONFIGURATION (Updated Size: 992x994) --- */
+                /* Frame: 992 / 6 = 165.33px wide, 994 / 6 = 165.66px high */
+                .boss-size-01 { width: 165.33px; height: 165.66px; transform: scale(1); }
                 .boss-anim-01 { 
-                    width: 1323px; height: 1326px; background-size: 1323px 1326px; 
+                    width: 992px; height: 994px; background-size: 992px 994px; 
                     animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite; 
                 }
-                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -1323px; } }
-                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -1326px; } }
+                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -992px; } }
+                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -994px; } }
 
                 /* --- BOSS 03 CONFIGURATION --- */
                 .boss-size-03 { width: 513px; height: 399px; transform: scale(0.55); }
