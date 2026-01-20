@@ -184,26 +184,39 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         
         /* --- TAG SỐ LƯỢNG (X1, X4) --- */
+        /* Cập nhật font Lilita, kích thước nhỏ */
         .vocabulary-chest-root .quantity-tag {
             position: absolute;
             top: 5px;
             left: 6px;
             background-color: rgba(0, 0, 0, 0.5); /* 50% opacity */
             color: rgba(255, 255, 255, 0.95);
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 2px 8px;
+            font-family: "Lilita One", sans-serif; /* Font Lilita */
+            font-size: 0.65rem; /* Cỡ chữ nhỏ */
+            letter-spacing: 0.5px;
+            padding: 2px 7px;
             border-radius: 12px; /* Pill shape */
-            pointer-events: none; /* Không cản click */
+            pointer-events: none;
+            text-transform: uppercase;
         }
 
         /* --- HIỂN THỊ GIÁ --- */
-        .vocabulary-chest-root .button-price-box { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.95rem; color: white; font-weight: 600; }
+        /* Cập nhật font Lilita cho giá */
+        .vocabulary-chest-root .button-price-box { 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            gap: 5px; 
+            font-size: 0.95rem; 
+            color: white; 
+            font-weight: 600; 
+            font-family: "Lilita One", sans-serif; /* Font Lilita */
+        }
         .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         
         /* Style cho giá sale */
-        .vocabulary-chest-root .old-price { text-decoration: line-through; opacity: 0.6; font-size: 0.75rem; color: #e2e8f0; margin-right: 4px; }
-        .vocabulary-chest-root .new-price { color: #fef08a; font-weight: 800; font-size: 1rem; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); }
+        .vocabulary-chest-root .old-price { text-decoration: line-through; opacity: 0.6; font-size: 0.75rem; color: #e2e8f0; margin-right: 4px; font-family: 'Roboto', sans-serif; /* Giá cũ giữ font thường cho dễ đọc khi gạch ngang */ }
+        .vocabulary-chest-root .new-price { color: #fef08a; font-weight: 800; font-size: 1.1rem; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); font-family: "Lilita One", sans-serif; }
 
         /* --- ANIMATIONS LOADING & PROCESSING --- */
         @keyframes vocabulary-chest-processing-pulse { 50% { transform: scale(1.02); } }
@@ -425,12 +438,12 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 <div className="action-button-group">
                     {/* BUTTON MỞ X1 */}
                     <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}>
-                        {/* Tag x1 - opacity 50% */}
-                        <span className="quantity-tag">x1</span>
+                        {/* Tag X1 - Font Lilita, Uppercase, Small size */}
+                        <span className="quantity-tag font-lilita">X1</span>
                         
-                        {/* Chỉ hiển thị giá */}
+                        {/* Chỉ hiển thị giá - Font Lilita */}
                         {typeof price1 === 'number' && (
-                            <div className="button-price-box">
+                            <div className="button-price-box font-lilita">
                                 <img src={priceIconUrl} alt="price icon" className="price-icon" />
                                 {isSaleActive ? (
                                     <>
@@ -447,11 +460,11 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     {/* BUTTON MỞ X4 */}
                     {price10 !== null && (
                         <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}>
-                            {/* Tag x4 - opacity 50% */}
-                            <span className="quantity-tag">x4</span>
+                            {/* Tag X4 - Font Lilita, Uppercase, Small size */}
+                            <span className="quantity-tag font-lilita">X4</span>
                             
-                            {/* Chỉ hiển thị giá */}
-                            <div className="button-price-box">
+                            {/* Chỉ hiển thị giá - Font Lilita */}
+                            <div className="button-price-box font-lilita">
                                 <img src={priceIconUrl} alt="price icon" className="price-icon" />
                                 {isSaleActive && typeof price10 === 'number' ? (
                                     <>
