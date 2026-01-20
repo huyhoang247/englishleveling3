@@ -168,8 +168,8 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                 */}
                 <div className={animClass}>
                     
-                    {/* HP Bar - Đã điều chỉnh dịch lên trên thêm nữa (giảm translate-y) */}
-                    <div className="w-32 md:w-48 z-20 translate-y-8 md:translate-y-16 translate-x-2 transition-transform duration-200 group-hover:scale-105">
+                    {/* HP Bar - Đã điều chỉnh dịch lên trên thêm nữa (giảm translate-y tiếp) */}
+                    <div className="w-32 md:w-48 z-20 translate-y-4 md:translate-y-12 translate-x-2 transition-transform duration-200 group-hover:scale-105">
                          <HealthBar 
                             current={stats.hp} 
                             max={stats.maxHp} 
