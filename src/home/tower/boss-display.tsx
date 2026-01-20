@@ -114,7 +114,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     transform: scale(0.85); 
                     transform-origin: bottom center;
 
-                    /* Render mặc định (Optimize contrast) */
+                    /* Render mặc định */
                     image-rendering: -webkit-optimize-contrast;
                 }
                 
@@ -140,10 +140,10 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     to { background-position-y: -1178px; }
                 }
 
-                /* Mobile Adjustments - Hero Scale 0.5 */
+                /* Mobile Adjustments - Hero Scale 1 (Full Size) */
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
-                        transform: scale(0.5); 
+                        transform: scale(1); 
                     }
                 }
             `}</style>
@@ -257,7 +257,7 @@ export const BossDisplay = memo(({
         <div className="w-full flex flex-col items-center justify-end h-full">
             <style>{`
                 .boss-render-optimize {
-                    /* Render mặc định (Optimize contrast) */
+                    /* Render mặc định */
                     image-rendering: -webkit-optimize-contrast;
                     transform: translateZ(0);
                 }
@@ -310,13 +310,13 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
                 @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -1380px; } }
 
-                /* Mobile Adjustments - ALL BOSSES SCALE 0.5 */
+                /* Mobile Adjustments - ALL BOSSES SCALE 1 (Full Size) */
                 @media (max-width: 768px) {
-                    .boss-size-default { transform: scale(0.5); }
-                    .boss-size-01 { transform: scale(0.5); }
-                    .boss-size-03 { transform: scale(0.5); }
-                    .boss-size-04 { transform: scale(0.5); }
-                    .boss-size-06 { transform: scale(0.5); }
+                    .boss-size-default { transform: scale(1); }
+                    .boss-size-01 { transform: scale(1); }
+                    .boss-size-03 { transform: scale(1); }
+                    .boss-size-04 { transform: scale(1); }
+                    .boss-size-06 { transform: scale(1); }
                 }
             `}</style>
 
