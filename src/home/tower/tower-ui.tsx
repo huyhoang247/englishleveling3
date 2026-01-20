@@ -362,9 +362,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     if(rewards.coins > 0) itemCount++;
                     if(rewards.energy > 0) itemCount++;
 
-                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
+                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 88%-94%)
                     // Lưu ý: LootItem được render ở main container (full screen) nên Y tính theo toàn màn hình.
-                    // Nút Fight ở tầm 75-80%, nên đặt Loot ở 82% trở xuống.
+                    // Đã điều chỉnh Y từ 82 xuống 88 để rơi thấp hơn.
                     
                     // Generate Coins Loot
                     if (rewards.coins > 0) {
@@ -378,7 +378,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             image: bossBattleAssets.coinIcon,
                             amount: rewards.coins,
                             x: minX + Math.random() * (maxX - minX), 
-                            y: 82 + Math.random() * 10,
+                            y: 88 + Math.random() * 6,
                             isVisible: true
                         });
                     }
@@ -394,7 +394,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                             image: bossBattleAssets.energyIcon,
                             amount: rewards.energy,
                             x: minX + Math.random() * (maxX - minX),
-                            y: 82 + Math.random() * 10,
+                            y: 88 + Math.random() * 6,
                             isVisible: true
                         });
                     }
@@ -410,9 +410,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         // 4. Sequence Collect: Duyệt qua từng item
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 12)
+                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 3.5)
                                 // Màu trắng, KHÔNG viền đen
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 5, 1000, "uppercase tracking-wide");
+                                // Đã điều chỉnh offset từ -5 xuống -3.5 để chữ sát hơn
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 3.5, 1000, "uppercase tracking-wide");
                                 
                                 // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
