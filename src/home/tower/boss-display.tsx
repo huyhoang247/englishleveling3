@@ -31,7 +31,7 @@ const CharacterAnimations = () => (
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
             20% { transform: translateX(-20px) scale(0.95); } /* Windup */
-            50% { transform: translateX(60px) scale(1.1); }   /* Strike */
+            50% { transform: translateX(60px) scale(1.1); }   /* Strike - 60px */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-right { 
@@ -42,7 +42,7 @@ const CharacterAnimations = () => (
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
             20% { transform: translateX(20px) scale(0.95); }  /* Windup */
-            50% { transform: translateX(-60px) scale(1.1); }  /* Strike */
+            50% { transform: translateX(-60px) scale(1.1); }  /* Strike - -60px */
             100% { transform: translateX(0) scale(1); }       /* Recovery */
         }
         .animate-char-attack-left { 
@@ -104,25 +104,30 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
              <CharacterAnimations />
              <style>{`
                 .hero-sprite-wrapper {
-                    /* Frame Size Grid 6x6 */
-                    width: 209px;
-                    height: 196px;
+                    /* 
+                       Frame Size Grid 6x6 updated for 939x883 sheet 
+                       Width: 939 / 6 = 156.5px
+                       Height: 883 / 6 = 147.16px (approx 147.2px)
+                    */
+                    width: 156.5px;
+                    height: 147.2px;
                     overflow: hidden;
                     position: relative;
                     
-                    /* Desktop Scale */
+                    /* Scale 0.85 for Desktop */
                     transform: scale(0.85); 
                     transform-origin: bottom center;
 
-                    /* Render mặc định */
+                    /* Tối ưu render pixel art */
+                    image-rendering: pixelated;
                     image-rendering: -webkit-optimize-contrast;
                 }
                 
                 .hero-sprite-sheet {
-                    width: 209px;
-                    height: 196px;
+                    width: 156.5px;
+                    height: 147.2px;
                     background-image: url('${spriteUrl}');
-                    background-size: 1252px 1178px;
+                    background-size: 939px 883px;
                     background-repeat: no-repeat;
                     
                     animation: 
@@ -132,17 +137,17 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
 
                 @keyframes hero-idle-x {
                     from { background-position-x: 0px; }
-                    to { background-position-x: -1252px; }
+                    to { background-position-x: -939px; }
                 }
 
                 @keyframes hero-idle-y {
                     from { background-position-y: 0px; }
-                    to { background-position-y: -1178px; }
+                    to { background-position-y: -883px; }
                 }
 
-                /* Mobile Adjustments - Hero Scale 1 (Full Size) */
                 @media (max-width: 768px) {
                     .hero-sprite-wrapper {
+                        /* Scale 1 cho điện thoại */
                         transform: scale(1); 
                     }
                 }
@@ -257,7 +262,6 @@ export const BossDisplay = memo(({
         <div className="w-full flex flex-col items-center justify-end h-full">
             <style>{`
                 .boss-render-optimize {
-                    /* Render mặc định */
                     image-rendering: -webkit-optimize-contrast;
                     transform: translateZ(0);
                 }
@@ -274,7 +278,7 @@ export const BossDisplay = memo(({
                     transform-origin: bottom center;
                 }
 
-                /* --- DEFAULT BOSS (Desktop) --- */
+                /* --- DEFAULT BOSS --- */
                 .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
                 .boss-anim-default {
                     width: 2814px; height: 2916px; background-size: 2814px 2916px;
@@ -283,7 +287,7 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
                 @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
 
-                /* --- BOSS 01 CONFIGURATION (Desktop) --- */
+                /* --- BOSS 01 CONFIGURATION (Updated Size: 1323x1326) --- */
                 .boss-size-01 { width: 220.5px; height: 221px; transform: scale(1); }
                 .boss-anim-01 { 
                     width: 1323px; height: 1326px; background-size: 1323px 1326px; 
@@ -292,31 +296,31 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -1323px; } }
                 @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -1326px; } }
 
-                /* --- BOSS 03 CONFIGURATION (Desktop) --- */
+                /* --- BOSS 03 CONFIGURATION --- */
                 .boss-size-03 { width: 513px; height: 399px; transform: scale(0.55); }
                 .boss-anim-03 { width: 3078px; height: 2394px; background-size: 3078px 2394px; animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; }
                 @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
 
-                /* --- BOSS 04 CONFIGURATION (Desktop) --- */
+                /* --- BOSS 04 CONFIGURATION --- */
                 .boss-size-04 { width: 300.5px; height: 332px; transform: scale(0.9); }
                 .boss-anim-04 { width: 1803px; height: 1992px; background-size: 1803px 1992px; animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; }
                 @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
                 @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
 
-                /* --- BOSS 06 CONFIGURATION (Desktop) --- */
+                /* --- BOSS 06 CONFIGURATION --- */
                 .boss-size-06 { width: 266px; height: 230px; transform: scale(1.1); }
                 .boss-anim-06 { width: 1596px; height: 1380px; background-size: 1596px 1380px; animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; }
                 @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
                 @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -1380px; } }
 
-                /* Mobile Adjustments - ALL BOSSES SCALE 1 (Full Size) */
+                /* Mobile Adjustments */
                 @media (max-width: 768px) {
-                    .boss-size-default { transform: scale(1); }
-                    .boss-size-01 { transform: scale(1); }
-                    .boss-size-03 { transform: scale(1); }
-                    .boss-size-04 { transform: scale(1); }
-                    .boss-size-06 { transform: scale(1); }
+                    .boss-size-default { transform: scale(0.35); }
+                    .boss-size-01 { transform: scale(0.8); } /* Scale 0.8 for mobile */
+                    .boss-size-03 { transform: scale(0.35); }
+                    .boss-size-04 { transform: scale(0.6); }
+                    .boss-size-06 { transform: scale(0.7); }
                 }
             `}</style>
 
