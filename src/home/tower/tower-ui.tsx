@@ -235,8 +235,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // Skill Effects State
     const [orbEffects, setOrbEffects] = useState<SkillProps[]>([]);
     
-    // Visual Boss HP
+    // Visual HP States
     const [visualBossHp, setVisualBossHp] = useState(0);
+    const [visualPlayerHp, setVisualPlayerHp] = useState(0); // THÊM DÒNG NÀY
 
     // --- ANIMATION STATES ---
     const [heroState, setHeroState] = useState<ActionState>('idle');
@@ -252,10 +253,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     // --- SYNC VISUAL HP ---
     useEffect(() => {
+        // Sync Boss
         if (bossStats && (battleState === 'idle' || visualBossHp === 0)) {
             setVisualBossHp(bossStats.hp);
         }
-    }, [bossStats, battleState, currentFloor]);
+        // Sync Player - THÊM PHẦN NÀY
+        if (playerStats && (battleState === 'idle' || visualPlayerHp === 0)) {
+            setVisualPlayerHp(playerStats.hp);
+        }
+    }, [bossStats, playerStats, battleState, currentFloor]);
 
     useEffect(() => {
         if (currentBossData) {
@@ -380,7 +386,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit3Time);
             setTimeout(() => setBossState('idle'), hit3Time + 400);
 
-            // Cleanup
+            // Cleanup Boss HP
             setTimeout(() => {
                 setOrbEffects(prev => prev.filter(e => e.id !== orb1.id && e.id !== orb2.id && e.id !== orb3.id));
                 if (bossStats) {
@@ -394,6 +400,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         
         if (playerHeal > 0) {
              addDamageText(`+${formatDamageText(playerHeal)}`, '#4ade80', 'player', 20); 
+             // THÊM: Cập nhật visual máu khi hồi
+             setVisualPlayerHp(prev => prev + playerHeal);
         }
         
         // --- 2. BOSS TURN (CHẬM LẠI: Tăng delay từ 1500 -> 2500) ---
@@ -433,6 +441,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg1)}`, '#ef4444', 'player', 30); 
                 setHeroState('hit'); // RUNG LẮC HERO
+                // THÊM: Trừ máu Player visual
+                setVisualPlayerHp(prev => Math.max(0, prev - bDmg1));
             }, hit1Time);
             setTimeout(() => setHeroState('idle'), hit1Time + 400);
 
@@ -440,6 +450,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 32);
                 setHeroState('hit');
+                // THÊM: Trừ máu Player visual
+                setVisualPlayerHp(prev => Math.max(0, prev - bDmg2));
             }, hit2Time);
             setTimeout(() => setHeroState('idle'), hit2Time + 400);
 
@@ -447,18 +459,29 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 36);
                 setHeroState('hit');
+                // THÊM: Trừ máu Player visual
+                setVisualPlayerHp(prev => Math.max(0, prev - bDmg3));
             }, hit3Time);
             setTimeout(() => setHeroState('idle'), hit3Time + 400);
 
-            // Cleanup
+            // Cleanup & Sync
             setTimeout(() => {
                  setOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
+                 // THÊM: Đồng bộ chính xác máu thật
+                 if(playerStats) {
+                     setVisualPlayerHp(current => {
+                         if(Math.abs(current - playerStats.hp) < 100) return playerStats.hp;
+                         return current;
+                     });
+                 }
             }, hit3Time + 500);
         }
 
         if (bossReflectDmg > 0) {
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
+                // THÊM: Trừ máu khi bị phản dame
+                setVisualPlayerHp(prev => Math.max(0, prev - bossReflectDmg));
             }, 3000); 
         }
 
@@ -604,7 +627,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         {/* LEFT: HERO */}
                                         <div className="w-[45%] md:w-[40%] h-full flex flex-col justify-end items-center relative z-10">
                                             <HeroDisplay 
-                                                stats={playerStats} 
+                                                // MODIFIED: Truyền visualPlayerHp thay vì hp gốc để animation mượt
+                                                stats={playerStats ? { ...playerStats, hp: visualPlayerHp } : playerStats}
                                                 onStatsClick={() => setStatsModalTarget('player')} 
                                                 actionState={heroState} 
                                             />
