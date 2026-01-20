@@ -133,37 +133,6 @@ const ScopedStyles = () => (
         .vocabulary-chest-root .chest-ui-container::before { content: ''; position: absolute; inset: 0; border-radius: 16px; padding: 1px; background: linear-gradient(135deg, rgba(129, 140, 248, 0.3), rgba(49, 46, 129, 0.2)); -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0); -webkit-mask-composite: xor; mask-composite: exclude; pointer-events: none; }
         .vocabulary-chest-root .chest-ui-container:hover:not(.is-processing) { transform: translateY(-8px); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.5), 0 0 25px rgba(129, 140, 248, 0.2); }
         
-        /* --- FLASH SALE BADGE (THẺ SALE) --- */
-        .vocabulary-chest-root .sale-badge { 
-            position: absolute; 
-            top: 12px; 
-            right: -6px; 
-            background: linear-gradient(135deg, #ef4444, #b91c1c); 
-            color: white; 
-            padding: 4px 12px 4px 15px; 
-            border-radius: 4px 0 0 4px; 
-            font-weight: 800; 
-            font-size: 0.75rem; 
-            box-shadow: -2px 3px 5px rgba(0,0,0,0.3); 
-            z-index: 20; 
-            clip-path: polygon(100% 0, 100% 100%, 10% 100%, 0 50%, 10% 0);
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            animation: pulse-red 2s infinite;
-        }
-        .vocabulary-chest-root .sale-badge::after {
-            content: '';
-            position: absolute;
-            right: 0;
-            bottom: -6px;
-            width: 6px;
-            height: 6px;
-            background-color: #7f1d1d;
-            clip-path: polygon(0 0, 100% 0, 0 100%);
-        }
-        @keyframes pulse-red { 0% { filter: brightness(1); transform: scale(1); } 50% { filter: brightness(1.2); transform: scale(1.05); } 100% { filter: brightness(1); transform: scale(1); } }
-
         /* --- HEADER RƯƠNG --- */
         .vocabulary-chest-root .chest-header { padding: 12px 10px; background-color: rgba(42, 49, 78, 0.4); font-size: 0.9rem; font-weight: 600; color: #c7d2fe; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: center; align-items: center; gap: 8px; }
         .vocabulary-chest-root .cefr-tag { font-size: 0.7rem; font-weight: 700; padding: 3px 6px; border-radius: 4px; color: rgba(255, 255, 255, 0.9); background-color: rgba(0, 0, 0, 0.5); border: 1px solid rgba(255, 255, 255, 0.15); vertical-align: middle; display: inline-block; }
@@ -191,20 +160,50 @@ const ScopedStyles = () => (
         
         /* --- NÚT BẤM (BUTTONS) --- */
         .vocabulary-chest-root .action-button-group { display: flex; gap: 10px; width: 100%; margin-top: auto; padding-top: 15px; }
-        .vocabulary-chest-root .chest-button { flex: 1; padding: 8px 12px; border-radius: 10px; border: none; cursor: pointer; transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s; color: #ffffff; font-weight: 700; font-size: 0.95rem; text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; min-height: 52px; }
+        .vocabulary-chest-root .chest-button { 
+            position: relative; /* Để định vị thẻ quantity-tag */
+            flex: 1; 
+            padding: 8px; 
+            border-radius: 10px; 
+            border: none; 
+            cursor: pointer; 
+            transition: transform 0.1s ease, box-shadow 0.1s ease, background-color 0.2s; 
+            color: #ffffff; 
+            font-weight: 700; 
+            font-size: 0.95rem; 
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4); 
+            box-shadow: inset 0 -3px 0 rgba(0,0,0,0.25); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            min-height: 48px; 
+        }
         .vocabulary-chest-root .chest-button:disabled { cursor: not-allowed; background: linear-gradient(to top, #52525b, #71717a); }
         .vocabulary-chest-root .chest-button:active:not(:disabled) { transform: translateY(2px); box-shadow: inset 0 -1px 0 rgba(0,0,0,0.25); }
         .vocabulary-chest-root .btn-get-1 { background: linear-gradient(to top, #8b5cf6, #c084fc); }
         .vocabulary-chest-root .btn-get-10 { background: linear-gradient(to top, #16a34a, #4ade80); }
         
+        /* --- TAG SỐ LƯỢNG (X1, X4) --- */
+        .vocabulary-chest-root .quantity-tag {
+            position: absolute;
+            top: 5px;
+            left: 6px;
+            background-color: rgba(0, 0, 0, 0.5); /* 50% opacity */
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 12px; /* Pill shape */
+            pointer-events: none; /* Không cản click */
+        }
+
         /* --- HIỂN THỊ GIÁ --- */
-        .vocabulary-chest-root .button-content-row { display: flex; align-items: center; gap: 6px; font-size: 0.9rem; }
-        .vocabulary-chest-root .button-price-box { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 0.85rem; color: white; font-weight: 600; background-color: rgba(0,0,0,0.25); padding: 2px 8px; border-radius: 12px; min-width: 60px; }
-        .vocabulary-chest-root .price-icon { width: 14px; height: 14px; }
+        .vocabulary-chest-root .button-price-box { display: flex; align-items: center; justify-content: center; gap: 5px; font-size: 0.95rem; color: white; font-weight: 600; }
+        .vocabulary-chest-root .price-icon { width: 16px; height: 16px; }
         
         /* Style cho giá sale */
-        .vocabulary-chest-root .old-price { text-decoration: line-through; opacity: 0.6; font-size: 0.75rem; color: #e2e8f0; margin-right: 2px; }
-        .vocabulary-chest-root .new-price { color: #fef08a; font-weight: 800; font-size: 0.95rem; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); }
+        .vocabulary-chest-root .old-price { text-decoration: line-through; opacity: 0.6; font-size: 0.75rem; color: #e2e8f0; margin-right: 4px; }
+        .vocabulary-chest-root .new-price { color: #fef08a; font-weight: 800; font-size: 1rem; text-shadow: 0 0 8px rgba(250, 204, 21, 0.6); }
 
         /* --- ANIMATIONS LOADING & PROCESSING --- */
         @keyframes vocabulary-chest-processing-pulse { 50% { transform: scale(1.02); } }
@@ -354,7 +353,7 @@ const FourCardsOpener = ({ cards, onClose, onOpenAgain }: { cards: ImageCard[], 
 };
 
 // ========================================================================
-// === 3. CHEST UI COMPONENT (UPDATED FOR SALE LOGIC) =====================
+// === 3. CHEST UI COMPONENT (UPDATED FOR BUTTON DESIGN) ==================
 // ========================================================================
 
 interface ChestUIProps { 
@@ -371,7 +370,6 @@ interface ChestUIProps {
     isComingSoon: boolean; 
     remainingCount: number; 
     isProcessing: boolean;
-    // Props cho tính năng sale
     saleConfig?: {
         isActive: boolean;
         remainingSaleSlots: number;
@@ -387,7 +385,7 @@ const ChestUI: React.FC<ChestUIProps> = ({
     isComingSoon, remainingCount, isProcessing,
     saleConfig
 }) => {
-    // Logic xác định giá: Nếu có sale thì dùng giá sale, ngược lại dùng giá gốc
+    // Logic xác định giá
     const isSaleActive = saleConfig?.isActive ?? false;
     const finalPrice1 = isSaleActive ? saleConfig!.salePrice1 : price1;
     const finalPrice4 = isSaleActive && price10 !== null ? saleConfig!.salePrice4 : price10;
@@ -396,13 +394,6 @@ const ChestUI: React.FC<ChestUIProps> = ({
         <div className={`chest-ui-container ${isComingSoon ? 'is-coming-soon' : ''} ${isProcessing ? 'is-processing' : ''}`}>
             {isProcessing && (<div className="chest-processing-overlay"><div className="chest-spinner"></div></div>)}
             
-            {/* --- SALE BADGE --- */}
-            {isSaleActive && (
-                <div className="sale-badge">
-                    <span>SALE!</span> 10 <img src={uiAssets.priceIcon} alt="" style={{width: '12px', height: '12px', verticalAlign: 'middle'}} />
-                </div>
-            )}
-
             <header className="chest-header">
                 {headerTitle}
                 <span className={`cefr-tag ${cefr}`}>{cefr}</span>
@@ -418,7 +409,6 @@ const ChestUI: React.FC<ChestUIProps> = ({
                         <p className="remaining-count-text">
                             {isComingSoon ? "Sắp ra mắt" : <>Còn lại: <span className="highlight-yellow">{remainingCount.toLocaleString()}</span> thẻ</>}
                         </p>
-                        {/* Hiển thị số lượng ưu đãi còn lại */}
                         {isSaleActive && (
                             <span className="sale-count-text">
                                 Còn {saleConfig?.remainingSaleSlots} lượt ưu đãi
@@ -435,9 +425,10 @@ const ChestUI: React.FC<ChestUIProps> = ({
                 <div className="action-button-group">
                     {/* BUTTON MỞ X1 */}
                     <button className="chest-button btn-get-1" onClick={onOpen1} disabled={isComingSoon || remainingCount < 1}>
-                        <div className="button-content-row">
-                            <span>Mở x1</span>
-                        </div>
+                        {/* Tag x1 - opacity 50% */}
+                        <span className="quantity-tag">x1</span>
+                        
+                        {/* Chỉ hiển thị giá */}
                         {typeof price1 === 'number' && (
                             <div className="button-price-box">
                                 <img src={priceIconUrl} alt="price icon" className="price-icon" />
@@ -456,9 +447,10 @@ const ChestUI: React.FC<ChestUIProps> = ({
                     {/* BUTTON MỞ X4 */}
                     {price10 !== null && (
                         <button className="chest-button btn-get-10" onClick={onOpen10} disabled={isComingSoon || remainingCount < 4}>
-                            <div className="button-content-row">
-                                <span>Mở x4</span>
-                            </div>
+                            {/* Tag x4 - opacity 50% */}
+                            <span className="quantity-tag">x4</span>
+                            
+                            {/* Chỉ hiển thị giá */}
                             <div className="button-price-box">
                                 <img src={priceIconUrl} alt="price icon" className="price-icon" />
                                 {isSaleActive && typeof price10 === 'number' ? (
@@ -485,7 +477,6 @@ const ChestUI: React.FC<ChestUIProps> = ({
 interface VocabularyChestScreenUIProps { onClose: () => void; }
 
 const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClose }) => {
-    // Lấy dữ liệu và logic từ Context
     const { 
         isLoading, 
         playerStats, 
@@ -498,10 +489,9 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
         openChest, 
         closeOverlay, 
         openAgain,
-        basicSaleInfo // <<< Thông tin Sale lấy từ Context
+        basicSaleInfo 
     } = useVocabularyChest();
     
-    // Animation số tiền
     const displayCoins = isLoading ? 0 : playerStats.coins;
     const displayGems = isLoading ? 0 : playerStats.gems;
     const animatedCoins = useAnimateValue(displayCoins, 500);
@@ -512,12 +502,10 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
             <ScopedStyles />
             <ImagePreloader imageUrls={urlsToPreload} />
 
-            {/* Skeleton Loading khi đang khởi tạo */}
             <div className={`absolute inset-0 bg-[#0a0a14] z-20 ${isLoading ? 'opacity-100' : 'opacity-0 pointer-events-none'}`}>
                 <VocabularyChestLoadingSkeleton />
             </div>
 
-            {/* Nội dung chính */}
             <div className={`relative z-10 flex flex-col w-full h-screen ${isLoading ? 'opacity-0' : 'opacity-100'}`}>
                 <header className="sticky top-0 left-0 w-full h-[53px] box-border flex items-center justify-between px-4 bg-slate-900/70 border-b border-white/10 flex-shrink-0 z-[1100]">
                     <button onClick={onClose} className={`vocab-screen-home-btn ${isOverlayVisible ? 'is-hidden' : ''}`} title="Quay lại Trang Chính">
@@ -530,7 +518,6 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
                     </div>
                 </header>
                 
-                {/* Danh sách các rương (Ẩn khi Popup mở để tăng performance và tập trung) */}
                 {!isOverlayVisible && (
                     <div className="chest-gallery-container">
                         {CHEST_DATA.map((chest) => (
@@ -543,14 +530,12 @@ const VocabularyChestScreenUI: React.FC<VocabularyChestScreenUIProps> = ({ onClo
                                 onOpen1={() => openChest(1, chest.chestType)}
                                 onOpen10={() => openChest(4, chest.chestType)}
                                 isProcessing={processingChestId === chest.id}
-                                // Truyền cấu hình Sale chỉ cho rương Basic
                                 saleConfig={chest.chestType === 'basic' ? basicSaleInfo : undefined}
                             />
                         ))}
                     </div>
                 )}
                 
-                {/* Popup mở thẻ */}
                 {isOverlayVisible && openedCardCount === 1 && (
                     <div className="card-opening-overlay">
                         <div className="overlay-content">
