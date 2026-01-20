@@ -308,11 +308,15 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
                 @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
 
-                /* --- BOSS 06 CONFIGURATION --- */
-                .boss-size-06 { width: 266px; height: 230px; transform: scale(1.1); }
-                .boss-anim-06 { width: 1596px; height: 1380px; background-size: 1596px 1380px; animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; }
-                @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1596px; } }
-                @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -1380px; } }
+                /* --- BOSS 06 & 50 CONFIGURATION (Updated Size: 1117x966) --- */
+                /* Frame: 1117 / 6 = 186.17px wide, 966 / 6 = 161px high */
+                .boss-size-06 { width: 186.17px; height: 161px; transform: scale(1.1); }
+                .boss-anim-06 { 
+                    width: 1117px; height: 966px; background-size: 1117px 966px; 
+                    animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; 
+                }
+                @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1117px; } }
+                @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -966px; } }
 
                 /* Mobile Adjustments */
                 @media (max-width: 768px) {
@@ -320,7 +324,7 @@ export const BossDisplay = memo(({
                     .boss-size-01 { transform: scale(0.8); } /* Scale 0.8 for mobile */
                     .boss-size-03 { transform: scale(0.35); }
                     .boss-size-04 { transform: scale(0.6); }
-                    .boss-size-06 { transform: scale(0.7); }
+                    .boss-size-06 { transform: scale(1); } /* Boss 6 & 50 scale 1 for mobile */
                 }
             `}</style>
 
