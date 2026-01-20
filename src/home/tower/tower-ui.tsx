@@ -58,7 +58,7 @@ interface DamageText {
     x: number;
     y: number;
     fontSize: number;
-    className?: string; // Support custom class for different text styles
+    className?: string; 
 }
 
 const FloatingText = memo(({ data }: { data: DamageText }) => {
@@ -79,7 +79,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
   );
 });
 
-// --- NEW COMPONENT: LOOT ITEM (Styled like multiple-ui) ---
+// --- NEW COMPONENT: LOOT ITEM ---
 const LootItem = memo(({ image, amount, delayIndex, isFading }: { image: string, amount: number, delayIndex: number, isFading: boolean }) => {
     return (
         <div 
@@ -87,7 +87,8 @@ const LootItem = memo(({ image, amount, delayIndex, isFading }: { image: string,
             style={{ animationDelay: `${delayIndex * 0.15}s` }}
         >
             <div className="animate-loot-pop relative">
-                <img src={image} alt="Loot" className="w-16 h-16 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
+                {/* Giảm kích thước icon xuống w-14 h-14 */}
+                <img src={image} alt="Loot" className="w-14 h-14 object-contain drop-shadow-[0_0_15px_rgba(255,255,255,0.4)]" />
                 <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide z-10">
                     x{amount}
                 </div>
@@ -99,8 +100,8 @@ const LootItem = memo(({ image, amount, delayIndex, isFading }: { image: string,
 // --- LOOT DISPLAY CONTAINER ---
 const LootDisplay = memo(({ rewards, isFading }: { rewards: { coins: number; energy: number }, isFading: boolean }) => {
     return (
-        <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-8 z-50 pointer-events-none">
-            {/* Styles copy from multiple-ui.tsx */}
+        // Dịch chuyển vị trí loot lên trên: top-[35%]
+        <div className="absolute top-[35%] left-1/2 -translate-x-1/2 -translate-y-1/2 flex items-center justify-center gap-6 z-50 pointer-events-none">
             <style>{`
                 @keyframes loot-pop {
                     0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
@@ -315,7 +316,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
     // --- LOGIC HIỂN THỊ DAMAGE / COLLECTED TEXT ---
-    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss' | 'center', fontSize: number = 18) => { 
+    const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss' | 'center' | 'top-center', fontSize: number = 18) => { 
         const id = Date.now() + Math.random();
         
         let baseX = 50; // default center
@@ -327,18 +328,20 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         // Randomize vị trí một chút
         let finalX = baseX + (Math.random() * 12 - 6);
         
-        // Nếu là 'center' (Collected text), spread rộng hơn một chút để đỡ chồng chéo
-        if (target === 'center') {
-             finalX = baseX + (Math.random() * 20 - 10);
+        // Nếu là 'center' (Collected) hoặc 'top-center' (Victory), spread rộng hơn
+        if (target === 'center' || target === 'top-center') {
+             finalX = baseX + (Math.random() * 10 - 5);
         }
 
         let finalY = baseY + (Math.random() * 10 - 5);
-        if (target === 'center') finalY = 45 + (Math.random() * 10 - 5); // Cao hơn một chút cho loot
+        
+        // Căn chỉnh chiều cao đặc biệt cho Loot
+        if (target === 'center') finalY = 40; // Ngay trên loot một chút
+        if (target === 'top-center') finalY = 30; // Cao hơn loot (cho chữ VICTORY)
 
         const isHeal = text.startsWith('+');
         if (isHeal) finalY -= 8;
 
-        // Tránh chồng lấp quá mức (collision detection đơn giản)
         const checkLimit = 15;
         let count = 0;
         for (let i = damagesRef.current.length - 1; i >= 0; i--) {
@@ -385,40 +388,32 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 setTimeout(() => {
                     setShowLoot(true);
                     setLootFading(false);
+                    
+                    // Hiện ngay chữ VICTORY ở trên đầu
+                    addDamageText("VICTORY", "#FFFFFF", "top-center", 24);
 
-                    // 3. ĐỢI 5 GIÂY CHO NGƯỜI CHƠI NGẮM LOOT
+                    // 3. Đợi khoảng 1.5s (lúc chữ Victory bay mất)
                     setTimeout(() => {
-                        // a. Hiện chữ "Collected" bay lên
-                        if (currentBossData.rewards.coins > 0) {
-                             addDamageText("Collected", "#fbbf24", "center", 24);
-                        }
-                        // Delay xíu nếu có cả 2 loại reward để text không ra cùng lúc
-                        if (currentBossData.rewards.energy > 0) {
-                             setTimeout(() => addDamageText("Collected", "#22d3ee", "center", 24), 200);
-                        }
+                        // a. Hiện chữ "COLLECTED" nhỏ hơn, màu trắng
+                        addDamageText("COLLECTED", "#FFFFFF", "center", 14);
 
-                        // b. Loot bắt đầu mờ đi
-                        setLootFading(true);
-
-                        // c. Sau khi loot mờ xong (khoảng 0.5-1s), chuyển màn
+                        // b. Loot bắt đầu mờ đi ngay sau đó
                         setTimeout(() => {
-                            setShowLoot(false);
+                            setLootFading(true);
                             
-                            // 4. Logic chuyển dữ liệu sang tầng tiếp theo
-                            handleNextFloor();
-                            
-                            // 5. Boss mới xuất hiện (Zoom in)
-                            setBossState('appearing');
-                            
-                            // 6. Reset về idle
+                            // c. Chuyển tầng sau khi loot mờ xong
                             setTimeout(() => {
-                                setBossState('idle');
-                                setSequenceState('none');
-                            }, 1200);
+                                setShowLoot(false);
+                                handleNextFloor();
+                                setBossState('appearing');
+                                setTimeout(() => {
+                                    setBossState('idle');
+                                    setSequenceState('none');
+                                }, 1200);
+                            }, 800); // Wait for loot fade
+                        }, 500); // Delay ngắn sau khi hiện chữ Collected thì loot mới mờ
 
-                        }, 800); // Thời gian fade out của loot
-
-                    }, 5000); // Thời gian chờ 5s
+                    }, 1500); // Thời gian chờ Victory bay hết (khoảng 1.2-1.5s)
 
                 }, 1200); // Thời gian animation 'dying' của Boss
 
@@ -769,7 +764,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 <FloatingText key={d.id} data={d} />
                                             ))}
 
-                                            {/* LOOT ANIMATION LAYER - Chỉ hiện khi đang chạy chuỗi Victory Sequence */}
+                                            {/* LOOT ANIMATION LAYER */}
                                             {showLoot && currentBossData.rewards && (
                                                 <LootDisplay rewards={currentBossData.rewards} isFading={lootFading} />
                                             )}
