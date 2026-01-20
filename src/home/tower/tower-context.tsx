@@ -305,20 +305,31 @@ export const BossBattleProvider = ({ children }: { children: ReactNode }) => {
         }
     }, [resetAllStateForNewBattle, currentBossData]);
 
+    // --- LOGIC CHUYỂN TẦNG MỚI (QUAN TRỌNG) ---
     const handleNextFloor = useCallback(() => {
         if (!initialPlayerStatsRef.current) return;
         const nextIndex = currentFloor + 1;
         if(nextIndex >= BOSS_DATA.length) return;
         
+        // 1. Reset state (bao gồm setGameOver về null)
         resetAllStateForNewBattle();
+        
+        // 2. Update Floor Index
         game.handleBossFloorUpdate(nextIndex);
         setCurrentFloor(nextIndex);
         
+        // 3. Reset Player Stats (Heal full HP, keep current Energy)
         setPlayerStats(prev => ({
             ...initialPlayerStatsRef.current!, 
             hp: initialPlayerStatsRef.current!.maxHp,
             energy: prev!.energy 
         }));
+        
+        // 4. Set Boss Stats explicitly for the new floor immediately
+        const nextBossData = BOSS_DATA[nextIndex];
+        if (nextBossData) {
+             setBossStats(nextBossData.stats);
+        }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
     const handleSweep = useCallback(async () => {
