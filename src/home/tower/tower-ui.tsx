@@ -413,8 +413,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
                                 // Hiện chữ COLLECTED ngay trên đầu item (item.y - 3)
-                                // Đã sửa từ item.y - 5 thành item.y - 3 để sát vật phẩm hơn
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x, item.y - 3, 1000, "uppercase tracking-wide");
+                                // Đã sửa: dùng item.x - 8 để dịch chữ sang trái, giúp nó cân đối hơn
+                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x - 8, item.y - 3, 1000, "uppercase tracking-wide");
                                 
                                 // Ẩn item sau khi text hiện lên (so le)
                                 setTimeout(() => {
