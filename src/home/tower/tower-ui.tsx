@@ -720,11 +720,11 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                                 {/* --- LEFT SIDE UTILITIES --- */}
                                 <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
-                                    {currentFloor > 0 && battleState === 'idle' && (
+                                    {currentFloor > 0 && (
                                         <button 
                                             onClick={handleSweepClick} 
-                                            disabled={(playerStats.energy || 0) < 10 || isSweeping} 
-                                            className="transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group rounded-full"
+                                            disabled={(playerStats.energy || 0) < 10 || isSweeping || battleState !== 'idle'} 
+                                            className="transition-all active:scale-95 hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed relative group rounded-full"
                                             title="Sweep"
                                         >
                                             <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
