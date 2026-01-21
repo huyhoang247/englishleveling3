@@ -232,6 +232,9 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
     } else if (bossId === 8) {
         sizeClass = 'boss-size-08';
         animClass = 'boss-anim-08';
+    } else if (bossId === 9) {
+        sizeClass = 'boss-size-09';
+        animClass = 'boss-anim-09';
     }
 
     return (
@@ -270,7 +273,8 @@ export const BossDisplay = memo(({
     onStatsClick,
     actionState = 'idle'
 }: BossDisplayProps) => {
-    const isSpriteBoss = [1, 3, 4, 6, 8, 50].includes(bossId);
+    // Thêm số 9 vào danh sách này
+    const isSpriteBoss = [1, 3, 4, 6, 8, 9, 50].includes(bossId);
 
     // Xử lý Animation Logic
     // 1. Animation cho toàn bộ khối (bao gồm cả vòng tròn ma pháp)
@@ -366,6 +370,17 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-08 { from { background-position-x: 0; } to { background-position-x: -984px; } }
                 @keyframes boss-y-08 { from { background-position-y: 0; } to { background-position-y: -1020px; } }
 
+                /* --- BOSS 09 --- */
+                /* Frame Size: 401 x 523 px */
+                /* Kích thước lớn nên scale nhỏ xuống 0.5 trên Desktop */
+                .boss-size-09 { width: 401px; height: 523px; transform: scale(0.5); }
+                .boss-anim-09 { 
+                    /* Sheet Size: 401*6 = 2406, 523*6 = 3138 */
+                    width: 2406px; height: 3138px; background-size: 2406px 3138px; 
+                    animation: boss-x-09 0.6s steps(6) infinite, boss-y-09 3.6s steps(6) infinite; 
+                }
+                @keyframes boss-x-09 { from { background-position-x: 0; } to { background-position-x: -2406px; } }
+                @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -3138px; } }
 
                 /* Mobile Adjustments */
                 @media (max-width: 768px) {
@@ -375,6 +390,7 @@ export const BossDisplay = memo(({
                     .boss-size-04 { transform: scale(1.2); }
                     .boss-size-06 { transform: scale(1); }
                     .boss-size-08 { transform: scale(1.0); }
+                    .boss-size-09 { transform: scale(0.35); }
                 }
             `}</style>
 
