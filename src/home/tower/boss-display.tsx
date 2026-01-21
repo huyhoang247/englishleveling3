@@ -229,6 +229,9 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
     } else if (bossId === 6 || bossId === 50) {
         sizeClass = 'boss-size-06';
         animClass = 'boss-anim-06';
+    } else if (bossId === 8) {
+        sizeClass = 'boss-size-08';
+        animClass = 'boss-anim-08';
     }
 
     return (
@@ -351,13 +354,27 @@ export const BossDisplay = memo(({
                 @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1117px; } }
                 @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -966px; } }
 
+                /* --- BOSS 08 --- */
+                /* Updated: 984x1020 sheet */
+                /* Frame Width: 984 / 6 = 164px */
+                /* Frame Height: 1020 / 6 = 170px */
+                .boss-size-08 { width: 164px; height: 170px; transform: scale(1.4); }
+                .boss-anim-08 { 
+                    width: 984px; height: 1020px; background-size: 984px 1020px; 
+                    animation: boss-x-08 0.6s steps(6) infinite, boss-y-08 3.6s steps(6) infinite; 
+                }
+                @keyframes boss-x-08 { from { background-position-x: 0; } to { background-position-x: -984px; } }
+                @keyframes boss-y-08 { from { background-position-y: 0; } to { background-position-y: -1020px; } }
+
+
                 /* Mobile Adjustments */
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.8); }
                     .boss-size-03 { transform: scale(1.0); }
-                    .boss-size-04 { transform: scale(1.2); } /* Adjusted scale for mobile */
+                    .boss-size-04 { transform: scale(1.2); }
                     .boss-size-06 { transform: scale(1); }
+                    .boss-size-08 { transform: scale(1.0); }
                 }
             `}</style>
 
