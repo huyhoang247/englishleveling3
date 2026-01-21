@@ -712,8 +712,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 </header>
     
                                 {/* --- CENTER FLOOR INDICATOR --- */}
-                                <div className="absolute top-16 left-[52%] -translate-x-1/2 z-10 pointer-events-none">
-                                    <h3 className="text-2xl font-bold tracking-widest uppercase text-white opacity-40 select-none shadow-black drop-shadow-sm">
+                                <div className="absolute top-20 left-[54%] -translate-x-1/2 z-10 pointer-events-none">
+                                    <h3 className="text-xl font-bold tracking-widest uppercase text-white opacity-40 select-none shadow-black drop-shadow-sm">
                                         {currentBossData.floor}
                                     </h3>
                                 </div>
