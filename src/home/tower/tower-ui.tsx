@@ -713,9 +713,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
                                 {/* --- LEFT SIDE UTILITIES --- */}
                                 <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
-                                    <div className="flex items-center gap-2 pl-2">
-                                        <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-6 h-6 drop-shadow-md" />
-                                        <h3 className="font-bold text-xl tracking-widest uppercase text-white select-none text-shadow">
+                                    <div className="flex items-center gap-2 pl-2 opacity-50">
+                                        <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-5 h-5 drop-shadow-md" />
+                                        <h3 className="font-bold text-lg tracking-widest uppercase text-white select-none text-shadow">
                                             {currentBossData.floor}
                                         </h3>
                                     </div>
