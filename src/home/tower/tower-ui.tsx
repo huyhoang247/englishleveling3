@@ -712,19 +712,34 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 </header>
     
                                 {/* --- LEFT SIDE UTILITIES --- */}
-                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
-                                    <div className="flex items-center gap-2 pl-2 opacity-50">
-                                        <img src={bossBattleAssets.floorIcon} alt="Floor" className="w-5 h-5 drop-shadow-md" />
-                                        <h3 className="font-bold text-lg tracking-widest uppercase text-white select-none text-shadow">
-                                            {currentBossData.floor}
-                                        </h3>
+                                <div className="absolute top-16 left-0 z-20 flex flex-col gap-3 items-start">
+                                    
+                                    {/* NEW FLOOR INDICATOR DESIGN */}
+                                    <div className="relative group select-none">
+                                        {/* Main container: Tab shape attached to left side */}
+                                        <div className="flex flex-col items-center justify-center pl-3 pr-6 py-1.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-800 border-y border-r border-yellow-500/30 rounded-r-2xl shadow-[4px_4px_10px_rgba(0,0,0,0.5)] min-w-[90px]">
+                                            
+                                            {/* Top Gloss highlight */}
+                                            <div className="absolute top-0 left-0 w-full h-[1px] bg-white/10 rounded-tr-xl"></div>
+                                            
+                                            {/* Decorative small element */}
+                                            <div className="absolute left-1 top-1/2 -translate-y-1/2 w-1 h-8 bg-yellow-600/20 rounded-full"></div>
+
+                                            {/* Text Content */}
+                                            <span className="text-[10px] font-bold text-yellow-500/60 tracking-[0.25em] uppercase font-sans leading-tight">
+                                                Floor
+                                            </span>
+                                            <span className="text-3xl font-lilita text-transparent bg-clip-text bg-gradient-to-b from-white to-slate-300 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] leading-none mt-0.5">
+                                                {currentBossData.floor}
+                                            </span>
+                                        </div>
                                     </div>
 
                                     {currentFloor > 0 && battleState === 'idle' && (
                                         <button 
                                             onClick={handleSweepClick} 
                                             disabled={(playerStats.energy || 0) < 10 || isSweeping} 
-                                            className="transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group rounded-full"
+                                            className="ml-4 transition-all active:scale-95 hover:scale-105 disabled:opacity-50 disabled:grayscale relative group rounded-full"
                                             title="Sweep"
                                         >
                                             <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
