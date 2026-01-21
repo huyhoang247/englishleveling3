@@ -321,10 +321,15 @@ export const BossDisplay = memo(({
                 @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -994px; } }
 
                 /* --- BOSS 03 --- */
-                .boss-size-03 { width: 513px; height: 399px; transform: scale(0.55); }
-                .boss-anim-03 { width: 3078px; height: 2394px; background-size: 3078px 2394px; animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; }
-                @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -3078px; } }
-                @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -2394px; } }
+                /* Updated: 1077px / 6 = 179.5px | 837px / 6 = 139.5px */
+                /* Scale tăng lên 1.5 để bù lại kích thước gốc bị nhỏ đi */
+                .boss-size-03 { width: 179.5px; height: 139.5px; transform: scale(1.5); }
+                .boss-anim-03 { 
+                    width: 1077px; height: 837px; background-size: 1077px 837px; 
+                    animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; 
+                }
+                @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -1077px; } }
+                @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -837px; } }
 
                 /* --- BOSS 04 --- */
                 .boss-size-04 { width: 300.5px; height: 332px; transform: scale(0.9); }
@@ -345,7 +350,7 @@ export const BossDisplay = memo(({
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.8); }
-                    .boss-size-03 { transform: scale(0.35); }
+                    .boss-size-03 { transform: scale(1.0); } /* Tăng scale mobile lên 1.0 vì sprite gốc nhỏ */
                     .boss-size-04 { transform: scale(0.6); }
                     .boss-size-06 { transform: scale(1); }
                 }
