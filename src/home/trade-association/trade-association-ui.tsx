@@ -14,7 +14,7 @@ import HomeButton from '../../ui/home-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../ui/notification.tsx'; 
 
-// Import Service và Types từ file mới
+// Import Service và Types từ file service
 import { 
     getTradeOptions, 
     executeTradeTransaction, 
@@ -23,6 +23,7 @@ import {
 } from './trade-service.ts';
 
 // --- IMAGE ICONS (UI Only) ---
+// Đã loại bỏ drop-shadow để giảm tải render
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
     let src = "";
     switch (type) {
@@ -54,9 +55,10 @@ const StoneIcon = ({ tier, className = '' }: { tier?: 'low' | 'medium' | 'high',
 };
 
 // --- COMPONENT HEADER ---
+// Sử dụng màu nền đặc (bg-slate-900) thay vì trong suốt mờ (blur)
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
-        <header className="flex-shrink-0 w-full bg-slate-900/90 border-b-2 border-slate-700/50 z-20 relative">
+        <header className="flex-shrink-0 w-full bg-slate-900 border-b border-slate-700 z-20 relative">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
                 <HomeButton onClick={onClose} />
                 <div className="flex items-center">
@@ -68,7 +70,8 @@ const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, display
 });
 
 // --- MARKET TIMER COMPONENT ---
-const MarketTimer = () => {
+// Loại bỏ backdrop-blur và box-shadow
+const MarketTimer = memo(() => {
     const [timeLeft, setTimeLeft] = useState('');
 
     useEffect(() => {
@@ -99,9 +102,8 @@ const MarketTimer = () => {
     }, []);
 
     return (
-        <div className="flex items-center gap-3 bg-slate-900/80 backdrop-blur-sm border border-white/30 px-5 py-2 rounded-full shadow-[0_0_15px_rgba(245,158,11,0.1)] mx-auto w-fit mb-4 animate-fadeIn">
+        <div className="flex items-center gap-3 bg-slate-900 border border-slate-600 px-5 py-2 rounded-full mx-auto w-fit mb-4 animate-fadeIn">
             <div className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </div>
             <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Market Reset</div>
@@ -110,14 +112,146 @@ const MarketTimer = () => {
             </div>
         </div>
     );
-};
+});
 
+// --- SUB-COMPONENT: TRADE OPTION CARD ---
+// Tách thành component riêng và dùng React.memo để ngăn việc re-render toàn bộ danh sách khi thay đổi số lượng ở 1 item
+interface TradeCardProps {
+    option: TradeOption;
+    quantity: number;
+    resources: Record<string, number>;
+    onQuantityChange: (id: string, delta: number) => void;
+    onExchange: (option: TradeOption, qty: number) => void;
+    isProcessing: boolean;
+}
+
+const TradeOptionCard = memo(({ 
+    option, 
+    quantity, 
+    resources, 
+    onQuantityChange, 
+    onExchange, 
+    isProcessing 
+}: TradeCardProps) => {
+    
+    let canAffordAll = true;
+
+    return (
+        <div className="relative bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
+            <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
+                
+                {/* INGREDIENTS */}
+                <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-6 bg-black/20 p-5 rounded-2xl border border-slate-800">
+                    {option.ingredients.map((ing, idx) => {
+                        const userHas = resources[ing.type] || 0;
+                        const requiredAmount = ing.amount * quantity;
+                        const isEnough = userHas >= requiredAmount;
+                        if (!isEnough) canAffordAll = false;
+
+                        return (
+                            <React.Fragment key={ing.type}>
+                                <div className="flex flex-col items-center gap-3 min-w-[80px]">
+                                    {/* Sử dụng Border thay vì shadow/glow */}
+                                    <div className={`relative p-3 rounded-xl border transition-colors ${isEnough ? 'bg-slate-800 border-slate-600' : 'bg-red-950/30 border-red-900'}`}>
+                                        <ResourceIcon type={ing.type} className="w-14 h-14 md:w-16 md:h-16" />
+                                    </div>
+                                    <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                                        <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
+                                            {userHas > 999 ? '999+' : userHas}
+                                        </span>
+                                        <span className="text-slate-500 ml-1">/ {requiredAmount}</span>
+                                    </div>
+                                </div>
+                                
+                                {idx < option.ingredients.length - 1 && (
+                                    <div className="shrink-0 flex items-center justify-center px-1 -translate-y-4 md:-translate-y-6">
+                                        <img 
+                                            src={tradeAssets.plusIcon}
+                                            alt="plus"
+                                            className="w-8 h-8 md:w-10 md:h-10 object-contain opacity-70"
+                                        />
+                                    </div>
+                                )}
+                            </React.Fragment>
+                        );
+                    })}
+                </div>
+
+                {/* ARROW */}
+                <div className="shrink-0 flex items-center justify-center">
+                    <img 
+                        src={tradeAssets.arrowIcon} 
+                        alt="Convert to"
+                        className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-70 lg:-rotate-90"
+                    />
+                </div>
+
+                {/* RESULT */}
+                <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800">
+                    
+                    <div className="relative">
+                        {/* Style phẳng, không shadow */}
+                        <div className="relative p-3 rounded-xl border bg-slate-800 border-slate-600">
+                            {option.receiveType === 'equipmentPiece' ? (
+                                <EquipmentPieceIcon className="w-14 h-14 md:w-16 md:h-16 object-contain" />
+                            ) : option.receiveType === 'stone' ? (
+                                <StoneIcon tier={option.receiveSubType} className="w-14 h-14 md:w-16 md:h-16 object-contain" />
+                            ) : (
+                                <AncientBookIcon className="w-14 h-14 md:w-16 md:h-16 object-contain" />
+                            )}
+                            <div className="absolute -top-3 -right-3 bg-slate-700 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-500 z-20">
+                                x{option.receiveAmount * quantity}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-3 w-full max-w-[140px] bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                        <button 
+                            onClick={() => onQuantityChange(option.id, -1)}
+                            className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                            </svg>
+                        </button>
+                        <span className="flex-1 text-center font-bold font-lilita text-xl text-amber-500">{quantity}</span>
+                        <button 
+                            onClick={() => onQuantityChange(option.id, 1)}
+                            className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <button
+                        onClick={() => onExchange(option, quantity)}
+                        disabled={!canAffordAll || isProcessing}
+                        className={`
+                            w-full max-w-[200px] py-2 px-4 rounded-xl font-lilita text-lg uppercase tracking-wider transition-transform duration-100
+                            flex items-center justify-center gap-2 active:scale-95 border
+                            ${canAffordAll 
+                                ? 'bg-emerald-700 border-emerald-600 text-white hover:bg-emerald-600' 
+                                : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
+                            }
+                        `}
+                    >
+                        {isProcessing ? 'Processing...' : 'Exchange'}
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+});
+
+
+// --- MAIN COMPONENT ---
 interface TradeAssociationModalV2Props {
     isOpen: boolean;
     onClose: () => void;
 }
 
-// --- MAIN COMPONENT ---
 const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModalV2Props) => {
     const { 
         wood, leather, ore, cloth, feather, coal,
@@ -134,14 +268,17 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     
     const [tradeQuantities, setTradeQuantities] = useState<Record<string, number>>({});
 
-    const resources: Record<ResourceType, number> = { wood, leather, ore, cloth, feather, coal };
+    // OPTIMIZATION: Wrap resources trong useMemo để component con (TradeOptionCard) không bị re-render thừa
+    const resources = useMemo(() => ({
+        wood, leather, ore, cloth, feather, coal
+    }), [wood, leather, ore, cloth, feather, coal]);
 
-    // --- LOAD TRADE OPTIONS FROM SERVICE ---
     const currentTradeOptions = useMemo(() => getTradeOptions(), []); 
 
-    const getQuantity = (optionId: string) => tradeQuantities[optionId] || 1;
+    // Dùng useCallback để tránh tạo hàm mới mỗi lần render
+    const getQuantity = useCallback((optionId: string) => tradeQuantities[optionId] || 1, [tradeQuantities]);
 
-    const handleQuantityChange = (optionId: string, change: number) => {
+    const handleQuantityChange = useCallback((optionId: string, change: number) => {
         setTradeQuantities(prev => {
             const current = prev[optionId] || 1;
             const newVal = current + change;
@@ -149,7 +286,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
             if (newVal > 99) return prev;
             return { ...prev, [optionId]: newVal };
         });
-    };
+    }, []);
 
     const handleExchange = useCallback(async (option: TradeOption, quantity: number) => {
         const userId = auth.currentUser?.uid;
@@ -163,7 +300,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         setToastState(prev => ({ ...prev, show: false }));
 
         try {
-            // A. Client-side Validation (Kiểm tra nhanh trên UI)
+            // Client-side Validation
             for (const ing of option.ingredients) {
                 const totalRequired = ing.amount * quantity;
                 if ((resources[ing.type] || 0) < totalRequired) {
@@ -171,7 +308,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 }
             }
 
-            // B. Call Service Transaction
             await executeTradeTransaction(userId, option, quantity);
 
             setToastState({ show: true, message: 'Đã đổi thành công.' });
@@ -191,16 +327,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans">
+        <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans bg-black">
             
-            {/* BACKGROUND */}
+            {/* BACKGROUND: Giảm opacity và dùng bg-black để tránh render lớp phủ nặng */}
             <div className="absolute inset-0 z-0">
                 <img 
                     src={tradeAssets.background} 
                     alt="Background" 
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover opacity-30" 
                 />
-                <div className="absolute inset-0 bg-black/80" />
             </div>
 
             <Header onClose={onClose} displayedCoins={displayedCoins} />
@@ -219,120 +354,17 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     />
 
                     <div className="space-y-6 md:space-y-8 flex-1 pb-10 mt-2">
-                        
-                        {currentTradeOptions.map((option) => {
-                            const quantity = getQuantity(option.id);
-                            let canAffordAll = true;
-                            
-                            return (
-                                <div key={option.id} className="relative group bg-slate-900/80 rounded-2xl border border-slate-700/50 shadow-xl overflow-hidden transition-all duration-300 hover:shadow-2xl hover:bg-slate-900/90 hover:-translate-y-1">
-
-                                    <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
-                                        
-                                        {/* INGREDIENTS */}
-                                        <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-6 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
-                                            {option.ingredients.map((ing, idx) => {
-                                                const userHas = resources[ing.type] || 0;
-                                                const requiredAmount = ing.amount * quantity;
-                                                const isEnough = userHas >= requiredAmount;
-                                                if (!isEnough) canAffordAll = false;
-
-                                                return (
-                                                    <React.Fragment key={ing.type}>
-                                                        <div className="flex flex-col items-center gap-3 min-w-[80px]">
-                                                            
-                                                            <div className={`relative p-4 rounded-xl border-2 transition-all duration-300 ${isEnough ? 'bg-slate-800 border-slate-700' : 'bg-red-950/20 border-red-900/50'}`}>
-                                                                <ResourceIcon type={ing.type} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-lg" />
-                                                            </div>
-                                                            <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5">
-                                                                <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
-                                                                    {userHas > 999 ? '999+' : userHas}
-                                                                </span>
-                                                                <span className="text-slate-500 ml-1">/ {requiredAmount}</span>
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        {idx < option.ingredients.length - 1 && (
-                                                            <div className="shrink-0 flex items-center justify-center px-1 -translate-y-4 md:-translate-y-6">
-                                                                <img 
-                                                                    src={tradeAssets.plusIcon}
-                                                                    alt="plus"
-                                                                    className="w-10 h-10 md:w-14 md:h-14 object-contain opacity-90"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </React.Fragment>
-                                                );
-                                            })}
-                                        </div>
-
-                                        {/* ARROW */}
-                                        <div className="shrink-0 flex items-center justify-center">
-                                            <img 
-                                                src={tradeAssets.arrowIcon} 
-                                                alt="Convert to"
-                                                className="w-14 h-14 md:w-20 md:h-20 object-contain opacity-90 lg:-rotate-90"
-                                            />
-                                        </div>
-
-                                        {/* RESULT */}
-                                        <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800/50 shadow-inner">
-                                            
-                                            <div className="relative group-hover:scale-105 transition-transform duration-500">
-                                                <div className="relative p-4 rounded-xl border-2 bg-slate-800 border-slate-700 shadow-lg">
-                                                    {option.receiveType === 'equipmentPiece' ? (
-                                                        <EquipmentPieceIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
-                                                    ) : option.receiveType === 'stone' ? (
-                                                        <StoneIcon tier={option.receiveSubType} className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
-                                                    ) : (
-                                                        <AncientBookIcon className="w-16 h-16 md:w-20 md:h-20 drop-shadow-2xl relative z-10 object-contain" />
-                                                    )}
-                                                    <div className="absolute -top-3 -right-3 bg-black/50 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-600 shadow-lg z-20">
-                                                        x{option.receiveAmount * quantity}
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="flex items-center justify-center gap-3 w-full max-w-[140px] bg-slate-900/50 p-1.5 rounded-lg border border-slate-700">
-                                                <button 
-                                                    onClick={() => handleQuantityChange(option.id, -1)}
-                                                    className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 transition-colors"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                                                    </svg>
-                                                </button>
-                                                <span className="flex-1 text-center font-bold font-lilita text-xl text-amber-500">{quantity}</span>
-                                                <button 
-                                                    onClick={() => handleQuantityChange(option.id, 1)}
-                                                    className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 transition-colors"
-                                                >
-                                                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                                        <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                                                    </svg>
-                                                </button>
-                                            </div>
-
-                                            <button
-                                                onClick={() => handleExchange(option, quantity)}
-                                                disabled={!canAffordAll || isProcessing}
-                                                className={`
-                                                    w-full max-w-[200px] py-2 px-4 rounded-xl font-lilita text-lg uppercase tracking-wider shadow-md transition-all duration-200
-                                                    flex items-center justify-center gap-2 transform active:scale-95
-                                                    ${canAffordAll 
-                                                        ? 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white shadow-emerald-900/30' 
-                                                        : 'bg-slate-800 text-slate-600 border border-slate-700 cursor-not-allowed opacity-70'
-                                                    }
-                                                `}
-                                            >
-                                                {isProcessing ? 'Processing...' : 'Exchange'}
-                                            </button>
-                                        </div>
-
-                                    </div>
-                                </div>
-                            );
-                        })}
+                        {currentTradeOptions.map((option) => (
+                            <TradeOptionCard 
+                                key={option.id}
+                                option={option}
+                                quantity={getQuantity(option.id)}
+                                resources={resources}
+                                onQuantityChange={handleQuantityChange}
+                                onExchange={handleExchange}
+                                isProcessing={isProcessing}
+                            />
+                        ))}
                     </div>
                 </div>
             </div>
