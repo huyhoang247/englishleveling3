@@ -38,12 +38,6 @@ const BOSS_ORB_SPAWN_SLOTS = [
     { left: '72%', top: '34%' },
 ];
 
-const SKIP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/skip-battle.webp";
-const SWEEP_BATTLE_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/sweep-battle.webp";
-const FIGHT_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/fight.webp";
-const BOSS_REWARDS_ICON = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/boss-rewards.webp";
-const BACKGROUND_IMAGE = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-tower.webp";
-
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
@@ -676,7 +670,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     <div 
                         className="absolute inset-0 bg-cover bg-no-repeat bg-slate-900"
                         style={{ 
-                            backgroundImage: `url(${BACKGROUND_IMAGE})`,
+                            backgroundImage: `url(${bossBattleAssets.towerBackground})`,
                             backgroundPosition: 'center 30px'
                         }}
                     />
@@ -727,7 +721,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             className="transition-all active:scale-95 hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed relative group rounded-full"
                                             title="Sweep"
                                         >
-                                            <img src={SWEEP_BATTLE_ICON} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
+                                            <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
                                             {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
                                         </button>
                                     )}
@@ -737,7 +731,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 <div className="absolute top-16 right-4 z-20 flex flex-col items-end gap-2">
                                      <div className="flex gap-2">
                                         <button onClick={() => setShowRewardsModal(true)} disabled={battleState !== 'idle'} className="w-12 h-12 transition-all active:scale-95 hover:scale-105 disabled:opacity-50" title="Rewards">
-                                            <img src={BOSS_REWARDS_ICON} alt="Rewards" className="w-full h-full object-contain drop-shadow-md" />
+                                            <img src={bossBattleAssets.bossRewardsIcon} alt="Rewards" className="w-full h-full object-contain drop-shadow-md" />
                                         </button>
                                      </div>
                                 </div>
@@ -798,7 +792,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         {battleState === 'idle' && sequenceState === 'none' ? (
                                             <div className="flex gap-4 items-center">
                                                 <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="transition-all active:scale-95 hover:scale-105 rounded-full relative group">
-                                                    <img src={FIGHT_ICON} alt="Fight" className="w-36 h-auto object-contain" />
+                                                    <img src={bossBattleAssets.fightButtonIcon} alt="Fight" className="w-36 h-auto object-contain" />
                                                     <div className="absolute -bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-1 text-xs font-bold text-cyan-300 bg-black/60 px-2 py-0.5 rounded-full border border-slate-600/50">
                                                         <span>10</span>
                                                         <img src={bossBattleAssets.energyIcon} alt="" className="w-3 h-3"/>
@@ -809,7 +803,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             // Ẩn nút Skip khi đã thắng/thua
                                             !gameOver && battleState === 'fighting' && (
                                                 <button onClick={skipBattle} className="transition-all active:scale-95 hover:scale-105 rounded-full" title="Skip Battle">
-                                                    <img src={SKIP_BATTLE_ICON} alt="Skip" className="w-36 h-auto object-contain" />
+                                                    <img src={bossBattleAssets.skipBattleIcon} alt="Skip" className="w-36 h-auto object-contain" />
                                                 </button>
                                             )
                                         )}
