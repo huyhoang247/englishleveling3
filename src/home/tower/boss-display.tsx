@@ -371,16 +371,17 @@ export const BossDisplay = memo(({
                 @keyframes boss-y-08 { from { background-position-y: 0; } to { background-position-y: -1020px; } }
 
                 /* --- BOSS 09 --- */
-                /* Frame Size: 401 x 523 px */
-                /* Kích thước lớn nên scale nhỏ xuống 0.5 trên Desktop */
-                .boss-size-09 { width: 401px; height: 523px; transform: scale(0.5); }
+                /* New Sheet Size: 865x1129 */
+                /* Frame Width: 865 / 6 = 144.17px */
+                /* Frame Height: 1129 / 6 = 188.17px */
+                /* Increased scale to 1.3 to compensate for smaller source image */
+                .boss-size-09 { width: 144.17px; height: 188.17px; transform: scale(1.3); }
                 .boss-anim-09 { 
-                    /* Sheet Size: 401*6 = 2406, 523*6 = 3138 */
-                    width: 2406px; height: 3138px; background-size: 2406px 3138px; 
+                    width: 865px; height: 1129px; background-size: 865px 1129px; 
                     animation: boss-x-09 0.6s steps(6) infinite, boss-y-09 3.6s steps(6) infinite; 
                 }
-                @keyframes boss-x-09 { from { background-position-x: 0; } to { background-position-x: -2406px; } }
-                @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -3138px; } }
+                @keyframes boss-x-09 { from { background-position-x: 0; } to { background-position-x: -865px; } }
+                @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -1129px; } }
 
                 /* Mobile Adjustments */
                 @media (max-width: 768px) {
@@ -390,7 +391,7 @@ export const BossDisplay = memo(({
                     .boss-size-04 { transform: scale(1.2); }
                     .boss-size-06 { transform: scale(1); }
                     .boss-size-08 { transform: scale(1.0); }
-                    .boss-size-09 { transform: scale(0.35); }
+                    .boss-size-09 { transform: scale(0.9); }
                 }
             `}</style>
 
