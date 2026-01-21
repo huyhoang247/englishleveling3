@@ -190,6 +190,12 @@ export const bossBattleAssets = {
   energyIcon: require("./assets/images/energy-icon.webp"),
   victoryIcon: require("./assets/images/victory-icon.webp"),
   defeatIcon: require("./assets/images/defeat-icon.webp"),
+  // *** THÊM MỚI TỪ tower-ui.tsx ***
+  skipBattleIcon: require("./assets/images/skip-battle.webp"),
+  sweepBattleIcon: require("./assets/images/sweep-battle.webp"),
+  fightButtonIcon: require("./assets/images/fight.webp"),
+  bossRewardsIcon: require("./assets/images/boss-rewards.webp"),
+  towerBackground: require("./assets/images/background-tower.webp"),
 };
 
 /**
