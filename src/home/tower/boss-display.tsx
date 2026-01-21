@@ -1,5 +1,3 @@
-// --- START OF FILE boss-display.tsx ---
-
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx';
@@ -332,10 +330,17 @@ export const BossDisplay = memo(({
                 @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -837px; } }
 
                 /* --- BOSS 04 --- */
-                .boss-size-04 { width: 300.5px; height: 332px; transform: scale(0.9); }
-                .boss-anim-04 { width: 1803px; height: 1992px; background-size: 1803px 1992px; animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; }
-                @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -1803px; } }
-                @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1992px; } }
+                /* Updated for 946x1045 sheet */
+                /* Frame Width: 946/6 = 157.66px */
+                /* Frame Height: 1045/6 = 174.16px */
+                /* Increased scale to 1.8 to compensate for smaller source image */
+                .boss-size-04 { width: 157.66px; height: 174.16px; transform: scale(1.8); }
+                .boss-anim-04 { 
+                    width: 946px; height: 1045px; background-size: 946px 1045px; 
+                    animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; 
+                }
+                @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -946px; } }
+                @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1045px; } }
 
                 /* --- BOSS 06 & 50 --- */
                 .boss-size-06 { width: 186.17px; height: 161px; transform: scale(1.1); }
@@ -350,8 +355,8 @@ export const BossDisplay = memo(({
                 @media (max-width: 768px) {
                     .boss-size-default { transform: scale(0.35); }
                     .boss-size-01 { transform: scale(0.8); }
-                    .boss-size-03 { transform: scale(1.0); } /* Tăng scale mobile lên 1.0 vì sprite gốc nhỏ */
-                    .boss-size-04 { transform: scale(0.6); }
+                    .boss-size-03 { transform: scale(1.0); }
+                    .boss-size-04 { transform: scale(1.2); } /* Adjusted scale for mobile */
                     .boss-size-06 { transform: scale(1); }
                 }
             `}</style>
