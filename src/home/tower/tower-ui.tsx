@@ -74,12 +74,6 @@ const MainBattleStyles = memo(() => (
         .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } 
         .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } 
         
-        /* Effects */
-        .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } 
-        .btn-shine:hover:not(:disabled)::before { left: 125%; }
-        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
-        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-        
         /* Loot Animations */
         @keyframes loot-pop {
             0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
@@ -175,7 +169,7 @@ const LootItem = memo(({ item }: { item: LootItemData }) => {
     );
 });
 
-// --- BATTLE EFFECTS LAYER (NEW: Reduces re-renders of main UI) ---
+// --- BATTLE EFFECTS LAYER ---
 const BattleEffectsLayer = memo(({ 
     orbEffects, 
     damages, 
@@ -219,7 +213,7 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
   const titleColor = isPlayer ? 'text-blue-300' : 'text-red-400';
   
   const StatItem = ({ label, icon, current, max }: { label: string, icon: string, current: number, max?: number }) => {
-    const valueText = max ? String(max) : String(current);
+    const valueText = max ? `${current}/${max}` : String(current);
     return (
       <div className="flex items-center gap-3 w-full">
         <div className="flex-shrink-0 w-24 h-10 bg-slate-800 rounded-lg flex items-center justify-center gap-2 border border-slate-700 p-2">
@@ -235,7 +229,7 @@ const CharacterStatsModal = memo(({ character, characterType, onClose }: { chara
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
       <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-        <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Đóng">✕</button>
+        <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans" aria-label="Close">✕</button>
         <div className="p-4 border-b border-slate-700"><h3 className={`text-xl font-bold text-center ${titleColor} text-shadow-sm tracking-widest`}>{title}</h3></div>
         <div className="p-5 flex flex-col gap-4">
           <StatItem label="HP" icon={uiAssets.statHpIcon} current={character.hp} max={character.maxHp} />
@@ -360,7 +354,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // States quản lý sequence chiến thắng
     const [sequenceState, setSequenceState] = useState<'none' | 'victory_sequence'>('none'); 
     
-    // Thay đổi cấu trúc quản lý Loot: dùng mảng LootItemData để quản lý vị trí từng món
     const [lootItems, setLootItems] = useState<LootItemData[]>([]);
 
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
@@ -507,9 +500,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     useEffect(() => {
         if (currentBossData) {
             const idStr = String(currentBossData.id).padStart(2, '0');
+            // Try to use webp as default for better quality
             setBossImgSrc(`/images/boss/${idStr}.webp`);
 
-            // PRELOAD NEXT BOSS IMAGE (Optimization)
+            // PRELOAD NEXT BOSS IMAGE
             const nextBoss = BOSS_DATA[currentFloor + 1];
             if (nextBoss) {
                 const nextIdStr = String(nextBoss.id).padStart(2, '0');
@@ -522,7 +516,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const handleBossImgError = useCallback(() => {
         if (currentBossData) {
             const idStr = String(currentBossData.id).padStart(2, '0');
-            const gifPath = `/images/boss/${idStr}.gif`;
+            const gifPath = `/images/boss/${idStr}.gif`; // Fallback to gif if webp fails
             if (!bossImgSrc.endsWith('.gif')) {
                 setBossImgSrc(gifPath);
             }
@@ -545,7 +539,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         // Player Turn
         if (playerDmg > 0) {
             setHeroState('attack');
-            setTimeout(() => setHeroState('idle'), 500); 
+            setTimeout(() => setHeroState('idle'), 300); // Shortened for CSS transition
 
             const dmg1 = playerDmgHit1 || Math.ceil(playerDmg / 3);
             const dmg2 = playerDmgHit2 || Math.ceil(playerDmg / 3);
@@ -570,14 +564,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 setVisualBossHp(prev => Math.max(0, prev - dmg1));
                 setBossState('hit'); 
             }, hit1Time);
-            setTimeout(() => setBossState('idle'), hit1Time + 400);
+            setTimeout(() => setBossState('idle'), hit1Time + 500);
 
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg2)}`, '#ef4444', 'boss', 32); 
                 setVisualBossHp(prev => Math.max(0, prev - dmg2));
                 setBossState('hit');
             }, hit2Time);
-            setTimeout(() => setBossState('idle'), hit2Time + 400);
+            setTimeout(() => setBossState('idle'), hit2Time + 500);
 
              setTimeout(() => {
                 addDamageText(`-${formatDamageText(dmg3)}`, '#ef4444', 'boss', 40); 
@@ -602,7 +596,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (bossDmg > 0) {
             setTimeout(() => {
                 setBossState('attack');
-                setTimeout(() => setBossState('idle'), 500);
+                setTimeout(() => setBossState('idle'), 300);
             }, bossStartDelay);
 
             const shuffledBossSlots = [...BOSS_ORB_SPAWN_SLOTS].sort(() => 0.5 - Math.random());
@@ -630,21 +624,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 setHeroState('hit');
                 setVisualPlayerHp(prev => Math.max(0, prev - bDmg1));
             }, hit1Time);
-            setTimeout(() => setHeroState('idle'), hit1Time + 400);
+            setTimeout(() => setHeroState('idle'), hit1Time + 500);
 
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg2)}`, '#ef4444', 'player', 32);
                 setHeroState('hit');
                 setVisualPlayerHp(prev => Math.max(0, prev - bDmg2));
             }, hit2Time);
-            setTimeout(() => setHeroState('idle'), hit2Time + 400);
+            setTimeout(() => setHeroState('idle'), hit2Time + 500);
 
             setTimeout(() => {
                 addDamageText(`-${formatDamageText(bDmg3)}`, '#ef4444', 'player', 36);
                 setHeroState('hit');
                 setVisualPlayerHp(prev => Math.max(0, prev - bDmg3));
             }, hit3Time);
-            setTimeout(() => setHeroState('idle'), hit3Time + 400);
+            setTimeout(() => setHeroState('idle'), hit3Time + 500);
 
             setTimeout(() => {
                  setOrbEffects(prev => prev.filter(e => e.id !== bOrb1.id && e.id !== bOrb2.id && e.id !== bOrb3.id));
@@ -773,7 +767,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             <HeroDisplay 
                                                 stats={playerStats ? { ...playerStats, hp: visualPlayerHp } : playerStats}
                                                 onStatsClick={() => setStatsModalTarget('player')} 
-                                                actionState={heroState} 
+                                                actionState={heroState}
+                                                // Using static image or fallback for hero
+                                                heroImage="/images/hero-static.png" 
                                             />
                                         </div>
 
@@ -792,7 +788,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             />
                                         </div>
 
-                                        {/* EFFECTS LAYER (Optimized) */}
+                                        {/* EFFECTS LAYER */}
                                         <BattleEffectsLayer 
                                             orbEffects={orbEffects} 
                                             damages={damages} 
@@ -803,7 +799,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                                     {/* --- ACTION BAR --- */}
                                     <div className="w-full max-w-2xl mx-auto flex flex-col items-center gap-4 mt-24 z-50">
-                                        {/* Chỉ hiện nút Fight khi Battle Idle VÀ không đang trong chuỗi animation thắng */}
+                                        {/* Only show Fight button when Idle AND not in victory sequence */}
                                         {battleState === 'idle' && sequenceState === 'none' ? (
                                             <div className="flex gap-4 items-center">
                                                 <button onClick={startGame} disabled={(playerStats.energy || 0) < 10} className="transition-all active:scale-95 hover:scale-105 rounded-full relative group">
@@ -815,7 +811,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                                 </button>
                                             </div>
                                         ) : (
-                                            // Ẩn nút Skip khi đã thắng/thua
+                                            // Hide Skip button when won/lost
                                             !gameOver && battleState === 'fighting' && (
                                                 <button onClick={skipBattle} className="transition-all active:scale-95 hover:scale-105 rounded-full" title="Skip Battle">
                                                     <img src={bossBattleAssets.skipBattleIcon} alt="Skip" className="w-36 h-auto object-contain" />
@@ -824,7 +820,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         )}
                                     </div>
     
-                                    {/* VICTORY MODAL - Chỉ hiện khi là Boss cuối cùng */}
+                                    {/* VICTORY MODAL - Last boss only */}
                                     {gameOver === 'win' && currentFloor === BOSS_DATA.length - 1 && (
                                         <VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={true} rewards={currentBossData.rewards} />
                                     )}
