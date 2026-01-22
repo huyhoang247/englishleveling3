@@ -7,13 +7,13 @@ import { CombatStats } from './tower-context.tsx';
 // --- TYPES ---
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
 
-// Link ảnh gốc từ code cũ của bạn
-const HERO_SPRITE_URL = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp';
+// ĐƯỜNG DẪN ẢNH TĨNH (Bạn hãy đảm bảo file này là ảnh đơn, không phải lưới sprite)
+const HERO_STATIC_IMAGE = '/images/hero.webp'; 
 
 // --- 0. ANIMATION STYLES (PURE CSS TRANSFORMS) ---
 const AnimationStyles = memo(() => (
     <style>{`
-        /* --- Breathing (Idle - Hiệu ứng thở) --- */
+        /* --- Breathing (Idle - Hiệu ứng thở nhẹ) --- */
         @keyframes breathe-hero {
             0%, 100% { transform: scale(1) translateY(0); }
             50% { transform: scale(1.02) translateY(-2px); }
@@ -78,11 +78,9 @@ const AnimationStyles = memo(() => (
         .animate-char-attack-right { animation: lunge-right 0.5s ease-in-out; }
         .animate-char-attack-left { animation: lunge-left 0.5s ease-in-out; }
         
-        .animate-boss-die { animation: boss-die 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards; pointer-events: none; }
-        .animate-boss-appear { animation: boss-appear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        
         .render-optimize {
-            image-rendering: pixelated; /* Giữ pixel art sắc nét */
+            /* Tối ưu render, giữ ảnh sắc nét */
+            -webkit-font-smoothing: antialiased;
             transform: translateZ(0);
             backface-visibility: hidden;
             will-change: transform;
@@ -118,7 +116,7 @@ export const HealthBar = memo(({
                         boxShadow: `0 0 10px ${shadowColor}`
                     }}>
                 </div>
-                {/* Text hiển thị số máu - Dùng font-lilita theo yêu cầu */}
+                {/* Text hiển thị số máu - Font Lilita */}
                 <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10 font-lilita tracking-wider">
                     <span>{Math.ceil(current)} / {Math.ceil(max)}</span>
                 </div>
@@ -127,7 +125,7 @@ export const HealthBar = memo(({
     );
 });
 
-// --- 2. HERO DISPLAY COMPONENT ---
+// --- 2. HERO DISPLAY COMPONENT (STATIC WEBP) ---
 interface HeroDisplayProps {
     stats: CombatStats;
     onStatsClick: () => void;
@@ -157,20 +155,12 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     />
                 </div>
 
-                {/* HERO IMAGE FIX: Dùng div background thay vì img để crop lấy frame đầu tiên */}
+                {/* HERO IMAGE (STATIC WEBP) */}
                 <div className={`z-10 render-optimize ${animClass}`}>
-                    <div 
-                        style={{
-                            width: '156.5px', // Kích thước 1 frame
-                            height: '147.2px',
-                            backgroundImage: `url(${HERO_SPRITE_URL})`,
-                            backgroundRepeat: 'no-repeat',
-                            backgroundPosition: '0px 0px', // Lấy frame đầu tiên
-                            backgroundSize: '939px 883px', // Kích thước gốc của sprite sheet
-                            transform: 'scale(0.85)', // Scale nhỏ lại chút cho vừa
-                            transformOrigin: 'bottom center',
-                            filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.5))'
-                        }}
+                    <img 
+                        src={HERO_STATIC_IMAGE} 
+                        alt="Hero" 
+                        className="w-[140px] md:w-[180px] h-auto object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
                     />
                 </div>
 
@@ -183,7 +173,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
 });
 
 
-// --- 3. BOSS DISPLAY COMPONENT ---
+// --- 3. BOSS DISPLAY COMPONENT (STATIC WEBP) ---
 interface BossDisplayProps {
     bossId: number;
     name: string;
@@ -249,7 +239,7 @@ export const BossDisplay = memo(({
                         />
                     </div>
 
-                    {/* Boss Image */}
+                    {/* BOSS IMAGE (STATIC WEBP) */}
                     <div className={`relative flex items-end justify-center z-10 render-optimize ${imageAnimClass}`}>
                         <img 
                             src={imgSrc} 
