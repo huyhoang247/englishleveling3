@@ -43,9 +43,9 @@ const SKILL_DATA: Record<SkillType, {
     }
 };
 
-// --- CSS STYLES (Encapsulated) ---
-// Chứa toàn bộ logic chuyển động
-const SkillStyles = () => (
+// --- CSS STYLES (Encapsulated & Optimized) ---
+// Chứa toàn bộ logic chuyển động. Được bọc trong memo để tránh re-calc style không cần thiết.
+const SkillStyles = memo(() => (
     <style>{`
         /* --- 1. SPIN ANIMATIONS (Xoay tròn quả cầu) --- */
         
@@ -171,7 +171,7 @@ const SkillStyles = () => (
             transform: translateZ(0);
         }
     `}</style>
-);
+));
 
 // --- COMPONENT ---
 const SkillEffect = memo(({ id, type, delay, startPos }: SkillProps) => {
