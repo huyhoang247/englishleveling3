@@ -7,87 +7,86 @@ import { CombatStats } from './tower-context.tsx';
 // --- TYPES ---
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
 
-// --- STYLES COMPONENTS (OPTIMIZED) ---
-const BattleVisualStyles = memo(() => (
+const HERO_IMAGE_PATH = '/images/hero.webp'; 
+
+// --- 0. ANIMATION STYLES (PURE CSS TRANSFORMS) ---
+// Styles này định nghĩa các chuyển động mượt mà (2.5D) thay vì dùng Sprite Sheet giật cục
+const AnimationStyles = memo(() => (
     <style>{`
-        /* --- SHARED HIT & ATTACK EFFECTS --- */
+        /* --- Breathing (Idle - Hiệu ứng thở) --- */
+        @keyframes breathe-hero {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.02) translateY(-2px); }
+        }
+        @keyframes breathe-boss {
+            0%, 100% { transform: scale(1) translateY(0); }
+            50% { transform: scale(1.03) translateY(-4px); }
+        }
+        
+        /* --- Floating (Hover - Hiệu ứng trôi nhẹ cho Boss) --- */
+        @keyframes float-gentle {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* --- Hit/Shake (Hiệu ứng bị đánh) --- */
         @keyframes shake-hit {
             0%, 100% { transform: translateX(0); filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
-            10%, 90% { transform: translateX(-5px); }
-            20%, 80% { transform: translateX(5px); }
+            10%, 90% { transform: translateX(-6px); }
+            20%, 80% { transform: translateX(6px); }
             30%, 50%, 70% { 
-                transform: translateX(-5px); 
-                filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(3); 
+                transform: translateX(-6px); 
+                filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3); 
             }
-            40%, 60% { transform: translateX(5px); }
-        }
-        .animate-char-hit { 
-            animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both; 
+            40%, 60% { transform: translateX(6px); }
         }
 
+        /* --- Attack (Lunge - Hiệu ứng lao tới tấn công) --- */
+        /* Hero lao sang phải */
         @keyframes lunge-right {
-            0% { transform: translateX(0) scale(1); }
-            40% { transform: translateX(100px) scale(1.1); }   
-            100% { transform: translateX(0) scale(1); }       
+            0% { transform: translateX(0) scale(1) rotate(0); }
+            20% { transform: translateX(-20px) scale(0.95) rotate(-5deg); } /* Lùi lại lấy đà */
+            50% { transform: translateX(60px) scale(1.1) rotate(2deg); }   /* Lao tới */
+            100% { transform: translateX(0) scale(1) rotate(0); }       
         }
-        .animate-char-attack-right { 
-            animation: lunge-right 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
-        }
-
+        /* Boss lao sang trái */
         @keyframes lunge-left {
-            0% { transform: translateX(0) scale(1); }
-            40% { transform: translateX(-100px) scale(1.1); }  
-            100% { transform: translateX(0) scale(1); }       
-        }
-        .animate-char-attack-left { 
-            animation: lunge-left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
+            0% { transform: translateX(0) scale(1) rotate(0); }
+            20% { transform: translateX(20px) scale(0.95) rotate(5deg); }  /* Lùi lại lấy đà */
+            50% { transform: translateX(-60px) scale(1.1) rotate(-2deg); }  /* Lao tới */
+            100% { transform: translateX(0) scale(1) rotate(0); }       
         }
 
-        /* --- HERO IDLE (BREATHING) --- */
-        @keyframes hero-breathe {
-            0%, 100% { transform: scaleY(1) scaleX(1) translateY(0); }
-            50% { transform: scaleY(1.03) scaleX(0.98) translateY(1px); }
-        }
-        .animate-hero-idle {
-            animation: hero-breathe 2.5s ease-in-out infinite;
-            transform-origin: bottom center;
-        }
-
-        /* --- BOSS IDLE (FLOATING) --- */
-        @keyframes boss-float {
-            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
-            50% { transform: translateY(-12px) scale(1.02); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); }
-        }
-        .animate-boss-idle {
-            animation: boss-float 3s ease-in-out infinite;
-            will-change: transform;
-        }
-
-        /* --- BOSS DEATH & APPEAR --- */
+        /* --- Death / Appear (Hiệu ứng Chết và Xuất hiện) --- */
         @keyframes boss-die {
             0% { transform: scale(1) rotate(0deg); opacity: 1; filter: grayscale(0); }
             20% { transform: scale(1.1) rotate(5deg); opacity: 1; filter: brightness(2); } 
-            100% { transform: scale(0) rotate(-20deg); opacity: 0; filter: grayscale(1); }
+            100% { transform: scale(0) rotate(-45deg); opacity: 0; filter: grayscale(1); }
         }
-        .animate-boss-die {
-            animation: boss-die 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
-            pointer-events: none; 
-        }
-
         @keyframes boss-appear {
             0% { transform: scale(0); opacity: 0; }
-            70% { transform: scale(1.1); opacity: 1; }
+            60% { transform: scale(1.1); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
-        .animate-boss-appear {
-            animation: boss-appear 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-        }
 
-        /* --- UTILS --- */
-        .render-crisp {
-            image-rendering: -webkit-optimize-contrast; 
-            /* Optional: pixelated if using pixel art assets */
-            /* image-rendering: pixelated; */ 
+        /* --- CLASSES MAPPING --- */
+        .animate-breathe-hero { animation: breathe-hero 4s ease-in-out infinite; }
+        .animate-breathe-boss { animation: breathe-boss 5s ease-in-out infinite; }
+        .animate-float-gentle { animation: float-gentle 6s ease-in-out infinite; }
+        
+        .animate-char-hit { animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both; }
+        .animate-char-attack-right { animation: lunge-right 0.5s ease-in-out; }
+        .animate-char-attack-left { animation: lunge-left 0.5s ease-in-out; }
+        
+        .animate-boss-die { animation: boss-die 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards; pointer-events: none; }
+        .animate-boss-appear { animation: boss-appear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        
+        /* Tối ưu hóa render cho GPU */
+        .render-optimize {
+            image-rendering: -webkit-optimize-contrast; /* Giữ ảnh sắc nét */
+            transform: translateZ(0); /* Kích hoạt tăng tốc phần cứng */
+            backface-visibility: hidden;
+            will-change: transform;
         }
     `}</style>
 ));
@@ -112,6 +111,7 @@ export const HealthBar = memo(({
     return (
         <div className={`w-full transition-all duration-300 ${isHidden ? 'opacity-0' : 'opacity-100'}`}>
             <div className={`relative w-full ${heightClass} bg-black/60 rounded-lg border border-slate-600 p-0.5 shadow-inner overflow-hidden`}>
+                {/* Thanh máu chính */}
                 <div
                     className={`h-full rounded-md transition-transform duration-300 ease-out origin-left ${colorGradient}`}
                     style={{
@@ -119,8 +119,9 @@ export const HealthBar = memo(({
                         boxShadow: `0 0 10px ${shadowColor}`
                     }}>
                 </div>
+                {/* Text hiển thị số máu */}
                 <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10 font-sans tracking-wide">
-                    <span>{Math.ceil(current)} / {max}</span>
+                    <span>{Math.ceil(current)} / {Math.ceil(max)}</span>
                 </div>
             </div>
         </div>
@@ -132,26 +133,24 @@ interface HeroDisplayProps {
     stats: CombatStats;
     onStatsClick: () => void;
     actionState?: ActionState; 
-    heroImage?: string; // Add prop for image source
 }
 
-export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle', heroImage = "/images/hero-static.png" }: HeroDisplayProps) => {
-    
-    // Logic Animation Class
-    let animClass = 'animate-hero-idle'; // Default breathing
+export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
+    // Xác định class animation dựa trên trạng thái
+    let animClass = 'animate-breathe-hero'; // Mặc định là thở
     if (actionState === 'hit') animClass = 'animate-char-hit';
     if (actionState === 'attack') animClass = 'animate-char-attack-right';
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full relative">
-            <BattleVisualStyles />
+            <AnimationStyles />
             
             <div 
-                className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10 z-20"
+                className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                {/* HP Bar */}
-                <div className="w-32 md:w-48 z-30 mb-2 md:translate-y-8 translate-x-2 transition-transform duration-200 group-hover:scale-105">
+                {/* HP Bar Container - Di chuyển nhẹ khi hover, không bị rung lắc khi đánh */}
+                <div className="w-32 md:w-48 z-20 translate-y-2 md:translate-y-6 translate-x-2 transition-transform duration-200 group-hover:scale-105">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
@@ -160,25 +159,23 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle', he
                     />
                 </div>
 
-                {/* Character Wrapper */}
-                <div className="relative z-20">
+                {/* Hero Image Container - Chứa Animation chính */}
+                <div className={`z-10 render-optimize ${animClass}`}>
                     <img 
-                        src={heroImage}
-                        alt="Hero"
-                        // Fallback to a placeholder if image fails
-                        onError={(e) => {e.currentTarget.src = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp'}} 
-                        className={`w-[180px] md:w-[240px] h-auto object-contain render-crisp drop-shadow-xl ${animClass}`}
-                        style={{ maxHeight: '300px' }}
+                        src={HERO_IMAGE_PATH} 
+                        alt="Hero" 
+                        className="w-[140px] md:w-[180px] h-auto object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
                     />
                 </div>
 
-                {/* Shadow */}
-                <div className="absolute -bottom-2 w-[100px] h-[25px] bg-black/50 blur-md rounded-[100%] z-10 transition-transform duration-1000"></div>
+                {/* Bóng dưới chân - Thay đổi kích thước theo nhịp thở để chân thực hơn */}
+                <div className="absolute bottom-[2%] w-[80px] h-[15px] bg-black/40 blur-md rounded-[100%] z-0 animate-breathe-hero opacity-80"></div>
 
             </div>
         </div>
     )
 });
+
 
 // --- 3. BOSS DISPLAY COMPONENT ---
 interface BossDisplayProps {
@@ -194,7 +191,7 @@ interface BossDisplayProps {
 }
 
 export const BossDisplay = memo(({
-    bossId, // kept for potential future use or specific scaling logic
+    bossId,
     name,
     element,
     hp,
@@ -204,53 +201,63 @@ export const BossDisplay = memo(({
     onStatsClick,
     actionState = 'idle'
 }: BossDisplayProps) => {
-
-    // Logic Animation Class
-    let animClass = 'animate-boss-idle';
-    if (actionState === 'hit') animClass = 'animate-char-hit';
-    if (actionState === 'attack') animClass = 'animate-char-attack-left';
     
-    // Wrapper Animation (Appear/Die affects everything including the wrapper)
-    let wrapperAnimClass = ''; 
+    // 1. Wrapper Animation: Dùng cho toàn bộ khối Boss (bao gồm cả vòng tròn ma pháp nếu cần)
+    // - Dying: Biến mất
+    // - Appearing: Xuất hiện
+    // - Float: Trôi nhẹ (Mặc định cho Boss trông ngầu hơn)
+    let wrapperAnimClass = 'animate-float-gentle'; 
     if (actionState === 'dying') wrapperAnimClass = 'animate-boss-die';
     if (actionState === 'appearing') wrapperAnimClass = 'animate-boss-appear';
 
+    // 2. Image Animation: Dùng riêng cho hình ảnh Boss
+    // - Attack: Lao tới
+    // - Hit: Rung lắc
+    // - Breathe: Thở (kết hợp với float ở trên)
+    let imageAnimClass = 'animate-breathe-boss';
+    if (actionState === 'hit') imageAnimClass = 'animate-char-hit';
+    if (actionState === 'attack') imageAnimClass = 'animate-char-attack-left';
+
     return (
         <div className="w-full flex flex-col items-center justify-end h-full">
-            {/* Styles are included in HeroDisplay already, but safe to include if used standalone, memo prevents dupes */}
-            
+            <AnimationStyles />
+
             <div 
                 className={`relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group z-10 ${wrapperAnimClass}`} 
                 onClick={actionState !== 'dying' ? onStatsClick : undefined}
             >
-                {/* Magic Circle (Static on ground, scales slightly with idle) */}
-                <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[220px] h-[220px] z-0 opacity-70 pointer-events-none scale-75 md:scale-110">
+                {/* Bóng dưới chân (Anchor) - Giữ cố định, không trôi theo Boss để tạo cảm giác Boss đang bay */}
+                <div className="absolute bottom-[2%] w-[120px] h-[25px] bg-black/40 blur-lg rounded-[100%] z-0"></div>
+
+                {/* Vòng tròn ma pháp - Nằm dưới chân, scale theo animation của wrapper */}
+                <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* Shadow */}
-                <div className="absolute bottom-[2%] w-[140px] h-[35px] bg-black/50 blur-lg rounded-[100%] z-0"></div>
+                {/* Container chứa Ảnh và HP Bar */}
+                <div className="flex flex-col items-center">
+                    
+                    {/* HP Bar Boss - Ẩn khi đang chết */}
+                    <div className="w-40 md:w-60 z-20 mb-2 md:mb-4 transition-transform duration-200 group-hover:scale-105">
+                        <HealthBar 
+                            current={hp} 
+                            max={maxHp} 
+                            colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
+                            shadowColor="rgba(56, 189, 248, 0.5)" 
+                            heightClass="h-6 md:h-8"
+                            isHidden={actionState === 'dying'}
+                        />
+                    </div>
 
-                {/* HP Bar */}
-                <div className="w-40 md:w-60 z-30 mb-4 transition-transform duration-200 group-hover:scale-105">
-                    <HealthBar 
-                        current={hp} 
-                        max={maxHp} 
-                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
-                        shadowColor="rgba(239, 68, 68, 0.5)" 
-                        heightClass="h-6 md:h-8"
-                        isHidden={actionState === 'dying'}
-                    />
-                </div>
-
-                {/* Boss Image Wrapper */}
-                <div className="relative z-20 flex items-end justify-center h-[200px] md:h-[280px] w-[200px] md:w-[280px]">
-                    <img 
-                        src={imgSrc} 
-                        alt={name} 
-                        onError={onImgError}
-                        className={`max-w-full max-h-full object-contain drop-shadow-2xl render-crisp ${animClass}`} 
-                    />
+                    {/* Boss Image - Render ảnh trực tiếp thay vì Sprite Sheet */}
+                    <div className={`relative flex items-end justify-center z-10 render-optimize ${imageAnimClass}`}>
+                        <img 
+                            src={imgSrc} 
+                            alt={name} 
+                            onError={onImgError}
+                            className="w-auto h-[160px] md:h-[240px] max-w-[280px] object-contain drop-shadow-[0_0_15px_rgba(0,0,0,0.3)]" 
+                        />
+                    </div>
                 </div>
                 
             </div>
