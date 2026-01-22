@@ -189,14 +189,14 @@ const BossStyles = memo(() => (
         @keyframes boss-x-12 { from { background-position-x: 0; } to { background-position-x: -1089px; } }
         @keyframes boss-y-12 { from { background-position-y: 0; } to { background-position-y: -825px; } }
 
-        /* BOSS 15 (SKELETON) - Frame: 529 x 478 */
-        .boss-size-15 { width: 529px; height: 478px; transform: scale(0.6); }
+        /* BOSS 15 (SKELETON) - Frame: 185 x 167.17 */
+        .boss-size-15 { width: 185px; height: 167.17px; transform: scale(1.5); }
         .boss-anim-15 { 
-            width: 3174px; height: 2868px; background-size: 3174px 2868px; 
+            width: 1110px; height: 1003px; background-size: 1110px 1003px; 
             animation: boss-x-15 0.6s steps(6) infinite, boss-y-15 3.6s steps(6) infinite; 
         }
-        @keyframes boss-x-15 { from { background-position-x: 0; } to { background-position-x: -3174px; } }
-        @keyframes boss-y-15 { from { background-position-y: 0; } to { background-position-y: -2868px; } }
+        @keyframes boss-x-15 { from { background-position-x: 0; } to { background-position-x: -1110px; } }
+        @keyframes boss-y-15 { from { background-position-y: 0; } to { background-position-y: -1003px; } }
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
@@ -208,7 +208,7 @@ const BossStyles = memo(() => (
             .boss-size-08 { transform: scale(1.0); }
             .boss-size-09 { transform: scale(0.9); }
             .boss-size-12 { transform: scale(1.0); }
-            .boss-size-15 { transform: scale(0.4); }
+            .boss-size-15 { transform: scale(1.1); }
         }
     `}</style>
 ));
