@@ -1,3 +1,5 @@
+// --- START OF FILE boss-display.tsx ---
+
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx';
@@ -5,18 +7,18 @@ import { CombatStats } from './tower-context.tsx';
 // --- TYPES ---
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
 
-// --- 0. ANIMATION STYLES & CONFIG ---
-// Component này chứa CSS Keyframes cho toàn bộ hiệu ứng nhân vật và Boss
-const CharacterAnimations = () => (
+// --- 0. STYLES COMPONENTS (OPTIMIZED) ---
+// Tách biệt Styles ra khỏi component chính để tránh Render Thrashing (Lag khi update HP)
+
+const HeroStyles = memo(() => (
     <style>{`
-        /* Rung lắc + Chớp sáng khi bị đánh (Hit Reaction) */
+        /* --- SHARED ANIMATIONS --- */
         @keyframes shake-hit {
             0%, 100% { transform: translateX(0); filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
             10%, 90% { transform: translateX(-5px); }
             20%, 80% { transform: translateX(5px); }
             30%, 50%, 70% { 
                 transform: translateX(-5px); 
-                /* Hiệu ứng Flash: Sáng rực + hơi đỏ/cam */
                 filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3); 
             }
             40%, 60% { transform: translateX(5px); }
@@ -25,42 +27,69 @@ const CharacterAnimations = () => (
             animation: shake-hit 0.5s cubic-bezier(.36,.07,.19,.97) both; 
         }
 
-        /* Player tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang phải */
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(-20px) scale(0.95); } /* Windup */
-            50% { transform: translateX(60px) scale(1.1); }   /* Strike */
-            100% { transform: translateX(0) scale(1); }       /* Recovery */
+            20% { transform: translateX(-20px) scale(0.95); } 
+            50% { transform: translateX(60px) scale(1.1); }   
+            100% { transform: translateX(0) scale(1); }       
         }
         .animate-char-attack-right { 
             animation: lunge-right 0.5s ease-in-out; 
         }
 
-        /* Boss tấn công: Lùi nhẹ lấy đà -> Lướt mạnh sang trái */
+        /* --- HERO SPECIFIC STYLES --- */
+        .hero-sprite-wrapper {
+            width: 156.5px;
+            height: 147.2px;
+            overflow: hidden;
+            position: relative;
+            transform: scale(0.85); 
+            transform-origin: bottom center;
+            image-rendering: pixelated;
+            image-rendering: -webkit-optimize-contrast;
+        }
+        
+        .hero-sprite-sheet {
+            width: 156.5px;
+            height: 147.2px;
+            background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp');
+            background-size: 939px 883px;
+            background-repeat: no-repeat;
+            animation: hero-idle-x 0.5s steps(6) infinite, hero-idle-y 3.0s steps(6) infinite;
+        }
+
+        @keyframes hero-idle-x { from { background-position-x: 0px; } to { background-position-x: -939px; } }
+        @keyframes hero-idle-y { from { background-position-y: 0px; } to { background-position-y: -883px; } }
+
+        @media (max-width: 768px) {
+            .hero-sprite-wrapper { transform: scale(1); }
+        }
+    `}</style>
+));
+
+const BossStyles = memo(() => (
+    <style>{`
+        /* --- BOSS ANIMATIONS --- */
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(20px) scale(0.95); }  /* Windup */
-            50% { transform: translateX(-60px) scale(1.1); }  /* Strike */
-            100% { transform: translateX(0) scale(1); }       /* Recovery */
+            20% { transform: translateX(20px) scale(0.95); }  
+            50% { transform: translateX(-60px) scale(1.1); }  
+            100% { transform: translateX(0) scale(1); }       
         }
         .animate-char-attack-left { 
             animation: lunge-left 0.5s ease-in-out; 
         }
 
-        /* --- BOSS DEATH ANIMATION --- */
-        /* Thu nhỏ, xoay nhẹ, mờ dần và chuyển sang trắng đen */
         @keyframes boss-die {
             0% { transform: scale(1) rotate(0deg); opacity: 1; filter: grayscale(0); }
-            20% { transform: scale(1.1) rotate(5deg); opacity: 1; filter: brightness(2) contrast(1.2); } /* Flash trước khi chết */
+            20% { transform: scale(1.1) rotate(5deg); opacity: 1; filter: brightness(2) contrast(1.2); } 
             100% { transform: scale(0) rotate(-45deg); opacity: 0; filter: grayscale(1); }
         }
         .animate-boss-die {
             animation: boss-die 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
-            pointer-events: none; /* Không cho click khi đang chết */
+            pointer-events: none; 
         }
 
-        /* --- BOSS APPEAR ANIMATION --- */
-        /* Zoom từ 0 ra, nảy nhẹ (elastic effect) */
         @keyframes boss-appear {
             0% { transform: scale(0); opacity: 0; }
             60% { transform: scale(1.1); opacity: 1; }
@@ -69,8 +98,100 @@ const CharacterAnimations = () => (
         .animate-boss-appear {
             animation: boss-appear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
+
+        /* --- BOSS SPRITE CONFIGURATION --- */
+        .boss-render-optimize {
+            image-rendering: -webkit-optimize-contrast;
+            transform: translateZ(0);
+        }
+        .boss-sprite-wrapper {
+            padding-bottom: 8px; 
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+            height: 100%;
+        }
+        .boss-sprite-container {
+            overflow: hidden;
+            position: relative;
+            transform-origin: bottom center;
+        }
+
+        /* DEFAULT BOSS */
+        .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
+        .boss-anim-default {
+            width: 2814px; height: 2916px; background-size: 2814px 2916px;
+            animation: boss-x-def 0.4s steps(6) infinite, boss-y-def 2.4s steps(6) infinite;
+        }
+        @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
+        @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
+
+        /* BOSS 01 */
+        .boss-size-01 { width: 165.33px; height: 165.66px; transform: scale(1); }
+        .boss-anim-01 { 
+            width: 992px; height: 994px; background-size: 992px 994px; 
+            animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite; 
+        }
+        @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -992px; } }
+        @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -994px; } }
+
+        /* BOSS 03 */
+        .boss-size-03 { width: 179.5px; height: 139.5px; transform: scale(1.5); }
+        .boss-anim-03 { 
+            width: 1077px; height: 837px; background-size: 1077px 837px; 
+            animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; 
+        }
+        @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -1077px; } }
+        @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -837px; } }
+
+        /* BOSS 04 */
+        .boss-size-04 { width: 157.66px; height: 174.16px; transform: scale(1.8); }
+        .boss-anim-04 { 
+            width: 946px; height: 1045px; background-size: 946px 1045px; 
+            animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; 
+        }
+        @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -946px; } }
+        @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1045px; } }
+
+        /* BOSS 06 & 50 */
+        .boss-size-06 { width: 186.17px; height: 161px; transform: scale(1.1); }
+        .boss-anim-06 { 
+            width: 1117px; height: 966px; background-size: 1117px 966px; 
+            animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; 
+        }
+        @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1117px; } }
+        @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -966px; } }
+
+        /* BOSS 08 */
+        .boss-size-08 { width: 164px; height: 170px; transform: scale(1.4); }
+        .boss-anim-08 { 
+            width: 984px; height: 1020px; background-size: 984px 1020px; 
+            animation: boss-x-08 0.6s steps(6) infinite, boss-y-08 3.6s steps(6) infinite; 
+        }
+        @keyframes boss-x-08 { from { background-position-x: 0; } to { background-position-x: -984px; } }
+        @keyframes boss-y-08 { from { background-position-y: 0; } to { background-position-y: -1020px; } }
+
+        /* BOSS 09 */
+        .boss-size-09 { width: 144.17px; height: 188.17px; transform: scale(1.3); }
+        .boss-anim-09 { 
+            width: 865px; height: 1129px; background-size: 865px 1129px; 
+            animation: boss-x-09 0.6s steps(6) infinite, boss-y-09 3.6s steps(6) infinite; 
+        }
+        @keyframes boss-x-09 { from { background-position-x: 0; } to { background-position-x: -865px; } }
+        @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -1129px; } }
+
+        /* Mobile Adjustments */
+        @media (max-width: 768px) {
+            .boss-size-default { transform: scale(0.35); }
+            .boss-size-01 { transform: scale(0.8); }
+            .boss-size-03 { transform: scale(1.0); }
+            .boss-size-04 { transform: scale(1.2); }
+            .boss-size-06 { transform: scale(1); }
+            .boss-size-08 { transform: scale(1.0); }
+            .boss-size-09 { transform: scale(0.9); }
+        }
     `}</style>
-);
+));
 
 // --- 1. HEALTH BAR COMPONENT ---
 export const HealthBar = memo(({ 
@@ -115,8 +236,6 @@ interface HeroDisplayProps {
 }
 
 export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
-    const spriteUrl = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp";
-
     // Chọn class animation dựa trên actionState
     let animClass = '';
     if (actionState === 'hit') animClass = 'animate-char-hit';
@@ -124,57 +243,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full relative">
-             <CharacterAnimations />
-             <style>{`
-                .hero-sprite-wrapper {
-                    /* 
-                       Frame Size Grid 6x6 updated for 939x883 sheet 
-                       Width: 939 / 6 = 156.5px
-                       Height: 883 / 6 = 147.16px (approx 147.2px)
-                    */
-                    width: 156.5px;
-                    height: 147.2px;
-                    overflow: hidden;
-                    position: relative;
-                    
-                    /* Scale 0.85 for Desktop */
-                    transform: scale(0.85); 
-                    transform-origin: bottom center;
-
-                    /* Tối ưu render pixel art */
-                    image-rendering: pixelated;
-                    image-rendering: -webkit-optimize-contrast;
-                }
-                
-                .hero-sprite-sheet {
-                    width: 156.5px;
-                    height: 147.2px;
-                    background-image: url('${spriteUrl}');
-                    background-size: 939px 883px;
-                    background-repeat: no-repeat;
-                    
-                    animation: 
-                        hero-idle-x 0.5s steps(6) infinite,
-                        hero-idle-y 3.0s steps(6) infinite;
-                }
-
-                @keyframes hero-idle-x {
-                    from { background-position-x: 0px; }
-                    to { background-position-x: -939px; }
-                }
-
-                @keyframes hero-idle-y {
-                    from { background-position-y: 0px; }
-                    to { background-position-y: -883px; }
-                }
-
-                @media (max-width: 768px) {
-                    .hero-sprite-wrapper {
-                        /* Scale 1 cho điện thoại */
-                        transform: scale(1); 
-                    }
-                }
-            `}</style>
+            <HeroStyles />
             
             {/* Container định vị vị trí đứng */}
             <div 
@@ -289,111 +358,7 @@ export const BossDisplay = memo(({
 
     return (
         <div className="w-full flex flex-col items-center justify-end h-full">
-            <style>{`
-                .boss-render-optimize {
-                    image-rendering: -webkit-optimize-contrast;
-                    transform: translateZ(0);
-                }
-                .boss-sprite-wrapper {
-                    padding-bottom: 8px; 
-                    display: flex;
-                    justify-content: center;
-                    align-items: flex-end;
-                    height: 100%;
-                }
-                .boss-sprite-container {
-                    overflow: hidden;
-                    position: relative;
-                    transform-origin: bottom center;
-                }
-
-                /* --- DEFAULT BOSS --- */
-                .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
-                .boss-anim-default {
-                    width: 2814px; height: 2916px; background-size: 2814px 2916px;
-                    animation: boss-x-def 0.4s steps(6) infinite, boss-y-def 2.4s steps(6) infinite;
-                }
-                @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
-                @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
-
-                /* --- BOSS 01 --- */
-                .boss-size-01 { width: 165.33px; height: 165.66px; transform: scale(1); }
-                .boss-anim-01 { 
-                    width: 992px; height: 994px; background-size: 992px 994px; 
-                    animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite; 
-                }
-                @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -992px; } }
-                @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -994px; } }
-
-                /* --- BOSS 03 --- */
-                /* Updated: 1077px / 6 = 179.5px | 837px / 6 = 139.5px */
-                /* Scale tăng lên 1.5 để bù lại kích thước gốc bị nhỏ đi */
-                .boss-size-03 { width: 179.5px; height: 139.5px; transform: scale(1.5); }
-                .boss-anim-03 { 
-                    width: 1077px; height: 837px; background-size: 1077px 837px; 
-                    animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; 
-                }
-                @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -1077px; } }
-                @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -837px; } }
-
-                /* --- BOSS 04 --- */
-                /* Updated for 946x1045 sheet */
-                /* Frame Width: 946/6 = 157.66px */
-                /* Frame Height: 1045/6 = 174.16px */
-                /* Increased scale to 1.8 to compensate for smaller source image */
-                .boss-size-04 { width: 157.66px; height: 174.16px; transform: scale(1.8); }
-                .boss-anim-04 { 
-                    width: 946px; height: 1045px; background-size: 946px 1045px; 
-                    animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; 
-                }
-                @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -946px; } }
-                @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1045px; } }
-
-                /* --- BOSS 06 & 50 --- */
-                .boss-size-06 { width: 186.17px; height: 161px; transform: scale(1.1); }
-                .boss-anim-06 { 
-                    width: 1117px; height: 966px; background-size: 1117px 966px; 
-                    animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; 
-                }
-                @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1117px; } }
-                @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -966px; } }
-
-                /* --- BOSS 08 --- */
-                /* Updated: 984x1020 sheet */
-                /* Frame Width: 984 / 6 = 164px */
-                /* Frame Height: 1020 / 6 = 170px */
-                .boss-size-08 { width: 164px; height: 170px; transform: scale(1.4); }
-                .boss-anim-08 { 
-                    width: 984px; height: 1020px; background-size: 984px 1020px; 
-                    animation: boss-x-08 0.6s steps(6) infinite, boss-y-08 3.6s steps(6) infinite; 
-                }
-                @keyframes boss-x-08 { from { background-position-x: 0; } to { background-position-x: -984px; } }
-                @keyframes boss-y-08 { from { background-position-y: 0; } to { background-position-y: -1020px; } }
-
-                /* --- BOSS 09 --- */
-                /* New Sheet Size: 865x1129 */
-                /* Frame Width: 865 / 6 = 144.17px */
-                /* Frame Height: 1129 / 6 = 188.17px */
-                /* Increased scale to 1.3 to compensate for smaller source image */
-                .boss-size-09 { width: 144.17px; height: 188.17px; transform: scale(1.3); }
-                .boss-anim-09 { 
-                    width: 865px; height: 1129px; background-size: 865px 1129px; 
-                    animation: boss-x-09 0.6s steps(6) infinite, boss-y-09 3.6s steps(6) infinite; 
-                }
-                @keyframes boss-x-09 { from { background-position-x: 0; } to { background-position-x: -865px; } }
-                @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -1129px; } }
-
-                /* Mobile Adjustments */
-                @media (max-width: 768px) {
-                    .boss-size-default { transform: scale(0.35); }
-                    .boss-size-01 { transform: scale(0.8); }
-                    .boss-size-03 { transform: scale(1.0); }
-                    .boss-size-04 { transform: scale(1.2); }
-                    .boss-size-06 { transform: scale(1); }
-                    .boss-size-08 { transform: scale(1.0); }
-                    .boss-size-09 { transform: scale(0.9); }
-                }
-            `}</style>
+            <BossStyles />
 
             {/* Container định vị chính */}
             {/* Áp dụng wrapperAnimClass vào đây để CẢ vòng tròn ma pháp và Boss cùng thu nhỏ/biến mất */}
