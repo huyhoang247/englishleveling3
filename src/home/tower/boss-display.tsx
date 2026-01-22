@@ -181,13 +181,13 @@ const BossStyles = memo(() => (
         @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -1129px; } }
 
         /* BOSS 12 */
-        .boss-size-12 { width: 519px; height: 393px; transform: scale(0.55); }
+        .boss-size-12 { width: 181.5px; height: 137.5px; transform: scale(1.4); }
         .boss-anim-12 { 
-            width: 3114px; height: 2358px; background-size: 3114px 2358px; 
+            width: 1089px; height: 825px; background-size: 1089px 825px; 
             animation: boss-x-12 0.6s steps(6) infinite, boss-y-12 3.6s steps(6) infinite; 
         }
-        @keyframes boss-x-12 { from { background-position-x: 0; } to { background-position-x: -3114px; } }
-        @keyframes boss-y-12 { from { background-position-y: 0; } to { background-position-y: -2358px; } }
+        @keyframes boss-x-12 { from { background-position-x: 0; } to { background-position-x: -1089px; } }
+        @keyframes boss-y-12 { from { background-position-y: 0; } to { background-position-y: -825px; } }
 
         /* Mobile Adjustments */
         @media (max-width: 768px) {
@@ -198,7 +198,7 @@ const BossStyles = memo(() => (
             .boss-size-06 { transform: scale(1); }
             .boss-size-08 { transform: scale(1.0); }
             .boss-size-09 { transform: scale(0.9); }
-            .boss-size-12 { transform: scale(0.4); }
+            .boss-size-12 { transform: scale(1.0); }
         }
     `}</style>
 ));
