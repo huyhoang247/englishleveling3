@@ -189,6 +189,15 @@ const BossStyles = memo(() => (
         @keyframes boss-x-12 { from { background-position-x: 0; } to { background-position-x: -1089px; } }
         @keyframes boss-y-12 { from { background-position-y: 0; } to { background-position-y: -825px; } }
 
+        /* BOSS 15 (SKELETON) - Frame: 529 x 478 */
+        .boss-size-15 { width: 529px; height: 478px; transform: scale(0.6); }
+        .boss-anim-15 { 
+            width: 3174px; height: 2868px; background-size: 3174px 2868px; 
+            animation: boss-x-15 0.6s steps(6) infinite, boss-y-15 3.6s steps(6) infinite; 
+        }
+        @keyframes boss-x-15 { from { background-position-x: 0; } to { background-position-x: -3174px; } }
+        @keyframes boss-y-15 { from { background-position-y: 0; } to { background-position-y: -2868px; } }
+
         /* Mobile Adjustments */
         @media (max-width: 768px) {
             .boss-size-default { transform: scale(0.35); }
@@ -199,6 +208,7 @@ const BossStyles = memo(() => (
             .boss-size-08 { transform: scale(1.0); }
             .boss-size-09 { transform: scale(0.9); }
             .boss-size-12 { transform: scale(1.0); }
+            .boss-size-15 { transform: scale(0.4); }
         }
     `}</style>
 ));
@@ -317,6 +327,9 @@ const BossSprite = memo(({ bossId }: { bossId: number }) => {
     } else if (bossId === 12) {
         sizeClass = 'boss-size-12';
         animClass = 'boss-anim-12';
+    } else if (bossId === 15) {
+        sizeClass = 'boss-size-15';
+        animClass = 'boss-anim-15';
     }
 
     return (
@@ -355,8 +368,8 @@ export const BossDisplay = memo(({
     onStatsClick,
     actionState = 'idle'
 }: BossDisplayProps) => {
-    // Thêm số 12 vào danh sách này
-    const isSpriteBoss = [1, 3, 4, 6, 8, 9, 12, 50].includes(bossId);
+    // Thêm số 15 vào danh sách này
+    const isSpriteBoss = [1, 3, 4, 6, 8, 9, 12, 15, 50].includes(bossId);
 
     // Xử lý Animation Logic
     // 1. Animation cho toàn bộ khối (bao gồm cả vòng tròn ma pháp)
