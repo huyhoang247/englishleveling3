@@ -7,10 +7,10 @@ import { CombatStats } from './tower-context.tsx';
 // --- TYPES ---
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
 
-const HERO_IMAGE_PATH = '/images/hero.webp'; 
+// Link ảnh gốc từ code cũ của bạn
+const HERO_SPRITE_URL = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp';
 
 // --- 0. ANIMATION STYLES (PURE CSS TRANSFORMS) ---
-// Styles này định nghĩa các chuyển động mượt mà (2.5D) thay vì dùng Sprite Sheet giật cục
 const AnimationStyles = memo(() => (
     <style>{`
         /* --- Breathing (Idle - Hiệu ứng thở) --- */
@@ -45,15 +45,15 @@ const AnimationStyles = memo(() => (
         /* Hero lao sang phải */
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1) rotate(0); }
-            20% { transform: translateX(-20px) scale(0.95) rotate(-5deg); } /* Lùi lại lấy đà */
-            50% { transform: translateX(60px) scale(1.1) rotate(2deg); }   /* Lao tới */
+            20% { transform: translateX(-20px) scale(0.95) rotate(-5deg); } 
+            50% { transform: translateX(60px) scale(1.1) rotate(2deg); }   
             100% { transform: translateX(0) scale(1) rotate(0); }       
         }
         /* Boss lao sang trái */
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1) rotate(0); }
-            20% { transform: translateX(20px) scale(0.95) rotate(5deg); }  /* Lùi lại lấy đà */
-            50% { transform: translateX(-60px) scale(1.1) rotate(-2deg); }  /* Lao tới */
+            20% { transform: translateX(20px) scale(0.95) rotate(5deg); }  
+            50% { transform: translateX(-60px) scale(1.1) rotate(-2deg); }  
             100% { transform: translateX(0) scale(1) rotate(0); }       
         }
 
@@ -81,10 +81,9 @@ const AnimationStyles = memo(() => (
         .animate-boss-die { animation: boss-die 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards; pointer-events: none; }
         .animate-boss-appear { animation: boss-appear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         
-        /* Tối ưu hóa render cho GPU */
         .render-optimize {
-            image-rendering: -webkit-optimize-contrast; /* Giữ ảnh sắc nét */
-            transform: translateZ(0); /* Kích hoạt tăng tốc phần cứng */
+            image-rendering: pixelated; /* Giữ pixel art sắc nét */
+            transform: translateZ(0);
             backface-visibility: hidden;
             will-change: transform;
         }
@@ -119,8 +118,8 @@ export const HealthBar = memo(({
                         boxShadow: `0 0 10px ${shadowColor}`
                     }}>
                 </div>
-                {/* Text hiển thị số máu */}
-                <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10 font-sans tracking-wide">
+                {/* Text hiển thị số máu - Dùng font-lilita theo yêu cầu */}
+                <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10 font-lilita tracking-wider">
                     <span>{Math.ceil(current)} / {Math.ceil(max)}</span>
                 </div>
             </div>
@@ -136,8 +135,7 @@ interface HeroDisplayProps {
 }
 
 export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
-    // Xác định class animation dựa trên trạng thái
-    let animClass = 'animate-breathe-hero'; // Mặc định là thở
+    let animClass = 'animate-breathe-hero'; 
     if (actionState === 'hit') animClass = 'animate-char-hit';
     if (actionState === 'attack') animClass = 'animate-char-attack-right';
 
@@ -149,7 +147,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                {/* HP Bar Container - Di chuyển nhẹ khi hover, không bị rung lắc khi đánh */}
+                {/* HP Bar */}
                 <div className="w-32 md:w-48 z-20 translate-y-2 md:translate-y-6 translate-x-2 transition-transform duration-200 group-hover:scale-105">
                      <HealthBar 
                         current={stats.hp} 
@@ -159,16 +157,24 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                     />
                 </div>
 
-                {/* Hero Image Container - Chứa Animation chính */}
+                {/* HERO IMAGE FIX: Dùng div background thay vì img để crop lấy frame đầu tiên */}
                 <div className={`z-10 render-optimize ${animClass}`}>
-                    <img 
-                        src={HERO_IMAGE_PATH} 
-                        alt="Hero" 
-                        className="w-[140px] md:w-[180px] h-auto object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
+                    <div 
+                        style={{
+                            width: '156.5px', // Kích thước 1 frame
+                            height: '147.2px',
+                            backgroundImage: `url(${HERO_SPRITE_URL})`,
+                            backgroundRepeat: 'no-repeat',
+                            backgroundPosition: '0px 0px', // Lấy frame đầu tiên
+                            backgroundSize: '939px 883px', // Kích thước gốc của sprite sheet
+                            transform: 'scale(0.85)', // Scale nhỏ lại chút cho vừa
+                            transformOrigin: 'bottom center',
+                            filter: 'drop-shadow(0 10px 10px rgba(0,0,0,0.5))'
+                        }}
                     />
                 </div>
 
-                {/* Bóng dưới chân - Thay đổi kích thước theo nhịp thở để chân thực hơn */}
+                {/* Bóng dưới chân */}
                 <div className="absolute bottom-[2%] w-[80px] h-[15px] bg-black/40 blur-md rounded-[100%] z-0 animate-breathe-hero opacity-80"></div>
 
             </div>
@@ -202,18 +208,12 @@ export const BossDisplay = memo(({
     actionState = 'idle'
 }: BossDisplayProps) => {
     
-    // 1. Wrapper Animation: Dùng cho toàn bộ khối Boss (bao gồm cả vòng tròn ma pháp nếu cần)
-    // - Dying: Biến mất
-    // - Appearing: Xuất hiện
-    // - Float: Trôi nhẹ (Mặc định cho Boss trông ngầu hơn)
+    // Animation Wrapper (Chết, Xuất hiện, Bay)
     let wrapperAnimClass = 'animate-float-gentle'; 
     if (actionState === 'dying') wrapperAnimClass = 'animate-boss-die';
     if (actionState === 'appearing') wrapperAnimClass = 'animate-boss-appear';
 
-    // 2. Image Animation: Dùng riêng cho hình ảnh Boss
-    // - Attack: Lao tới
-    // - Hit: Rung lắc
-    // - Breathe: Thở (kết hợp với float ở trên)
+    // Animation Image (Đánh, Bị đánh, Thở)
     let imageAnimClass = 'animate-breathe-boss';
     if (actionState === 'hit') imageAnimClass = 'animate-char-hit';
     if (actionState === 'attack') imageAnimClass = 'animate-char-attack-left';
@@ -226,18 +226,18 @@ export const BossDisplay = memo(({
                 className={`relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group z-10 ${wrapperAnimClass}`} 
                 onClick={actionState !== 'dying' ? onStatsClick : undefined}
             >
-                {/* Bóng dưới chân (Anchor) - Giữ cố định, không trôi theo Boss để tạo cảm giác Boss đang bay */}
+                {/* Bóng dưới chân */}
                 <div className="absolute bottom-[2%] w-[120px] h-[25px] bg-black/40 blur-lg rounded-[100%] z-0"></div>
 
-                {/* Vòng tròn ma pháp - Nằm dưới chân, scale theo animation của wrapper */}
+                {/* Vòng tròn ma pháp */}
                 <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* Container chứa Ảnh và HP Bar */}
+                {/* Boss Container */}
                 <div className="flex flex-col items-center">
                     
-                    {/* HP Bar Boss - Ẩn khi đang chết */}
+                    {/* HP Bar */}
                     <div className="w-40 md:w-60 z-20 mb-2 md:mb-4 transition-transform duration-200 group-hover:scale-105">
                         <HealthBar 
                             current={hp} 
@@ -249,7 +249,7 @@ export const BossDisplay = memo(({
                         />
                     </div>
 
-                    {/* Boss Image - Render ảnh trực tiếp thay vì Sprite Sheet */}
+                    {/* Boss Image */}
                     <div className={`relative flex items-end justify-center z-10 render-optimize ${imageAnimClass}`}>
                         <img 
                             src={imgSrc} 
