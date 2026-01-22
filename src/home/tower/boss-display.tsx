@@ -8,7 +8,7 @@ import { CombatStats } from './tower-context.tsx';
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
 
 // ĐƯỜNG DẪN ẢNH TĨNH (Bạn hãy đảm bảo file này là ảnh đơn, không phải lưới sprite)
-const HERO_STATIC_IMAGE = '/images/hero.webp'; 
+const HERO_STATIC_IMAGE = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp'; 
 
 // --- 0. ANIMATION STYLES (PURE CSS TRANSFORMS) ---
 const AnimationStyles = memo(() => (
