@@ -74,12 +74,6 @@ const MainBattleStyles = memo(() => (
         .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } 
         .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } 
         
-        /* Effects */
-        .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } 
-        .btn-shine:hover:not(:disabled)::before { left: 125%; }
-        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
-        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-        
         /* Loot Animations */
         @keyframes loot-pop {
             0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
@@ -175,7 +169,7 @@ const LootItem = memo(({ item }: { item: LootItemData }) => {
     );
 });
 
-// --- BATTLE EFFECTS LAYER (NEW: Reduces re-renders of main UI) ---
+// --- BATTLE EFFECTS LAYER ---
 const BattleEffectsLayer = memo(({ 
     orbEffects, 
     damages, 
@@ -360,9 +354,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     // States quản lý sequence chiến thắng
     const [sequenceState, setSequenceState] = useState<'none' | 'victory_sequence'>('none'); 
     
-    // Loot items management
     const [lootItems, setLootItems] = useState<LootItemData[]>([]);
-
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
     const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
@@ -504,13 +496,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
     }, [bossStats, playerStats, battleState, currentFloor, sequenceState]);
 
-    // --- IMAGE HANDLING ---
     useEffect(() => {
         if (currentBossData) {
             const idStr = String(currentBossData.id).padStart(2, '0');
             setBossImgSrc(`/images/boss/${idStr}.webp`);
 
-            // PRELOAD NEXT BOSS IMAGE (Optimization)
+            // PRELOAD NEXT BOSS IMAGE
             const nextBoss = BOSS_DATA[currentFloor + 1];
             if (nextBoss) {
                 const nextIdStr = String(nextBoss.id).padStart(2, '0');
