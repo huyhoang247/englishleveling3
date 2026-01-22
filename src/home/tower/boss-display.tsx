@@ -95,6 +95,7 @@ export const HealthBar = memo(({
     colorGradient, 
     shadowColor, 
     heightClass = "h-5 md:h-6",
+    textSizeClass = "text-xs md:text-sm", // Default text size
     isHidden = false 
 }: { 
     current: number, 
@@ -102,6 +103,7 @@ export const HealthBar = memo(({
     colorGradient: string, 
     shadowColor: string,
     heightClass?: string,
+    textSizeClass?: string,
     isHidden?: boolean
 }) => {
     const scale = Math.max(0, current / max);
@@ -116,9 +118,9 @@ export const HealthBar = memo(({
                         boxShadow: `0 0 10px ${shadowColor}`
                     }}>
                 </div>
-                {/* Text hiển thị số máu - Font Lilita */}
-                <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10 font-lilita tracking-wider">
-                    <span>{Math.ceil(current)} / {Math.ceil(max)}</span>
+                {/* Text hiển thị số máu - Chỉ hiện Current HP */}
+                <div className={`absolute inset-0 flex justify-center items-center ${textSizeClass} text-white text-shadow font-bold z-10 font-lilita tracking-wider`}>
+                    <span>{Math.ceil(current)}</span>
                 </div>
             </div>
         </div>
@@ -145,13 +147,14 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                {/* HP Bar - Đã điều chỉnh dịch xuống một chút (từ -6 xuống -2) */}
+                {/* HP Bar - Chữ nhỏ hơn cho Hero */}
                 <div className="w-32 md:w-48 z-20 -translate-y-2 md:-translate-y-4 translate-x-2 transition-transform duration-200 group-hover:scale-105">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
                         colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
                         shadowColor="rgba(132, 204, 22, 0.5)"
+                        textSizeClass="text-[10px] md:text-xs" // Size chữ nhỏ hơn
                     />
                 </div>
 
