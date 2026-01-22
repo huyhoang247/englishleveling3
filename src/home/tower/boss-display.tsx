@@ -145,8 +145,8 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                 className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
                 onClick={onStatsClick}
             >
-                {/* HP Bar - Đã điều chỉnh translate-y để dịch lên trên */}
-                <div className="w-32 md:w-48 z-20 -translate-y-6 md:-translate-y-10 translate-x-2 transition-transform duration-200 group-hover:scale-105">
+                {/* HP Bar - Đã điều chỉnh dịch xuống một chút (từ -6 xuống -2) */}
+                <div className="w-32 md:w-48 z-20 -translate-y-2 md:-translate-y-4 translate-x-2 transition-transform duration-200 group-hover:scale-105">
                      <HealthBar 
                         current={stats.hp} 
                         max={stats.maxHp} 
