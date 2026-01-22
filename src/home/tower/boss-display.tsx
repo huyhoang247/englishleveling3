@@ -7,19 +7,17 @@ import { CombatStats } from './tower-context.tsx';
 // --- TYPES ---
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
 
-// --- 0. STYLES COMPONENTS (OPTIMIZED) ---
-// Tách biệt Styles ra khỏi component chính để tránh Render Thrashing (Lag khi update HP)
-
-const HeroStyles = memo(() => (
+// --- STYLES COMPONENTS (OPTIMIZED) ---
+const BattleVisualStyles = memo(() => (
     <style>{`
-        /* --- SHARED ANIMATIONS --- */
+        /* --- SHARED HIT & ATTACK EFFECTS --- */
         @keyframes shake-hit {
             0%, 100% { transform: translateX(0); filter: brightness(1) sepia(0) hue-rotate(0deg) saturate(1); }
             10%, 90% { transform: translateX(-5px); }
             20%, 80% { transform: translateX(5px); }
             30%, 50%, 70% { 
                 transform: translateX(-5px); 
-                filter: brightness(1.5) sepia(1) hue-rotate(-50deg) saturate(3); 
+                filter: brightness(2) sepia(1) hue-rotate(-50deg) saturate(3); 
             }
             40%, 60% { transform: translateX(5px); }
         }
@@ -29,186 +27,67 @@ const HeroStyles = memo(() => (
 
         @keyframes lunge-right {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(-20px) scale(0.95); } 
-            50% { transform: translateX(60px) scale(1.1); }   
+            40% { transform: translateX(100px) scale(1.1); }   
             100% { transform: translateX(0) scale(1); }       
         }
         .animate-char-attack-right { 
-            animation: lunge-right 0.5s ease-in-out; 
+            animation: lunge-right 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
         }
 
-        /* --- HERO SPECIFIC STYLES --- */
-        .hero-sprite-wrapper {
-            width: 156.5px;
-            height: 147.2px;
-            overflow: hidden;
-            position: relative;
-            transform: scale(0.85); 
-            transform-origin: bottom center;
-            image-rendering: pixelated;
-            image-rendering: -webkit-optimize-contrast;
-        }
-        
-        .hero-sprite-sheet {
-            width: 156.5px;
-            height: 147.2px;
-            background-image: url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp');
-            background-size: 939px 883px;
-            background-repeat: no-repeat;
-            animation: hero-idle-x 0.5s steps(6) infinite, hero-idle-y 3.0s steps(6) infinite;
-        }
-
-        @keyframes hero-idle-x { from { background-position-x: 0px; } to { background-position-x: -939px; } }
-        @keyframes hero-idle-y { from { background-position-y: 0px; } to { background-position-y: -883px; } }
-
-        @media (max-width: 768px) {
-            .hero-sprite-wrapper { transform: scale(1); }
-        }
-    `}</style>
-));
-
-const BossStyles = memo(() => (
-    <style>{`
-        /* --- BOSS ANIMATIONS --- */
         @keyframes lunge-left {
             0% { transform: translateX(0) scale(1); }
-            20% { transform: translateX(20px) scale(0.95); }  
-            50% { transform: translateX(-60px) scale(1.1); }  
+            40% { transform: translateX(-100px) scale(1.1); }  
             100% { transform: translateX(0) scale(1); }       
         }
         .animate-char-attack-left { 
-            animation: lunge-left 0.5s ease-in-out; 
+            animation: lunge-left 0.3s cubic-bezier(0.18, 0.89, 0.32, 1.28); 
         }
 
+        /* --- HERO IDLE (BREATHING) --- */
+        @keyframes hero-breathe {
+            0%, 100% { transform: scaleY(1) scaleX(1) translateY(0); }
+            50% { transform: scaleY(1.03) scaleX(0.98) translateY(1px); }
+        }
+        .animate-hero-idle {
+            animation: hero-breathe 2.5s ease-in-out infinite;
+            transform-origin: bottom center;
+        }
+
+        /* --- BOSS IDLE (FLOATING) --- */
+        @keyframes boss-float {
+            0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 0 rgba(0,0,0,0)); }
+            50% { transform: translateY(-12px) scale(1.02); filter: drop-shadow(0 10px 15px rgba(0,0,0,0.3)); }
+        }
+        .animate-boss-idle {
+            animation: boss-float 3s ease-in-out infinite;
+            will-change: transform;
+        }
+
+        /* --- BOSS DEATH & APPEAR --- */
         @keyframes boss-die {
             0% { transform: scale(1) rotate(0deg); opacity: 1; filter: grayscale(0); }
-            20% { transform: scale(1.1) rotate(5deg); opacity: 1; filter: brightness(2) contrast(1.2); } 
-            100% { transform: scale(0) rotate(-45deg); opacity: 0; filter: grayscale(1); }
+            20% { transform: scale(1.1) rotate(5deg); opacity: 1; filter: brightness(2); } 
+            100% { transform: scale(0) rotate(-20deg); opacity: 0; filter: grayscale(1); }
         }
         .animate-boss-die {
-            animation: boss-die 1.5s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
+            animation: boss-die 1.2s cubic-bezier(0.55, 0.085, 0.68, 0.53) forwards;
             pointer-events: none; 
         }
 
         @keyframes boss-appear {
             0% { transform: scale(0); opacity: 0; }
-            60% { transform: scale(1.1); opacity: 1; }
+            70% { transform: scale(1.1); opacity: 1; }
             100% { transform: scale(1); opacity: 1; }
         }
         .animate-boss-appear {
-            animation: boss-appear 1.2s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            animation: boss-appear 1s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        /* --- BOSS SPRITE CONFIGURATION --- */
-        .boss-render-optimize {
-            image-rendering: -webkit-optimize-contrast;
-            transform: translateZ(0);
-        }
-        .boss-sprite-wrapper {
-            padding-bottom: 8px; 
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
-            height: 100%;
-        }
-        .boss-sprite-container {
-            overflow: hidden;
-            position: relative;
-            transform-origin: bottom center;
-        }
-
-        /* DEFAULT BOSS */
-        .boss-size-default { width: 469px; height: 486px; transform: scale(0.5); }
-        .boss-anim-default {
-            width: 2814px; height: 2916px; background-size: 2814px 2916px;
-            animation: boss-x-def 0.4s steps(6) infinite, boss-y-def 2.4s steps(6) infinite;
-        }
-        @keyframes boss-x-def { from { background-position-x: 0; } to { background-position-x: -2814px; } }
-        @keyframes boss-y-def { from { background-position-y: 0; } to { background-position-y: -2916px; } }
-
-        /* BOSS 01 */
-        .boss-size-01 { width: 165.33px; height: 165.66px; transform: scale(1); }
-        .boss-anim-01 { 
-            width: 992px; height: 994px; background-size: 992px 994px; 
-            animation: boss-x-01 0.5s steps(6) infinite, boss-y-01 3s steps(6) infinite; 
-        }
-        @keyframes boss-x-01 { from { background-position-x: 0; } to { background-position-x: -992px; } }
-        @keyframes boss-y-01 { from { background-position-y: 0; } to { background-position-y: -994px; } }
-
-        /* BOSS 03 */
-        .boss-size-03 { width: 179.5px; height: 139.5px; transform: scale(1.5); }
-        .boss-anim-03 { 
-            width: 1077px; height: 837px; background-size: 1077px 837px; 
-            animation: boss-x-03 0.6s steps(6) infinite, boss-y-03 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-03 { from { background-position-x: 0; } to { background-position-x: -1077px; } }
-        @keyframes boss-y-03 { from { background-position-y: 0; } to { background-position-y: -837px; } }
-
-        /* BOSS 04 */
-        .boss-size-04 { width: 157.66px; height: 174.16px; transform: scale(1.8); }
-        .boss-anim-04 { 
-            width: 946px; height: 1045px; background-size: 946px 1045px; 
-            animation: boss-x-04 0.6s steps(6) infinite, boss-y-04 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-04 { from { background-position-x: 0; } to { background-position-x: -946px; } }
-        @keyframes boss-y-04 { from { background-position-y: 0; } to { background-position-y: -1045px; } }
-
-        /* BOSS 06 & 50 */
-        .boss-size-06 { width: 186.17px; height: 161px; transform: scale(1.1); }
-        .boss-anim-06 { 
-            width: 1117px; height: 966px; background-size: 1117px 966px; 
-            animation: boss-x-06 0.6s steps(6) infinite, boss-y-06 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-06 { from { background-position-x: 0; } to { background-position-x: -1117px; } }
-        @keyframes boss-y-06 { from { background-position-y: 0; } to { background-position-y: -966px; } }
-
-        /* BOSS 08 */
-        .boss-size-08 { width: 164px; height: 170px; transform: scale(1.4); }
-        .boss-anim-08 { 
-            width: 984px; height: 1020px; background-size: 984px 1020px; 
-            animation: boss-x-08 0.6s steps(6) infinite, boss-y-08 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-08 { from { background-position-x: 0; } to { background-position-x: -984px; } }
-        @keyframes boss-y-08 { from { background-position-y: 0; } to { background-position-y: -1020px; } }
-
-        /* BOSS 09 */
-        .boss-size-09 { width: 144.17px; height: 188.17px; transform: scale(1.3); }
-        .boss-anim-09 { 
-            width: 865px; height: 1129px; background-size: 865px 1129px; 
-            animation: boss-x-09 0.6s steps(6) infinite, boss-y-09 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-09 { from { background-position-x: 0; } to { background-position-x: -865px; } }
-        @keyframes boss-y-09 { from { background-position-y: 0; } to { background-position-y: -1129px; } }
-
-        /* BOSS 12 */
-        .boss-size-12 { width: 181.5px; height: 137.5px; transform: scale(1.4); }
-        .boss-anim-12 { 
-            width: 1089px; height: 825px; background-size: 1089px 825px; 
-            animation: boss-x-12 0.6s steps(6) infinite, boss-y-12 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-12 { from { background-position-x: 0; } to { background-position-x: -1089px; } }
-        @keyframes boss-y-12 { from { background-position-y: 0; } to { background-position-y: -825px; } }
-
-        /* BOSS 15 (SKELETON) - Frame: 185 x 167.17 */
-        .boss-size-15 { width: 185px; height: 167.17px; transform: scale(1.5); }
-        .boss-anim-15 { 
-            width: 1110px; height: 1003px; background-size: 1110px 1003px; 
-            animation: boss-x-15 0.6s steps(6) infinite, boss-y-15 3.6s steps(6) infinite; 
-        }
-        @keyframes boss-x-15 { from { background-position-x: 0; } to { background-position-x: -1110px; } }
-        @keyframes boss-y-15 { from { background-position-y: 0; } to { background-position-y: -1003px; } }
-
-        /* Mobile Adjustments */
-        @media (max-width: 768px) {
-            .boss-size-default { transform: scale(0.35); }
-            .boss-size-01 { transform: scale(0.8); }
-            .boss-size-03 { transform: scale(1.0); }
-            .boss-size-04 { transform: scale(1.2); }
-            .boss-size-06 { transform: scale(1); }
-            .boss-size-08 { transform: scale(1.0); }
-            .boss-size-09 { transform: scale(0.9); }
-            .boss-size-12 { transform: scale(1.0); }
-            .boss-size-15 { transform: scale(1.1); }
+        /* --- UTILS --- */
+        .render-crisp {
+            image-rendering: -webkit-optimize-contrast; 
+            /* Optional: pixelated if using pixel art assets */
+            /* image-rendering: pixelated; */ 
         }
     `}</style>
 ));
@@ -240,8 +119,8 @@ export const HealthBar = memo(({
                         boxShadow: `0 0 10px ${shadowColor}`
                     }}>
                 </div>
-                <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10">
-                    <span>{Math.ceil(current)}</span>
+                <div className="absolute inset-0 flex justify-center items-center text-xs md:text-sm text-white text-shadow font-bold z-10 font-sans tracking-wide">
+                    <span>{Math.ceil(current)} / {max}</span>
                 </div>
             </div>
         </div>
@@ -253,98 +132,55 @@ interface HeroDisplayProps {
     stats: CombatStats;
     onStatsClick: () => void;
     actionState?: ActionState; 
+    heroImage?: string; // Add prop for image source
 }
 
-export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: HeroDisplayProps) => {
-    // Chọn class animation dựa trên actionState
-    let animClass = '';
+export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle', heroImage = "/images/hero-static.png" }: HeroDisplayProps) => {
+    
+    // Logic Animation Class
+    let animClass = 'animate-hero-idle'; // Default breathing
     if (actionState === 'hit') animClass = 'animate-char-hit';
     if (actionState === 'attack') animClass = 'animate-char-attack-right';
 
     return (
         <div className="flex flex-col items-center justify-end h-full w-full relative">
-            <HeroStyles />
+            <BattleVisualStyles />
             
-            {/* Container định vị vị trí đứng */}
             <div 
-                className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10"
+                className="relative cursor-pointer group flex flex-col items-center -translate-x-4 md:-translate-x-10 z-20"
                 onClick={onStatsClick}
             >
-                {/* WRAPPER ANIMATION */}
-                <div className={animClass}>
-                    
-                    {/* HP Bar */}
-                    <div className="w-32 md:w-48 z-20 translate-y-0 md:translate-y-8 translate-x-2 transition-transform duration-200 group-hover:scale-105">
-                         <HealthBar 
-                            current={stats.hp} 
-                            max={stats.maxHp} 
-                            colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
-                            shadowColor="rgba(132, 204, 22, 0.5)"
-                        />
-                    </div>
+                {/* HP Bar */}
+                <div className="w-32 md:w-48 z-30 mb-2 md:translate-y-8 translate-x-2 transition-transform duration-200 group-hover:scale-105">
+                     <HealthBar 
+                        current={stats.hp} 
+                        max={stats.maxHp} 
+                        colorGradient="bg-gradient-to-r from-green-500 to-lime-400" 
+                        shadowColor="rgba(132, 204, 22, 0.5)"
+                    />
+                </div>
 
-                    {/* Sprite */}
-                    <div className="hero-sprite-wrapper z-10">
-                        <div className="hero-sprite-sheet"></div>
-                    </div>
+                {/* Character Wrapper */}
+                <div className="relative z-20">
+                    <img 
+                        src={heroImage}
+                        alt="Hero"
+                        // Fallback to a placeholder if image fails
+                        onError={(e) => {e.currentTarget.src = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp'}} 
+                        className={`w-[180px] md:w-[240px] h-auto object-contain render-crisp drop-shadow-xl ${animClass}`}
+                        style={{ maxHeight: '300px' }}
+                    />
                 </div>
 
                 {/* Shadow */}
-                <div className="absolute bottom-[2%] w-[80px] h-[20px] bg-black/40 blur-md rounded-[100%] z-0"></div>
+                <div className="absolute -bottom-2 w-[100px] h-[25px] bg-black/50 blur-md rounded-[100%] z-10 transition-transform duration-1000"></div>
 
             </div>
         </div>
     )
 });
 
-
-// --- 3. BOSS SPRITE ANIMATION HELPER ---
-const BossSprite = memo(({ bossId }: { bossId: number }) => {
-    const idStr = String(bossId).padStart(2, '0');
-    const spritePath = `/images/boss/${idStr}.webp`;
-
-    let sizeClass = 'boss-size-default';
-    let animClass = 'boss-anim-default';
-
-    if (bossId === 1) {
-        sizeClass = 'boss-size-01';
-        animClass = 'boss-anim-01';
-    } else if (bossId === 3) {
-        sizeClass = 'boss-size-03';
-        animClass = 'boss-anim-03';
-    } else if (bossId === 4) {
-        sizeClass = 'boss-size-04';
-        animClass = 'boss-anim-04';
-    } else if (bossId === 6 || bossId === 50) {
-        sizeClass = 'boss-size-06';
-        animClass = 'boss-anim-06';
-    } else if (bossId === 8) {
-        sizeClass = 'boss-size-08';
-        animClass = 'boss-anim-08';
-    } else if (bossId === 9) {
-        sizeClass = 'boss-size-09';
-        animClass = 'boss-anim-09';
-    } else if (bossId === 12) {
-        sizeClass = 'boss-size-12';
-        animClass = 'boss-anim-12';
-    } else if (bossId === 15) {
-        sizeClass = 'boss-size-15';
-        animClass = 'boss-anim-15';
-    }
-
-    return (
-        <div className="boss-sprite-wrapper">
-            <div className={`boss-sprite-container boss-render-optimize ${sizeClass}`}>
-                <div
-                    className={`boss-sprite-sheet ${animClass}`}
-                    style={{ backgroundImage: `url(${spritePath})` }}
-                />
-            </div>
-        </div>
-    );
-});
-
-// --- 4. BOSS DISPLAY COMPONENT ---
+// --- 3. BOSS DISPLAY COMPONENT ---
 interface BossDisplayProps {
     bossId: number;
     name: string;
@@ -358,7 +194,7 @@ interface BossDisplayProps {
 }
 
 export const BossDisplay = memo(({
-    bossId,
+    bossId, // kept for potential future use or specific scaling logic
     name,
     element,
     hp,
@@ -368,66 +204,53 @@ export const BossDisplay = memo(({
     onStatsClick,
     actionState = 'idle'
 }: BossDisplayProps) => {
-    // Thêm số 15 vào danh sách này
-    const isSpriteBoss = [1, 3, 4, 6, 8, 9, 12, 15, 50].includes(bossId);
 
-    // Xử lý Animation Logic
-    // 1. Animation cho toàn bộ khối (bao gồm cả vòng tròn ma pháp)
+    // Logic Animation Class
+    let animClass = 'animate-boss-idle';
+    if (actionState === 'hit') animClass = 'animate-char-hit';
+    if (actionState === 'attack') animClass = 'animate-char-attack-left';
+    
+    // Wrapper Animation (Appear/Die affects everything including the wrapper)
     let wrapperAnimClass = ''; 
     if (actionState === 'dying') wrapperAnimClass = 'animate-boss-die';
     if (actionState === 'appearing') wrapperAnimClass = 'animate-boss-appear';
 
-    // 2. Animation riêng cho Sprite (khi đánh nhau, chỉ sprite di chuyển, vòng tròn đứng yên)
-    let spriteAnimClass = '';
-    if (actionState === 'hit') spriteAnimClass = 'animate-char-hit';
-    if (actionState === 'attack') spriteAnimClass = 'animate-char-attack-left';
-
     return (
         <div className="w-full flex flex-col items-center justify-end h-full">
-            <BossStyles />
-
-            {/* Container định vị chính */}
-            {/* Áp dụng wrapperAnimClass vào đây để CẢ vòng tròn ma pháp và Boss cùng thu nhỏ/biến mất */}
+            {/* Styles are included in HeroDisplay already, but safe to include if used standalone, memo prevents dupes */}
+            
             <div 
                 className={`relative bg-transparent flex flex-col items-center gap-0 cursor-pointer group z-10 ${wrapperAnimClass}`} 
                 onClick={actionState !== 'dying' ? onStatsClick : undefined}
             >
-                {/* Visual Anchor/Shadow at feet - Bóng đổ, giữ ở ngoài để không bị rotate theo boss khi chết */}
-                <div className="absolute bottom-[2%] w-[120px] h-[30px] bg-black/40 blur-md rounded-[100%] z-0"></div>
-
-                {/* Magic Circle - Sẽ bị ảnh hưởng bởi wrapperAnimClass (thu nhỏ cùng boss) */}
-                <div className="absolute bottom-[-30%] left-1/2 -translate-x-1/2 w-[200px] h-[200px] z-0 opacity-60 pointer-events-none scale-75 md:scale-100">
+                {/* Magic Circle (Static on ground, scales slightly with idle) */}
+                <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[220px] h-[220px] z-0 opacity-70 pointer-events-none scale-75 md:scale-110">
                     <MagicCircle elementKey={element} />
                 </div>
 
-                {/* WRAPPER SPRITE: Chỉ animation rung lắc/tấn công ở đây để không ảnh hưởng Magic Circle */}
-                <div className={spriteAnimClass}>
-                    
-                    {/* HP Bar Boss - Ẩn khi đang chết */}
-                    <div className="w-40 md:w-60 z-20 mb-6 md:mb-10 transition-transform duration-200 group-hover:scale-105">
-                        <HealthBar 
-                            current={hp} 
-                            max={maxHp} 
-                            colorGradient="bg-gradient-to-r from-blue-700 to-sky-400" 
-                            shadowColor="rgba(56, 189, 248, 0.5)" 
-                            heightClass="h-6 md:h-8"
-                            isHidden={actionState === 'dying'}
-                        />
-                    </div>
+                {/* Shadow */}
+                <div className="absolute bottom-[2%] w-[140px] h-[35px] bg-black/50 blur-lg rounded-[100%] z-0"></div>
 
-                    {/* Sprite Render */}
-                    <div className="w-40 h-40 md:w-64 md:h-64 relative flex items-end justify-center z-10">
-                        {isSpriteBoss ? (
-                            <BossSprite bossId={bossId} />
-                        ) : (
-                            <img 
-                                src={imgSrc} 
-                                alt={name} 
-                                onError={onImgError}
-                                className="max-w-full max-h-full object-contain drop-shadow-2xl boss-render-optimize animate-pulse-slow" 
-                            />
-                        )}
-                    </div>
+                {/* HP Bar */}
+                <div className="w-40 md:w-60 z-30 mb-4 transition-transform duration-200 group-hover:scale-105">
+                    <HealthBar 
+                        current={hp} 
+                        max={maxHp} 
+                        colorGradient="bg-gradient-to-r from-red-600 to-orange-500" 
+                        shadowColor="rgba(239, 68, 68, 0.5)" 
+                        heightClass="h-6 md:h-8"
+                        isHidden={actionState === 'dying'}
+                    />
+                </div>
+
+                {/* Boss Image Wrapper */}
+                <div className="relative z-20 flex items-end justify-center h-[200px] md:h-[280px] w-[200px] md:w-[280px]">
+                    <img 
+                        src={imgSrc} 
+                        alt={name} 
+                        onError={onImgError}
+                        className={`max-w-full max-h-full object-contain drop-shadow-2xl render-crisp ${animClass}`} 
+                    />
                 </div>
                 
             </div>
