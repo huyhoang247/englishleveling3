@@ -38,6 +38,65 @@ const BOSS_ORB_SPAWN_SLOTS = [
     { left: '72%', top: '34%' },
 ];
 
+// --- STYLES COMPONENT (OPTIMIZED) ---
+const MainBattleStyles = memo(() => (
+    <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+        .font-lilita { font-family: 'Lilita One', cursive; } 
+        .font-sans { font-family: sans-serif; } 
+        .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
+        .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
+        .font-outline { -webkit-text-stroke: 1px #854d0e; text-shadow: 0 4px 6px rgba(0,0,0,0.3); } 
+
+        @keyframes float-up { 
+            0% { transform: translateY(0) scale(1); opacity: 1; } 
+            20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
+            100% { transform: translateY(-80px) scale(1); opacity: 0; } 
+        } 
+        .animate-float-up { animation: float-up 1.2s ease-out forwards; } 
+        
+        @keyframes victory-pulse {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -60%) scale(1.1); opacity: 0; }
+        }
+        .animate-victory-pulse { animation: victory-pulse 3s ease-in-out forwards; }
+
+        @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } 
+        .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } 
+        @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } 
+        .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } 
+        
+        /* Background overlays */
+        .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } 
+        .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } 
+        .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } 
+        
+        /* Effects */
+        .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } 
+        .btn-shine:hover:not(:disabled)::before { left: 125%; }
+        @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
+        .animate-pulse-fast { animation: pulse-fast 1s infinite; }
+        
+        /* Loot Animations */
+        @keyframes loot-pop {
+            0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
+            40% { opacity: 1; transform: scale(1.2) translateY(-30px) rotate(10deg); }
+            60% { transform: scale(0.95) translateY(0) rotate(-5deg); }
+            80% { transform: scale(1.05) translateY(-10px) rotate(3deg); }
+            100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
+        }
+        @keyframes fade-in-badge {
+            0%, 50% { opacity: 0; transform: scale(0); }
+            100% { opacity: 1; transform: scale(1); }
+        }
+        .animate-loot-pop { animation: loot-pop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
+        .animate-fade-in-badge { animation: fade-in-badge 0.8s ease-out forwards; }
+    `}</style>
+));
+
 // --- UI ICONS ---
 const HomeIcon = memo(({ className = '' }: { className?: string }) => ( 
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className={className}> 
@@ -62,9 +121,6 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
       ? "animate-victory-pulse" 
       : "animate-float-up";
 
-  // Logic Shadow:
-  // - Victory: Glow nhẹ màu đen để nổi trên nền sáng/tối.
-  // - Còn lại (Damage, Collected): KHÔNG dùng shadow/stroke (theo yêu cầu).
   const isVictory = data.text === 'VICTORY';
   const textShadowStyle = isVictory 
       ? '0px 0px 8px rgba(0,0,0,0.6)' 
@@ -94,8 +150,8 @@ interface LootItemData {
     id: number;
     image: string;
     amount: number;
-    x: number; // Random position X
-    y: number; // Random position Y
+    x: number;
+    y: number;
     isVisible: boolean;
 }
 
@@ -110,10 +166,7 @@ const LootItem = memo(({ item }: { item: LootItemData }) => {
             }}
         >
             <div className="animate-loot-pop relative">
-                {/* Vật phẩm nhỏ w-10 (40px) */}
                 <img src={item.image} alt="Loot" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
-                
-                {/* Opacity 50% để đỡ che vật phẩm */}
                 <div className="absolute -bottom-1 -right-1 bg-black/50 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[24px] text-center animate-fade-in-badge tracking-wide z-10">
                     x{item.amount}
                 </div>
@@ -121,6 +174,43 @@ const LootItem = memo(({ item }: { item: LootItemData }) => {
         </div>
     );
 });
+
+// --- BATTLE EFFECTS LAYER (NEW: Reduces re-renders of main UI) ---
+const BattleEffectsLayer = memo(({ 
+    orbEffects, 
+    damages, 
+    lootItems 
+}: { 
+    orbEffects: SkillProps[], 
+    damages: DamageText[],
+    lootItems: LootItemData[]
+}) => {
+    return (
+        <div className="absolute inset-0 pointer-events-none z-40">
+            {/* Render all skills */}
+            {orbEffects.map(effect => (
+                <SkillEffect 
+                    key={effect.id} 
+                    id={effect.id}
+                    type={effect.type}
+                    delay={effect.delay}
+                    startPos={effect.startPos}
+                />
+            ))}
+            
+            {/* Render Damages & Text */}
+            {damages.map(d => (
+                <FloatingText key={d.id} data={d} />
+            ))}
+
+            {/* Render Loot */}
+            {lootItems.map(item => (
+                <LootItem key={item.id} item={item} />
+            ))}
+        </div>
+    );
+});
+
 
 // --- MODALS ---
 const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
@@ -255,7 +345,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     } = useBossBattle();
 
     const [damages, setDamages] = useState<DamageText[]>([]);
-    const damagesRef = useRef<DamageText[]>([]);
     
     // Skill Effects State
     const [orbEffects, setOrbEffects] = useState<SkillProps[]>([]);
@@ -304,18 +393,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
         const newText: DamageText = { id, text, color, x: finalX, y: finalY, fontSize, duration, className };
         
-        setDamages(prev => {
-            const updated = [...prev, newText];
-            damagesRef.current = updated;
-            return updated;
-        });
+        setDamages(prev => [...prev, newText]);
         
         setTimeout(() => {
-            setDamages(prev => {
-                const updated = prev.filter(d => d.id !== id);
-                damagesRef.current = updated;
-                return updated;
-            });
+            setDamages(prev => prev.filter(d => d.id !== id));
         }, duration);
     }, []);
 
@@ -341,13 +422,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                     if(rewards.energy > 0) itemCount++;
 
                     // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
-                    // Lưu ý: LootItem được render ở main container (full screen) nên Y tính theo toàn màn hình.
-                    // Nút Fight ở tầm 75-80%, nên đặt Loot ở 82% trở xuống.
-                    
-                    // Generate Coins Loot
                     if (rewards.coins > 0) {
-                        // Nếu có 2 item thì coin nằm bên trái (15% - 45%)
-                        // Nếu chỉ 1 item thì coin nằm giữa (35% - 65%)
                         const minX = itemCount > 1 ? 20 : 40;
                         const maxX = itemCount > 1 ? 45 : 60;
                         
@@ -361,9 +436,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         });
                     }
                     
-                    // Generate Energy Loot
                     if (rewards.energy > 0) {
-                        // Energy nằm bên phải (55% - 85%)
                         const minX = 55;
                         const maxX = 80;
 
@@ -379,7 +452,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                     setLootItems(newLootItems);
 
-                    // SHOW VICTORY TEXT: Chính giữa (50), Dưới Header (15%), Màu Trắng, Cỡ vừa (40)
+                    // SHOW VICTORY TEXT
                     addDamageText("VICTORY", "#FFFFFF", "custom", 40, 50, 15, 3000, "font-outline drop-shadow-xl");
 
                     // 3. Đợi 3s (cho chữ VICTORY bay hết)
@@ -388,22 +461,21 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         // 4. Sequence Collect: Duyệt qua từng item
                         newLootItems.forEach((item, index) => {
                             setTimeout(() => {
-                                // Hiện chữ COLLECTED ngay trên đầu item (item.y - 3)
-                                // Đã sửa: dùng item.x - 8 để dịch chữ sang trái, giúp nó cân đối hơn
+                                // Hiện chữ COLLECTED
                                 addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x - 8, item.y - 3, 1000, "uppercase tracking-wide");
                                 
-                                // Ẩn item sau khi text hiện lên (so le)
+                                // Ẩn item sau khi text hiện lên
                                 setTimeout(() => {
                                      setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
                                 }, 300);
 
-                            }, index * 400); // So le thời gian mỗi item
+                            }, index * 400); 
                         });
 
                         // 5. Kết thúc sequence, chuyển tầng
-                        const totalDelay = newLootItems.length * 400 + 800; // Đợi hết loot biến mất
+                        const totalDelay = newLootItems.length * 400 + 800; 
                         setTimeout(() => {
-                            setLootItems([]); // Clean up
+                            setLootItems([]); 
                             handleNextFloor();
                             setBossState('appearing');
                             setTimeout(() => {
@@ -436,8 +508,16 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         if (currentBossData) {
             const idStr = String(currentBossData.id).padStart(2, '0');
             setBossImgSrc(`/images/boss/${idStr}.webp`);
+
+            // PRELOAD NEXT BOSS IMAGE (Optimization)
+            const nextBoss = BOSS_DATA[currentFloor + 1];
+            if (nextBoss) {
+                const nextIdStr = String(nextBoss.id).padStart(2, '0');
+                const img = new Image();
+                img.src = `/images/boss/${nextIdStr}.webp`;
+            }
         }
-    }, [currentBossData?.id]);
+    }, [currentBossData, currentFloor]);
 
     const handleBossImgError = useCallback(() => {
         if (currentBossData) {
@@ -603,61 +683,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     return (
         <>
+            <MainBattleStyles />
             <SkillStyles />
-            <style>{`
-                @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
-                .font-lilita { font-family: 'Lilita One', cursive; } 
-                .font-sans { font-family: sans-serif; } 
-                .text-shadow { text-shadow: 2px 2px 4px rgba(0,0,0,0.5); } 
-                .text-shadow-sm { text-shadow: 1px 1px 2px rgba(0,0,0,0.5); } 
-                .font-outline { -webkit-text-stroke: 1px #854d0e; text-shadow: 0 4px 6px rgba(0,0,0,0.3); } 
-
-                @keyframes float-up { 
-                    0% { transform: translateY(0) scale(1); opacity: 1; } 
-                    20% { transform: translateY(-10px) scale(1.2); opacity: 1; }
-                    100% { transform: translateY(-80px) scale(1); opacity: 0; } 
-                } 
-                .animate-float-up { animation: float-up 1.2s ease-out forwards; } 
-                
-                @keyframes victory-pulse {
-                    0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
-                    20% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
-                    30% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-                    80% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-                    100% { transform: translate(-50%, -60%) scale(1.1); opacity: 0; }
-                }
-                .animate-victory-pulse { animation: victory-pulse 3s ease-in-out forwards; }
-
-                @keyframes fade-in { from { opacity: 0; } to { opacity: 1; } } 
-                .animate-fade-in { animation: fade-in 0.2s ease-out forwards; } 
-                @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } } 
-                .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; } 
-                .main-bg::before, .main-bg::after { content: ''; position: absolute; left: 50%; z-index: -1; pointer-events: none; } 
-                .main-bg::before { width: 150%; height: 150%; top: 50%; transform: translate(-50%, -50%); background-image: radial-gradient(circle, transparent 40%, #110f21 80%); } 
-                .main-bg::after { width: 100%; height: 100%; top: 0; transform: translateX(-50%); background-image: radial-gradient(ellipse at top, rgba(173, 216, 230, 0.1) 0%, transparent 50%); } 
-                .scrollbar-thin { scrollbar-width: thin; scrollbar-color: #4A5568 #2D3748; } 
-                .scrollbar-thin::-webkit-scrollbar { width: 8px; } 
-                .scrollbar-thin::-webkit-scrollbar-track { background: #2D3748; } 
-                .scrollbar-thin::-webkit-scrollbar-thumb { background-color: #4A5568; border-radius: 4px; border: 2px solid #2D3748; } 
-                .btn-shine::before { content: ''; position: absolute; top: 0; left: -100%; width: 75%; height: 100%; background: linear-gradient( to right, transparent 0%, rgba(255, 255, 255, 0.25) 50%, transparent 100% ); transform: skewX(-25deg); transition: left 0.6s ease; } 
-                .btn-shine:hover:not(:disabled)::before { left: 125%; }
-                @keyframes pulse-fast { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } } 
-                .animate-pulse-fast { animation: pulse-fast 1s infinite; }
-                
-                @keyframes loot-pop {
-                    0% { opacity: 0; transform: scale(0) translateY(50px) rotate(-45deg); }
-                    40% { opacity: 1; transform: scale(1.2) translateY(-30px) rotate(10deg); }
-                    60% { transform: scale(0.95) translateY(0) rotate(-5deg); }
-                    80% { transform: scale(1.05) translateY(-10px) rotate(3deg); }
-                    100% { opacity: 1; transform: scale(1) translateY(0) rotate(0deg); }
-                }
-                @keyframes fade-in-badge {
-                    0%, 50% { opacity: 0; transform: scale(0); }
-                    100% { opacity: 1; transform: scale(1); }
-                }
-                .animate-loot-pop { animation: loot-pop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
-                .animate-fade-in-badge { animation: fade-in-badge 0.8s ease-out forwards; }
-            `}</style>
       
             {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
             {statsModalTarget && playerStats && bossStats && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
@@ -765,24 +792,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             />
                                         </div>
 
-                                        {/* EFFECTS LAYER */}
-                                        <div className="absolute inset-0 pointer-events-none z-40">
-                                            {/* Render all skills */}
-                                            {orbEffects.map(effect => (
-                                                <SkillEffect 
-                                                    key={effect.id} 
-                                                    id={effect.id}
-                                                    type={effect.type}
-                                                    delay={effect.delay}
-                                                    startPos={effect.startPos}
-                                                />
-                                            ))}
-                                            
-                                            {/* Render Damages & Text */}
-                                            {damages.map(d => (
-                                                <FloatingText key={d.id} data={d} />
-                                            ))}
-                                        </div>
+                                        {/* EFFECTS LAYER (Optimized) */}
+                                        <BattleEffectsLayer 
+                                            orbEffects={orbEffects} 
+                                            damages={damages} 
+                                            lootItems={lootItems}
+                                        />
 
                                     </div>
 
@@ -817,12 +832,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     {/* DEFEAT MODAL */}
                                     {gameOver === 'lose' && (<DefeatModal onRestart={retryCurrentFloor} />)}
 
-                                    {/* LOOT ANIMATION LAYER (Rendered relative to full screen main to be below Action Bar) */}
-                                    <div className="absolute inset-0 pointer-events-none z-50">
-                                        {lootItems.map(item => (
-                                            <LootItem key={item.id} item={item} />
-                                        ))}
-                                    </div>
                                 </main>
                             </>
                         )}
