@@ -392,7 +392,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, duration);
     }, []);
 
-    // --- EFFECT: HANDLE VICTORY SEQUENCE (UPDATED LOGIC) ---
+    // --- EFFECT: HANDLE VICTORY SEQUENCE ---
     useEffect(() => {
         // Trigger chỉ khi thắng và chưa bắt đầu sequence
         if (gameOver === 'win' && sequenceState === 'none') {
@@ -496,6 +496,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
     }, [bossStats, playerStats, battleState, currentFloor, sequenceState]);
 
+    // --- IMAGE HANDLING ---
     useEffect(() => {
         if (currentBossData) {
             const idStr = String(currentBossData.id).padStart(2, '0');
