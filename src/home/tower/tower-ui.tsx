@@ -1,6 +1,6 @@
 // --- START OF FILE tower-ui.tsx ---
 
-import React, { useState, useCallback, useEffect, memo, useMemo, useRef } from 'react';
+import React, { useState, useCallback, useEffect, memo, useMemo } from 'react';
 import { BossBattleProvider, useBossBattle, CombatStats } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
@@ -115,7 +115,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
       ? "animate-victory-pulse" 
       : "animate-float-up";
 
-  const isVictory = data.text === 'VICTORY';
+  const isVictory = data.text === 'VICTORY' || data.text === 'SWEEP SUCCESS';
   const textShadowStyle = isVictory 
       ? '0px 0px 8px rgba(0,0,0,0.6)' 
       : 'none';
@@ -733,6 +733,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 {/* --- LEFT SIDE UTILITIES (SWEEP BUTTON) --- */}
                                 <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
                                     {/* Luôn hiển thị nút nhưng vô hiệu hóa nếu là tầng đầu tiên (currentFloor <= 0) */}
+                                    {/* Sử dụng disabled:grayscale để biến thành trắng đen khi bị disable */}
                                     <button 
                                         onClick={handleSweepClick} 
                                         disabled={currentFloor <= 0 || (playerStats.energy || 0) < 10 || isSweeping || battleState !== 'idle'} 
