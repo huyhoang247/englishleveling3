@@ -115,11 +115,6 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
       ? "animate-victory-pulse" 
       : "animate-float-up";
 
-  const isVictory = data.text === 'VICTORY' || data.text === 'SWEEP SUCCESS';
-  const textShadowStyle = isVictory 
-      ? '0px 0px 8px rgba(0,0,0,0.6)' 
-      : 'none';
-
   return (
     <div 
         key={data.id} 
@@ -130,8 +125,8 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             color: data.color,
             fontSize: `${data.fontSize}px`,
             transform: data.duration && data.duration > 2000 ? 'translate(-50%, -50%)' : undefined,
-            textShadow: textShadowStyle,
-            fontWeight: 'bold'
+            fontWeight: 'bold',
+            textShadow: 'none' // Đảm bảo không có bóng đổ
         }}
     >
         {data.text}
@@ -444,7 +439,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 // 2. Sau khi boss chết xong -> Generate Loot & Show Victory
                 setTimeout(() => {
                     // SHOW VICTORY TEXT
-                    addDamageText("VICTORY", "#FFFFFF", "custom", 40, 50, 15, 3000, "font-outline drop-shadow-xl");
+                    // Đã sửa: Màu trắng, Size 32, Y=15, Xóa drop shadow
+                    addDamageText("VICTORY", "#FFFFFF", "custom", 32, 50, 15, 3000, "tracking-widest");
 
                     // 3. Đợi 2s (cho chữ VICTORY bay lên một chút) rồi bung loot
                     setTimeout(() => {
@@ -651,7 +647,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         
         if (result === 'win') {
              // 1. Hiển thị text Sweep thành công
-            addDamageText("SWEEP SUCCESS", "#fbbf24", "custom", 30, 50, 20, 2000, "font-outline drop-shadow-xl");
+             // Đã sửa: Màu trắng, Size 32, Y=15, Xóa drop shadow
+            addDamageText("SWEEP SUCCESS", "#FFFFFF", "custom", 32, 50, 15, 2500, "tracking-widest");
             
             // 2. Chạy animation rơi vật phẩm trực tiếp
             // (Không hiện Modal popup)
