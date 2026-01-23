@@ -31,7 +31,7 @@ const BOSS_DATA: Boss[] = [
     { id: 10, floor: "FLOOR 10", name: "Verdant Wyrm", stats: { maxHp: 516, hp: 516, atk: 52, def: 31 }, rewards: { coins: 464, energy: 7 } },
     { id: 11, floor: "FLOOR 11", name: "Hollow Tooth", stats: { maxHp: 619, hp: 619, atk: 62, def: 37 }, rewards: { coins: 557, energy: 7 } },
     { id: 12, floor: "FLOOR 12", name: "Zephyrling", stats: { maxHp: 743, hp: 743, atk: 74, def: 45 }, rewards: { coins: 669, energy: 7 } },
-    { id: 13, floor: "FLOOR 13", name: "Corrupted Peasant", stats: { maxHp: 892, hp: 892, atk: 89, def: 53 }, rewards: { coins: 803, energy: 7 } },
+    { id: 13, floor: "FLOOR 13", name: "Nocturnix", stats: { maxHp: 892, hp: 892, atk: 89, def: 53 }, rewards: { coins: 803, energy: 7 } },
     { id: 14, floor: "FLOOR 14", name: "Pallid Clerk", stats: { maxHp: 1070, hp: 1070, atk: 107, def: 64 }, rewards: { coins: 963, energy: 7 } },
     { id: 15, floor: "FLOOR 15", name: "Shambling Skeleton", stats: { maxHp: 1284, hp: 1284, atk: 128, def: 77 }, rewards: { coins: 1156, energy: 8 } },
     { id: 16, floor: "FLOOR 16", name: "Buzzing Swarm", stats: { maxHp: 1541, hp: 1541, atk: 154, def: 92 }, rewards: { coins: 1387, energy: 8 } },
