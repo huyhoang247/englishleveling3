@@ -25,7 +25,7 @@ const BOSS_DATA: Boss[] = [
     { id: 4, floor: "FLOOR 4", name: "Shivering Spider", stats: { maxHp: 173, hp: 173, atk: 17, def: 10 }, rewards: { coins: 156, energy: 5 } },
     { id: 5, floor: "FLOOR 5", name: "Oozing Leech", stats: { maxHp: 207, hp: 207, atk: 21, def: 12 }, rewards: { coins: 186, energy: 6 } },
     { id: 6, floor: "FLOOR 6", name: "Murmuring Echo", stats: { maxHp: 249, hp: 249, atk: 25, def: 15 }, rewards: { coins: 224, energy: 6 } },
-    { id: 7, floor: "FLOOR 7", name: "Rusted Golem", stats: { maxHp: 299, hp: 299, atk: 30, def: 18 }, rewards: { coins: 269, energy: 6 } },
+    { id: 7, floor: "FLOOR 7", name: "Skyreaver", stats: { maxHp: 299, hp: 299, atk: 30, def: 18 }, rewards: { coins: 269, energy: 6 } },
     { id: 8, floor: "FLOOR 8", name: "Sunken Gazer", stats: { maxHp: 358, hp: 358, atk: 36, def: 21 }, rewards: { coins: 322, energy: 6 } },
     { id: 9, floor: "FLOOR 9", name: "Lurking Shade", stats: { maxHp: 430, hp: 430, atk: 43, def: 26 }, rewards: { coins: 387, energy: 6 } },
     { id: 10, floor: "FLOOR 10", name: "Twitching Fungus", stats: { maxHp: 516, hp: 516, atk: 52, def: 31 }, rewards: { coins: 464, energy: 7 } },
