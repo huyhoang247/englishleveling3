@@ -214,14 +214,17 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         const rewards = currentBossData?.rewards || { coins: 0, energy: 0 };
         const finalRewards = result === 'win' ? rewards : { coins: 0, energy: 0 };
         
-        // --- SỬA LỖI Ở ĐÂY: DÙNG updateCoins thay vì updateUserCurrency ---
+        // --- SỬA LỖI: CẬP NHẬT LẠC QUAN ---
         if (result === 'win' && finalRewards.coins > 0) {
-            // Sử dụng updateCoins để đồng bộ lên server
+            // KHÔNG DÙNG await để UI không bị khựng (Fire and Forget)
             game.updateCoins(finalRewards.coins);
         }
         
+        // Cập nhật Energy cục bộ cho Player
         if (result === 'win') {
-            setDisplayedCoins(prev => prev + finalRewards.coins);
+            // LƯU Ý: Không cộng coin vào `displayedCoins` ở đây nữa 
+            // để tránh lỗi hiển thị x2. useEffect ở dưới sẽ tự động làm việc đó.
+            
             setPlayerStats(prev => {
                 if (!prev) return null;
                 return {
@@ -346,28 +349,29 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             return { result: 'lose', rewards: { coins: 0, energy: 0 } };
         }
     
-        // 1. Trừ năng lượng trước
+        // 1. Trừ năng lượng trước (Optimistic)
         setPlayerStats(prev => {
             if(!prev) return null;
             return { ...prev, energy: prev.energy - 10 }
         });
     
         // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
-        // Chú ý: Ở đây ta lấy phần thưởng của tầng trước (currentFloor - 1)
         const previousBossData = BOSS_DATA[currentFloor - 1];
         
-        // 3. FORCE WIN: Mặc định là thắng và nhận thưởng
+        // 3. FORCE WIN
         const finalWinner = 'win';
         const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
         
         // 4. Cập nhật Coins cho User
         if (rewards.coins > 0) {
-            // --- SỬA LỖI Ở ĐÂY: Gọi updateCoins và await kết quả ---
-            await game.updateCoins(rewards.coins);
+            // --- CẬP NHẬT LẠC QUAN ---
+            // Gọi hàm update và KHÔNG DÙNG await
+            // GameContext sẽ tự cập nhật local state ngay lập tức -> UI nhảy số liền -> Không lag
+            game.updateCoins(rewards.coins);
         }
     
-        // 5. Cập nhật UI và Player Stats
-        setDisplayedCoins(prev => prev + rewards.coins);
+        // 5. Cập nhật Player Stats (Energy)
+        // LƯU Ý: Không cập nhật displayedCoins ở đây nữa để tránh x2
         setPlayerStats(prev => {
             if(!prev) return null;
             return {
@@ -382,6 +386,13 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     }, [playerStats, currentFloor, game]);
 
     // --- REACT HOOKS & EFFECTS ---
+
+    // --- ĐỒNG BỘ COIN TỪ GAMECONTEXT SANG TOWERCONTEXT ---
+    // Đây là chìa khóa để fix lỗi x2:
+    // Khi game.coins thay đổi (do gọi game.updateCoins), effect này sẽ chạy và cập nhật hiển thị.
+    useEffect(() => {
+        setDisplayedCoins(game.coins);
+    }, [game.coins]);
     
     // Lưu callback mới nhất để dùng trong interval
     useEffect(() => {
@@ -428,6 +439,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 setBossStats(initialBossData.stats);
             }
 
+            // Đồng bộ coin ban đầu
             setDisplayedCoins(game.coins);
             setError(null);
 
