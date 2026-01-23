@@ -47,7 +47,7 @@ const BOSS_DATA: Boss[] = [
     { id: 26, floor: "FLOOR 26", name: "Aquaorb", stats: { maxHp: 9541, hp: 9541, atk: 954, def: 572 }, rewards: { coins: 8587, energy: 10 } },
     { id: 27, floor: "FLOOR 27", name: "Moldering Husk", stats: { maxHp: 11449, hp: 11449, atk: 1145, def: 687 }, rewards: { coins: 10304, energy: 10 } },
     { id: 28, floor: "FLOOR 28", name: "Creeping Vine", stats: { maxHp: 13739, hp: 13739, atk: 1374, def: 824 }, rewards: { coins: 12365, energy: 10 } },
-    { id: 29, floor: "FLOOR 29", name: "Deafening Screech", stats: { maxHp: 16487, hp: 16487, atk: 1649, def: 989 }, rewards: { coins: 14838, energy: 10 } },
+    { id: 29, floor: "FLOOR 29", name: "Unquiet Tormentor", stats: { maxHp: 16487, hp: 16487, atk: 1649, def: 989 }, rewards: { coins: 14838, energy: 10 } },
     { id: 30, floor: "FLOOR 30", name: "Veiled Mourner", stats: { maxHp: 19784, hp: 19784, atk: 1978, def: 1187 }, rewards: { coins: 17806, energy: 11 } },
     { id: 31, floor: "FLOOR 31", name: "Rotted Knight", stats: { maxHp: 23741, hp: 23741, atk: 2374, def: 1424 }, rewards: { coins: 21367, energy: 11 } },
     { id: 32, floor: "FLOOR 32", name: "Sinister Jester", stats: { maxHp: 28489, hp: 28489, atk: 2849, def: 1709 }, rewards: { coins: 25640, energy: 11 } },
