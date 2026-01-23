@@ -171,14 +171,24 @@ const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ appVersion, c
       <div className="absolute inset-0 bg-black/75 z-0"></div>
 
       {/* 3. Content Container */}
-      <div className="relative z-10 flex flex-col items-center justify-between pt-28 pb-56 w-full h-full text-white font-sans">
-        {/* CSS Class 'animate-floating' sẽ thay thế JS state để làm animation cho Logo */}
-        <img 
-            src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
-            alt="Loading Logo" 
-            className="w-48 h-48 object-contain animate-floating" 
-            style={{ filter: 'drop-shadow(0 0 15px rgba(0, 255, 255, 0.3)) drop-shadow(0 0 30px rgba(0, 150, 255, 0.2))' }} 
-        />
+      <div className="relative z-10 flex flex-col items-center justify-between pt-16 pb-56 w-full h-full text-white font-sans">
+        
+        {/* Phần Hình ảnh Header */}
+        <div className="flex flex-col items-center gap-4">
+            {/* Gameplay Image - Lớn hơn, nằm trên */}
+            <img 
+                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gameplay.webp" 
+                alt="Gameplay" 
+                className="w-72 h-auto object-contain animate-floating" 
+            />
+            
+            {/* Logo Image - Nhỏ hơn, không phát sáng, nằm dưới */}
+            <img 
+                src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
+                alt="Loading Logo" 
+                className="w-20 h-20 object-contain" 
+            />
+        </div>
         
         {children}
 
