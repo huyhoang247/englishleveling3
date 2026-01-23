@@ -5,10 +5,10 @@ import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore'; 
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
-import { OwnedItem, EquippedItems, EquipmentScreenExitData } from './home/equipment/equipment-ui.tsx';
+import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, TransactionRecord // Import thêm TransactionRecord
+  updateUserBossFloor, updateUserPickaxes
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -38,8 +38,8 @@ interface IGameContext {
     leather: number;
     ore: number;
     cloth: number;
-    feather: number; 
-    coal: number;    
+    feather: number; // Mới thêm
+    coal: number;    // Mới thêm
 
     // Equipment Data
     equipmentPieces: number;
@@ -57,9 +57,6 @@ interface IGameContext {
     accountType: string;         // 'Normal' | 'VIP'
     vipExpiresAt: Date | null;   // Thời hạn VIP
     vipLuckySpinClaims: number;  // Số lượt đã nhận x2 trong ngày (Max 5)
-
-    // --- TRANSACTION HISTORY ---
-    transactionHistory: TransactionRecord[];
 
     // UI States
     isBackgroundPaused: boolean;
@@ -80,7 +77,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    isTradeAssociationOpen: boolean; 
+    isTradeAssociationOpen: boolean; // Trạng thái mở modal Thương Hội
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -91,18 +88,14 @@ interface IGameContext {
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleVipLuckySpinClaim: () => Promise<boolean>;
-    handleStatsUpdate: (newStatsLevel: { hp: number; atk: number; def: number; }, newStatsValue: { hp: number; atk: number; def: number; }) => void;
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
     handleAchievementsDataUpdate: (updates: { coins?: number; masteryCards?: number }) => void;
     handleSkillScreenClose: (dataUpdated: boolean) => void;
     updateSkillsState: (data: SkillScreenExitData) => void;
-    updateEquipmentData: (data: EquipmentScreenExitData) => void;
     updateUserCurrency: (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => void;
-    
-    // Cập nhật hàm này để nhận thêm reason
-    updateCoins: (amount: number, reason?: string) => Promise<void>;
+    updateCoins: (amount: number) => Promise<void>;
 
     // Toggles
     toggleRank: () => void;
@@ -162,8 +155,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
   const [cloth, setCloth] = useState(0);
-  const [feather, setFeather] = useState(0); 
-  const [coal, setCoal] = useState(0);       
+  const [feather, setFeather] = useState(0); // Mới thêm
+  const [coal, setCoal] = useState(0);       // Mới thêm
 
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
@@ -177,9 +170,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [accountType, setAccountType] = useState<string>('Normal');
   const [vipExpiresAt, setVipExpiresAt] = useState<Date | null>(null);
   const [vipLuckySpinClaims, setVipLuckySpinClaims] = useState(0);
-
-  // --- TRANSACTION HISTORY STATE ---
-  const [transactionHistory, setTransactionHistory] = useState<TransactionRecord[]>([]);
 
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
@@ -232,8 +222,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setLeather(gameData.leather || 0);
       setOre(gameData.ore || 0);
       setCloth(gameData.cloth || 0);
-      setFeather(gameData.feather || 0); 
-      setCoal(gameData.coal || 0);       
+      setFeather(gameData.feather || 0); // Mới thêm
+      setCoal(gameData.coal || 0);       // Mới thêm
 
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
@@ -246,9 +236,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setAccountType(gameData.accountType || 'Normal');
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
       setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
-      
-      // Load History
-      setTransactionHistory(gameData.transactionHistory || []);
 
     } catch (error) { 
         console.error("Error refreshing user data:", error);
@@ -294,8 +281,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setLeather(gameData.leather ?? 0);
                 setOre(gameData.ore ?? 0);
                 setCloth(gameData.cloth ?? 0);
-                setFeather(gameData.feather ?? 0); 
-                setCoal(gameData.coal ?? 0);       
+                setFeather(gameData.feather ?? 0); // Mới thêm
+                setCoal(gameData.coal ?? 0);       // Mới thêm
 
                 setEquipmentPieces(gameData.equipment?.pieces ?? 0);
                 setOwnedItems(gameData.equipment?.owned ?? []);
@@ -308,9 +295,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setAccountType(gameData.accountType ?? 'Normal');
                 setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
                 setVipLuckySpinClaims(gameData.vipLuckySpinClaims ?? 0);
-
-                // Update Transaction History
-                setTransactionHistory(gameData.transactionHistory || []);
 
             } else {
                 console.warn("User document not found, attempting to create one.");
@@ -341,7 +325,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         
         // Reset resources
         setWood(0); setLeather(0); setOre(0); setCloth(0);
-        setFeather(0); setCoal(0);
+        setFeather(0); setCoal(0); // Reset mới
 
         setEquipmentPieces(0); 
         setOwnedItems([]); 
@@ -351,13 +335,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setLoginStreak(0); setLastCheckIn(null);
         setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
-        setIsTradeAssociationOpen(false); 
+        setIsTradeAssociationOpen(false); // Reset trạng thái modal
         
         setAccountType('Normal');
         setVipExpiresAt(null);
         setVipLuckySpinClaims(0);
-        
-        setTransactionHistory([]);
       }
     });
 
@@ -403,8 +385,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, [userStatsValue, totalEquipmentStats]);
     
-  // --- UPDATED: updateCoins with reason ---
-  const updateCoins = async (amount: number, reason: string = "Gameplay") => {
+  const updateCoins = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId || amount === 0) return;
 
@@ -416,8 +397,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setIsSyncingData(true);
 
     try {
-      // Pass 'reason' to the service function
-      const serverConfirmedCoins = await updateUserCoins(userId, amount, reason);
+      const serverConfirmedCoins = await updateUserCoins(userId, amount);
       setCoins(serverConfirmedCoins);
     } catch (error) {
       console.error("Failed to update coins via context (Rolling back):", error);
@@ -483,11 +463,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           return false;
       }
   };
-
-  const handleStatsUpdate = (newStatsLevel: { hp: number; atk: number; def: number; }, newStatsValue: { hp: number; atk: number; def: number; }) => {
-      setUserStatsLevel(newStatsLevel);
-      setUserStatsValue(newStatsValue);
-  }
   
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
@@ -561,19 +536,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     setEquippedSkillIds(data.equippedSkillIds);
   };
 
-  const updateEquipmentData = (data: EquipmentScreenExitData) => {
-      setEquipmentPieces(data.equipmentPieces);
-      setStones(data.stones);
-      setOwnedItems(data.ownedItems);
-      setEquippedItems(data.equippedItems);
-      // Gold and gems might also be updated in equipment screen
-      if (data.coins !== undefined) {
-          setCoins(data.coins);
-          setDisplayedCoins(data.coins);
-      }
-      if (data.gems !== undefined) setGems(data.gems);
-  };
-
   const updateUserCurrency = (updates: { coins?: number; gems?: number; equipmentPieces?: number; ancientBooks?: number; cardCapacity?: number; }) => {
     if (updates.coins !== undefined) {
         setCoins(updates.coins);
@@ -618,9 +580,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     // VIP Values
     accountType, vipExpiresAt, vipLuckySpinClaims,
 
-    // Transaction History
-    transactionHistory,
-
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
     isAuctionHouseOpen,
@@ -630,9 +589,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     isAnyOverlayOpen, isGamePaused,
     refreshUserData, handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes, handleUpdateJackpotPool, 
     handleVipLuckySpinClaim,
-    handleStatsUpdate,
     getPlayerBattleStats, getEquippedSkillsDetails, handleStateUpdateFromChest, handleAchievementsDataUpdate, handleSkillScreenClose, updateSkillsState,
-    updateEquipmentData,
     updateUserCurrency,
     updateCoins,
     toggleRank, togglePvpArena, toggleLuckyGame, toggleMinerChallenge, toggleBossBattle, toggleShop, toggleVocabularyChest, toggleAchievements,
