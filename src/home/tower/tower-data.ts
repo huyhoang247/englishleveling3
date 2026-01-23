@@ -43,7 +43,7 @@ const BOSS_DATA: Boss[] = [
     { id: 22, floor: "FLOOR 22", name: "Ninefathom", stats: { maxHp: 4601, hp: 4601, atk: 460, def: 276 }, rewards: { coins: 4141, energy: 9 } },
     { id: 23, floor: "FLOOR 23", name: "Wailing Child", stats: { maxHp: 5521, hp: 5521, atk: 552, def: 331 }, rewards: { coins: 4969, energy: 9 } },
     { id: 24, floor: "FLOOR 24", name: "Shardwisp", stats: { maxHp: 6626, hp: 6626, atk: 663, def: 398 }, rewards: { coins: 5963, energy: 9 } },
-    { id: 25, floor: "FLOOR 25", name: "Aquaorb", stats: { maxHp: 7951, hp: 7951, atk: 795, def: 477 }, rewards: { coins: 7156, energy: 10 } },
+    { id: 25, floor: "FLOOR 25", name: "Fiendish Bat", stats: { maxHp: 7951, hp: 7951, atk: 795, def: 477 }, rewards: { coins: 7156, energy: 10 } },
     { id: 26, floor: "FLOOR 26", name: "Gnashing Maw", stats: { maxHp: 9541, hp: 9541, atk: 954, def: 572 }, rewards: { coins: 8587, energy: 10 } },
     { id: 27, floor: "FLOOR 27", name: "Moldering Husk", stats: { maxHp: 11449, hp: 11449, atk: 1145, def: 687 }, rewards: { coins: 10304, energy: 10 } },
     { id: 28, floor: "FLOOR 28", name: "Creeping Vine", stats: { maxHp: 13739, hp: 13739, atk: 1374, def: 824 }, rewards: { coins: 12365, energy: 10 } },
