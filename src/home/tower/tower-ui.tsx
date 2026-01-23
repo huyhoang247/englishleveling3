@@ -472,14 +472,14 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 </header>
     
                                 {/* --- CENTER FLOOR INDICATOR --- */}
-                                <div className="absolute top-18 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
+                                <div className="absolute top-16 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                                     <h3 className="text-xl font-bold tracking-widest uppercase text-white opacity-40 select-none shadow-black drop-shadow-sm">
                                         {currentBossData.floor}
                                     </h3>
                                 </div>
 
                                 {/* --- LEFT SIDE UTILITIES (SWEEP BUTTON) --- */}
-                                <div className="absolute top-18 left-4 z-20 flex flex-col gap-3 items-start">
+                                <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
                                     <button 
                                         onClick={handleSweepClick} 
                                         disabled={currentFloor <= 0 || (playerStats.energy || 0) < 10 || isSweeping || battleState !== 'idle'} 
