@@ -126,7 +126,7 @@ const FloatingText = memo(({ data }: { data: DamageText }) => {
             fontSize: `${data.fontSize}px`,
             transform: data.duration && data.duration > 2000 ? 'translate(-50%, -50%)' : undefined,
             fontWeight: 'bold',
-            textShadow: 'none' // Đảm bảo không có bóng đổ
+            textShadow: 'none'
         }}
     >
         {data.text}
@@ -439,8 +439,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 // 2. Sau khi boss chết xong -> Generate Loot & Show Victory
                 setTimeout(() => {
                     // SHOW VICTORY TEXT
-                    // Đã sửa: Màu trắng, Size 32, Y=15, Xóa drop shadow
-                    addDamageText("VICTORY", "#FFFFFF", "custom", 32, 50, 15, 3000, "tracking-widest");
+                    // Đã sửa: Size 24 (nhỏ hơn trước), màu trắng, xóa drop shadow
+                    addDamageText("VICTORY", "#FFFFFF", "custom", 24, 50, 15, 3000, "tracking-widest");
 
                     // 3. Đợi 2s (cho chữ VICTORY bay lên một chút) rồi bung loot
                     setTimeout(() => {
@@ -647,8 +647,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         
         if (result === 'win') {
              // 1. Hiển thị text Sweep thành công
-             // Đã sửa: Màu trắng, Size 32, Y=15, Xóa drop shadow
-            addDamageText("SWEEP SUCCESS", "#FFFFFF", "custom", 32, 50, 15, 2500, "tracking-widest");
+             // Đã sửa: Size 18 (nhỏ hơn Victory), màu trắng, xóa drop shadow
+            addDamageText("SWEEP SUCCESS", "#FFFFFF", "custom", 18, 50, 15, 2500, "tracking-widest");
             
             // 2. Chạy animation rơi vật phẩm trực tiếp
             // (Không hiện Modal popup)
@@ -738,7 +738,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         title="Sweep"
                                     >
                                         <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
-                                        {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
+                                        {/* Đã xóa spinner loading ở đây */}
                                     </button>
                                 </div>
 
