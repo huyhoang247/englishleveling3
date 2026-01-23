@@ -302,34 +302,6 @@ const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => (
     </div>
 ));
 
-const SweepRewardsModal = memo(({ isSuccess, rewards, onClose }: { isSuccess: boolean; rewards: { coins: number; energy: number }; onClose: () => void; }) => (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
-        <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
-            <img src={isSuccess ? bossBattleAssets.victoryIcon : bossBattleAssets.defeatIcon} alt="" className="w-16 h-16 object-contain mb-2" />
-            <h2 className={`text-3xl font-bold ${isSuccess ? 'text-yellow-300' : 'text-slate-300'} tracking-widest uppercase mb-4 text-shadow`}>{isSuccess ? 'SWEEP SUCCESS' : 'SWEEP FAILED'}</h2>
-            {isSuccess ? (
-                <div className="w-full flex flex-col items-center gap-3">
-                    <p className="font-sans text-slate-300/80 text-sm tracking-wide uppercase">Rewards Received</p>
-                    <div className="flex flex-row flex-wrap justify-center gap-3">
-                        <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                            <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
-                            <span className="text-xl font-bold text-yellow-300">{rewards.coins}</span>
-                        </div>
-                        <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                            <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
-                            <span className="text-xl font-bold text-cyan-300">{rewards.energy}</span>
-                        </div>
-                    </div>
-                </div>
-            ) : (
-                <p className="font-sans text-slate-400 text-sm leading-relaxed max-w-xs">Failed.</p>
-            )}
-            <hr className="w-full border-t border-slate-700/50 my-5" />
-            <button onClick={onClose} className="w-full px-8 py-3 bg-slate-700/50 hover:bg-slate-700 rounded-lg font-bold text-base text-slate-200 tracking-wider uppercase border border-slate-600">Close</button>
-        </div>
-    </div>
-));
-
 // --- MAIN VIEW COMPONENT ---
 const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
@@ -357,7 +329,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [lootItems, setLootItems] = useState<LootItemData[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
-    const [sweepResult, setSweepResult] = useState<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } } | null>(null);
+    
     const [isSweeping, setIsSweeping] = useState(false);
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
@@ -392,6 +364,71 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, duration);
     }, []);
 
+    // --- HELPER: ANIMATE LOOT DROP ---
+    // Hàm này dùng chung cho cả khi Chiến thắng Battle và khi Sweep
+    const animateLootDrop = useCallback((rewards: { coins: number, energy: number }, onComplete?: () => void) => {
+        const newLootItems: LootItemData[] = [];
+        let itemCount = 0;
+        if(rewards.coins > 0) itemCount++;
+        if(rewards.energy > 0) itemCount++;
+
+        // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
+        if (rewards.coins > 0) {
+            const minX = itemCount > 1 ? 20 : 40;
+            const maxX = itemCount > 1 ? 45 : 60;
+            
+            newLootItems.push({
+                id: Date.now() + 1,
+                image: bossBattleAssets.coinIcon,
+                amount: rewards.coins,
+                x: minX + Math.random() * (maxX - minX), 
+                y: 82 + Math.random() * 10,
+                isVisible: true
+            });
+        }
+        
+        if (rewards.energy > 0) {
+            const minX = 55;
+            const maxX = 80;
+
+            newLootItems.push({
+                id: Date.now() + 2,
+                image: bossBattleAssets.energyIcon,
+                amount: rewards.energy,
+                x: minX + Math.random() * (maxX - minX),
+                y: 82 + Math.random() * 10,
+                isVisible: true
+            });
+        }
+
+        setLootItems(newLootItems);
+
+        // Sequence Collect: Đợi Loot hiện ra rồi bay đi
+        setTimeout(() => {
+            newLootItems.forEach((item, index) => {
+                setTimeout(() => {
+                    // Hiện chữ COLLECTED
+                    addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x - 8, item.y - 3, 1000, "uppercase tracking-wide");
+                    
+                    // Ẩn item sau khi text hiện lên
+                    setTimeout(() => {
+                         setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
+                    }, 300);
+
+                }, index * 400); 
+            });
+
+            // Kết thúc sequence
+            const totalDelay = newLootItems.length * 400 + 800; 
+            setTimeout(() => {
+                setLootItems([]); 
+                if (onComplete) onComplete();
+            }, totalDelay);
+
+        }, 1000); // Đợi Loot Pop lên (1s)
+    }, [addDamageText]);
+
+
     // --- EFFECT: HANDLE VICTORY SEQUENCE ---
     useEffect(() => {
         // Trigger chỉ khi thắng và chưa bắt đầu sequence
@@ -406,83 +443,30 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                 // 2. Sau khi boss chết xong -> Generate Loot & Show Victory
                 setTimeout(() => {
-                    const rewards = currentBossData.rewards;
-                    const newLootItems: LootItemData[] = [];
-                    
-                    let itemCount = 0;
-                    if(rewards.coins > 0) itemCount++;
-                    if(rewards.energy > 0) itemCount++;
-
-                    // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
-                    if (rewards.coins > 0) {
-                        const minX = itemCount > 1 ? 20 : 40;
-                        const maxX = itemCount > 1 ? 45 : 60;
-                        
-                        newLootItems.push({
-                            id: Date.now() + 1,
-                            image: bossBattleAssets.coinIcon,
-                            amount: rewards.coins,
-                            x: minX + Math.random() * (maxX - minX), 
-                            y: 82 + Math.random() * 10,
-                            isVisible: true
-                        });
-                    }
-                    
-                    if (rewards.energy > 0) {
-                        const minX = 55;
-                        const maxX = 80;
-
-                        newLootItems.push({
-                            id: Date.now() + 2,
-                            image: bossBattleAssets.energyIcon,
-                            amount: rewards.energy,
-                            x: minX + Math.random() * (maxX - minX),
-                            y: 82 + Math.random() * 10,
-                            isVisible: true
-                        });
-                    }
-
-                    setLootItems(newLootItems);
-
                     // SHOW VICTORY TEXT
                     addDamageText("VICTORY", "#FFFFFF", "custom", 40, 50, 15, 3000, "font-outline drop-shadow-xl");
 
-                    // 3. Đợi 3s (cho chữ VICTORY bay hết)
+                    // 3. Đợi 2s (cho chữ VICTORY bay lên một chút) rồi bung loot
                     setTimeout(() => {
+                        const rewards = currentBossData.rewards;
                         
-                        // 4. Sequence Collect: Duyệt qua từng item
-                        newLootItems.forEach((item, index) => {
-                            setTimeout(() => {
-                                // Hiện chữ COLLECTED
-                                addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x - 8, item.y - 3, 1000, "uppercase tracking-wide");
-                                
-                                // Ẩn item sau khi text hiện lên
-                                setTimeout(() => {
-                                     setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
-                                }, 300);
-
-                            }, index * 400); 
-                        });
-
-                        // 5. Kết thúc sequence, chuyển tầng
-                        const totalDelay = newLootItems.length * 400 + 800; 
-                        setTimeout(() => {
-                            setLootItems([]); 
+                        // Gọi hàm rơi vật phẩm
+                        animateLootDrop(rewards, () => {
+                            // Sau khi loot xong thì chuyển tầng
                             handleNextFloor();
                             setBossState('appearing');
                             setTimeout(() => {
                                 setBossState('idle');
                                 setSequenceState('none');
                             }, 1200);
-                        }, totalDelay);
+                        });
 
-                    }, 3000); // Thời gian chờ Victory (3s)
+                    }, 2000); 
 
                 }, 1200); // Thời gian animation 'dying' của Boss
-
             }
         }
-    }, [gameOver, currentFloor, handleNextFloor, sequenceState, addDamageText, currentBossData]);
+    }, [gameOver, currentFloor, handleNextFloor, sequenceState, addDamageText, currentBossData, animateLootDrop]);
 
     // --- SYNC VISUAL HP ---
     useEffect(() => {
@@ -659,11 +643,26 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     }, [lastTurnEvents, addDamageText]); 
 
+    // --- HANDLE SWEEP CLICK ---
     const handleSweepClick = async () => {
+        if (!playerStats) return;
         setIsSweeping(true);
-        const result = await handleSweep();
-        setSweepResult(result);
-        setIsSweeping(false);
+        const { result, rewards } = await handleSweep();
+        
+        if (result === 'win') {
+             // 1. Hiển thị text Sweep thành công
+            addDamageText("SWEEP SUCCESS", "#fbbf24", "custom", 30, 50, 20, 2000, "font-outline drop-shadow-xl");
+            
+            // 2. Chạy animation rơi vật phẩm trực tiếp
+            // (Không hiện Modal popup)
+            animateLootDrop(rewards, () => {
+                setIsSweeping(false);
+            });
+        } else {
+             // Thất bại (thường là do không đủ energy hoặc lỗi logic)
+             addDamageText("SWEEP FAILED", "#ef4444", "custom", 30, 50, 20, 2000);
+             setIsSweeping(false);
+        }
     };
 
     const bossElement = useMemo(() => {
@@ -679,7 +678,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             <MainBattleStyles />
             <SkillStyles />
       
-            {sweepResult && ( <SweepRewardsModal isSuccess={sweepResult.result === 'win'} rewards={sweepResult.rewards} onClose={() => setSweepResult(null)} /> )}
             {statsModalTarget && playerStats && bossStats && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
             {showRewardsModal && currentBossData && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
@@ -732,19 +730,18 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     </h3>
                                 </div>
 
-                                {/* --- LEFT SIDE UTILITIES --- */}
+                                {/* --- LEFT SIDE UTILITIES (SWEEP BUTTON) --- */}
                                 <div className="absolute top-16 left-4 z-20 flex flex-col gap-3 items-start">
-                                    {currentFloor > 0 && (
-                                        <button 
-                                            onClick={handleSweepClick} 
-                                            disabled={(playerStats.energy || 0) < 10 || isSweeping || battleState !== 'idle'} 
-                                            className="transition-all active:scale-95 hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed relative group rounded-full"
-                                            title="Sweep"
-                                        >
-                                            <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
-                                            {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
-                                        </button>
-                                    )}
+                                    {/* Luôn hiển thị nút nhưng vô hiệu hóa nếu là tầng đầu tiên (currentFloor <= 0) */}
+                                    <button 
+                                        onClick={handleSweepClick} 
+                                        disabled={currentFloor <= 0 || (playerStats.energy || 0) < 10 || isSweeping || battleState !== 'idle'} 
+                                        className="transition-all active:scale-95 hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed relative group rounded-full"
+                                        title="Sweep"
+                                    >
+                                        <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
+                                        {isSweeping && <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full"><span className="animate-spin text-white">⟳</span></div>}
+                                    </button>
                                 </div>
 
                                 {/* --- RIGHT UTILITY BUTTONS --- */}
