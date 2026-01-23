@@ -3,12 +3,10 @@
 import React, { memo } from 'react';
 import MagicCircle, { ElementKey } from './thuoc-tinh.tsx';
 import { CombatStats } from './tower-context.tsx';
+import { characterAssets } from '../../game-assets.ts';
 
 // --- TYPES ---
 export type ActionState = 'idle' | 'attack' | 'hit' | 'dying' | 'appearing';
-
-// ĐƯỜNG DẪN ẢNH TĨNH (Bạn hãy đảm bảo file này là ảnh đơn, không phải lưới sprite)
-const HERO_STATIC_IMAGE = 'https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/hero.webp'; 
 
 // --- 0. ANIMATION STYLES (PURE CSS TRANSFORMS) ---
 const AnimationStyles = memo(() => (
@@ -161,7 +159,7 @@ export const HeroDisplay = memo(({ stats, onStatsClick, actionState = 'idle' }: 
                 {/* HERO IMAGE (STATIC WEBP) */}
                 <div className={`z-10 render-optimize ${animClass}`}>
                     <img 
-                        src={HERO_STATIC_IMAGE} 
+                        src={characterAssets.heroStatic} 
                         alt="Hero" 
                         className="w-[140px] md:w-[180px] h-auto object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]"
                     />
