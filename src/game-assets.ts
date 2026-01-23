@@ -208,6 +208,13 @@ export const minerAssets = {
   pickaxeIcon: require("./assets/images/pickaxe-icon.webp"),
 };
 
+/**
+ * Tài nguyên cho Nhân vật (Character/Hero)
+ */
+export const characterAssets = {
+    heroStatic: require("./assets/images/hero.webp"),
+};
+
 
 /**
  * Mảng tổng hợp TẤT CẢ CÁC URL HÌNH ẢNH cần được tải trước
@@ -226,4 +233,5 @@ export const allImageUrls = [
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
     ...Object.values(bossBattleAssets),
     ...Object.values(minerAssets),
+    ...Object.values(characterAssets), // Thêm tài nguyên nhân vật
 ];
