@@ -472,7 +472,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                 </header>
     
                                 {/* --- CENTER FLOOR INDICATOR --- */}
-                                <div className="absolute top-20 left-[54%] -translate-x-1/2 z-10 pointer-events-none">
+                                <div className="absolute top-20 left-1/2 -translate-x-1/2 z-10 pointer-events-none">
                                     <h3 className="text-xl font-bold tracking-widest uppercase text-white opacity-40 select-none shadow-black drop-shadow-sm">
                                         {currentBossData.floor}
                                     </h3>
@@ -486,7 +486,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                         className="transition-all active:scale-95 hover:scale-105 disabled:hover:scale-100 disabled:opacity-60 disabled:grayscale disabled:cursor-not-allowed relative group rounded-full"
                                         title="Sweep"
                                     >
-                                        <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-24 h-auto object-contain drop-shadow-md" />
+                                        <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-16 h-auto object-contain drop-shadow-md" />
                                     </button>
                                 </div>
 
