@@ -39,16 +39,6 @@ export interface EnhancementStones {
     high: number;
 }
 
-// --- MỚI: Định nghĩa lịch sử giao dịch ---
-export interface TransactionRecord {
-    id: string;
-    type: 'COINS' | 'GEMS';
-    amount: number;      // Số lượng thay đổi (dương hoặc âm)
-    reason: string;      // Lý do (vd: Mua shop, Đánh quái)
-    balanceAfter: number; // Số dư sau giao dịch
-    timestamp: number;   // Thời gian (Date.now())
-}
-
 export interface UserGameData {
   coins: number;
   gems: number;
@@ -84,9 +74,6 @@ export interface UserGameData {
   accountType?: string; 
   vipExpiresAt?: Timestamp | null;
   vipLuckySpinClaims?: number;
-
-  // --- MỚI: Lịch sử giao dịch ---
-  transactionHistory?: TransactionRecord[];
 }
 
 
@@ -152,9 +139,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       accountType: data.accountType || 'Normal',
       vipExpiresAt: data.vipExpiresAt || null,
       vipLuckySpinClaims: data.vipLuckySpinClaims || 0,
-      
-      // Load History
-      transactionHistory: data.transactionHistory || []
     } as UserGameData;
   } else {
     // Tạo user mới hoàn toàn
@@ -187,8 +171,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       claimedQuizRewards: {},
       accountType: 'Normal',
       vipExpiresAt: null,
-      vipLuckySpinClaims: 0,
-      transactionHistory: [] // Init History
+      vipLuckySpinClaims: 0
     };
     await setDoc(userDocRef, newUserData);
     return newUserData;
@@ -211,13 +194,8 @@ export const fetchSkillScreenData = async (userId: string) => {
   };
 };
 
-/**
- * Cập nhật Coins của user và ghi lại lịch sử giao dịch.
- * @param userId ID người dùng
- * @param amount Số lượng thay đổi (có thể âm)
- * @param reason Lý do thay đổi (để hiển thị trong lịch sử)
- */
-export const updateUserCoins = async (userId: string, amount: number, reason: string = "Giao dịch khác"): Promise<number> => {
+
+export const updateUserCoins = async (userId: string, amount: number): Promise<number> => {
   if (!userId) throw new Error("User ID is required.");
   if (amount === 0) {
     const userDoc = await getDoc(doc(db, 'users', userId));
@@ -227,40 +205,13 @@ export const updateUserCoins = async (userId: string, amount: number, reason: st
   return runTransaction(db, async (t) => {
     const userDoc = await t.get(userDocRef);
     if (!userDoc.exists()) throw new Error("User document does not exist!");
-    
-    const data = userDoc.data();
-    const currentCoins = data.coins || 0;
-    const newCoins = Math.max(0, currentCoins + amount);
-
-    // --- LOGIC GHI LỊCH SỬ ---
-    const newRecord: TransactionRecord = {
-        id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
-        type: 'COINS',
-        amount: amount,
-        reason: reason,
-        balanceAfter: newCoins,
-        timestamp: Date.now()
-    };
-    
-    // Lấy history hiện tại, thêm mới vào đầu, giữ tối đa 20 dòng
-    const currentHistory = (data.transactionHistory as TransactionRecord[]) || [];
-    const newHistory = [newRecord, ...currentHistory].slice(0, 20);
-
-    t.update(userDocRef, { 
-        coins: newCoins,
-        transactionHistory: newHistory 
-    });
+    const newCoins = Math.max(0, (userDoc.data().coins || 0) + amount);
+    t.update(userDocRef, { coins: newCoins });
     return newCoins;
   });
 };
 
-/**
- * Cập nhật Gems của user và ghi lại lịch sử giao dịch.
- * @param userId ID người dùng
- * @param amount Số lượng thay đổi (có thể âm)
- * @param reason Lý do thay đổi
- */
-export const updateUserGems = async (userId: string, amount: number, reason: string = "Giao dịch khác"): Promise<number> => {
+export const updateUserGems = async (userId: string, amount: number): Promise<number> => {
     if (!userId) throw new Error("User ID is required.");
     if (amount === 0) {
         const userDoc = await getDoc(doc(db, 'users', userId));
@@ -270,28 +221,8 @@ export const updateUserGems = async (userId: string, amount: number, reason: str
     return runTransaction(db, async (t) => {
         const userDoc = await t.get(userDocRef);
         if (!userDoc.exists()) throw new Error("User document does not exist!");
-        
-        const data = userDoc.data();
-        const currentGems = data.gems || 0;
-        const newGems = Math.max(0, currentGems + amount);
-
-        // --- LOGIC GHI LỊCH SỬ ---
-        const newRecord: TransactionRecord = {
-            id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
-            type: 'GEMS',
-            amount: amount,
-            reason: reason,
-            balanceAfter: newGems,
-            timestamp: Date.now()
-        };
-
-        const currentHistory = (data.transactionHistory as TransactionRecord[]) || [];
-        const newHistory = [newRecord, ...currentHistory].slice(0, 20);
-
-        t.update(userDocRef, { 
-            gems: newGems,
-            transactionHistory: newHistory
-        });
+        const newGems = Math.max(0, (userDoc.data().gems || 0) + amount);
+        t.update(userDocRef, { gems: newGems });
         return newGems;
     });
 };
@@ -337,26 +268,10 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
         const newBooks = (data.ancientBooks || 0) + updates.booksChange;
         if (newCoins < 0) throw new Error("Không đủ vàng.");
         if (newBooks < 0) throw new Error("Không đủ Sách Cổ.");
-
-        // --- GHI LOG GIAO DỊCH KHI NÂNG CẤP SKILL ---
-        let history = (data.transactionHistory as TransactionRecord[]) || [];
-        if (updates.goldChange !== 0) {
-             const record: TransactionRecord = {
-                id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
-                type: 'COINS',
-                amount: updates.goldChange,
-                reason: "Nâng cấp/Trang bị Kỹ năng",
-                balanceAfter: newCoins,
-                timestamp: Date.now()
-            };
-            history = [record, ...history].slice(0, 20);
-        }
-
         t.update(userDocRef, {
             coins: newCoins,
             ancientBooks: newBooks,
-            skills: { owned: updates.newOwned, equipped: updates.newEquippedIds },
-            transactionHistory: history
+            skills: { owned: updates.newOwned, equipped: updates.newEquippedIds }
         });
         return { newCoins, newBooks };
     });
@@ -483,13 +398,8 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
     const data = userDoc.data() as UserGameData;
     const updatePayload: { [key: string]: any } = {};
 
-    // --- MỚI: LOG ADMIN UPDATE ---
-    let logMessage = "Admin Update: ";
-
     for (const key in updates) {
       const valueToAdd = updates[key];
-      logMessage += `${key}(${valueToAdd > 0 ? '+' : ''}${valueToAdd}) `;
-
       if (key.includes('.')) {
         const keys = key.split('.');
         let currentLevel = data as any;
@@ -504,30 +414,12 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
         updatePayload[key] = Math.max(0, currentValue + valueToAdd);
       }
     }
-
-    // Nếu có thay đổi Coins/Gems, ghi thêm vào lịch sử để user biết
-    let history = (data.transactionHistory || []) as TransactionRecord[];
-    if (updates.coins) {
-        history = [{
-            id: Date.now().toString() + Math.random().toString(36).substring(2, 5),
-            type: 'COINS',
-            amount: updates.coins,
-            reason: "Admin Adjustment",
-            balanceAfter: (data.coins || 0) + updates.coins,
-            timestamp: Date.now()
-        }, ...history].slice(0, 20);
-        updatePayload['transactionHistory'] = history;
-    }
     
     t.update(userDocRef, updatePayload);
     
     // Tạo object trả về đã được cập nhật (để UI phản hồi ngay lập tức)
     const updatedData = JSON.parse(JSON.stringify(data));
     for(const key in updatePayload){
-        if (key === 'transactionHistory') {
-            updatedData.transactionHistory = updatePayload[key];
-            continue;
-        }
         if (key.includes('.')) {
             const keys = key.split('.');
             let temp = updatedData;
