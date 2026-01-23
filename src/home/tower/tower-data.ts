@@ -57,7 +57,7 @@ const BOSS_DATA: Boss[] = [
     { id: 36, floor: "FLOOR 36", name: "Hollow Mourner", stats: { maxHp: 59075, hp: 59075, atk: 5908, def: 3545 }, rewards: { coins: 53168, energy: 12 } },
     { id: 37, floor: "FLOOR 37", name: "Unquiet Tormentor", stats: { maxHp: 70890, hp: 70890, atk: 7089, def: 4253 }, rewards: { coins: 63801, energy: 12 } },
     { id: 38, floor: "FLOOR 38", name: "Shackled Wraith", stats: { maxHp: 85068, hp: 85068, atk: 8507, def: 5104 }, rewards: { coins: 76561, energy: 12 } },
-    { id: 39, floor: "FLOOR 39", name: "Ragged Centurion", stats: { maxHp: 102082, hp: 102082, atk: 10208, def: 6125 }, rewards: { coins: 91874, energy: 12 } },
+    { id: 39, floor: "FLOOR 39", name: "Frost Dragon", stats: { maxHp: 102082, hp: 102082, atk: 10208, def: 6125 }, rewards: { coins: 91874, energy: 12 } },
     { id: 40, floor: "FLOOR 40", name: "Whisperblade Assassin", stats: { maxHp: 122499, hp: 122499, atk: 12250, def: 7350 }, rewards: { coins: 110249, energy: 13 } },
     { id: 41, floor: "FLOOR 41", name: "Thorned Warden", stats: { maxHp: 146998, hp: 146998, atk: 14700, def: 8820 }, rewards: { coins: 132298, energy: 13 } },
     { id: 42, floor: "FLOOR 42", name: "Shattered Archon", stats: { maxHp: 176398, hp: 176398, atk: 17640, def: 10584 }, rewards: { coins: 158758, energy: 13 } },
