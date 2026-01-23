@@ -20,7 +20,7 @@ export interface Boss {
 // --- Cấu trúc dữ liệu cho các Boss theo tầng (50 Tầng) ---
 const BOSS_DATA: Boss[] = [
     { id: 1, floor: "FLOOR 1", name: "Whispering Wisp", stats: { maxHp: 100, hp: 100, atk: 10, def: 6 }, rewards: { coins: 90, energy: 5 } },
-    { id: 2, floor: "FLOOR 2", name: "Flickering Ember", stats: { maxHp: 120, hp: 120, atk: 12, def: 7 }, rewards: { coins: 108, energy: 5 } },
+    { id: 2, floor: "FLOOR 2", name: "Emberbolt", stats: { maxHp: 120, hp: 120, atk: 12, def: 7 }, rewards: { coins: 108, energy: 5 } },
     { id: 3, floor: "FLOOR 3", name: "Bone Scuttler", stats: { maxHp: 144, hp: 144, atk: 14, def: 9 }, rewards: { coins: 130, energy: 5 } },
     { id: 4, floor: "FLOOR 4", name: "Shivering Spider", stats: { maxHp: 173, hp: 173, atk: 17, def: 10 }, rewards: { coins: 156, energy: 5 } },
     { id: 5, floor: "FLOOR 5", name: "Oozing Leech", stats: { maxHp: 207, hp: 207, atk: 21, def: 12 }, rewards: { coins: 186, energy: 6 } },
