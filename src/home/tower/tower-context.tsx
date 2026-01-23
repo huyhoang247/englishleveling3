@@ -214,8 +214,10 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         const rewards = currentBossData?.rewards || { coins: 0, energy: 0 };
         const finalRewards = result === 'win' ? rewards : { coins: 0, energy: 0 };
         
+        // --- SỬA LỖI Ở ĐÂY: DÙNG updateCoins thay vì updateUserCurrency ---
         if (result === 'win' && finalRewards.coins > 0) {
-            game.updateUserCurrency({ coins: game.coins + finalRewards.coins });
+            // Sử dụng updateCoins để đồng bộ lên server
+            game.updateCoins(finalRewards.coins);
         }
         
         if (result === 'win') {
@@ -360,7 +362,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         
         // 4. Cập nhật Coins cho User
         if (rewards.coins > 0) {
-            game.updateUserCurrency({ coins: game.coins + rewards.coins });
+            // --- SỬA LỖI Ở ĐÂY: Gọi updateCoins và await kết quả ---
+            await game.updateCoins(rewards.coins);
         }
     
         // 5. Cập nhật UI và Player Stats
