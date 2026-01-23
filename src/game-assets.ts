@@ -162,6 +162,15 @@ export const skillAssets = {
 };
 
 /**
+ * Tài nguyên Hiệu ứng kỹ năng (Skill Effects / Sprites)
+ * Thêm mới cho skill-effect.tsx
+ */
+export const effectAssets = {
+    playerSkillOrb: require("./assets/effect/skill-1.webp"),
+    bossSkillOrb: require("./assets/effect/skill-2.webp"),
+};
+
+/**
  * Tài nguyên Lottie Animation
  */
 export const lottieAssets = {
@@ -230,6 +239,7 @@ export const allImageUrls = [
     ...Object.values(resourceAssets), // Thêm tài nguyên nguyên liệu
     ...Object.values(tradeAssets),    // Thêm tài nguyên trade
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
+    ...Object.values(effectAssets).filter(url => typeof url === 'string'), // Thêm tài nguyên effect
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
     ...Object.values(bossBattleAssets),
     ...Object.values(minerAssets),
