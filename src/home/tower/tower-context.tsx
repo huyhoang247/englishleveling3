@@ -337,52 +337,46 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
+    // --- LOGIC SWEEP (QUÉT) MỚI: AUTO WIN ---
     const handleSweep = useCallback(async () => {
+        // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
             return { result: 'lose', rewards: { coins: 0, energy: 0 } };
         }
     
-        // Trừ năng lượng trước
+        // 1. Trừ năng lượng trước
         setPlayerStats(prev => {
             if(!prev) return null;
             return { ...prev, energy: prev.energy - 10 }
         });
     
-        // Giả lập trận đấu với Boss tầng trước (currentFloor - 1)
+        // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
+        // Chú ý: Ở đây ta lấy phần thưởng của tầng trước (currentFloor - 1)
         const previousBossData = BOSS_DATA[currentFloor - 1];
-        let simPlayer = { ...initialPlayerStatsRef.current };
-        let simBoss = { ...previousBossData.stats };
-        let simTurn = 0;
-        let finalWinner: 'win' | 'lose' | null = null;
-    
-        while (finalWinner === null && simTurn < 500) { 
-            simTurn++;
-            const { player, boss, winner } = executeFullTurn(simPlayer, simBoss, simTurn);
-            simPlayer = player;
-            simBoss = boss;
-            finalWinner = winner;
-        }
-        if (!finalWinner) finalWinner = 'lose';
-    
-        const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
-        const finalRewards = finalWinner === 'win' ? rewards : { coins: 0, energy: 0 };
         
-        if (finalWinner === 'win' && finalRewards.coins > 0) {
-            game.updateUserCurrency({ coins: game.coins + finalRewards.coins });
+        // 3. FORCE WIN: Mặc định là thắng và nhận thưởng
+        const finalWinner = 'win';
+        const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
+        
+        // 4. Cập nhật Coins cho User
+        if (rewards.coins > 0) {
+            game.updateUserCurrency({ coins: game.coins + rewards.coins });
         }
     
-        if (finalWinner === 'win') {
-          setDisplayedCoins(prev => prev + finalRewards.coins);
-          setPlayerStats(prev => {
-              if(!prev) return null;
-              return {
-                  ...prev,
-                  energy: Math.min(prev.maxEnergy, prev.energy + finalRewards.energy)
-              }
-          });
-        }
-        return { result: finalWinner, rewards: finalRewards };
-    }, [playerStats, currentFloor, executeFullTurn, game]);
+        // 5. Cập nhật UI và Player Stats
+        setDisplayedCoins(prev => prev + rewards.coins);
+        setPlayerStats(prev => {
+            if(!prev) return null;
+            return {
+                ...prev,
+                // Giữ nguyên các stats khác, chỉ cộng thêm energy (nếu có thưởng energy)
+                energy: Math.min(prev.maxEnergy, prev.energy + rewards.energy)
+            }
+        });
+        
+        // 6. Trả về kết quả thắng ngay lập tức
+        return { result: finalWinner, rewards: rewards };
+    }, [playerStats, currentFloor, game]);
 
     // --- REACT HOOKS & EFFECTS ---
     
