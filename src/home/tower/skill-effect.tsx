@@ -1,6 +1,7 @@
 // --- START OF FILE skill-effect.tsx ---
 
 import React, { memo } from 'react';
+import { effectAssets } from '../../game-assets.ts';
 
 // --- TYPES ---
 export type SkillType = 'player-orb' | 'boss-orb';
@@ -24,7 +25,7 @@ const SKILL_DATA: Record<SkillType, {
     animSpinClass: string;     // Class điều khiển frame ảnh (sprite sheet)
 }> = {
     'player-orb': {
-        spriteUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-1.webp",
+        spriteUrl: effectAssets.playerSkillOrb,
         width: 83,
         height: 76,
         sheetWidth: 498,
@@ -33,7 +34,7 @@ const SKILL_DATA: Record<SkillType, {
         animSpinClass: 'animate-orb-spin'
     },
     'boss-orb': {
-        spriteUrl: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/effect/skill-2.webp",
+        spriteUrl: effectAssets.bossSkillOrb,
         width: 66,
         height: 59,
         sheetWidth: 396,
