@@ -34,7 +34,7 @@ const BOSS_DATA: Boss[] = [
     { id: 13, floor: "FLOOR 13", name: "Nocturnix", stats: { maxHp: 892, hp: 892, atk: 89, def: 53 }, rewards: { coins: 803, energy: 7 } },
     { id: 14, floor: "FLOOR 14", name: "Pallid Clerk", stats: { maxHp: 1070, hp: 1070, atk: 107, def: 64 }, rewards: { coins: 963, energy: 7 } },
     { id: 15, floor: "FLOOR 15", name: "Shambling Skeleton", stats: { maxHp: 1284, hp: 1284, atk: 128, def: 77 }, rewards: { coins: 1156, energy: 8 } },
-    { id: 16, floor: "FLOOR 16", name: "Buzzing Swarm", stats: { maxHp: 1541, hp: 1541, atk: 154, def: 92 }, rewards: { coins: 1387, energy: 8 } },
+    { id: 16, floor: "FLOOR 16", name: "Bonegleam", stats: { maxHp: 1541, hp: 1541, atk: 154, def: 92 }, rewards: { coins: 1387, energy: 8 } },
     { id: 17, floor: "FLOOR 17", name: "Flickered Marionette", stats: { maxHp: 1849, hp: 1849, atk: 185, def: 111 }, rewards: { coins: 1664, energy: 8 } },
     { id: 18, floor: "FLOOR 18", name: "Fetid Bat", stats: { maxHp: 2219, hp: 2219, atk: 222, def: 133 }, rewards: { coins: 1997, energy: 8 } },
     { id: 19, floor: "FLOOR 19", name: "Echoing Howl", stats: { maxHp: 2663, hp: 2663, atk: 266, def: 160 }, rewards: { coins: 2397, energy: 8 } },
