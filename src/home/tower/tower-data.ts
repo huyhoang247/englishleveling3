@@ -38,7 +38,7 @@ const BOSS_DATA: Boss[] = [
     { id: 17, floor: "FLOOR 17", name: "Flickered Marionette", stats: { maxHp: 1849, hp: 1849, atk: 185, def: 111 }, rewards: { coins: 1664, energy: 8 } },
     { id: 18, floor: "FLOOR 18", name: "Duskhound", stats: { maxHp: 2219, hp: 2219, atk: 222, def: 133 }, rewards: { coins: 1997, energy: 8 } },
     { id: 19, floor: "FLOOR 19", name: "Jade Tiger", stats: { maxHp: 2663, hp: 2663, atk: 266, def: 160 }, rewards: { coins: 2397, energy: 8 } },
-    { id: 20, floor: "FLOOR 20", name: "Sputtering Torch", stats: { maxHp: 3195, hp: 3195, atk: 320, def: 192 }, rewards: { coins: 2876, energy: 9 } },
+    { id: 20, floor: "FLOOR 20", name: "Silverwillow", stats: { maxHp: 3195, hp: 3195, atk: 320, def: 192 }, rewards: { coins: 2876, energy: 9 } },
     { id: 21, floor: "FLOOR 21", name: "Scarlet Eyeball", stats: { maxHp: 3834, hp: 3834, atk: 383, def: 230 }, rewards: { coins: 3451, energy: 9 } },
     { id: 22, floor: "FLOOR 22", name: "Ragged Puppet", stats: { maxHp: 4601, hp: 4601, atk: 460, def: 276 }, rewards: { coins: 4141, energy: 9 } },
     { id: 23, floor: "FLOOR 23", name: "Wailing Child", stats: { maxHp: 5521, hp: 5521, atk: 552, def: 331 }, rewards: { coins: 4969, energy: 9 } },
