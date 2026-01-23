@@ -67,7 +67,7 @@ const BOSS_DATA: Boss[] = [
     { id: 46, floor: "FLOOR 46", name: "Cyclops", stats: { maxHp: 365779, hp: 365779, atk: 36578, def: 21947 }, rewards: { coins: 329201, energy: 14 } },
     { id: 47, floor: "FLOOR 47", name: "Plaguecaller Cultist", stats: { maxHp: 438935, hp: 438935, atk: 43893, def: 26336 }, rewards: { coins: 395042, energy: 14 } },
     { id: 48, floor: "FLOOR 48", name: "Webbed Matriarch", stats: { maxHp: 526722, hp: 526722, atk: 52672, def: 31603 }, rewards: { coins: 474050, energy: 14 } },
-    { id: 49, floor: "FLOOR 49", name: "Twisted Marionette", stats: { maxHp: 632066, hp: 632066, atk: 63207, def: 37924 }, rewards: { coins: 568859, energy: 14 } },
+    { id: 49, floor: "FLOOR 49", name: "Iron Golem", stats: { maxHp: 632066, hp: 632066, atk: 63207, def: 37924 }, rewards: { coins: 568859, energy: 14 } },
     { id: 50, floor: "FLOOR 50", name: "Demonic Hoy", stats: { maxHp: 758479, hp: 758479, atk: 75848, def: 45509 }, rewards: { coins: 682631, energy: 15 } }
 ];
 
