@@ -33,9 +33,6 @@ import GameSkeletonLoader from './GameSkeletonLoader.tsx';
 import { useGame } from './GameContext.tsx';
 import TradeAssociationModalV2 from './home/trade-association/trade-association-ui.tsx';
 
-// --- IMPORT MODAL LỊCH SỬ GIAO DỊCH ---
-import TransactionHistoryModal from './home/TransactionHistoryModal.tsx';
-
 const SystemCheckScreen = lazy(() => import('./SystemCheckScreen.tsx'));
 
 // URL ICON CHO NÚT THƯƠNG HỘI
@@ -81,7 +78,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     isAuctionHouseOpen,
     isCheckInOpen,
     isMailboxOpen,
-    isTradeAssociationOpen, 
+    isTradeAssociationOpen, // MỚI: Trạng thái Trade
     ownedItems, equippedItems, refreshUserData,
     handleBossFloorUpdate, handleMinerChallengeEnd, handleUpdatePickaxes,
     handleUpdateJackpotPool, handleStatsUpdate,
@@ -97,7 +94,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
     toggleCheckIn,
     toggleMailbox, 
     toggleBaseBuilding,
-    toggleTradeAssociation, 
+    toggleTradeAssociation, // MỚI: Toggle Trade
   } = useGame();
 
   const sidebarToggleRef = useRef<(() => void) | null>(null);
@@ -105,10 +102,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
   const isAdmin = currentUser?.email === 'vanlongt309@gmail.com';
   
   const [isSystemCheckOpen, setIsSystemCheckOpen] = useState(false);
-  
-  // --- STATE MODAL LỊCH SỬ ---
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-
   const toggleSystemCheck = useCallback(() => {
     setIsSystemCheckOpen(p => !p);
   }, []);
@@ -157,16 +150,7 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
                 <HeaderBackground />
                 <button onClick={() => sidebarToggleRef.current?.()} className="p-1 rounded-full hover:bg-slate-700 transition-colors z-20" aria-label="Mở sidebar" title="Mở sidebar"><img src={uiAssets.menuIcon} alt="Menu Icon" className="w-5 h-5 object-contain" /></button>
                 <div className="flex-1"></div>
-                
-                {/* --- KHU VỰC HIỂN THỊ TIỀN (Click để mở lịch sử) --- */}
-                <div 
-                    className="flex items-center space-x-1 currency-display-container relative z-10 cursor-pointer active:scale-95 transition-transform"
-                    onClick={() => setIsHistoryOpen(true)}
-                    title="Xem lịch sử giao dịch"
-                >
-                    <GemDisplay displayedGems={gems} />
-                    <CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} />
-                </div>
+                <div className="flex items-center space-x-1 currency-display-container relative z-10"><GemDisplay displayedGems={gems} /><CoinDisplay displayedCoins={displayedCoins} isStatsFullscreen={false} /></div>
             </div>
             <RateLimitToast show={showRateLimitToast} />
             
@@ -320,15 +304,6 @@ export default function ObstacleRunnerGame({ className, hideNavBar, showNavBar }
             <div className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
                 <ErrorBoundary>
                     <Mailbox onClose={toggleMailbox} />
-                </ErrorBoundary>
-            </div>
-        )}
-
-        {/* --- MODAL LỊCH SỬ GIAO DỊCH --- */}
-        {isHistoryOpen && (
-            <div className="fixed inset-0 z-[80]"> 
-                <ErrorBoundary>
-                    <TransactionHistoryModal onClose={() => setIsHistoryOpen(false)} />
                 </ErrorBoundary>
             </div>
         )}
