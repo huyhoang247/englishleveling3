@@ -8,7 +8,8 @@ import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes, updateUserEnergy
+  updateUserBossFloor, updateUserPickaxes, updateUserEnergy,
+  syncEnergyWithServer // Import hàm đồng bộ mới
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -23,8 +24,9 @@ interface IGameContext {
     masteryCards: number;
     pickaxes: number;
     
-    // --- NEW: ENERGY STATE ---
+    // --- ENERGY STATES ---
     energy: number;
+    timeUntilNextEnergy: number; // Thời gian còn lại (giây) để hồi 1 năng lượng
 
     minerChallengeHighestFloor: number;
     userStatsLevel: { hp: number; atk: number; def: number; };
@@ -91,7 +93,7 @@ interface IGameContext {
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
     
-    // --- NEW: HANDLE UPDATE ENERGY ---
+    // --- ENERGY FUNCTION ---
     handleUpdateEnergy: (amount: number) => Promise<void>;
 
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
@@ -148,8 +150,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
   
-  // --- NEW: ENERGY STATE ---
+  // --- ENERGY STATES ---
   const [energy, setEnergy] = useState(50);
+  const [timeUntilNextEnergy, setTimeUntilNextEnergy] = useState(0);
 
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [userStatsLevel, setUserStatsLevel] = useState({ hp: 0, atk: 0, def: 0 });
@@ -260,6 +263,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   }, []);
 
+  // --- EFFECT: AUTH & INITIAL LOAD & SYNC ENERGY ---
   useEffect(() => {
     let unsubscribeFromUserDoc = () => {};
 
@@ -269,6 +273,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       if (user) {
         setIsLoadingUserData(true);
         
+        // --- SYNC ENERGY TỪ SERVER (Tính toán offline progress) ---
+        syncEnergyWithServer(user.uid)
+            .then(result => {
+                setEnergy(result.currentEnergy);
+                setTimeUntilNextEnergy(result.nextRefillIn);
+                console.log(`Energy Sync: ${result.currentEnergy}, Next in: ${result.nextRefillIn}s`);
+            })
+            .catch(err => console.error("Energy sync failed:", err));
+
         const userDocRef = doc(db, 'users', user.uid);
         
         unsubscribeFromUserDoc = onSnapshot(userDocRef, (docSnap) => {
@@ -281,7 +294,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setMasteryCards(gameData.masteryCards ?? 0);
                 setPickaxes(gameData.pickaxes ?? 50);
                 
-                // Real-time Energy Update
+                // Real-time Energy Update (Value Only)
                 setEnergy(gameData.energy ?? 50);
 
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
@@ -340,6 +353,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setPickaxes(0); setMinerChallengeHighestFloor(0); 
         
         setEnergy(50); // Reset Energy
+        setTimeUntilNextEnergy(0);
 
         setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
         setUserStatsValue({ hp: 0, atk: 0, def: 0 });
@@ -371,6 +385,47 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       unsubscribeFromUserDoc();
     };
   }, []);
+
+  // --- EFFECT: ENERGY REGENERATION TIMER ---
+  useEffect(() => {
+    // Nếu đầy năng lượng thì dừng đếm ngược
+    if (energy >= 50) {
+        setTimeUntilNextEnergy(0);
+        return;
+    }
+
+    const timer = setInterval(() => {
+        setTimeUntilNextEnergy((prev) => {
+            if (prev <= 1) {
+                // Hết giờ -> Tự động hồi 1 năng lượng ở Client & Sync Server
+                handleRegenerateEnergyTick();
+                return 300; // Reset về 5 phút (300 giây)
+            }
+            return prev - 1;
+        });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [energy]); // Phụ thuộc vào energy để biết khi nào dừng/chạy
+
+
+  // --- HELPER: HỒI NĂNG LƯỢNG TỰ ĐỘNG ---
+  const handleRegenerateEnergyTick = async () => {
+      const userId = auth.currentUser?.uid;
+      
+      // Update Client State (Optimistic)
+      setEnergy(prev => Math.min(50, prev + 1));
+
+      // Trigger Server Sync (Background calculation)
+      // Hàm này trong service sẽ tự tính toán và update DB chuẩn xác
+      if (userId) {
+          try {
+              await syncEnergyWithServer(userId);
+          } catch (e) {
+              console.error("Background energy sync error:", e);
+          }
+      }
+  };
 
   useEffect(() => {
       const handleVisibilityChange = () => { setIsBackgroundPaused(document.hidden); };
@@ -461,20 +516,26 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  // --- NEW: HANDLE UPDATE ENERGY ---
+  // --- HANDLE UPDATE ENERGY ---
   const handleUpdateEnergy = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
     
-    // Giới hạn max energy là 50 (hoặc số khác tùy bạn)
-    const newEnergy = Math.max(0, Math.min(50, energy + amount));
-    setEnergy(newEnergy); // Optimistic Update
+    // Optimistic Update
+    setEnergy(prev => {
+        const newVal = Math.max(0, Math.min(50, prev + amount));
+        
+        // Nếu đang đầy (hoặc hơn) mà bị trừ xuống dưới 50, bắt đầu đếm ngược 5 phút
+        if (prev >= 50 && newVal < 50) {
+            setTimeUntilNextEnergy(300);
+        }
+        return newVal;
+    });
 
     try {
-        await updateUserEnergy(userId, newEnergy);
+        await updateUserEnergy(userId, Math.max(0, Math.min(50, energy + amount)));
     } catch (error) {
         console.error("Failed to update energy:", error);
-        // Có thể rollback ở đây nếu muốn, nhưng với energy thì thường không quá quan trọng
     }
   };
   
@@ -534,7 +595,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         atk: BASE_ATK + totalPlayerStats.atk, 
         def: BASE_DEF + totalPlayerStats.def, 
         maxEnergy: 50, 
-        // --- SỬ DỤNG ENERGY TỪ STATE ---
         energy: energy 
     };
   };
@@ -605,6 +665,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     
     // --- EXPORT ENERGY & FUNCTION ---
     energy,
+    timeUntilNextEnergy, // Export time remaining
     handleUpdateEnergy,
 
     userStatsLevel, 
