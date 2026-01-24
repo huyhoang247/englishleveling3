@@ -276,7 +276,8 @@ export const CharacterStatsModal = memo(({ character, characterType, onClose }: 
   )
 });
 
-export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number, energy: number } }) => (
+// --- REWARDS MODAL (UPDATED: REMOVED ENERGY DISPLAY) ---
+export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number } }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
         <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
             <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button>
@@ -287,17 +288,14 @@ export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, r
                         <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
                         <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{formatLootAmount(rewards.coins)}</span>
                     </div>
-                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-                        <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{formatLootAmount(rewards.energy)}</span>
-                    </div>
                 </div>
             </div>
         </div>
     </div>
 ));
 
-export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number, energy: number } }) => (
+// --- VICTORY MODAL (UPDATED: REMOVED ENERGY DISPLAY) ---
+export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number } }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
         <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
             <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2" />
@@ -308,10 +306,6 @@ export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards 
                     <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
                         <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
                         <span className="text-xl font-bold text-yellow-300">{formatLootAmount(rewards.coins)}</span>
-                    </div>
-                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                        <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-cyan-300">{formatLootAmount(rewards.energy)}</span>
                     </div>
                 </div>
             </div>
@@ -336,3 +330,5 @@ export const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => (
         </div>
     </div>
 ));
+
+// --- END OF FILE tower-ui-components.tsx ---
