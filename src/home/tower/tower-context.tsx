@@ -7,11 +7,11 @@ import {
     SkillBlueprint, 
     getActivationChance, 
     getRarityTextColor,
-    ALL_SKILLS // Import để có thể truy xuất thông tin chi tiết skill nếu cần
+    ALL_SKILLS 
 } from '../skill-game/skill-data.tsx';
 import { useGame } from '../../GameContext.tsx';
 
-// --- IMPORT SERVICE MỚI ---
+// --- IMPORT SERVICE ---
 import { calculateResourceRewards, claimTowerRewards, BattleRewards } from './tower-service.ts';
 
 // --- TYPE DEFINITIONS ---
@@ -36,12 +36,12 @@ export type TurnEvents = {
     bossDmg: number;
     bossReflectDmg: number;
     
-    // MỚI: Danh sách kỹ năng kích hoạt trong lượt này
+    // Danh sách kỹ năng kích hoạt trong lượt này
     playerActivatedSkills: { 
         id: string; 
         name: string; 
         rarity: string; 
-        type: 'offensive' | 'defensive'; // offensive: hiện đầu lượt, defensive: hiện khi bị đánh
+        type: 'offensive' | 'defensive'; 
     }[];
     bossActivatedSkills: { 
         id: string; 
@@ -66,8 +66,12 @@ interface BossBattleState {
     battleState: 'idle' | 'fighting' | 'finished';
     currentBossData: typeof BOSS_DATA[number] | null;
     lastTurnEvents: TurnEvents | null;
-    // Thêm state để UI biết phần thưởng vừa nhận (Coins + Resources)
+    
+    // State lưu phần thưởng cuối trận để hiển thị (khi đã thắng)
     lastRewards: BattleRewards | null; 
+    
+    // State lưu phần thưởng tiềm năng (tính trước để hiện Popup xem trước)
+    potentialRewards: BattleRewards | null;
 }
 
 interface BossBattleActions {
@@ -102,8 +106,9 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
     const [lastTurnEvents, setLastTurnEvents] = useState<TurnEvents | null>(null);
     
-    // State lưu phần thưởng cuối trận để hiển thị
+    // State Rewards
     const [lastRewards, setLastRewards] = useState<BattleRewards | null>(null);
+    const [potentialRewards, setPotentialRewards] = useState<BattleRewards | null>(null);
 
     const initialPlayerStatsRef = useRef<CombatStats | null>(null);
     const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -147,22 +152,17 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         };
 
         // --- 0. TÍNH HỒI MÁU ĐẦU LƯỢT (SKILL HEALING) ---
-        // Kỹ năng: Healing
         equippedSkills.forEach(skill => {
             if (skill.id === 'healing' && checkActivation(skill.rarity)) {
-                // Effect value trả về % (ví dụ: 0.5 nghĩa là 0.5%)
                 const healPercent = getSkillEffect(skill);
                 const healAmount = Math.ceil(player.maxHp * (healPercent / 100));
-                
-                // Đảm bảo không hồi vượt quá Max HP
                 const actualHeal = Math.min(healAmount, player.maxHp - player.hp);
                 
                 if (actualHeal > 0) {
                     player.hp += actualHeal;
-                    turnEvents.playerHeal += actualHeal; // Cộng dồn vào sự kiện hiển thị
+                    turnEvents.playerHeal += actualHeal;
                     log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> hồi phục <b class="text-green-400">${actualHeal}</b> HP.`);
                     
-                    // Ghi nhận skill đã kích hoạt (Loại Offensive/Support - Hiện đầu lượt)
                     turnEvents.playerActivatedSkills.push({
                         id: skill.id,
                         name: skill.name,
@@ -176,7 +176,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         // --- 1. TÍNH DAMAGE PLAYER ---
         let atkMods = { boost: 1, armorPen: 0 };
         
-        // Kỹ năng: Damage Boost & Armor Penetration
         equippedSkills.forEach(skill => {
             if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
                 const effect = getSkillEffect(skill);
@@ -185,7 +184,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 if (skill.id === 'damage_boost') atkMods.boost += effect / 100;
                 if (skill.id === 'armor_penetration') atkMods.armorPen += effect / 100;
 
-                // Ghi nhận skill đã kích hoạt (Loại Offensive - Hiện đầu lượt)
                 turnEvents.playerActivatedSkills.push({
                     id: skill.id,
                     name: skill.name,
@@ -222,11 +220,10 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 const healed = Math.ceil(totalPlayerDmg * (getSkillEffect(skill) / 100));
                 const actualHeal = Math.min(healed, player.maxHp - player.hp);
                 if (actualHeal > 0) {
-                    turnEvents.playerHeal += actualHeal; // Sử dụng += để cộng dồn nếu có skill Healing trước đó
+                    turnEvents.playerHeal += actualHeal;
                     log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> hút <b class="text-green-400">${actualHeal}</b> Máu.`);
                     player.hp += actualHeal;
 
-                    // Ghi nhận skill đã kích hoạt (Loại Offensive - Hiện trong lúc đánh)
                     turnEvents.playerActivatedSkills.push({
                         id: skill.id,
                         name: skill.name,
@@ -259,7 +256,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương.`);
                 boss.hp -= reflectDmg;
 
-                // Ghi nhận skill đã kích hoạt (Loại Defensive - Hiện khi bị đánh)
                 turnEvents.playerActivatedSkills.push({
                     id: skill.id,
                     name: skill.name,
@@ -282,6 +278,23 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         return { player, boss, turnLogs, winner, turnEvents };
     }, [equippedSkills, currentBossData]);
 
+    // --- EFFECT: TÍNH TOÁN PHẦN THƯỞNG TIỀM NĂNG (ĐỒNG BỘ 1 LẦN KHI ĐỔI TẦNG) ---
+    useEffect(() => {
+        if (currentBossData) {
+            // 1. Lấy Coins cố định từ Data
+            const coins = currentBossData.rewards?.coins || 0;
+            
+            // 2. Tính Resources ngẫu nhiên NGAY LÚC NÀY
+            const resources = calculateResourceRewards(currentFloor);
+            
+            // 3. Lưu vào State để dùng chung (Hiển thị Popup & Trả thưởng)
+            setPotentialRewards({
+                coins,
+                resources
+            });
+        }
+    }, [currentFloor, currentBossData]);
+
     // --- GAME CONTROL FUNCTIONS ---
     const endGame = useCallback(async (result: 'win' | 'lose') => {
         if (isEndingGame.current) return;
@@ -291,40 +304,30 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         setGameOver(result);
         setBattleState('finished');
 
-        // Tính toán phần thưởng
-        let finalRewards: BattleRewards = { coins: 0, resources: [] };
+        // Lấy phần thưởng đã tính trước (potentialRewards)
+        // Nếu vì lý do gì đó mà null (ít xảy ra), tính lại như fallback
+        let finalRewards: BattleRewards = potentialRewards || { 
+            coins: currentBossData?.rewards?.coins || 0, 
+            resources: calculateResourceRewards(currentFloor) 
+        };
 
-        if (result === 'win' && currentBossData) {
-            // 1. Coins từ Data cứng
-            const earnedCoins = currentBossData.rewards?.coins || 0;
-            
-            // 2. Resources từ Service (Random)
-            const earnedResources = calculateResourceRewards(currentFloor);
-
-            finalRewards = {
-                coins: earnedCoins,
-                resources: earnedResources
-            };
-
+        if (result === 'win') {
             setLastRewards(finalRewards);
 
-            // 3. Cập nhật Coins lạc quan (Optimistic Update cho UI)
-            if (earnedCoins > 0) {
-                // KHÔNG DÙNG await để UI không bị khựng (Fire and Forget)
-                game.updateCoins(earnedCoins);
+            // Optimistic UI Update cho Coins
+            if (finalRewards.coins > 0) {
+                game.updateCoins(finalRewards.coins);
             }
 
-            // 4. Gọi Service để lưu Resources và Coins vào Firestore
+            // Gọi Service để lưu Resources và Coins vào Firestore
             try {
-                // Ở endGame thì có thể await hoặc không tùy ý, vì animation thắng cũng mất thời gian
-                // Nhưng để an toàn cho trải nghiệm, có thể bỏ await
                 await claimTowerRewards(userId, finalRewards);
             } catch (err) {
                 console.error("Error saving rewards:", err);
             }
         }
         
-    }, [currentBossData, game, userId, currentFloor]);
+    }, [currentBossData, game, userId, currentFloor, potentialRewards]);
 
     const runBattleTurn = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -371,7 +374,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         endGame(finalWinner);
     }, [playerStats, bossStats, turnCounter, executeFullTurn, endGame]);
     
-    // --- CẬP NHẬT START GAME: TRỪ NĂNG LƯỢNG THẬT ---
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
         isEndingGame.current = false;
@@ -384,9 +386,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             return { ...prev, energy: prev.energy - 10 };
         });
         
-        // --- NEW: CẬP NHẬT NĂNG LƯỢNG TOÀN CỤC & DATABASE ---
         game.handleUpdateEnergy(-10);
-
         setBattleState('fighting');
     }, [battleState, playerStats, game]);
 
@@ -398,8 +398,9 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         setGameOver(null);
         setBattleState('idle');
         setLastTurnEvents(null);
-        setLastRewards(null); // Reset phần thưởng
+        setLastRewards(null);
         isEndingGame.current = false;
+        // LƯU Ý: Không reset potentialRewards ở đây, nó sẽ được update qua useEffect khi currentFloor thay đổi
     }, [combatLog]);
 
     const retryCurrentFloor = useCallback(() => {
@@ -416,54 +417,49 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [resetAllStateForNewBattle, currentBossData, addLog]);
 
-    // --- LOGIC CHUYỂN TẦNG MỚI ---
     const handleNextFloor = useCallback(() => {
         if (!initialPlayerStatsRef.current) return;
         const nextIndex = currentFloor + 1;
         if(nextIndex >= BOSS_DATA.length) return;
         
-        // 1. Reset state (bao gồm setGameOver về null)
+        // 1. Reset state
         resetAllStateForNewBattle();
         
         // 2. Update Floor Index trong Game Context
         game.handleBossFloorUpdate(nextIndex);
         setCurrentFloor(nextIndex);
         
-        // 3. Reset Player Stats (Hồi đầy HP, giữ nguyên Energy hiện tại)
+        // 3. Reset Player Stats
         setPlayerStats(prev => ({
             ...initialPlayerStatsRef.current!, 
             hp: initialPlayerStatsRef.current!.maxHp,
             energy: prev!.energy 
         }));
         
-        // 4. Set Boss Stats explicitly cho tầng mới ngay lập tức
+        // 4. Set Boss Stats explicitly
         const nextBossData = BOSS_DATA[nextIndex];
         if (nextBossData) {
              setBossStats(nextBossData.stats);
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
-    // --- CẬP NHẬT HANDLE SWEEP: TRỪ NĂNG LƯỢNG THẬT ---
     const handleSweep = useCallback(async () => {
-        // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
             return { result: 'lose' as const, rewards: null };
         }
     
-        // 1. Trừ năng lượng ở Local State
+        // 1. Trừ năng lượng
         setPlayerStats(prev => {
             if(!prev) return null;
             return { ...prev, energy: prev.energy - 10 }
         });
-
-        // --- NEW: CẬP NHẬT NĂNG LƯỢNG TOÀN CỤC & DATABASE ---
         game.handleUpdateEnergy(-10);
     
-        // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
+        // 2. Lấy data boss tầng trước
         const previousFloorIndex = currentFloor - 1;
         const previousBossData = BOSS_DATA[previousFloorIndex];
         
-        // 3. Tính phần thưởng
+        // 3. Tính phần thưởng (Sweep cần tính mới vì không phải tầng hiện tại)
         const earnedCoins = previousBossData.rewards?.coins || 0;
         const earnedResources = calculateResourceRewards(previousFloorIndex);
 
@@ -475,34 +471,30 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         // Lưu state để UI hiển thị
         setLastRewards(rewards);
         
-        // 4. Cập nhật Coins cho User (Optimistic - Hiện ngay)
+        // 4. Cập nhật Coins
         if (rewards.coins > 0) {
             game.updateCoins(rewards.coins);
         }
     
         // 5. Lưu vào Firestore (FIRE AND FORGET)
-        // QUAN TRỌNG: Không dùng await để tránh lag UI
         claimTowerRewards(userId, rewards)
             .catch(err => console.error("Background sweep save error:", err));
         
-        // 6. Trả về kết quả thắng ngay lập tức
+        // 6. Trả về kết quả
         return { result: 'win' as const, rewards: rewards };
     }, [playerStats, currentFloor, game, userId]);
 
     // --- REACT HOOKS & EFFECTS ---
 
-    // --- ĐỒNG BỘ COIN TỪ GAMECONTEXT SANG TOWERCONTEXT ---
     useEffect(() => {
         setDisplayedCoins(game.coins);
     }, [game.coins]);
     
-    // Lưu callback mới nhất để dùng trong interval
     useEffect(() => {
         savedCallback.current = runBattleTurn;
     }, [runBattleTurn]);
 
     // Init Data khi vào màn chơi
-    // --- QUAN TRỌNG: Đã xóa game.coins khỏi dependency array để tránh reset năng lượng ---
     useEffect(() => {
         if (game.isLoadingUserData) {
             setIsLoading(true);
@@ -520,7 +512,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
 
             let stats = game.getPlayerBattleStats();
             if (!stats) {
-                // Fallback nếu chưa có stats
                 stats = {
                     maxHp: 1000,
                     hp: 1000,
@@ -542,7 +533,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 setBossStats(initialBossData.stats);
             }
 
-            // Đồng bộ coin ban đầu
             setDisplayedCoins(game.coins);
             setError(null);
 
@@ -551,7 +541,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             setError(e instanceof Error ? e.message : "An unknown error occurred.");
         } finally {
             const elapsedTime = Date.now() - startTime;
-            const remainingTime = 700 - elapsedTime; // Minimum loading time
+            const remainingTime = 700 - elapsedTime;
 
             if (remainingTime > 0) {
                 setTimeout(() => setIsLoading(false), remainingTime);
@@ -559,7 +549,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 setIsLoading(false);
             }
         }
-    }, [game.isLoadingUserData, game.bossBattleHighestFloor]); // <--- Đã xóa game.coins ở đây
+    }, [game.isLoadingUserData, game.bossBattleHighestFloor]);
 
     // Update Boss Stats khi đổi tầng
     useEffect(() => {
@@ -573,10 +563,9 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, isLoading, currentBossData, battleState, addLog]);
     
-    // Interval Loop cho Battle (5500ms)
+    // Interval Loop cho Battle
     useEffect(() => {
         if (battleState === 'fighting' && !gameOver) {
-          // Chạy ngay lượt đầu tiên
           if(savedCallback.current) {
             savedCallback.current();
           }
@@ -607,7 +596,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         battleState,
         currentBossData,
         lastTurnEvents,
-        lastRewards, // Export state này
+        lastRewards,
+        potentialRewards, // Export state này để UI sử dụng
         startGame,
         skipBattle,
         retryCurrentFloor,
