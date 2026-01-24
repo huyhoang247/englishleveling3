@@ -1,6 +1,6 @@
 // --- START OF FILE tower-service.ts ---
 
-import { db } from './firebase'; // Đảm bảo đường dẫn import đúng với project của bạn
+import { db } from '../../firebase'; // Đảm bảo đường dẫn import đúng với project của bạn
 import { doc, runTransaction, increment } from 'firebase/firestore';
 
 export type ResourceType = 'wood' | 'leather' | 'ore' | 'cloth' | 'feather' | 'coal';
