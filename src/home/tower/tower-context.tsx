@@ -11,6 +11,9 @@ import {
 } from '../skill-game/skill-data.tsx';
 import { useGame } from '../../GameContext.tsx';
 
+// --- IMPORT SERVICE MỚI ---
+import { calculateResourceRewards, claimTowerRewards, BattleRewards } from './tower-service.ts';
+
 // --- TYPE DEFINITIONS ---
 export type ActiveSkill = OwnedSkill & SkillBlueprint;
 
@@ -63,6 +66,8 @@ interface BossBattleState {
     battleState: 'idle' | 'fighting' | 'finished';
     currentBossData: typeof BOSS_DATA[number] | null;
     lastTurnEvents: TurnEvents | null;
+    // Thêm state để UI biết phần thưởng vừa nhận (Coins + Resources)
+    lastRewards: BattleRewards | null; 
 }
 
 interface BossBattleActions {
@@ -70,7 +75,7 @@ interface BossBattleActions {
     skipBattle: () => void;
     retryCurrentFloor: () => void;
     handleNextFloor: () => void;
-    handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: { coins: number; energy: number } }>;
+    handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: BattleRewards | null }>;
 }
 
 type BossBattleContextType = BossBattleState & BossBattleActions;
@@ -96,6 +101,9 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     const [gameOver, setGameOver] = useState<null | 'win' | 'lose'>(null);
     const [battleState, setBattleState] = useState<'idle' | 'fighting' | 'finished'>('idle');
     const [lastTurnEvents, setLastTurnEvents] = useState<TurnEvents | null>(null);
+    
+    // State lưu phần thưởng cuối trận để hiển thị
+    const [lastRewards, setLastRewards] = useState<BattleRewards | null>(null);
 
     const initialPlayerStatsRef = useRef<CombatStats | null>(null);
     const battleIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -275,7 +283,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     }, [equippedSkills, currentBossData]);
 
     // --- GAME CONTROL FUNCTIONS ---
-    const endGame = useCallback((result: 'win' | 'lose') => {
+    const endGame = useCallback(async (result: 'win' | 'lose') => {
         if (isEndingGame.current) return;
         isEndingGame.current = true;
 
@@ -283,29 +291,39 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         setGameOver(result);
         setBattleState('finished');
 
-        const rewards = currentBossData?.rewards || { coins: 0, energy: 0 };
-        const finalRewards = result === 'win' ? rewards : { coins: 0, energy: 0 };
-        
-        // --- SỬA LỖI: CẬP NHẬT LẠC QUAN ---
-        if (result === 'win' && finalRewards.coins > 0) {
-            // KHÔNG DÙNG await để UI không bị khựng (Fire and Forget)
-            game.updateCoins(finalRewards.coins);
-        }
-        
-        // Cập nhật Energy cục bộ cho Player
-        if (result === 'win') {
-            // LƯU Ý: Không cộng coin vào `displayedCoins` ở đây nữa 
-            // để tránh lỗi hiển thị x2. useEffect ở dưới sẽ tự động làm việc đó.
+        // Tính toán phần thưởng
+        let finalRewards: BattleRewards = { coins: 0, resources: [] };
+
+        if (result === 'win' && currentBossData) {
+            // 1. Coins từ Data cứng
+            const earnedCoins = currentBossData.rewards?.coins || 0;
             
-            setPlayerStats(prev => {
-                if (!prev) return null;
-                return {
-                    ...prev,
-                    energy: Math.min(prev.maxEnergy, prev.energy + finalRewards.energy)
-                };
-            });
+            // 2. Resources từ Service (Random)
+            const earnedResources = calculateResourceRewards(currentFloor);
+
+            finalRewards = {
+                coins: earnedCoins,
+                resources: earnedResources
+            };
+
+            setLastRewards(finalRewards);
+
+            // 3. Cập nhật Coins lạc quan (Optimistic Update cho UI)
+            if (earnedCoins > 0) {
+                // KHÔNG DÙNG await để UI không bị khựng (Fire and Forget)
+                game.updateCoins(earnedCoins);
+            }
+
+            // 4. Gọi Service để lưu Resources và Coins vào Firestore
+            try {
+                await claimTowerRewards(userId, finalRewards);
+            } catch (err) {
+                console.error("Error saving rewards:", err);
+            }
         }
-    }, [currentBossData, game]);
+        
+        // Không còn cộng Energy vào playerStats ở đây nữa
+    }, [currentBossData, game, userId, currentFloor]);
 
     const runBattleTurn = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -355,6 +373,10 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
         isEndingGame.current = false;
+        
+        // Reset rewards cũ khi bắt đầu trận mới
+        setLastRewards(null); 
+        
         setPlayerStats(prev => {
             if (!prev) return null;
             return { ...prev, energy: prev.energy - 10 };
@@ -370,6 +392,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         setGameOver(null);
         setBattleState('idle');
         setLastTurnEvents(null);
+        setLastRewards(null); // Reset phần thưởng
         isEndingGame.current = false;
     }, [combatLog]);
 
@@ -418,7 +441,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     const handleSweep = useCallback(async () => {
         // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
-            return { result: 'lose', rewards: { coins: 0, energy: 0 } };
+            return { result: 'lose' as const, rewards: null };
         }
     
         // 1. Trừ năng lượng trước (Optimistic)
@@ -428,34 +451,36 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         });
     
         // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
-        const previousBossData = BOSS_DATA[currentFloor - 1];
+        const previousFloorIndex = currentFloor - 1;
+        const previousBossData = BOSS_DATA[previousFloorIndex];
         
-        // 3. FORCE WIN
-        const finalWinner = 'win';
-        const rewards = previousBossData.rewards || { coins: 0, energy: 0 };
+        // 3. Tính phần thưởng
+        const earnedCoins = previousBossData.rewards?.coins || 0;
+        const earnedResources = calculateResourceRewards(previousFloorIndex);
+
+        const rewards: BattleRewards = {
+            coins: earnedCoins,
+            resources: earnedResources
+        };
         
-        // 4. Cập nhật Coins cho User
+        // Lưu state để UI hiển thị
+        setLastRewards(rewards);
+        
+        // 4. Cập nhật Coins cho User (Optimistic)
         if (rewards.coins > 0) {
-            // --- CẬP NHẬT LẠC QUAN ---
-            // Gọi hàm update và KHÔNG DÙNG await
-            // GameContext sẽ tự cập nhật local state ngay lập tức -> UI nhảy số liền -> Không lag
             game.updateCoins(rewards.coins);
         }
     
-        // 5. Cập nhật Player Stats (Energy)
-        // LƯU Ý: Không cập nhật displayedCoins ở đây nữa để tránh x2
-        setPlayerStats(prev => {
-            if(!prev) return null;
-            return {
-                ...prev,
-                // Giữ nguyên các stats khác, chỉ cộng thêm energy (nếu có thưởng energy)
-                energy: Math.min(prev.maxEnergy, prev.energy + rewards.energy)
-            }
-        });
+        // 5. Lưu vào Firestore
+        try {
+            await claimTowerRewards(userId, rewards);
+        } catch (err) {
+            console.error("Sweep error:", err);
+        }
         
         // 6. Trả về kết quả thắng ngay lập tức
-        return { result: finalWinner, rewards: rewards };
-    }, [playerStats, currentFloor, game]);
+        return { result: 'win' as const, rewards: rewards };
+    }, [playerStats, currentFloor, game, userId]);
 
     // --- REACT HOOKS & EFFECTS ---
 
@@ -576,6 +601,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         battleState,
         currentBossData,
         lastTurnEvents,
+        lastRewards, // Export state này
         startGame,
         skipBattle,
         retryCurrentFloor,
