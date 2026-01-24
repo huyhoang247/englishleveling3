@@ -27,8 +27,8 @@ import {
     RewardsModal, 
     VictoryModal, 
     DefeatModal,
-    ActiveSkillToast,      // NEW COMPONENT
-    ActiveSkillToastProps  // NEW TYPE
+    ActiveSkillToast,      
+    ActiveSkillToastProps  
 } from './tower-ui-components.tsx';
 
 interface BossBattleWrapperProps {
@@ -431,8 +431,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
         if (bossReflectDmg > 0) {
             setTimeout(() => {
-                addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'player', 18); 
-                setVisualPlayerHp(prev => Math.max(0, prev - bossReflectDmg));
+                // --- SỬA LỖI: HIỂN THỊ DAMAGE PHẢN LẠI TRÊN ĐẦU BOSS ---
+                // Target: 'boss', update: setVisualBossHp
+                addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'boss', 32); 
+                setVisualBossHp(prev => Math.max(0, prev - bossReflectDmg));
+                
+                // Hiệu ứng Boss bị đánh (giật lùi)
+                setBossState('hit');
+                setTimeout(() => setBossState('idle'), 400);
+
             }, 3000); 
         }
 
