@@ -2,9 +2,12 @@
 
 import React, { memo } from 'react';
 import { CombatStats } from './tower-context.tsx';
-import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
+import { uiAssets, bossBattleAssets, resourceAssets } from '../../game-assets.ts';
 import SkillEffect, { SkillProps } from './skill-effect.tsx';
 import { ALL_SKILLS, getRarityColor, getRarityGradient } from '../skill-game/skill-data.tsx';
+
+// --- IMPORT TYPES ---
+import { BattleRewards } from './tower-service.ts';
 
 // --- HELPER: FORMAT NUMBER (k, m, b) ---
 const formatLootAmount = (num: number): string => {
@@ -19,6 +22,16 @@ const formatLootAmount = (num: number): string => {
     }
     return num.toString();
 };
+
+// --- HELPER COMPONENT: REWARD ITEM ---
+// Dùng chung cho RewardsModal và VictoryModal để hiển thị thống nhất
+const RewardItem = ({ icon, amount, label }: { icon: string, amount: number, label?: string }) => (
+    <div className="flex flex-col items-center justify-center bg-slate-800/60 p-2 rounded-lg border border-slate-700 min-w-[70px] transition-transform hover:scale-105">
+        <img src={icon} alt={label || 'Reward'} className="w-8 h-8 object-contain mb-1 drop-shadow-md" />
+        <span className="text-sm font-bold text-white text-shadow-sm">{formatLootAmount(amount)}</span>
+        {label && <span className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">{label}</span>}
+    </div>
+);
 
 // --- STYLES COMPONENT (OPTIMIZED FOR PERFORMANCE) ---
 export const MainBattleStyles = memo(() => (
@@ -76,7 +89,6 @@ export const MainBattleStyles = memo(() => (
             0% { opacity: 0; transform: translateX(-30px); }
             100% { opacity: 1; transform: translateX(0); }
         }
-        /* Thêm will-change để tối ưu GPU */
         .animate-slide-in-left { 
             will-change: transform, opacity;
             animation: slide-in-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
@@ -86,7 +98,6 @@ export const MainBattleStyles = memo(() => (
             0% { opacity: 0; transform: translateX(30px); }
             100% { opacity: 1; transform: translateX(0); }
         }
-        /* Thêm will-change để tối ưu GPU */
         .animate-slide-in-right { 
             will-change: transform, opacity;
             animation: slide-in-right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
@@ -147,7 +158,7 @@ export interface LootItemData {
     isVisible: boolean;
 }
 
-// --- LOOT ITEM COMPONENT (UPDATED FORMATTING) ---
+// --- LOOT ITEM COMPONENT ---
 export const LootItem = memo(({ item }: { item: LootItemData }) => {
     const formattedAmount = formatLootAmount(item.amount);
     
@@ -191,7 +202,6 @@ export const ActiveSkillToast = memo(({ skill }: { skill: ActiveSkillToastProps 
     const borderColor = getRarityColor(skill.rarity as any);
 
     return (
-        // LƯU Ý: Đã xóa 'backdrop-blur-md'. Thêm 'bg-slate-900' để làm nền cứng tối màu + 'shadow-xl'
         <div className={`flex items-center gap-3 p-2 pr-4 rounded-xl border ${borderColor} bg-gradient-to-r ${bgGradient} bg-slate-900 shadow-xl mb-2 min-w-[180px] max-w-[220px] ${alignClass}`}>
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-black/40 border border-white/10 shrink-0 relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
@@ -242,6 +252,8 @@ export const BattleEffectsLayer = memo(({
 });
 
 // --- MODALS ---
+
+// --- CHARACTER STATS MODAL ---
 export const CharacterStatsModal = memo(({ character, characterType, onClose }: { character: CombatStats, characterType: 'player' | 'boss', onClose: () => void }) => {
   const isPlayer = characterType === 'player';
   const title = isPlayer ? 'YOUR STATS' : 'BOSS STATS';
@@ -276,39 +288,67 @@ export const CharacterStatsModal = memo(({ character, characterType, onClose }: 
   )
 });
 
-// --- REWARDS MODAL (UPDATED: REMOVED ENERGY DISPLAY) ---
-export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: { coins: number } }) => (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
-        <div className="relative w-80 bg-slate-900/80 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
-            <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button>
-            <div className="p-5 pt-8">
-                <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Rewards</h3>
-                <div className="flex flex-row flex-wrap justify-center gap-3">
-                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
-                        <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{formatLootAmount(rewards.coins)}</span>
+// --- REWARDS MODAL (UPDATED: SHOW BOTH COINS AND RESOURCES) ---
+export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: BattleRewards | null }) => {
+    return (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
+            <div className="relative w-80 bg-slate-900/90 border border-slate-600 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita" onClick={(e) => e.stopPropagation()}>
+                <button onClick={onClose} className="absolute top-2 right-2 w-8 h-8 rounded-full bg-slate-800/70 hover:bg-red-500/80 flex items-center justify-center text-slate-300 hover:text-white transition-all duration-200 z-10 font-sans">✕</button>
+                <div className="p-5 pt-8">
+                    <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Potential Rewards</h3>
+                    
+                    <div className="flex flex-wrap justify-center gap-3">
+                        {/* 1. COINS */}
+                        {rewards && rewards.coins > 0 && (
+                            <RewardItem icon={bossBattleAssets.coinIcon} amount={rewards.coins} label="Coins" />
+                        )}
+
+                        {/* 2. RESOURCES */}
+                        {rewards && rewards.resources && rewards.resources.map((res, idx) => {
+                            // Map type string sang ảnh từ resourceAssets
+                            const resKey = res.type as keyof typeof resourceAssets;
+                            const img = resourceAssets[resKey] || bossBattleAssets.coinIcon; // Fallback icon
+                            return (
+                                <RewardItem key={idx} icon={img} amount={res.amount} label={res.type} />
+                            );
+                        })}
+
+                        {(!rewards || ((!rewards.resources || rewards.resources.length === 0) && rewards.coins === 0)) && (
+                            <p className="text-slate-400 text-sm italic">No rewards available.</p>
+                        )}
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-));
+    );
+});
 
-// --- VICTORY MODAL (UPDATED: REMOVED ENERGY DISPLAY) ---
-export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: { coins: number } }) => (
+// --- VICTORY MODAL (UPDATED: SHOW BOTH COINS AND RESOURCES) ---
+export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: BattleRewards | null }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
         <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
             <img src={bossBattleAssets.victoryIcon} alt="Victory" className="w-16 h-16 object-contain mb-2" />
             <h2 className="text-4xl font-bold text-yellow-300 tracking-widest uppercase mb-4 text-shadow">VICTORY</h2>
+            
             <div className="w-full flex flex-col items-center gap-3">
                 <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
-                <div className="flex flex-row flex-wrap justify-center gap-3">
-                    <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
-                        <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-yellow-300">{formatLootAmount(rewards.coins)}</span>
-                    </div>
+                
+                {/* HIỂN THỊ LIST REWARDS (COINS + RESOURCES) */}
+                <div className="flex flex-wrap justify-center gap-3 w-full">
+                    {rewards && rewards.coins > 0 && (
+                         <RewardItem icon={bossBattleAssets.coinIcon} amount={rewards.coins} label="Coins" />
+                    )}
+                    
+                    {rewards && rewards.resources && rewards.resources.map((res, idx) => {
+                        const resKey = res.type as keyof typeof resourceAssets;
+                        const img = resourceAssets[resKey] || bossBattleAssets.coinIcon;
+                        return (
+                            <RewardItem key={idx} icon={img} amount={res.amount} label={res.type} />
+                        );
+                    })}
                 </div>
             </div>
+
             <hr className="w-full border-t border-yellow-500/20 my-5" />
             {!isLastBoss ? (
                 <button onClick={onNextFloor} className="w-full px-8 py-3 bg-blue-600/50 hover:bg-blue-600 rounded-lg font-bold text-base text-blue-50 tracking-wider uppercase border border-blue-500">Next Floor</button>
@@ -319,6 +359,7 @@ export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards 
     </div>
 ));
 
+// --- DEFEAT MODAL ---
 export const DefeatModal = memo(({ onRestart }: { onRestart: () => void }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
         <div className="relative w-80 bg-slate-900/90 border border-slate-700 rounded-xl shadow-2xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
