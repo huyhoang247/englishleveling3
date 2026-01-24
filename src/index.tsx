@@ -159,11 +159,11 @@ interface LoadingScreenLayoutProps {
 const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ appVersion, children, className }) => {
   return (
     <div className={`relative w-full h-screen overflow-hidden bg-black ${className}`}>
-      {/* Định nghĩa animation float nhẹ nhàng */}
+      {/* Định nghĩa animation float nhẹ nhàng hơn */}
       <style>{`
         @keyframes gentleFloat {
           0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-10px); }
+          50% { transform: translateY(-6px); }
         }
       `}</style>
       
@@ -181,13 +181,13 @@ const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ appVersion, c
       <div className="relative z-10 flex flex-col items-center justify-between pt-16 pb-56 w-full h-full text-white font-sans">
         
         {/* Phần Hình ảnh Header */}
-        <div className="flex flex-col items-center gap-4 mt-10">
-            {/* Gameplay Image - Nhỏ hơn (w-64), dịch xuống (mt-10 ở parent), opacity 90%, animation nhẹ */}
+        <div className="flex flex-col items-center gap-4 mt-24">
+            {/* Gameplay Image - Nhỏ hơn (w-64), dịch xuống (mt-24 ở parent), opacity 90%, animation nhẹ */}
             <img 
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/gameplay.webp" 
                 alt="Gameplay" 
                 className="w-64 h-auto object-contain opacity-90" 
-                style={{ animation: 'gentleFloat 3s ease-in-out infinite' }}
+                style={{ animation: 'gentleFloat 4s ease-in-out infinite' }}
             />
             
             {/* Logo đã được dời xuống footer */}
@@ -195,8 +195,8 @@ const LoadingScreenLayout: React.FC<LoadingScreenLayoutProps> = ({ appVersion, c
         
         {children}
 
-        {/* Footer: Logo và Version nằm góc phải dưới */}
-        <div className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col items-end gap-1">
+        {/* Footer: Logo và Version nằm góc phải dưới, căn giữa với nhau */}
+        <div className="fixed right-4 bottom-[calc(1rem+env(safe-area-inset-bottom))] flex flex-col items-center gap-1">
             {/* Logo Image - Nhỏ, opacity 60% */}
             <img 
                 src="https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/logo.webp" 
