@@ -62,7 +62,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
         isLoading, error, playerStats, bossStats, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
-        lastRewards, // Lấy thông tin phần thưởng từ Context
+        lastRewards,      // Phần thưởng thực nhận khi thắng
+        potentialRewards, // Phần thưởng xem trước (đã tính toán đồng bộ)
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
@@ -90,7 +91,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
-    // --- NEW: SKILL NOTIFICATION STATES ---
+    // --- SKILL NOTIFICATION STATES ---
     const [visiblePlayerSkills, setVisiblePlayerSkills] = useState<ActiveSkillToastProps[]>([]);
     const [visibleBossSkills, setVisibleBossSkills] = useState<ActiveSkillToastProps[]>([]);
 
@@ -124,7 +125,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, duration);
     }, []);
 
-    // --- HELPER: ANIMATE LOOT DROP (UPDATED FOR RESOURCES) ---
+    // --- HELPER: ANIMATE LOOT DROP (COINS + RESOURCES) ---
     const animateLootDrop = useCallback((rewards: BattleRewards | null, onComplete?: () => void) => {
         if (!rewards) {
             if (onComplete) onComplete();
@@ -145,7 +146,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
 
         // 2. Resources (Wood, Leather, etc.)
-        // UPDATED: Use resourceAssets from game-assets.ts
         if (rewards.resources && rewards.resources.length > 0) {
             rewards.resources.forEach(res => {
                 // Map dynamic key to resourceAssets, fallback to coin if not found
@@ -233,7 +233,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                     // 3. Đợi 2s (cho chữ VICTORY bay lên một chút) rồi bung loot
                     setTimeout(() => {
-                        // Gọi hàm rơi vật phẩm với phần thưởng đã lưu trong Context
+                        // Gọi hàm rơi vật phẩm với phần thưởng đã lưu trong Context (lastRewards)
                         animateLootDrop(lastRewards, () => {
                             // Sau khi loot xong thì chuyển tầng
                             handleNextFloor();
@@ -296,7 +296,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    // --- TURN SEQUENCE LOGIC (UPDATED WITH SKILL NOTIFICATIONS) ---
+    // --- TURN SEQUENCE LOGIC ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
@@ -506,8 +506,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
       
             {statsModalTarget && playerStats && bossStats && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
             
-            {/* Rewards Modal - Chú ý: Component này có thể cần cập nhật để hiển thị Resources nếu muốn xem trước */}
-            {showRewardsModal && currentBossData && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
+            {/* UPDATED: Truyền potentialRewards vào RewardsModal */}
+            {showRewardsModal && (
+                <RewardsModal 
+                    onClose={() => setShowRewardsModal(false)} 
+                    rewards={potentialRewards} 
+                />
+            )}
 
             <div className="relative w-full min-h-screen flex flex-col items-center font-lilita text-white overflow-hidden">
                 
@@ -656,7 +661,12 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
                                     {/* VICTORY MODAL - Chỉ hiện khi là Boss cuối cùng */}
                                     {gameOver === 'win' && currentFloor === BOSS_DATA.length - 1 && (
-                                        <VictoryModal onRestart={retryCurrentFloor} onNextFloor={handleNextFloor} isLastBoss={true} rewards={currentBossData.rewards} />
+                                        <VictoryModal 
+                                            onRestart={retryCurrentFloor} 
+                                            onNextFloor={handleNextFloor} 
+                                            isLastBoss={true} 
+                                            rewards={lastRewards} 
+                                        />
                                     )}
 
                                     {/* DEFEAT MODAL */}
