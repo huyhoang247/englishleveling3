@@ -151,9 +151,8 @@ export interface LootItemData {
 export const LootItem = memo(({ item }: { item: LootItemData }) => {
     const formattedAmount = formatLootAmount(item.amount);
     
-    // Nếu chuỗi dài (>= 4 ký tự, ví dụ 400k, 1.5m) thì giảm size chữ xuống
-    // text-[10px] là nhỏ hơn text-xs (12px), leading-tight để gọn hơn
-    const fontSizeClass = formattedAmount.length >= 4 ? "text-[10px] leading-tight" : "text-xs";
+    // Luôn sử dụng text-[10px] và leading-tight cho mọi trường hợp để đồng bộ
+    const fontSizeClass = "text-[10px] leading-tight";
 
     return (
         <div 
