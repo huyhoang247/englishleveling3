@@ -6,7 +6,7 @@ import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import SkillEffect, { SkillProps } from './skill-effect.tsx';
 import { ALL_SKILLS, getRarityColor, getRarityGradient } from '../skill-game/skill-data.tsx';
 
-// --- STYLES COMPONENT (OPTIMIZED) ---
+// --- STYLES COMPONENT (OPTIMIZED FOR PERFORMANCE) ---
 export const MainBattleStyles = memo(() => (
     <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
@@ -57,18 +57,26 @@ export const MainBattleStyles = memo(() => (
         .animate-loot-pop { animation: loot-pop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
         .animate-fade-in-badge { animation: fade-in-badge 0.8s ease-out forwards; }
 
-        /* SKILL NOTIFICATION ANIMATIONS */
+        /* SKILL NOTIFICATION ANIMATIONS (OPTIMIZED) */
         @keyframes slide-in-left {
             0% { opacity: 0; transform: translateX(-30px); }
             100% { opacity: 1; transform: translateX(0); }
         }
-        .animate-slide-in-left { animation: slide-in-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        /* Thêm will-change để tối ưu GPU */
+        .animate-slide-in-left { 
+            will-change: transform, opacity;
+            animation: slide-in-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
 
         @keyframes slide-in-right {
             0% { opacity: 0; transform: translateX(30px); }
             100% { opacity: 1; transform: translateX(0); }
         }
-        .animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+        /* Thêm will-change để tối ưu GPU */
+        .animate-slide-in-right { 
+            will-change: transform, opacity;
+            animation: slide-in-right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; 
+        }
     `}</style>
 ));
 
@@ -145,7 +153,7 @@ export const LootItem = memo(({ item }: { item: LootItemData }) => {
     );
 });
 
-// --- ACTIVE SKILL NOTIFICATION COMPONENT ---
+// --- ACTIVE SKILL NOTIFICATION COMPONENT (OPTIMIZED - NO BLUR) ---
 export interface ActiveSkillToastProps {
     id: string; // Skill ID (e.g., 'life_steal')
     name: string;
@@ -164,7 +172,8 @@ export const ActiveSkillToast = memo(({ skill }: { skill: ActiveSkillToastProps 
     const borderColor = getRarityColor(skill.rarity as any);
 
     return (
-        <div className={`flex items-center gap-3 p-2 pr-4 rounded-xl border ${borderColor} bg-gradient-to-r ${bgGradient} shadow-lg backdrop-blur-md mb-2 min-w-[180px] max-w-[220px] ${alignClass}`}>
+        // LƯU Ý: Đã xóa 'backdrop-blur-md'. Thêm 'bg-slate-900' để làm nền cứng tối màu + 'shadow-xl'
+        <div className={`flex items-center gap-3 p-2 pr-4 rounded-xl border ${borderColor} bg-gradient-to-r ${bgGradient} bg-slate-900 shadow-xl mb-2 min-w-[180px] max-w-[220px] ${alignClass}`}>
             <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-black/40 border border-white/10 shrink-0 relative overflow-hidden`}>
                 <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
                 <Icon className="w-7 h-7 object-contain relative z-10" />
