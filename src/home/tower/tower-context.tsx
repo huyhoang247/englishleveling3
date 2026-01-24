@@ -120,6 +120,25 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             bossReflectDmg: 0 
         };
 
+        // --- 0. TÍNH HỒI MÁU ĐẦU LƯỢT (SKILL HEALING) ---
+        // Logic mới thêm vào đây: Hồi máu theo % Max HP
+        equippedSkills.forEach(skill => {
+            if (skill.id === 'healing' && checkActivation(skill.rarity)) {
+                // Effect value trả về % (ví dụ: 0.5 nghĩa là 0.5%)
+                const healPercent = getSkillEffect(skill);
+                const healAmount = Math.ceil(player.maxHp * (healPercent / 100));
+                
+                // Đảm bảo không hồi vượt quá Max HP
+                const actualHeal = Math.min(healAmount, player.maxHp - player.hp);
+                
+                if (actualHeal > 0) {
+                    player.hp += actualHeal;
+                    turnEvents.playerHeal += actualHeal; // Cộng dồn vào sự kiện hiển thị
+                    log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> hồi phục <b class="text-green-400">${actualHeal}</b> HP.`);
+                }
+            }
+        });
+
         // --- 1. TÍNH DAMAGE PLAYER ---
         let atkMods = { boost: 1, armorPen: 0 };
         equippedSkills.forEach(skill => {
@@ -152,14 +171,14 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         log(`Bạn tấn công 3 lần, tổng gây <b class="text-red-400">${totalPlayerDmg}</b> sát thương.`);
         boss.hp -= totalPlayerDmg;
 
-        // --- XỬ LÝ KỸ NĂNG HÚT MÁU ---
+        // --- XỬ LÝ KỸ NĂNG HÚT MÁU (LIFE STEAL) ---
         equippedSkills.forEach(skill => {
             if (skill.id === 'life_steal' && checkActivation(skill.rarity)) {
                 const healed = Math.ceil(totalPlayerDmg * (getSkillEffect(skill) / 100));
                 const actualHeal = Math.min(healed, player.maxHp - player.hp);
                 if (actualHeal > 0) {
-                    turnEvents.playerHeal = actualHeal;
-                    log(`<span class="text-green-400 font-bold">[Kỹ Năng] ${skill.name}</span> hút <b class="text-green-400">${actualHeal}</b> Máu.`);
+                    turnEvents.playerHeal += actualHeal; // Sử dụng += để cộng dồn nếu có skill Healing trước đó
+                    log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> hút <b class="text-green-400">${actualHeal}</b> Máu.`);
                     player.hp += actualHeal;
                 }
             }
@@ -178,13 +197,13 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         log(`${currentBossData?.name} phản công, gây <b class="text-red-400">${bossDmg}</b> sát thương.`);
         player.hp -= bossDmg;
 
-        // --- XỬ LÝ PHẢN ĐÒN ---
+        // --- XỬ LÝ PHẢN ĐÒN (THORNS) ---
         let totalReflectDmg = 0;
         equippedSkills.forEach(skill => {
             if (skill.id === 'thorns' && checkActivation(skill.rarity)) {
                 const reflectDmg = Math.ceil(bossDmg * (getSkillEffect(skill) / 100));
                 totalReflectDmg += reflectDmg;
-                log(`<span class="text-orange-400 font-bold">[Kỹ Năng] ${skill.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương.`);
+                log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương.`);
                 boss.hp -= reflectDmg;
             }
         });
