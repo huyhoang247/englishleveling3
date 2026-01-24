@@ -44,8 +44,10 @@ export interface UserGameData {
   gems: number;
   masteryCards: number;
   pickaxes: number;
-  // --- NEW: ENERGY FIELD ---
+  
+  // --- ENERGY FIELDS (UPDATED) ---
   energy?: number; 
+  lastEnergyUpdate?: Timestamp; // Thời điểm cuối cùng năng lượng thay đổi hoặc được tính toán
   
   minerChallengeHighestFloor: number;
   stats: { hp: number; atk: number; def: number; };
@@ -55,13 +57,13 @@ export interface UserGameData {
   totalVocabCollected: number;
   cardCapacity: number;
   
-  // --- RESOURCES (UPDATED) ---
+  // --- RESOURCES ---
   wood?: number;
   leather?: number;
   ore?: number;
   cloth?: number;
-  feather?: number; // Mới thêm
-  coal?: number;    // Mới thêm
+  feather?: number;
+  coal?: number;
 
   // Equipment including Stones
   equipment: { 
@@ -82,6 +84,7 @@ export interface UserGameData {
 
 /**
  * Lấy dữ liệu game của người dùng. Nếu chưa có, tạo mới với giá trị mặc định.
+ * Cập nhật logic khởi tạo Energy timestamp.
  * @param userId - ID của người dùng.
  * @returns {Promise<UserGameData>} Dữ liệu game của người dùng.
  */
@@ -108,7 +111,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
         stones: { low: 0, medium: 0, high: 0 } 
     };
     
-    // Merge dữ liệu cũ với default để tránh lỗi nếu user cũ chưa có field stones
+    // Merge dữ liệu cũ với default
     const equipmentData = { 
         ...defaultEquipment, 
         ...(data.equipment || {}),
@@ -120,9 +123,12 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       gems: data.gems || 0,
       masteryCards: data.masteryCards || 0,
       pickaxes: typeof data.pickaxes === 'number' ? data.pickaxes : 50,
-      // --- LOAD ENERGY TỪ DB (Mặc định 50 nếu không có) ---
-      energy: typeof data.energy === 'number' ? data.energy : 50,
       
+      // --- ENERGY LOGIC ---
+      energy: typeof data.energy === 'number' ? data.energy : 50,
+      // Nếu user cũ chưa có field này, gán tạm là hiện tại để bắt đầu tính từ bây giờ
+      lastEnergyUpdate: data.lastEnergyUpdate || Timestamp.now(),
+
       minerChallengeHighestFloor: data.minerChallengeHighestFloor || 0,
       stats: data.stats || { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: data.bossBattleHighestFloor || 0,
@@ -136,8 +142,8 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       leather: data.leather || 0,
       ore: data.ore || 0,
       cloth: data.cloth || 0,
-      feather: data.feather || 0, // Load Feather
-      coal: data.coal || 0,       // Load Coal
+      feather: data.feather || 0, 
+      coal: data.coal || 0,      
 
       equipment: equipmentData, 
       lastCheckIn: data.lastCheckIn || null,
@@ -150,9 +156,11 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     // Tạo user mới hoàn toàn
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
       coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
-      // --- INIT ENERGY CHO USER MỚI ---
-      energy: 50,
       
+      // --- INIT ENERGY & TIMESTAMP ---
+      energy: 50,
+      lastEnergyUpdate: Timestamp.now(), // Đánh dấu thời điểm tạo
+
       minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
@@ -163,14 +171,14 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       leather: 0,
       ore: 0,
       cloth: 0,
-      feather: 0, // Init Feather
-      coal: 0,    // Init Coal
+      feather: 0, 
+      coal: 0,    
 
       equipment: { 
           pieces: 100, 
           owned: [], 
           equipped: { weapon: null, armor: null, Helmet: null },
-          stones: { low: 0, medium: 0, high: 0 } // Khởi tạo đá = 0
+          stones: { low: 0, medium: 0, high: 0 } 
       },
       lastCheckIn: null,
       loginStreak: 0,
@@ -190,8 +198,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
 /**
  * Lấy dữ liệu cần thiết cho màn hình Kỹ năng.
- * @param userId - ID của người dùng.
- * @returns Dữ liệu cần thiết cho màn hình kỹ năng.
  */
 export const fetchSkillScreenData = async (userId: string) => {
   if (!userId) throw new Error("User ID is required.");
@@ -199,7 +205,7 @@ export const fetchSkillScreenData = async (userId: string) => {
   return {
     coins: gameData.coins,
     ancientBooks: gameData.ancientBooks,
-    skills: gameData.skills, // Gồm { owned, equipped }
+    skills: gameData.skills, 
   };
 };
 
@@ -236,12 +242,106 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
     });
 };
 
-// --- NEW FUNCTION: CẬP NHẬT NĂNG LƯỢNG ---
+// --- NEW FUNCTION: ĐỒNG BỘ NĂNG LƯỢNG (OFFLINE CALCULATION) ---
+// Hàm này tính toán số năng lượng đã hồi phục dựa trên thời gian offline
+// Gọi hàm này khi khởi động App hoặc khi cần đồng bộ chính xác
+export const syncEnergyWithServer = async (userId: string): Promise<{ currentEnergy: number, nextRefillIn: number }> => {
+    const userDocRef = doc(db, 'users', userId);
+    
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if (!userDoc.exists()) throw new Error("User not found");
+
+        const data = userDoc.data();
+        let currentEnergy = typeof data.energy === 'number' ? data.energy : 50;
+        const maxEnergy = 50;
+        
+        // Lấy thời điểm update cuối, nếu không có thì lấy hiện tại
+        const lastUpdate = data.lastEnergyUpdate ? data.lastEnergyUpdate.toDate() : new Date();
+        const now = new Date();
+
+        // 1. Nếu năng lượng đã đầy, không cần tính toán, reset timer về 0
+        if (currentEnergy >= maxEnergy) {
+            // Nếu DB chưa chuẩn (ví dụ > 50), ta cap lại về 50 cho sạch
+            if (currentEnergy > maxEnergy) {
+                 t.update(userDocRef, { energy: maxEnergy });
+                 return { currentEnergy: maxEnergy, nextRefillIn: 0 };
+            }
+            return { currentEnergy: maxEnergy, nextRefillIn: 0 };
+        }
+
+        // 2. Tính số giây trôi qua
+        const elapsedSeconds = Math.floor((now.getTime() - lastUpdate.getTime()) / 1000);
+        const REGEN_INTERVAL = 300; // 5 phút = 300 giây
+
+        // 3. Nếu chưa đủ 5 phút
+        if (elapsedSeconds < REGEN_INTERVAL) {
+             return { 
+                 currentEnergy, 
+                 nextRefillIn: REGEN_INTERVAL - elapsedSeconds 
+             };
+        }
+
+        // 4. Nếu đủ thời gian hồi ít nhất 1 điểm
+        const energyGained = Math.floor(elapsedSeconds / REGEN_INTERVAL);
+        let newEnergy = Math.min(maxEnergy, currentEnergy + energyGained);
+        
+        // Tính toán lại timestamp để giữ lại phần dư thời gian (progress cho điểm tiếp theo)
+        // Ví dụ: Trôi qua 350s -> Hồi 1 điểm (300s), dư 50s.
+        // Timestamp mới phải lùi lại 50s so với hiện tại để điểm tiếp theo chỉ cần chờ 250s nữa.
+        const remainingSecondsForNextPoint = elapsedSeconds % REGEN_INTERVAL;
+        const newLastUpdateDate = new Date(now.getTime() - (remainingSecondsForNextPoint * 1000));
+        
+        // Cập nhật DB
+        t.update(userDocRef, {
+            energy: newEnergy,
+            lastEnergyUpdate: Timestamp.fromDate(newLastUpdateDate)
+        });
+
+        // Nếu sau khi hồi mà đầy bình, thời gian chờ là 0
+        if (newEnergy >= maxEnergy) {
+            return { currentEnergy: newEnergy, nextRefillIn: 0 };
+        }
+
+        return { 
+            currentEnergy: newEnergy, 
+            nextRefillIn: REGEN_INTERVAL - remainingSecondsForNextPoint 
+        };
+    });
+};
+
+// --- UPDATED FUNCTION: CẬP NHẬT NĂNG LƯỢNG & RESET TIMER ---
+// Hàm này được gọi khi tiêu hao năng lượng (đánh boss, sweep...)
 export const updateUserEnergy = async (userId: string, newEnergy: number): Promise<void> => {
     if (!userId) return;
-    // Đảm bảo không âm. Nếu bạn muốn giới hạn max 50 thì thêm Math.min(newEnergy, 50)
-    const finalAmount = Math.max(0, newEnergy); 
-    await setDoc(doc(db, 'users', userId), { energy: finalAmount }, { merge: true });
+    // Giới hạn max energy là 50, min là 0
+    const finalAmount = Math.max(0, Math.min(50, newEnergy));
+    
+    const userDocRef = doc(db, 'users', userId);
+    
+    await runTransaction(db, async (t) => {
+        const userDoc = await t.get(userDocRef);
+        if(!userDoc.exists()) return;
+
+        const currentDbEnergy = userDoc.data().energy ?? 50;
+        
+        const updates: any = { energy: finalAmount };
+
+        // QUAN TRỌNG: Logic Reset Timer
+        // Chỉ reset timestamp bắt đầu đếm giờ hồi phục KHI:
+        // Năng lượng hiện tại đang Đầy (>=50) VÀ Năng lượng mới < 50.
+        // Nếu năng lượng đang là 40, đánh boss còn 30 -> KHÔNG reset timestamp, để nó tiếp tục hồi điểm đang dở.
+        if (currentDbEnergy >= 50 && finalAmount < 50) {
+            updates.lastEnergyUpdate = serverTimestamp();
+        }
+        
+        // Nếu trường hợp mua năng lượng hoặc hồi đầy (newEnergy >= 50), cũng update timestamp cho gọn
+        if (finalAmount >= 50) {
+            updates.lastEnergyUpdate = serverTimestamp();
+        }
+
+        t.update(userDocRef, updates);
+    });
 };
 
 
@@ -312,9 +412,6 @@ const initializeSlotJackpots = async (initialPools: { [key: number]: number }) =
 
 /**
  * Lắng nghe sự thay đổi của jackpot pools trong real-time.
- * @param callback Hàm sẽ được gọi mỗi khi dữ liệu jackpot thay đổi.
- * @param initialPools Dữ liệu jackpot ban đầu để khởi tạo nếu chưa có trên DB.
- * @returns Một hàm để hủy lắng nghe (unsubscribe).
  */
 export const listenToJackpotPools = (
     callback: (pools: { [key: number]: number }) => void,
@@ -337,9 +434,6 @@ export const listenToJackpotPools = (
 
 /**
  * Đóng góp vào jackpot pool của một phòng cụ thể trong game Slot Machine.
- * Sử dụng `increment` của Firestore để đảm bảo an toàn khi nhiều người chơi cùng lúc.
- * @param roomId ID của phòng.
- * @param contribution Số tiền đóng góp.
  */
 export const contributeToJackpot = async (roomId: number, contribution: number) => {
     if (contribution <= 0) return;
@@ -354,8 +448,6 @@ export const contributeToJackpot = async (roomId: number, contribution: number) 
 
 /**
  * Reset jackpot của một phòng về giá trị ban đầu sau khi có người thắng.
- * @param roomId ID của phòng.
- * @param initialValue Giá trị jackpot ban đầu.
  */
 export const resetJackpot = async (roomId: number, initialValue: number) => {
      try {
@@ -379,7 +471,6 @@ export interface SimpleUser {
 
 /**
  * Lấy danh sách ID, email và username của tất cả người dùng.
- * @returns {Promise<SimpleUser[]>} Một mảng các object người dùng.
  */
 export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
   const usersCollectionRef = collection(db, 'users');
@@ -398,10 +489,6 @@ export const fetchAllUsers = async (): Promise<SimpleUser[]> => {
 
 /**
  * Cập nhật nhiều trường dữ liệu của người dùng cùng lúc cho mục đích quản trị.
- * Hàm này sử dụng dot notation cho các object lồng nhau (vd: 'stats.hp', 'equipment.stones.low').
- * @param userId - ID của người dùng cần cập nhật.
- * @param updates - Object chứa các trường và giá trị cần thay đổi (giá trị là số lượng cộng thêm/trừ đi).
- * @returns {Promise<UserGameData>} Dữ liệu mới nhất của người dùng sau khi cập nhật.
  */
 export const adminUpdateUserData = async (userId: string, updates: { [key: string]: number }): Promise<UserGameData> => {
   if (!userId) throw new Error("User ID is required.");
