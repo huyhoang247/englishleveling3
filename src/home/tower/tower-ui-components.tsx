@@ -6,6 +6,20 @@ import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import SkillEffect, { SkillProps } from './skill-effect.tsx';
 import { ALL_SKILLS, getRarityColor, getRarityGradient } from '../skill-game/skill-data.tsx';
 
+// --- HELPER: FORMAT NUMBER (k, m, b) ---
+const formatLootAmount = (num: number): string => {
+    if (num >= 1_000_000_000) {
+        return parseFloat((num / 1_000_000_000).toFixed(1)) + 'b';
+    }
+    if (num >= 1_000_000) {
+        return parseFloat((num / 1_000_000).toFixed(1)) + 'm';
+    }
+    if (num >= 1_000) {
+        return parseFloat((num / 1_000).toFixed(1)) + 'k';
+    }
+    return num.toString();
+};
+
 // --- STYLES COMPONENT (OPTIMIZED FOR PERFORMANCE) ---
 export const MainBattleStyles = memo(() => (
     <style>{`
@@ -133,8 +147,14 @@ export interface LootItemData {
     isVisible: boolean;
 }
 
-// --- LOOT ITEM COMPONENT ---
+// --- LOOT ITEM COMPONENT (UPDATED FORMATTING) ---
 export const LootItem = memo(({ item }: { item: LootItemData }) => {
+    const formattedAmount = formatLootAmount(item.amount);
+    
+    // Nếu chuỗi dài (>= 4 ký tự, ví dụ 400k, 1.5m) thì giảm size chữ xuống
+    // text-[10px] là nhỏ hơn text-xs (12px), leading-tight để gọn hơn
+    const fontSizeClass = formattedAmount.length >= 4 ? "text-[10px] leading-tight" : "text-xs";
+
     return (
         <div 
             className={`absolute transition-all duration-500 transform -translate-x-1/2 -translate-y-1/2 z-40 ${item.isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-50'}`}
@@ -145,15 +165,15 @@ export const LootItem = memo(({ item }: { item: LootItemData }) => {
         >
             <div className="animate-loot-pop relative">
                 <img src={item.image} alt="Loot" className="w-10 h-10 object-contain drop-shadow-[0_0_10px_rgba(255,255,255,0.6)]" />
-                <div className="absolute -bottom-1 -right-1 bg-black/50 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[24px] text-center animate-fade-in-badge tracking-wide z-10">
-                    x{item.amount}
+                <div className={`absolute -bottom-1 -right-1 bg-black/50 text-white font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[24px] text-center animate-fade-in-badge tracking-wide z-10 ${fontSizeClass}`}>
+                    {formattedAmount}
                 </div>
             </div>
         </div>
     );
 });
 
-// --- ACTIVE SKILL NOTIFICATION COMPONENT (OPTIMIZED - NO BLUR) ---
+// --- ACTIVE SKILL NOTIFICATION COMPONENT ---
 export interface ActiveSkillToastProps {
     id: string; // Skill ID (e.g., 'life_steal')
     name: string;
@@ -266,11 +286,11 @@ export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, r
                 <div className="flex flex-row flex-wrap justify-center gap-3">
                     <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
                         <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{rewards.coins}</span>
+                        <span className="text-xl font-bold text-yellow-300 text-shadow-sm">{formatLootAmount(rewards.coins)}</span>
                     </div>
                     <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/50 w-32 py-1.5 rounded-lg border border-slate-700">
                         <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{rewards.energy}</span>
+                        <span className="text-xl font-bold text-cyan-300 text-shadow-sm">{formatLootAmount(rewards.energy)}</span>
                     </div>
                 </div>
             </div>
@@ -288,11 +308,11 @@ export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards 
                 <div className="flex flex-row flex-wrap justify-center gap-3">
                     <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
                         <img src={bossBattleAssets.coinIcon} alt="Coins" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-yellow-300">{rewards.coins}</span>
+                        <span className="text-xl font-bold text-yellow-300">{formatLootAmount(rewards.coins)}</span>
                     </div>
                     <div className="flex flex-row items-center justify-center gap-2 bg-slate-800/60 w-32 py-1.5 rounded-lg border border-slate-700">
                         <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-6 h-6" />
-                        <span className="text-xl font-bold text-cyan-300">{rewards.energy}</span>
+                        <span className="text-xl font-bold text-cyan-300">{formatLootAmount(rewards.energy)}</span>
                     </div>
                 </div>
             </div>
