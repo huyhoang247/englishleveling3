@@ -316,6 +316,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
 
             // 4. Gọi Service để lưu Resources và Coins vào Firestore
             try {
+                // Ở endGame thì có thể await hoặc không tùy ý, vì animation thắng cũng mất thời gian
+                // Nhưng để an toàn cho trải nghiệm, có thể bỏ await
                 await claimTowerRewards(userId, finalRewards);
             } catch (err) {
                 console.error("Error saving rewards:", err);
@@ -437,7 +439,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
-    // --- LOGIC SWEEP (QUÉT) MỚI: AUTO WIN ---
+    // --- LOGIC SWEEP (QUÉT) MỚI: AUTO WIN (OPTIMISTIC) ---
     const handleSweep = useCallback(async () => {
         // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
@@ -466,17 +468,15 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         // Lưu state để UI hiển thị
         setLastRewards(rewards);
         
-        // 4. Cập nhật Coins cho User (Optimistic)
+        // 4. Cập nhật Coins cho User (Optimistic - Hiện ngay)
         if (rewards.coins > 0) {
             game.updateCoins(rewards.coins);
         }
     
-        // 5. Lưu vào Firestore
-        try {
-            await claimTowerRewards(userId, rewards);
-        } catch (err) {
-            console.error("Sweep error:", err);
-        }
+        // 5. Lưu vào Firestore (FIRE AND FORGET)
+        // QUAN TRỌNG: Không dùng await để tránh lag UI
+        claimTowerRewards(userId, rewards)
+            .catch(err => console.error("Background sweep save error:", err));
         
         // 6. Trả về kết quả thắng ngay lập tức
         return { result: 'win' as const, rewards: rewards };
@@ -485,8 +485,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     // --- REACT HOOKS & EFFECTS ---
 
     // --- ĐỒNG BỘ COIN TỪ GAMECONTEXT SANG TOWERCONTEXT ---
-    // Đây là chìa khóa để fix lỗi x2:
-    // Khi game.coins thay đổi (do gọi game.updateCoins), effect này sẽ chạy và cập nhật hiển thị.
     useEffect(() => {
         setDisplayedCoins(game.coins);
     }, [game.coins]);
