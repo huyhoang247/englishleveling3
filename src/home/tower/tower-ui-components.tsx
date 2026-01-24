@@ -4,6 +4,7 @@ import React, { memo } from 'react';
 import { CombatStats } from './tower-context.tsx';
 import { uiAssets, bossBattleAssets } from '../../game-assets.ts';
 import SkillEffect, { SkillProps } from './skill-effect.tsx';
+import { ALL_SKILLS, getRarityColor, getRarityGradient } from '../skill-game/skill-data.tsx';
 
 // --- STYLES COMPONENT (OPTIMIZED) ---
 export const MainBattleStyles = memo(() => (
@@ -55,6 +56,19 @@ export const MainBattleStyles = memo(() => (
         }
         .animate-loot-pop { animation: loot-pop 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
         .animate-fade-in-badge { animation: fade-in-badge 0.8s ease-out forwards; }
+
+        /* SKILL NOTIFICATION ANIMATIONS */
+        @keyframes slide-in-left {
+            0% { opacity: 0; transform: translateX(-30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slide-in-left { animation: slide-in-left 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
+
+        @keyframes slide-in-right {
+            0% { opacity: 0; transform: translateX(30px); }
+            100% { opacity: 1; transform: translateX(0); }
+        }
+        .animate-slide-in-right { animation: slide-in-right 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
     `}</style>
 ));
 
@@ -126,6 +140,38 @@ export const LootItem = memo(({ item }: { item: LootItemData }) => {
                 <div className="absolute -bottom-1 -right-1 bg-black/50 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[24px] text-center animate-fade-in-badge tracking-wide z-10">
                     x{item.amount}
                 </div>
+            </div>
+        </div>
+    );
+});
+
+// --- ACTIVE SKILL NOTIFICATION COMPONENT ---
+export interface ActiveSkillToastProps {
+    id: string; // Skill ID (e.g., 'life_steal')
+    name: string;
+    rarity: string;
+    side: 'left' | 'right'; // left = Player, right = Boss
+}
+
+export const ActiveSkillToast = memo(({ skill }: { skill: ActiveSkillToastProps }) => {
+    // Tìm blueprint để lấy Icon
+    const blueprint = ALL_SKILLS.find(s => s.id === skill.id);
+    const Icon = blueprint ? blueprint.icon : () => <div className="w-6 h-6 bg-gray-500 rounded-full"/>;
+    
+    // Config style dựa trên side
+    const alignClass = skill.side === 'left' ? 'flex-row text-left animate-slide-in-left' : 'flex-row-reverse text-right animate-slide-in-right';
+    const bgGradient = getRarityGradient(skill.rarity as any);
+    const borderColor = getRarityColor(skill.rarity as any);
+
+    return (
+        <div className={`flex items-center gap-3 p-2 pr-4 rounded-xl border ${borderColor} bg-gradient-to-r ${bgGradient} shadow-lg backdrop-blur-md mb-2 min-w-[180px] max-w-[220px] ${alignClass}`}>
+            <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-black/40 border border-white/10 shrink-0 relative overflow-hidden`}>
+                <div className="absolute inset-0 bg-white/10 animate-pulse"></div>
+                <Icon className="w-7 h-7 object-contain relative z-10" />
+            </div>
+            <div className="flex flex-col">
+                <span className="text-xs font-sans text-white/60 tracking-wider uppercase font-bold leading-none mb-0.5">Activated</span>
+                <span className={`text-sm font-lilita text-white tracking-wide text-shadow-sm leading-tight`}>{skill.name}</span>
             </div>
         </div>
     );
