@@ -5,7 +5,8 @@ import { BossBattleProvider, useBossBattle } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
-import { bossBattleAssets } from '../../game-assets.ts';
+// UPDATED: Import resourceAssets
+import { bossBattleAssets, resourceAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
@@ -33,17 +34,6 @@ import {
     ActiveSkillToast,      
     ActiveSkillToastProps  
 } from './tower-ui-components.tsx';
-
-// --- CONFIG RESOURCE IMAGES ---
-// Bạn hãy đảm bảo file ảnh tồn tại hoặc sửa đường dẫn cho đúng với project của bạn
-const RESOURCE_IMAGES: Record<string, string> = {
-    wood: '/images/resources/wood.webp',
-    leather: '/images/resources/leather.webp',
-    ore: '/images/resources/ore.webp',
-    cloth: '/images/resources/cloth.webp',
-    feather: '/images/resources/feather.webp',
-    coal: '/images/resources/coal.webp',
-};
 
 interface BossBattleWrapperProps {
   userId: string;
@@ -155,10 +145,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }
 
         // 2. Resources (Wood, Leather, etc.)
+        // UPDATED: Use resourceAssets from game-assets.ts
         if (rewards.resources && rewards.resources.length > 0) {
             rewards.resources.forEach(res => {
+                // Map dynamic key to resourceAssets, fallback to coin if not found
+                const resourceKey = res.type as keyof typeof resourceAssets;
+                const resourceImg = resourceAssets[resourceKey] || bossBattleAssets.coinIcon;
+
                 itemsToDrop.push({
-                    image: RESOURCE_IMAGES[res.type] || bossBattleAssets.coinIcon, // Fallback icon
+                    image: resourceImg, 
                     amount: res.amount,
                     type: res.type
                 });
