@@ -16,6 +16,9 @@ import BossDisplay, { HeroDisplay, ActionState } from './boss-display.tsx';
 // --- IMPORT SKILL ---
 import { SkillStyles, SkillProps } from './skill-effect.tsx';
 
+// --- IMPORT NEW TYPES ---
+import { BattleRewards } from './tower-service.ts';
+
 // --- IMPORT UI COMPONENTS ---
 import { 
     MainBattleStyles, 
@@ -31,10 +34,21 @@ import {
     ActiveSkillToastProps  
 } from './tower-ui-components.tsx';
 
+// --- CONFIG RESOURCE IMAGES ---
+// Bạn hãy đảm bảo file ảnh tồn tại hoặc sửa đường dẫn cho đúng với project của bạn
+const RESOURCE_IMAGES: Record<string, string> = {
+    wood: '/images/resources/wood.webp',
+    leather: '/images/resources/leather.webp',
+    ore: '/images/resources/ore.webp',
+    cloth: '/images/resources/cloth.webp',
+    feather: '/images/resources/feather.webp',
+    coal: '/images/resources/coal.webp',
+};
+
 interface BossBattleWrapperProps {
   userId: string;
   onClose: () => void;
-  onBattleEnd: (result: 'win' | 'lose', rewards: { coins: number; energy: number }) => void;
+  onBattleEnd: (result: 'win' | 'lose', rewards: any) => void;
   onFloorComplete: (newFloor: number) => void;
 }
 
@@ -58,6 +72,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
         isLoading, error, playerStats, bossStats, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
+        lastRewards, // Lấy thông tin phần thưởng từ Context
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
     } = useBossBattle();
 
@@ -119,41 +134,60 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         }, duration);
     }, []);
 
-    // --- HELPER: ANIMATE LOOT DROP ---
-    const animateLootDrop = useCallback((rewards: { coins: number, energy: number }, onComplete?: () => void) => {
+    // --- HELPER: ANIMATE LOOT DROP (UPDATED FOR RESOURCES) ---
+    const animateLootDrop = useCallback((rewards: BattleRewards | null, onComplete?: () => void) => {
+        if (!rewards) {
+            if (onComplete) onComplete();
+            return;
+        }
+
         const newLootItems: LootItemData[] = [];
-        let itemCount = 0;
-        if(rewards.coins > 0) itemCount++;
-        if(rewards.energy > 0) itemCount++;
+        // Tạo danh sách vật phẩm cần rơi
+        let itemsToDrop: { image: string, amount: number, type: string }[] = [];
 
-        // LOGIC VỊ TRÍ LOOT: Rải đều ở dưới cùng màn hình (Y: 82%-92%)
+        // 1. Coins
         if (rewards.coins > 0) {
-            const minX = itemCount > 1 ? 20 : 40;
-            const maxX = itemCount > 1 ? 45 : 60;
-            
-            newLootItems.push({
-                id: Date.now() + 1,
-                image: bossBattleAssets.coinIcon,
-                amount: rewards.coins,
-                x: minX + Math.random() * (maxX - minX), 
-                y: 82 + Math.random() * 10,
-                isVisible: true
+            itemsToDrop.push({ 
+                image: bossBattleAssets.coinIcon, 
+                amount: rewards.coins, 
+                type: 'coin' 
             });
         }
-        
-        if (rewards.energy > 0) {
-            const minX = 55;
-            const maxX = 80;
 
-            newLootItems.push({
-                id: Date.now() + 2,
-                image: bossBattleAssets.energyIcon,
-                amount: rewards.energy,
-                x: minX + Math.random() * (maxX - minX),
-                y: 82 + Math.random() * 10,
-                isVisible: true
+        // 2. Resources (Wood, Leather, etc.)
+        if (rewards.resources && rewards.resources.length > 0) {
+            rewards.resources.forEach(res => {
+                itemsToDrop.push({
+                    image: RESOURCE_IMAGES[res.type] || bossBattleAssets.coinIcon, // Fallback icon
+                    amount: res.amount,
+                    type: res.type
+                });
             });
         }
+
+        if (itemsToDrop.length === 0) {
+             if (onComplete) onComplete();
+             return;
+        }
+
+        // Tính toán vị trí rải đều item
+        const totalItems = itemsToDrop.length;
+        const startX = 20; // % màn hình trái
+        const endX = 80;   // % màn hình phải
+        // Chia khoảng cách dựa trên số lượng item
+        const step = (endX - startX) / (totalItems + 1);
+
+        itemsToDrop.forEach((item, index) => {
+            newLootItems.push({
+                id: Date.now() + index,
+                image: item.image,
+                amount: item.amount,
+                // Tính vị trí X: Start + bước nhảy * thứ tự + random nhẹ để tự nhiên
+                x: startX + step * (index + 1) + (Math.random() * 5 - 2.5), 
+                y: 82 + Math.random() * 5, // Vị trí Y ở dưới chân
+                isVisible: true
+            });
+        });
 
         setLootItems(newLootItems);
 
@@ -161,25 +195,27 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         setTimeout(() => {
             newLootItems.forEach((item, index) => {
                 setTimeout(() => {
-                    // Hiện chữ COLLECTED
-                    addDamageText("COLLECTED", "#FFFFFF", "custom", 14, item.x - 8, item.y - 3, 1000, "uppercase tracking-wide");
+                    // Hiện chữ tên vật phẩm
+                    const label = item.type === 'coin' ? 'COINS' : item.type.toUpperCase();
+                    // Tạo text bay lên
+                    addDamageText(`+${item.amount} ${label}`, "#fbbf24", "custom", 14, item.x - 8, item.y - 15, 1000, "uppercase tracking-wide font-bold shadow-black drop-shadow-md");
                     
-                    // Ẩn item sau khi text hiện lên
+                    // Ẩn item visual sau khi text hiện lên
                     setTimeout(() => {
                          setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
                     }, 300);
 
-                }, index * 400); 
+                }, index * 250); // Delay giữa các món đồ bay lên
             });
 
             // Kết thúc sequence
-            const totalDelay = newLootItems.length * 400 + 800; 
+            const totalDelay = newLootItems.length * 250 + 600; 
             setTimeout(() => {
                 setLootItems([]); 
                 if (onComplete) onComplete();
             }, totalDelay);
 
-        }, 1000); // Đợi Loot Pop lên (1s)
+        }, 800); // Đợi Loot Pop lên (0.8s)
     }, [addDamageText]);
 
 
@@ -202,10 +238,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
                     // 3. Đợi 2s (cho chữ VICTORY bay lên một chút) rồi bung loot
                     setTimeout(() => {
-                        const rewards = currentBossData.rewards;
-                        
-                        // Gọi hàm rơi vật phẩm
-                        animateLootDrop(rewards, () => {
+                        // Gọi hàm rơi vật phẩm với phần thưởng đã lưu trong Context
+                        animateLootDrop(lastRewards, () => {
                             // Sau khi loot xong thì chuyển tầng
                             handleNextFloor();
                             setBossState('appearing');
@@ -220,7 +254,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 }, 1200); // Thời gian animation 'dying' của Boss
             }
         }
-    }, [gameOver, currentFloor, handleNextFloor, sequenceState, addDamageText, currentBossData, animateLootDrop]);
+    }, [gameOver, currentFloor, handleNextFloor, sequenceState, addDamageText, currentBossData, animateLootDrop, lastRewards]);
 
     // --- SYNC VISUAL HP ---
     useEffect(() => {
@@ -274,25 +308,23 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         const { 
             playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, 
             bossDmg, bossReflectDmg, 
-            playerActivatedSkills, bossActivatedSkills // Lấy thông tin skill kích hoạt
+            playerActivatedSkills, bossActivatedSkills 
         } = lastTurnEvents;
 
-        // --- 1. DISPLAY OFFENSIVE SKILLS (PLAYER) - Hiện ngay khi lượt bắt đầu ---
+        // --- 1. DISPLAY OFFENSIVE SKILLS (PLAYER) ---
         const offensiveSkills = playerActivatedSkills.filter(s => s.type === 'offensive');
         if (offensiveSkills.length > 0) {
             const skillToasts = offensiveSkills.map(s => ({ ...s, side: 'left' } as ActiveSkillToastProps));
             setVisiblePlayerSkills(prev => [...prev, ...skillToasts]);
             
-            // Tự động ẩn sau 2.5s
             setTimeout(() => {
                 setVisiblePlayerSkills(prev => prev.filter(p => !skillToasts.find(t => t.id === p.id)));
             }, 2500);
         }
 
-        // --- 2. DISPLAY BOSS SKILLS - Hiện khi Boss bắt đầu đánh ---
+        // --- 2. DISPLAY BOSS SKILLS ---
         if (bossActivatedSkills && bossActivatedSkills.length > 0) {
              const bossToasts = bossActivatedSkills.map(s => ({ ...s, side: 'right' } as ActiveSkillToastProps));
-             // Delay một chút để khớp với animation boss
              setTimeout(() => {
                  setVisibleBossSkills(prev => [...prev, ...bossToasts]);
                  setTimeout(() => {
@@ -416,10 +448,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             }, hit3Time + 500);
         }
 
-        // --- 3. DISPLAY DEFENSIVE SKILLS (PLAYER) - Hiện sau khi bị Boss đánh ---
+        // --- 3. DISPLAY DEFENSIVE SKILLS (PLAYER) ---
         const defensiveSkills = playerActivatedSkills.filter(s => s.type === 'defensive');
         if (defensiveSkills.length > 0) {
-            const reflectDelay = bossStartDelay + 500; // Trigger khi Boss thực hiện tấn công
+            const reflectDelay = bossStartDelay + 500; 
             setTimeout(() => {
                  const skillToasts = defensiveSkills.map(s => ({ ...s, side: 'left' } as ActiveSkillToastProps));
                  setVisiblePlayerSkills(prev => [...prev, ...skillToasts]);
@@ -431,12 +463,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
         if (bossReflectDmg > 0) {
             setTimeout(() => {
-                // --- SỬA LỖI: HIỂN THỊ DAMAGE PHẢN LẠI TRÊN ĐẦU BOSS ---
-                // Target: 'boss', update: setVisualBossHp
                 addDamageText(`-${formatDamageText(bossReflectDmg)}`, '#fbbf24', 'boss', 32); 
                 setVisualBossHp(prev => Math.max(0, prev - bossReflectDmg));
                 
-                // Hiệu ứng Boss bị đánh (giật lùi)
                 setBossState('hit');
                 setTimeout(() => setBossState('idle'), 400);
 
@@ -449,9 +478,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const handleSweepClick = async () => {
         if (!playerStats) return;
         setIsSweeping(true);
+        // Gọi hàm sweep, nhận về kết quả và phần thưởng
         const { result, rewards } = await handleSweep();
         
-        if (result === 'win') {
+        if (result === 'win' && rewards) {
              // 1. Hiển thị text Sweep thành công
             addDamageText("SWEEP SUCCESS", "#FFFFFF", "custom", 18, 50, 15, 2500, "tracking-widest");
             
@@ -480,6 +510,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             <SkillStyles />
       
             {statsModalTarget && playerStats && bossStats && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
+            
+            {/* Rewards Modal - Chú ý: Component này có thể cần cập nhật để hiển thị Resources nếu muốn xem trước */}
             {showRewardsModal && currentBossData && <RewardsModal onClose={() => setShowRewardsModal(false)} rewards={currentBossData.rewards}/>}
 
             <div className="relative w-full min-h-screen flex flex-col items-center font-lilita text-white overflow-hidden">
@@ -653,3 +685,5 @@ export default function BossBattle(props: BossBattleWrapperProps) {
         </BossBattleProvider>
     );
 }
+
+// --- END OF FILE tower-ui.tsx ---
