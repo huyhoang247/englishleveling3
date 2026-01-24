@@ -8,7 +8,7 @@ import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-
 import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
-  updateUserBossFloor, updateUserPickaxes
+  updateUserBossFloor, updateUserPickaxes, updateUserEnergy
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -22,6 +22,10 @@ interface IGameContext {
     gems: number;
     masteryCards: number;
     pickaxes: number;
+    
+    // --- NEW: ENERGY STATE ---
+    energy: number;
+
     minerChallengeHighestFloor: number;
     userStatsLevel: { hp: number; atk: number; def: number; };
     userStatsValue: { hp: number; atk: number; def: number; };
@@ -38,8 +42,8 @@ interface IGameContext {
     leather: number;
     ore: number;
     cloth: number;
-    feather: number; // Mới thêm
-    coal: number;    // Mới thêm
+    feather: number;
+    coal: number;
 
     // Equipment Data
     equipmentPieces: number;
@@ -77,7 +81,7 @@ interface IGameContext {
     isAuctionHouseOpen: boolean;
     isCheckInOpen: boolean;
     isMailboxOpen: boolean;
-    isTradeAssociationOpen: boolean; // Trạng thái mở modal Thương Hội
+    isTradeAssociationOpen: boolean;
     isAnyOverlayOpen: boolean;
     isGamePaused: boolean;
 
@@ -86,6 +90,10 @@ interface IGameContext {
     handleBossFloorUpdate: (newFloor: number) => Promise<void>;
     handleMinerChallengeEnd: (result: { finalPickaxes: number; coinsEarned: number; highestFloorCompleted: number; }) => void;
     handleUpdatePickaxes: (amountToAdd: number) => Promise<void>;
+    
+    // --- NEW: HANDLE UPDATE ENERGY ---
+    handleUpdateEnergy: (amount: number) => Promise<void>;
+
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleVipLuckySpinClaim: () => Promise<boolean>;
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
@@ -139,6 +147,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [gems, setGems] = useState(0);
   const [masteryCards, setMasteryCards] = useState(0);
   const [pickaxes, setPickaxes] = useState(0);
+  
+  // --- NEW: ENERGY STATE ---
+  const [energy, setEnergy] = useState(50);
+
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [userStatsLevel, setUserStatsLevel] = useState({ hp: 0, atk: 0, def: 0 });
   const [userStatsValue, setUserStatsValue] = useState({ hp: 0, atk: 0, def: 0 });
@@ -155,8 +167,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [leather, setLeather] = useState(0);
   const [ore, setOre] = useState(0);
   const [cloth, setCloth] = useState(0);
-  const [feather, setFeather] = useState(0); // Mới thêm
-  const [coal, setCoal] = useState(0);       // Mới thêm
+  const [feather, setFeather] = useState(0);
+  const [coal, setCoal] = useState(0);
 
   const [equipmentPieces, setEquipmentPieces] = useState(0);
   const [ownedItems, setOwnedItems] = useState<OwnedItem[]>([]);
@@ -207,6 +219,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setGems(gameData.gems);
       setMasteryCards(gameData.masteryCards);
       setPickaxes(gameData.pickaxes);
+      
+      // Load Energy
+      setEnergy(gameData.energy ?? 50);
+
       setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor);
       setUserStatsLevel(gameData.stats?.hp ? gameData.stats : (gameData as any).stats_level || { hp: 0, atk: 0, def: 0 });
       setUserStatsValue((gameData as any).stats_value || { hp: 0, atk: 0, def: 0 }); 
@@ -222,8 +238,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setLeather(gameData.leather || 0);
       setOre(gameData.ore || 0);
       setCloth(gameData.cloth || 0);
-      setFeather(gameData.feather || 0); // Mới thêm
-      setCoal(gameData.coal || 0);       // Mới thêm
+      setFeather(gameData.feather || 0);
+      setCoal(gameData.coal || 0);
 
       setEquipmentPieces(gameData.equipment.pieces);
       setOwnedItems(gameData.equipment.owned);
@@ -264,6 +280,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setGems(gameData.gems ?? 0);
                 setMasteryCards(gameData.masteryCards ?? 0);
                 setPickaxes(gameData.pickaxes ?? 50);
+                
+                // Real-time Energy Update
+                setEnergy(gameData.energy ?? 50);
+
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
                 
                 setUserStatsLevel(gameData.stats_level ?? gameData.stats ?? { hp: 0, atk: 0, def: 0 });
@@ -281,8 +301,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setLeather(gameData.leather ?? 0);
                 setOre(gameData.ore ?? 0);
                 setCloth(gameData.cloth ?? 0);
-                setFeather(gameData.feather ?? 0); // Mới thêm
-                setCoal(gameData.coal ?? 0);       // Mới thêm
+                setFeather(gameData.feather ?? 0);
+                setCoal(gameData.coal ?? 0);
 
                 setEquipmentPieces(gameData.equipment?.pieces ?? 0);
                 setOwnedItems(gameData.equipment?.owned ?? []);
@@ -318,6 +338,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setIsRankOpen(false); setIsPvpArenaOpen(false); setIsLuckyGameOpen(false); setIsBossBattleOpen(false); setIsShopOpen(false); setIsVocabularyChestOpen(false);
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); 
+        
+        setEnergy(50); // Reset Energy
+
         setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
         setUserStatsValue({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0); setAncientBooks(0);
@@ -325,7 +348,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         
         // Reset resources
         setWood(0); setLeather(0); setOre(0); setCloth(0);
-        setFeather(0); setCoal(0); // Reset mới
+        setFeather(0); setCoal(0);
 
         setEquipmentPieces(0); 
         setOwnedItems([]); 
@@ -335,7 +358,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setLoginStreak(0); setLastCheckIn(null);
         setCardCapacity(100); setJackpotPool(0); setIsLoadingUserData(true);
         setIsMailboxOpen(false);
-        setIsTradeAssociationOpen(false); // Reset trạng thái modal
+        setIsTradeAssociationOpen(false);
         
         setAccountType('Normal');
         setVipExpiresAt(null);
@@ -437,6 +460,23 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setPickaxes(originalPickaxes);
     }
   };
+
+  // --- NEW: HANDLE UPDATE ENERGY ---
+  const handleUpdateEnergy = async (amount: number) => {
+    const userId = auth.currentUser?.uid;
+    if (!userId) return;
+    
+    // Giới hạn max energy là 50 (hoặc số khác tùy bạn)
+    const newEnergy = Math.max(0, Math.min(50, energy + amount));
+    setEnergy(newEnergy); // Optimistic Update
+
+    try {
+        await updateUserEnergy(userId, newEnergy);
+    } catch (error) {
+        console.error("Failed to update energy:", error);
+        // Có thể rollback ở đây nếu muốn, nhưng với energy thì thường không quá quan trọng
+    }
+  };
   
   const handleUpdateJackpotPool = async (amount: number, reset: boolean = false) => {
       setJackpotPool(await updateJackpotPool(amount, reset));
@@ -494,7 +534,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         atk: BASE_ATK + totalPlayerStats.atk, 
         def: BASE_DEF + totalPlayerStats.def, 
         maxEnergy: 50, 
-        energy: 50 
+        // --- SỬ DỤNG ENERGY TỪ STATE ---
+        energy: energy 
     };
   };
 
@@ -561,6 +602,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
   const value: IGameContext = {
     isLoadingUserData: isLoading, isSyncingData, coins, displayedCoins, gems, masteryCards, pickaxes, minerChallengeHighestFloor, 
+    
+    // --- EXPORT ENERGY & FUNCTION ---
+    energy,
+    handleUpdateEnergy,
+
     userStatsLevel, 
     userStatsValue,
     jackpotPool,
@@ -613,3 +659,5 @@ export const useGame = (): IGameContext => {
   }
   return context;
 };
+
+// --- END OF FILE GameContext.tsx ---
