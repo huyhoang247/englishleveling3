@@ -37,6 +37,14 @@ const AudioIcon = ({ className }: { className: string }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"> <path strokeLinecap="round" strokeLinejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.108 12 5v14c0 .892-1.077 1.337-1.707.707L5.586 15z" /> </svg>
 );
 
+// --- HÀM FORMAT SỐ LƯỢNG (MỚI) ---
+const formatResourceAmount = (num: number): string => {
+    if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'b';
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'm';
+    if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return num.toString();
+};
+
 // --- COMPONENT: POPUP NHẬN THƯỞNG (Resource Drop) ---
 const ResourceRewardPopup: React.FC<{ 
     image: string; 
@@ -45,12 +53,11 @@ const ResourceRewardPopup: React.FC<{
     triggerId: number; 
 }> = ({ image, amount, type, triggerId }) => {
     return (
-        // Đã sửa class: bottom-32 -> bottom-48 (Dịch lên trên một chút)
         <div key={triggerId} className="fixed bottom-60 left-1/2 -translate-x-1/2 z-[60] pointer-events-none">
             <div className="animate-loot-pop relative">
                 <img src={image} alt={type} className="w-16 h-16 object-contain drop-shadow-lg" />
-                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
-                    x{amount}
+                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-[10px] font-lilita px-1.5 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[20px] text-center animate-fade-in-badge tracking-wide leading-tight">
+                    x{formatResourceAmount(amount)}
                 </div>
             </div>
             <style jsx>{`
