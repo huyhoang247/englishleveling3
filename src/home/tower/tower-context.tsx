@@ -324,7 +324,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             }
         }
         
-        // Không còn cộng Energy vào playerStats ở đây nữa
     }, [currentBossData, game, userId, currentFloor]);
 
     const runBattleTurn = useCallback(() => {
@@ -372,6 +371,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         endGame(finalWinner);
     }, [playerStats, bossStats, turnCounter, executeFullTurn, endGame]);
     
+    // --- CẬP NHẬT START GAME: TRỪ NĂNG LƯỢNG THẬT ---
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
         isEndingGame.current = false;
@@ -383,8 +383,12 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             if (!prev) return null;
             return { ...prev, energy: prev.energy - 10 };
         });
+        
+        // --- NEW: CẬP NHẬT NĂNG LƯỢNG TOÀN CỤC & DATABASE ---
+        game.handleUpdateEnergy(-10);
+
         setBattleState('fighting');
-    }, [battleState, playerStats]);
+    }, [battleState, playerStats, game]);
 
     const resetAllStateForNewBattle = useCallback(() => {
         if (battleIntervalRef.current) clearInterval(battleIntervalRef.current);
@@ -439,18 +443,21 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
-    // --- LOGIC SWEEP (QUÉT) MỚI: AUTO WIN (OPTIMISTIC) ---
+    // --- CẬP NHẬT HANDLE SWEEP: TRỪ NĂNG LƯỢNG THẬT ---
     const handleSweep = useCallback(async () => {
         // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
             return { result: 'lose' as const, rewards: null };
         }
     
-        // 1. Trừ năng lượng trước (Optimistic)
+        // 1. Trừ năng lượng ở Local State
         setPlayerStats(prev => {
             if(!prev) return null;
             return { ...prev, energy: prev.energy - 10 }
         });
+
+        // --- NEW: CẬP NHẬT NĂNG LƯỢNG TOÀN CỤC & DATABASE ---
+        game.handleUpdateEnergy(-10);
     
         // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
         const previousFloorIndex = currentFloor - 1;
@@ -495,6 +502,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     }, [runBattleTurn]);
 
     // Init Data khi vào màn chơi
+    // --- QUAN TRỌNG: Đã xóa game.coins khỏi dependency array để tránh reset năng lượng ---
     useEffect(() => {
         if (game.isLoadingUserData) {
             setIsLoading(true);
@@ -518,8 +526,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                     hp: 1000,
                     atk: 50,
                     def: 10,
-                    maxEnergy: 100,
-                    energy: 100
+                    maxEnergy: 50,
+                    energy: 50
                 };
             }
             
@@ -551,7 +559,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 setIsLoading(false);
             }
         }
-    }, [game.isLoadingUserData, game.bossBattleHighestFloor, game.coins]);
+    }, [game.isLoadingUserData, game.bossBattleHighestFloor]); // <--- Đã xóa game.coins ở đây
 
     // Update Boss Stats khi đổi tầng
     useEffect(() => {
