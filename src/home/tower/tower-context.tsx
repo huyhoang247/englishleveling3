@@ -6,7 +6,8 @@ import {
     OwnedSkill, 
     SkillBlueprint, 
     getActivationChance, 
-    getRarityTextColor 
+    getRarityTextColor,
+    ALL_SKILLS // Import để có thể truy xuất thông tin chi tiết skill nếu cần
 } from '../skill-game/skill-data.tsx';
 import { useGame } from '../../GameContext.tsx';
 
@@ -31,6 +32,20 @@ export type TurnEvents = {
     playerHeal: number;
     bossDmg: number;
     bossReflectDmg: number;
+    
+    // MỚI: Danh sách kỹ năng kích hoạt trong lượt này
+    playerActivatedSkills: { 
+        id: string; 
+        name: string; 
+        rarity: string; 
+        type: 'offensive' | 'defensive'; // offensive: hiện đầu lượt, defensive: hiện khi bị đánh
+    }[];
+    bossActivatedSkills: { 
+        id: string; 
+        name: string; 
+        rarity: string; 
+    }[]; 
+    
     timestamp: number;      // Để đảm bảo useEffect luôn chạy
 };
 
@@ -110,6 +125,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         let boss = { ...currentBoss };
         let winner: 'win' | 'lose' | null = null;
         
+        // Khởi tạo Event Data cho lượt này
         let turnEvents: Omit<TurnEvents, 'timestamp'> = { 
             playerDmg: 0, 
             playerDmgHit1: 0, 
@@ -117,11 +133,13 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             playerDmgHit3: 0,
             playerHeal: 0, 
             bossDmg: 0, 
-            bossReflectDmg: 0 
+            bossReflectDmg: 0,
+            playerActivatedSkills: [],
+            bossActivatedSkills: []
         };
 
         // --- 0. TÍNH HỒI MÁU ĐẦU LƯỢT (SKILL HEALING) ---
-        // Logic mới thêm vào đây: Hồi máu theo % Max HP
+        // Kỹ năng: Healing
         equippedSkills.forEach(skill => {
             if (skill.id === 'healing' && checkActivation(skill.rarity)) {
                 // Effect value trả về % (ví dụ: 0.5 nghĩa là 0.5%)
@@ -135,18 +153,37 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                     player.hp += actualHeal;
                     turnEvents.playerHeal += actualHeal; // Cộng dồn vào sự kiện hiển thị
                     log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> hồi phục <b class="text-green-400">${actualHeal}</b> HP.`);
+                    
+                    // Ghi nhận skill đã kích hoạt (Loại Offensive/Support - Hiện đầu lượt)
+                    turnEvents.playerActivatedSkills.push({
+                        id: skill.id,
+                        name: skill.name,
+                        rarity: skill.rarity,
+                        type: 'offensive'
+                    });
                 }
             }
         });
 
         // --- 1. TÍNH DAMAGE PLAYER ---
         let atkMods = { boost: 1, armorPen: 0 };
+        
+        // Kỹ năng: Damage Boost & Armor Penetration
         equippedSkills.forEach(skill => {
             if ((skill.id === 'damage_boost' || skill.id === 'armor_penetration') && checkActivation(skill.rarity)) {
                 const effect = getSkillEffect(skill);
                 log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> kích hoạt!`);
+                
                 if (skill.id === 'damage_boost') atkMods.boost += effect / 100;
                 if (skill.id === 'armor_penetration') atkMods.armorPen += effect / 100;
+
+                // Ghi nhận skill đã kích hoạt (Loại Offensive - Hiện đầu lượt)
+                turnEvents.playerActivatedSkills.push({
+                    id: skill.id,
+                    name: skill.name,
+                    rarity: skill.rarity,
+                    type: 'offensive'
+                });
             }
         });
 
@@ -180,6 +217,14 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                     turnEvents.playerHeal += actualHeal; // Sử dụng += để cộng dồn nếu có skill Healing trước đó
                     log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> hút <b class="text-green-400">${actualHeal}</b> Máu.`);
                     player.hp += actualHeal;
+
+                    // Ghi nhận skill đã kích hoạt (Loại Offensive - Hiện trong lúc đánh)
+                    turnEvents.playerActivatedSkills.push({
+                        id: skill.id,
+                        name: skill.name,
+                        rarity: skill.rarity,
+                        type: 'offensive'
+                    });
                 }
             }
         });
@@ -205,6 +250,14 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
                 totalReflectDmg += reflectDmg;
                 log(`<span class="${getRarityTextColor(skill.rarity)} font-bold">[Kỹ Năng] ${skill.name}</span> phản lại <b class="text-orange-400">${reflectDmg}</b> sát thương.`);
                 boss.hp -= reflectDmg;
+
+                // Ghi nhận skill đã kích hoạt (Loại Defensive - Hiện khi bị đánh)
+                turnEvents.playerActivatedSkills.push({
+                    id: skill.id,
+                    name: skill.name,
+                    rarity: skill.rarity,
+                    type: 'defensive'
+                });
             }
         });
         if (totalReflectDmg > 0) turnEvents.bossReflectDmg = totalReflectDmg;
