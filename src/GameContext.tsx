@@ -9,7 +9,7 @@ import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, updateUserEnergy,
-  syncEnergyWithServer // Import hàm đồng bộ mới
+  syncEnergyWithServer // Import hàm đồng bộ
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -26,7 +26,7 @@ interface IGameContext {
     
     // --- ENERGY STATES ---
     energy: number;
-    timeUntilNextEnergy: number; // Thời gian còn lại (giây) để hồi 1 năng lượng
+    timeUntilNextEnergy: number; // Export số (nếu null sẽ convert thành 0 để UI không lỗi)
 
     minerChallengeHighestFloor: number;
     userStatsLevel: { hp: number; atk: number; def: number; };
@@ -152,7 +152,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   // --- ENERGY STATES ---
   const [energy, setEnergy] = useState(50);
-  const [timeUntilNextEnergy, setTimeUntilNextEnergy] = useState(0);
+  
+  // FIX: Khởi tạo là NULL để đánh dấu trạng thái "đang tải"
+  const [timeUntilNextEnergy, setTimeUntilNextEnergy] = useState<number | null>(null);
 
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
   const [userStatsLevel, setUserStatsLevel] = useState({ hp: 0, atk: 0, def: 0 });
@@ -273,14 +275,18 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       if (user) {
         setIsLoadingUserData(true);
         
-        // --- SYNC ENERGY TỪ SERVER (Tính toán offline progress) ---
+        // --- SYNC ENERGY TỪ SERVER (QUAN TRỌNG) ---
+        // Gọi hàm này ngay lập tức để lấy thời gian còn lại chuẩn từ server
         syncEnergyWithServer(user.uid)
             .then(result => {
                 setEnergy(result.currentEnergy);
-                setTimeUntilNextEnergy(result.nextRefillIn);
-                console.log(`Energy Sync: ${result.currentEnergy}, Next in: ${result.nextRefillIn}s`);
+                setTimeUntilNextEnergy(result.nextRefillIn); // Gán thời gian chuẩn
+                console.log(`Energy Sync Success: ${result.currentEnergy}, Next: ${result.nextRefillIn}s`);
             })
-            .catch(err => console.error("Energy sync failed:", err));
+            .catch(err => {
+                console.error("Energy sync failed:", err);
+                setTimeUntilNextEnergy(300); // Fallback nếu lỗi
+            });
 
         const userDocRef = doc(db, 'users', user.uid);
         
@@ -295,6 +301,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setPickaxes(gameData.pickaxes ?? 50);
                 
                 // Real-time Energy Update (Value Only)
+                // Lưu ý: Realtime snapshot chỉ cập nhật giá trị Energy, 
+                // còn Timer thì do logic interval và syncEnergyWithServer quản lý
                 setEnergy(gameData.energy ?? 50);
 
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
@@ -353,7 +361,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setPickaxes(0); setMinerChallengeHighestFloor(0); 
         
         setEnergy(50); // Reset Energy
-        setTimeUntilNextEnergy(0);
+        setTimeUntilNextEnergy(null); // Reset Timer về null
 
         setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
         setUserStatsValue({ hp: 0, atk: 0, def: 0 });
@@ -386,7 +394,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, []);
 
-  // --- EFFECT: ENERGY REGENERATION TIMER ---
+  // --- EFFECT: ENERGY REGENERATION TIMER (UPDATED FIX) ---
   useEffect(() => {
     // Nếu đầy năng lượng thì dừng đếm ngược
     if (energy >= 50) {
@@ -396,6 +404,11 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
     const timer = setInterval(() => {
         setTimeUntilNextEnergy((prev) => {
+            // FIX QUAN TRỌNG:
+            // Nếu prev là null (nghĩa là đang load hoặc chưa sync xong với server), giữ nguyên null.
+            // Điều này ngăn chặn việc "Race Condition" khi F5 khiến nó tự set về 300s.
+            if (prev === null) return null; 
+
             if (prev <= 1) {
                 // Hết giờ -> Tự động hồi 1 năng lượng ở Client & Sync Server
                 handleRegenerateEnergyTick();
@@ -420,6 +433,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       // Hàm này trong service sẽ tự tính toán và update DB chuẩn xác
       if (userId) {
           try {
+              // Gọi sync để DB update timestamp chuẩn
               await syncEnergyWithServer(userId);
           } catch (e) {
               console.error("Background energy sync error:", e);
@@ -665,7 +679,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     
     // --- EXPORT ENERGY & FUNCTION ---
     energy,
-    timeUntilNextEnergy, // Export time remaining
+    timeUntilNextEnergy: timeUntilNextEnergy ?? 0, // Fallback nếu null để UI không lỗi
     handleUpdateEnergy,
 
     userStatsLevel, 
