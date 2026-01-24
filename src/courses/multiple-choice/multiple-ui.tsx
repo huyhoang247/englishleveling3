@@ -56,6 +56,14 @@ const ChevronRightIcon = ({ className }: { className: string }) => (
 
 interface Definition { vietnamese: string; english: string; explanation: string; }
 
+// --- HÀM FORMAT SỐ LƯỢNG (MỚI) ---
+const formatResourceAmount = (num: number): string => {
+    if (num >= 1_000_000_000) return (num / 1_000_000_000).toFixed(1).replace(/\.0$/, '') + 'b';
+    if (num >= 1_000_000) return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'm';
+    if (num >= 1_000) return (num / 1_000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return num.toString();
+};
+
 // --- COMPONENT: POPUP NHẬN THƯỞNG ---
 const ResourceRewardPopup: React.FC<{ 
     image: string; 
@@ -67,8 +75,8 @@ const ResourceRewardPopup: React.FC<{
         <div key={triggerId} className="fixed bottom-8 left-8 z-[60] pointer-events-none">
             <div className="animate-loot-pop relative">
                 <img src={image} alt={type} className="w-14 h-14 object-contain drop-shadow-lg" />
-                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-xs font-lilita px-2 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[28px] text-center animate-fade-in-badge tracking-wide">
-                    x{amount}
+                <div className="absolute -bottom-1 -right-1 bg-black/80 text-white text-[10px] font-lilita px-1.5 py-0.5 rounded-md border border-white/20 shadow-sm min-w-[20px] text-center animate-fade-in-badge tracking-wide leading-tight">
+                    x{formatResourceAmount(amount)}
                 </div>
             </div>
             <style jsx>{`
