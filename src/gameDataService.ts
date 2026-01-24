@@ -44,6 +44,9 @@ export interface UserGameData {
   gems: number;
   masteryCards: number;
   pickaxes: number;
+  // --- NEW: ENERGY FIELD ---
+  energy?: number; 
+  
   minerChallengeHighestFloor: number;
   stats: { hp: number; atk: number; def: number; };
   bossBattleHighestFloor: number;
@@ -117,6 +120,9 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       gems: data.gems || 0,
       masteryCards: data.masteryCards || 0,
       pickaxes: typeof data.pickaxes === 'number' ? data.pickaxes : 50,
+      // --- LOAD ENERGY TỪ DB (Mặc định 50 nếu không có) ---
+      energy: typeof data.energy === 'number' ? data.energy : 50,
+      
       minerChallengeHighestFloor: data.minerChallengeHighestFloor || 0,
       stats: data.stats || { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: data.bossBattleHighestFloor || 0,
@@ -144,6 +150,9 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
     // Tạo user mới hoàn toàn
     const newUserData: UserGameData & { createdAt: Date; claimedDailyGoals: object; claimedVocabMilestones: any[], claimedQuizRewards: object; } = {
       coins: 0, gems: 0, masteryCards: 0, pickaxes: 50,
+      // --- INIT ENERGY CHO USER MỚI ---
+      energy: 50,
+      
       minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
       skills: { owned: [], equipped: [null, null, null] },
@@ -226,6 +235,15 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
         return newGems;
     });
 };
+
+// --- NEW FUNCTION: CẬP NHẬT NĂNG LƯỢNG ---
+export const updateUserEnergy = async (userId: string, newEnergy: number): Promise<void> => {
+    if (!userId) return;
+    // Đảm bảo không âm. Nếu bạn muốn giới hạn max 50 thì thêm Math.min(newEnergy, 50)
+    const finalAmount = Math.max(0, newEnergy); 
+    await setDoc(doc(db, 'users', userId), { energy: finalAmount }, { merge: true });
+};
+
 
 export const fetchJackpotPool = async (): Promise<number> => {
     const jackpotDocRef = doc(db, 'appData', 'jackpotPoolData');
