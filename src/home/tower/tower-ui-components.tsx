@@ -26,9 +26,9 @@ const formatLootAmount = (num: number): string => {
 // --- HELPER COMPONENT: REWARD ITEM ---
 // Dùng chung cho RewardsModal và VictoryModal để hiển thị thống nhất
 const RewardItem = ({ icon, amount, label }: { icon: string, amount: number, label?: string }) => (
-    <div className="flex flex-col items-center justify-center bg-slate-800/60 p-2 rounded-lg border border-slate-700 min-w-[70px] transition-transform hover:scale-105">
-        <img src={icon} alt={label || 'Reward'} className="w-8 h-8 object-contain mb-1 drop-shadow-md" />
-        <span className="text-sm font-bold text-white text-shadow-sm">{formatLootAmount(amount)}</span>
+    <div className="flex flex-col items-center justify-center bg-slate-800/60 p-2 rounded-lg border border-slate-700 w-full transition-transform hover:scale-105">
+        <img src={icon} alt={label || 'Reward'} className="w-9 h-9 object-contain mb-1 drop-shadow-md" />
+        <span className="text-base font-bold text-white text-shadow-sm">{formatLootAmount(amount)}</span>
         {label && <span className="text-[10px] text-slate-400 uppercase tracking-wider mt-0.5">{label}</span>}
     </div>
 );
@@ -288,7 +288,7 @@ export const CharacterStatsModal = memo(({ character, characterType, onClose }: 
   )
 });
 
-// --- REWARDS MODAL (UPDATED: SHOW BOTH COINS AND RESOURCES) ---
+// --- REWARDS MODAL (UPDATED: GRID LAYOUT 2x2) ---
 export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, rewards: BattleRewards | null }) => {
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in" onClick={onClose}>
@@ -297,7 +297,8 @@ export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, r
                 <div className="p-5 pt-8">
                     <h3 className="text-xl font-bold text-center text-yellow-300 text-shadow-sm tracking-wide mb-5 uppercase">Potential Rewards</h3>
                     
-                    <div className="flex flex-wrap justify-center gap-3">
+                    {/* SỬ DỤNG GRID 2 CỘT ĐỂ HIỆN 2 TRÊN - 2 DƯỚI */}
+                    <div className="grid grid-cols-2 gap-3 justify-items-center">
                         {/* 1. COINS */}
                         {rewards && rewards.coins > 0 && (
                             <RewardItem icon={bossBattleAssets.coinIcon} amount={rewards.coins} label="Coins" />
@@ -305,16 +306,15 @@ export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, r
 
                         {/* 2. RESOURCES */}
                         {rewards && rewards.resources && rewards.resources.map((res, idx) => {
-                            // Map type string sang ảnh từ resourceAssets
                             const resKey = res.type as keyof typeof resourceAssets;
-                            const img = resourceAssets[resKey] || bossBattleAssets.coinIcon; // Fallback icon
+                            const img = resourceAssets[resKey] || bossBattleAssets.coinIcon;
                             return (
                                 <RewardItem key={idx} icon={img} amount={res.amount} label={res.type} />
                             );
                         })}
 
                         {(!rewards || ((!rewards.resources || rewards.resources.length === 0) && rewards.coins === 0)) && (
-                            <p className="text-slate-400 text-sm italic">No rewards available.</p>
+                            <p className="text-slate-400 text-sm italic col-span-2">No rewards available.</p>
                         )}
                     </div>
                 </div>
@@ -323,7 +323,7 @@ export const RewardsModal = memo(({ onClose, rewards }: { onClose: () => void, r
     );
 });
 
-// --- VICTORY MODAL (UPDATED: SHOW BOTH COINS AND RESOURCES) ---
+// --- VICTORY MODAL (UPDATED: GRID LAYOUT 2x2) ---
 export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards }: { onRestart: () => void, onNextFloor: () => void, isLastBoss: boolean, rewards: BattleRewards | null }) => (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-40 animate-fade-in">
         <div className="relative w-80 bg-slate-900/90 border border-yellow-500/30 rounded-xl shadow-2xl shadow-yellow-500/10 animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center">
@@ -333,8 +333,8 @@ export const VictoryModal = memo(({ onRestart, onNextFloor, isLastBoss, rewards 
             <div className="w-full flex flex-col items-center gap-3">
                 <p className="font-sans text-yellow-100/80 text-sm tracking-wide uppercase">Rewards Earned</p>
                 
-                {/* HIỂN THỊ LIST REWARDS (COINS + RESOURCES) */}
-                <div className="flex flex-wrap justify-center gap-3 w-full">
+                {/* SỬ DỤNG GRID 2 CỘT ĐỂ HIỆN 2 TRÊN - 2 DƯỚI */}
+                <div className="grid grid-cols-2 gap-3 justify-items-center w-full">
                     {rewards && rewards.coins > 0 && (
                          <RewardItem icon={bossBattleAssets.coinIcon} amount={rewards.coins} label="Coins" />
                     )}
