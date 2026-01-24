@@ -26,7 +26,9 @@ import {
     CharacterStatsModal, 
     RewardsModal, 
     VictoryModal, 
-    DefeatModal 
+    DefeatModal,
+    ActiveSkillToast,      // NEW COMPONENT
+    ActiveSkillToastProps  // NEW TYPE
 } from './tower-ui-components.tsx';
 
 interface BossBattleWrapperProps {
@@ -83,6 +85,10 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     
     const [bossImgSrc, setBossImgSrc] = useState<string>('');
 
+    // --- NEW: SKILL NOTIFICATION STATES ---
+    const [visiblePlayerSkills, setVisiblePlayerSkills] = useState<ActiveSkillToastProps[]>([]);
+    const [visibleBossSkills, setVisibleBossSkills] = useState<ActiveSkillToastProps[]>([]);
+
     // --- LOGIC HIỂN THỊ DAMAGE / COLLECTED / VICTORY ---
     const addDamageText = useCallback((text: string, color: string, target: 'player' | 'boss' | 'custom', fontSize: number = 18, customX?: number, customY?: number, duration: number = 1200, className: string = '') => { 
         const id = Date.now() + Math.random();
@@ -114,7 +120,6 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     }, []);
 
     // --- HELPER: ANIMATE LOOT DROP ---
-    // Hàm này dùng chung cho cả khi Chiến thắng Battle và khi Sweep
     const animateLootDrop = useCallback((rewards: { coins: number, energy: number }, onComplete?: () => void) => {
         const newLootItems: LootItemData[] = [];
         let itemCount = 0;
@@ -262,13 +267,41 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
 
-    // --- TURN SEQUENCE LOGIC ---
+    // --- TURN SEQUENCE LOGIC (UPDATED WITH SKILL NOTIFICATIONS) ---
     useEffect(() => {
         if (!lastTurnEvents) return;
         
-        const { playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, bossDmg, bossReflectDmg } = lastTurnEvents;
+        const { 
+            playerDmg, playerDmgHit1, playerDmgHit2, playerDmgHit3, playerHeal, 
+            bossDmg, bossReflectDmg, 
+            playerActivatedSkills, bossActivatedSkills // Lấy thông tin skill kích hoạt
+        } = lastTurnEvents;
 
-        // Player Turn
+        // --- 1. DISPLAY OFFENSIVE SKILLS (PLAYER) - Hiện ngay khi lượt bắt đầu ---
+        const offensiveSkills = playerActivatedSkills.filter(s => s.type === 'offensive');
+        if (offensiveSkills.length > 0) {
+            const skillToasts = offensiveSkills.map(s => ({ ...s, side: 'left' } as ActiveSkillToastProps));
+            setVisiblePlayerSkills(prev => [...prev, ...skillToasts]);
+            
+            // Tự động ẩn sau 2.5s
+            setTimeout(() => {
+                setVisiblePlayerSkills(prev => prev.filter(p => !skillToasts.find(t => t.id === p.id)));
+            }, 2500);
+        }
+
+        // --- 2. DISPLAY BOSS SKILLS - Hiện khi Boss bắt đầu đánh ---
+        if (bossActivatedSkills && bossActivatedSkills.length > 0) {
+             const bossToasts = bossActivatedSkills.map(s => ({ ...s, side: 'right' } as ActiveSkillToastProps));
+             // Delay một chút để khớp với animation boss
+             setTimeout(() => {
+                 setVisibleBossSkills(prev => [...prev, ...bossToasts]);
+                 setTimeout(() => {
+                    setVisibleBossSkills(prev => prev.filter(p => !bossToasts.find(t => t.id === p.id)));
+                 }, 2500);
+             }, 2500); 
+        }
+
+        // Player Turn Attack Logic
         if (playerDmg > 0) {
             setHeroState('attack');
             setTimeout(() => setHeroState('idle'), 500); 
@@ -322,7 +355,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
              setVisualPlayerHp(prev => prev + playerHeal);
         }
         
-        // Boss Turn
+        // Boss Turn Logic
         const bossStartDelay = 2500; 
         
         if (bossDmg > 0) {
@@ -381,6 +414,19 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                      });
                  }
             }, hit3Time + 500);
+        }
+
+        // --- 3. DISPLAY DEFENSIVE SKILLS (PLAYER) - Hiện sau khi bị Boss đánh ---
+        const defensiveSkills = playerActivatedSkills.filter(s => s.type === 'defensive');
+        if (defensiveSkills.length > 0) {
+            const reflectDelay = bossStartDelay + 500; // Trigger khi Boss thực hiện tấn công
+            setTimeout(() => {
+                 const skillToasts = defensiveSkills.map(s => ({ ...s, side: 'left' } as ActiveSkillToastProps));
+                 setVisiblePlayerSkills(prev => [...prev, ...skillToasts]);
+                 setTimeout(() => {
+                    setVisiblePlayerSkills(prev => prev.filter(p => !skillToasts.find(t => t.id === p.id)));
+                }, 2500);
+            }, reflectDelay);
         }
 
         if (bossReflectDmg > 0) {
@@ -488,6 +534,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                     >
                                         <img src={bossBattleAssets.sweepBattleIcon} alt="Sweep" className="w-16 h-auto object-contain drop-shadow-md" />
                                     </button>
+
+                                    {/* --- PLAYER ACTIVE SKILLS NOTIFICATION AREA --- */}
+                                    <div className="flex flex-col gap-1 mt-2">
+                                        {visiblePlayerSkills.map((skill, idx) => (
+                                            <ActiveSkillToast key={`${skill.id}-${idx}`} skill={skill} />
+                                        ))}
+                                    </div>
                                 </div>
 
                                 {/* --- RIGHT UTILITY BUTTONS --- */}
@@ -497,6 +550,13 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                                             <img src={bossBattleAssets.bossRewardsIcon} alt="Rewards" className="w-full h-full object-contain drop-shadow-md" />
                                         </button>
                                      </div>
+
+                                    {/* --- BOSS ACTIVE SKILLS NOTIFICATION AREA --- */}
+                                    <div className="flex flex-col gap-1 mt-2 items-end">
+                                        {visibleBossSkills.map((skill, idx) => (
+                                            <ActiveSkillToast key={`${skill.id}-${idx}`} skill={skill} />
+                                        ))}
+                                    </div>
                                 </div>
     
                                 <main className="w-full h-full flex flex-col justify-center items-center pt-[72px] relative overflow-hidden">
