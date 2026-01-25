@@ -264,14 +264,14 @@ const TradeOptionCard = memo(({
                             </button>
                         </div>
 
-                        {/* SMART BUTTONS: Min | Step 1 | Step 2 | Max */}
+                        {/* SMART BUTTONS: MIN | Step 1 | Step 2 | MAX */}
                         <div className="flex gap-1 justify-between">
                             {/* MIN Button */}
                             <button
                                 onClick={() => onSetQuantity(option.id, 1)}
                                 className="px-2 py-1 text-[10px] sm:text-xs font-lilita rounded border transition-colors flex-1 bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
                             >
-                                Min
+                                MIN
                             </button>
 
                             {/* Dynamic Step 1 */}
@@ -300,7 +300,7 @@ const TradeOptionCard = memo(({
                                     }
                                 `}
                             >
-                                Max
+                                MAX
                             </button>
                         </div>
                     </div>
