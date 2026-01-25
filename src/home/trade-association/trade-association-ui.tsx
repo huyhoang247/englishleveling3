@@ -1,4 +1,4 @@
-// --- START OF FILE trade-association-modal.tsx ---
+// --- START OF FILE trade-association-ui.tsx ---
 
 import React, { memo, useState, useCallback, useEffect, useMemo } from 'react';
 import { 
@@ -125,12 +125,30 @@ const MarketTimer = memo(() => {
     );
 });
 
+// --- HELPER COMPONENT: QUICK SELECT BUTTON ---
+const QuickSelectBtn = ({ label, onClick, disabled = false }: { label: string, onClick: () => void, disabled?: boolean }) => (
+    <button
+        onClick={onClick}
+        disabled={disabled}
+        className={`
+            px-1 py-1 text-[10px] sm:text-xs font-bold rounded border transition-colors
+            ${disabled 
+                ? 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed' 
+                : 'bg-slate-700 border-slate-600 text-slate-300 hover:bg-slate-600 hover:text-white active:bg-slate-500'
+            }
+        `}
+    >
+        {label}
+    </button>
+);
+
 // --- SUB-COMPONENT: TRADE OPTION CARD ---
 interface TradeCardProps {
     option: TradeOption;
     quantity: number;
     resources: Record<string, number>;
     onQuantityChange: (id: string, delta: number) => void;
+    onSetQuantity: (id: string, value: number) => void; 
     onExchange: (option: TradeOption, qty: number) => void;
     isProcessing: boolean;
 }
@@ -140,11 +158,25 @@ const TradeOptionCard = memo(({
     quantity, 
     resources, 
     onQuantityChange, 
+    onSetQuantity,
     onExchange, 
     isProcessing 
 }: TradeCardProps) => {
     
     let canAffordAll = true;
+
+    // Calculate maximum possible trade based on ingredients
+    const maxAffordable = useMemo(() => {
+        let max = Infinity;
+        option.ingredients.forEach(ing => {
+            const userHas = resources[ing.type] || 0;
+            const cost = ing.amount;
+            if (cost === 0) return; 
+            const possible = Math.floor(userHas / cost);
+            if (possible < max) max = possible;
+        });
+        return max === Infinity ? 0 : max;
+    }, [option.ingredients, resources]);
 
     return (
         <div className="relative bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
@@ -198,11 +230,11 @@ const TradeOptionCard = memo(({
                     />
                 </div>
 
-                {/* RESULT */}
-                <div className="flex-1 w-full flex flex-col items-center justify-center gap-5 bg-black/20 p-5 rounded-2xl border border-slate-800">
+                {/* RESULT & CONTROLS */}
+                <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 bg-black/20 p-5 rounded-2xl border border-slate-800">
                     
+                    {/* Item Icon */}
                     <div className="relative">
-                        {/* Style phẳng, không shadow */}
                         <div className="relative p-3 rounded-xl border bg-slate-800 border-slate-600">
                             {option.receiveType === 'equipmentPiece' ? (
                                 <EquipmentPieceIcon className="w-14 h-14 md:w-16 md:h-16 object-contain" />
@@ -217,33 +249,67 @@ const TradeOptionCard = memo(({
                         </div>
                     </div>
 
-                    <div className="flex items-center justify-center gap-3 w-full max-w-[140px] bg-slate-900 p-1.5 rounded-lg border border-slate-700">
-                        <button 
-                            onClick={() => onQuantityChange(option.id, -1)}
-                            className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
-                            </svg>
-                        </button>
-                        <span className="flex-1 text-center font-bold font-lilita text-xl text-amber-500">{quantity}</span>
-                        <button 
-                            onClick={() => onQuantityChange(option.id, 1)}
-                            className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-                            </svg>
-                        </button>
+                    {/* Quantity Controls Container */}
+                    <div className="w-full max-w-[240px] space-y-2">
+                        
+                        {/* +/- and Input Row */}
+                        <div className="flex items-center justify-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
+                            <button 
+                                onClick={() => onQuantityChange(option.id, -1)}
+                                className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 shrink-0"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 12h-15" />
+                                </svg>
+                            </button>
+                            
+                            {/* Number Input Field */}
+                            <input 
+                                type="number" 
+                                value={quantity}
+                                onChange={(e) => {
+                                    const val = parseInt(e.target.value);
+                                    if (!isNaN(val) && val > 0) onSetQuantity(option.id, val);
+                                    else if (e.target.value === '') onSetQuantity(option.id, 0); // Allow clearing
+                                }}
+                                onBlur={(e) => {
+                                    if (!quantity || quantity < 1) onSetQuantity(option.id, 1);
+                                }}
+                                className="flex-1 bg-transparent text-center font-bold font-lilita text-xl text-amber-500 outline-none min-w-0" 
+                            />
+                            
+                            <button 
+                                onClick={() => onQuantityChange(option.id, 1)}
+                                className="w-8 h-8 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 shrink-0"
+                            >
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" className="w-4 h-4">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
+                                </svg>
+                            </button>
+                        </div>
+
+                        {/* Quick Select Buttons Grid */}
+                        <div className="grid grid-cols-5 gap-1">
+                            <QuickSelectBtn label="Min" onClick={() => onSetQuantity(option.id, 1)} />
+                            <QuickSelectBtn label="10" onClick={() => onSetQuantity(option.id, 10)} />
+                            <QuickSelectBtn label="100" onClick={() => onSetQuantity(option.id, 100)} />
+                            <QuickSelectBtn label="1k" onClick={() => onSetQuantity(option.id, 1000)} />
+                            <QuickSelectBtn 
+                                label="Max" 
+                                onClick={() => onSetQuantity(option.id, Math.max(1, maxAffordable))} 
+                                disabled={maxAffordable === 0}
+                            />
+                        </div>
                     </div>
 
+                    {/* Exchange Button */}
                     <button
                         onClick={() => onExchange(option, quantity)}
-                        disabled={!canAffordAll || isProcessing}
+                        disabled={!canAffordAll || isProcessing || quantity <= 0}
                         className={`
-                            w-full max-w-[200px] py-2 px-4 rounded-xl font-lilita text-lg uppercase tracking-wider transition-transform duration-100
-                            flex items-center justify-center gap-2 active:scale-95 border
-                            ${canAffordAll 
+                            w-full max-w-[240px] py-2 px-4 rounded-xl font-lilita text-lg uppercase tracking-wider transition-transform duration-100
+                            flex items-center justify-center gap-2 active:scale-95 border mt-1
+                            ${canAffordAll && quantity > 0
                                 ? 'bg-emerald-700 border-emerald-600 text-white hover:bg-emerald-600' 
                                 : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
                             }
@@ -288,13 +354,21 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     const getQuantity = useCallback((optionId: string) => tradeQuantities[optionId] || 1, [tradeQuantities]);
 
+    // Handle +/- clicks
     const handleQuantityChange = useCallback((optionId: string, change: number) => {
         setTradeQuantities(prev => {
             const current = prev[optionId] || 1;
             const newVal = current + change;
             if (newVal < 1) return prev;
-            if (newVal > 99) return prev;
             return { ...prev, [optionId]: newVal };
+        });
+    }, []);
+
+    // Handle direct input and Quick buttons
+    const handleSetQuantity = useCallback((optionId: string, value: number) => {
+        setTradeQuantities(prev => {
+            if (value < 0) return prev; // allow 0 temporarily for typing
+            return { ...prev, [optionId]: value };
         });
     }, []);
 
@@ -305,6 +379,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
             return;
         }
         if (isProcessing) return;
+        if (quantity <= 0) return;
 
         setIsProcessing(true);
         setToastState(prev => ({ ...prev, show: false }));
@@ -371,6 +446,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                 quantity={getQuantity(option.id)}
                                 resources={resources}
                                 onQuantityChange={handleQuantityChange}
+                                onSetQuantity={handleSetQuantity}
                                 onExchange={handleExchange}
                                 isProcessing={isProcessing}
                             />
@@ -400,6 +476,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 .hide-scrollbar {
                     -ms-overflow-style: none;
                     scrollbar-width: none;
+                }
+                /* Remove Arrows from Number Input */
+                input[type=number]::-webkit-inner-spin-button, 
+                input[type=number]::-webkit-outer-spin-button { 
+                    -webkit-appearance: none; 
+                    margin: 0; 
+                }
+                input[type=number] {
+                    -moz-appearance: textfield;
                 }
             `}</style>
         </div>
