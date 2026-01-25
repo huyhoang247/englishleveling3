@@ -9,16 +9,16 @@ import { ALL_SKILLS, getRarityColor, getRarityGradient } from '../skill-game/ski
 // --- IMPORT TYPES ---
 import { BattleRewards } from './tower-service.ts';
 
-// --- HELPER: FORMAT NUMBER (k, m, b) ---
+// --- HELPER: FORMAT NUMBER (K, M, B) ---
 const formatLootAmount = (num: number): string => {
     if (num >= 1_000_000_000) {
-        return parseFloat((num / 1_000_000_000).toFixed(1)) + 'b';
+        return parseFloat((num / 1_000_000_000).toFixed(1)) + 'B';
     }
     if (num >= 1_000_000) {
-        return parseFloat((num / 1_000_000).toFixed(1)) + 'm';
+        return parseFloat((num / 1_000_000).toFixed(1)) + 'M';
     }
     if (num >= 1_000) {
-        return parseFloat((num / 1_000).toFixed(1)) + 'k';
+        return parseFloat((num / 1_000).toFixed(1)) + 'K';
     }
     return num.toString();
 };
