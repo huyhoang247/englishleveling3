@@ -1,10 +1,10 @@
 // --- START OF FILE lucky-game.tsx ---
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import CoinDisplay from './ui/display/coin-display.tsx';
-import HomeButton from './ui//home-button.tsx';
-import { useGame } from './GameContext.tsx'; 
-import { useAnimateValue } from './ui/useAnimateValue.ts'; 
+import CoinDisplay from '../../ui/display/coin-display.tsx';
+import HomeButton from '../../ui//home-button.tsx';
+import { useGame } from '../../GameContext.tsx'; 
+import { useAnimateValue } from '../../ui/useAnimateValue.ts'; 
 
 // --- IMPORT DATA & HELPERS ---
 // Đảm bảo bạn đã tạo file lucky-game-data.tsx cùng thư mục
