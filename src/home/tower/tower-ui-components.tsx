@@ -27,9 +27,9 @@ const formatLootAmount = (num: number): string => {
 // Dùng chung cho RewardsModal và VictoryModal để hiển thị thống nhất
 const RewardItem = ({ icon, amount, label }: { icon: string, amount: number, label?: string }) => (
     <div className="flex flex-col items-center justify-center bg-slate-800/60 p-2 rounded-lg border border-slate-700 w-full transition-transform hover:scale-105">
-        <img src={icon} alt={label || 'Reward'} className="w-9 h-9 object-contain mb-1 drop-shadow-md" />
+        {/* UPDATED: Changed size from w-9 h-9 to w-7 h-7 */}
+        <img src={icon} alt={label || 'Reward'} className="w-7 h-7 object-contain mb-1 drop-shadow-md" />
         <span className="text-base font-bold text-white text-shadow-sm">{formatLootAmount(amount)}</span>
-        {/* Đã ẩn label text theo yêu cầu (Coins, Wood, v.v.) */}
     </div>
 );
 
