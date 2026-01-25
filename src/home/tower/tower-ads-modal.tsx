@@ -90,7 +90,7 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
                     <button 
                         onClick={onClaimX1}
                         disabled={isWatchingAd}
-                        // Reduced padding (py-2) and font size for compactness
+                        // Reduced padding and font size for compactness
                         className="flex-[1] py-2 bg-slate-700 hover:bg-slate-600 rounded-xl border-b-4 border-slate-900 active:border-b-0 active:translate-y-1 transition-all flex flex-col items-center justify-center group h-14"
                     >
                          <span className="text-slate-400 text-[9px] font-bold uppercase leading-tight group-hover:text-slate-300">No Thanks</span>
@@ -140,13 +140,9 @@ const RewardRow = ({ icon, label, amount }: { icon: string, label: string, amoun
         
         {/* Left: Normal Amount */}
         <div className="flex items-center gap-3">
-            <div className="relative">
-                <img src={icon} alt={label} className="w-8 h-8 object-contain drop-shadow-md" />
-                {/* Small badge 1x */}
-                <div className="absolute -bottom-1 -right-1 w-3.5 h-3.5 bg-slate-700 rounded-full flex items-center justify-center text-[7px] border border-slate-500 text-slate-300 font-bold">
-                   1x
-                </div>
-            </div>
+            {/* REMOVED: 1x Badge */}
+            <img src={icon} alt={label} className="w-8 h-8 object-contain drop-shadow-md" />
+            
             <div className="flex flex-col">
                 <span className="text-white font-lilita text-sm tracking-wide">{formatNum(amount)}</span>
                 <span className="text-[8px] text-slate-500 font-bold uppercase">{label}</span>
