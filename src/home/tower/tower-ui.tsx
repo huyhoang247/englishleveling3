@@ -35,6 +35,9 @@ import {
     ActiveSkillToastProps  
 } from './tower-ui-components.tsx';
 
+// --- IMPORT NEW ADS COMPONENT ---
+import { AdsRewardModal } from './tower-ads-modal.tsx';
+
 interface BossBattleWrapperProps {
   userId: string;
   onClose: () => void;
@@ -64,7 +67,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
         lastRewards,      // Phần thưởng thực nhận khi thắng
         potentialRewards, // Phần thưởng xem trước (đã tính toán đồng bộ)
-        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep
+        startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep,
+        confirmClaimRewards // Hàm xác nhận nhận thưởng từ Context
     } = useBossBattle();
 
     const [damages, setDamages] = useState<DamageTextData[]>([]);
@@ -86,6 +90,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [lootItems, setLootItems] = useState<LootItemData[]>([]);
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
+    
+    // NEW STATE: ADS MODAL
+    const [showAdsModal, setShowAdsModal] = useState(false);
     
     const [isSweeping, setIsSweeping] = useState(false);
     
@@ -215,6 +222,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
 
     // --- EFFECT: HANDLE VICTORY SEQUENCE ---
+    // UPDATED: Now shows Ads Modal instead of instant loot drop
     useEffect(() => {
         // Trigger chỉ khi thắng và chưa bắt đầu sequence
         if (gameOver === 'win' && sequenceState === 'none') {
@@ -226,30 +234,45 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 // 1. Boss chết (1.5s)
                 setBossState('dying');
 
-                // 2. Sau khi boss chết xong -> Generate Loot & Show Victory
+                // 2. Sau khi boss chết xong -> Show Victory -> SHOW ADS MODAL
                 setTimeout(() => {
                     // SHOW VICTORY TEXT
                     addDamageText("VICTORY", "#FFFFFF", "custom", 24, 50, 15, 3000, "tracking-widest");
 
-                    // 3. Đợi 2s (cho chữ VICTORY bay lên một chút) rồi bung loot
+                    // 3. Đợi 1.5s (cho chữ VICTORY bay lên một chút) rồi hiện Modal
                     setTimeout(() => {
-                        // Gọi hàm rơi vật phẩm với phần thưởng đã lưu trong Context (lastRewards)
-                        animateLootDrop(lastRewards, () => {
-                            // Sau khi loot xong thì chuyển tầng
-                            handleNextFloor();
-                            setBossState('appearing');
-                            setTimeout(() => {
-                                setBossState('idle');
-                                setSequenceState('none');
-                            }, 1200);
-                        });
-
-                    }, 2000); 
+                        setShowAdsModal(true);
+                    }, 1500); 
 
                 }, 1200); // Thời gian animation 'dying' của Boss
             }
         }
-    }, [gameOver, currentFloor, handleNextFloor, sequenceState, addDamageText, currentBossData, animateLootDrop, lastRewards]);
+    }, [gameOver, currentFloor, sequenceState, addDamageText]);
+
+    // --- FUNCTION: HANDLE CLAIM FROM MODAL ---
+    const handleClaimReward = async (multiplier: 1 | 2) => {
+        // 1. Đóng Modal
+        setShowAdsModal(false);
+
+        // 2. Lưu vào DB & Update Game Context
+        await confirmClaimRewards(multiplier);
+
+        // 3. Tạo visual rewards (phải tính toán thủ công để animation chạy đúng số)
+        const visualRewards = lastRewards ? {
+            coins: lastRewards.coins * multiplier,
+            resources: lastRewards.resources.map(r => ({ ...r, amount: r.amount * multiplier }))
+        } : null;
+
+        // 4. Chạy animation rơi đồ, sau đó Next Floor
+        animateLootDrop(visualRewards, () => {
+            handleNextFloor();
+            setBossState('appearing');
+            setTimeout(() => {
+                setBossState('idle');
+                setSequenceState('none');
+            }, 1200);
+        });
+    };
 
     // --- SYNC VISUAL HP ---
     useEffect(() => {
@@ -511,6 +534,15 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 <RewardsModal 
                     onClose={() => setShowRewardsModal(false)} 
                     rewards={potentialRewards} 
+                />
+            )}
+
+            {/* NEW: ADS REWARD MODAL */}
+            {showAdsModal && (
+                <AdsRewardModal 
+                    rewards={lastRewards}
+                    onClaimX1={() => handleClaimReward(1)}
+                    onClaimX2={() => handleClaimReward(2)}
                 />
             )}
 
