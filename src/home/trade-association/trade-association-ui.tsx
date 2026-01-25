@@ -14,8 +14,9 @@ import HomeButton from '../../ui/home-button.tsx';
 import CoinDisplay from '../../ui/display/coin-display.tsx'; 
 import RateLimitToast from '../../ui/notification.tsx'; 
 
-// Import Numpad từ file riêng
+// Import Components từ file riêng
 import NumpadModal from './numpad-modal.tsx';
+import MarketTimer from './market-timer.tsx'; // Import component MarketTimer mới tách
 
 // Import Service và Types từ file service
 import { 
@@ -81,51 +82,6 @@ const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, display
                 </div>
             </div>
         </header>
-    );
-});
-
-// --- MARKET TIMER COMPONENT ---
-const MarketTimer = memo(() => {
-    const [timeLeft, setTimeLeft] = useState('');
-
-    useEffect(() => {
-        const calculateTimeLeft = () => {
-            const now = new Date();
-            const vnNowString = now.toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" });
-            const vnNow = new Date(vnNowString);
-
-            const vnTomorrow = new Date(vnNow);
-            vnTomorrow.setDate(vnTomorrow.getDate() + 1);
-            vnTomorrow.setHours(0, 0, 0, 0);
-
-            const diff = vnTomorrow.getTime() - vnNow.getTime();
-
-            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
-            const m = Math.floor((diff / (1000 * 60)) % 60);
-            const s = Math.floor((diff / 1000) % 60);
-
-            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-        };
-
-        setTimeLeft(calculateTimeLeft());
-        const timer = setInterval(() => {
-            setTimeLeft(calculateTimeLeft());
-        }, 1000);
-
-        return () => clearInterval(timer);
-    }, []);
-
-    return (
-        // UPDATED: bg-slate-900/80 for opacity 80% without backdrop blur
-        <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full mx-auto w-fit mb-4 animate-fadeIn">
-            <div className="relative flex h-3 w-3">
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </div>
-            <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Market Reset</div>
-            <div className="font-lilita text-2xl text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
-                {timeLeft}
-            </div>
-        </div>
     );
 });
 
@@ -516,6 +472,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 
                 <div className="relative p-4 md:p-10 min-h-full max-w-5xl mx-auto flex flex-col">
                     
+                    {/* MARKET TIMER COMPONENT */}
                     <MarketTimer />
 
                     <RateLimitToast 
