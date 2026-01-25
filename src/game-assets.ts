@@ -29,7 +29,7 @@ export const uiAssets = {
   // -- Icons cho Tiền tệ & Lucky Game --
   priceIcon: require("./assets/images/coin.webp"),
   coinIcon: require("./assets/images/coin.webp"),
-  jackpotIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot.webp",
+  jackpotIcon: require("./assets/images/jackpot.webp"),
   
   cardCapacityIcon: require("./assets/images/card-capacity.webp"),
   
