@@ -9,7 +9,9 @@ import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, updateUserEnergy,
-  syncEnergyWithServer // Import hàm đồng bộ
+  syncEnergyWithServer, // Import hàm đồng bộ
+  registerAdWatch,      // Import hàm đăng ký xem quảng cáo
+  AdData                // Import kiểu dữ liệu AdData
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
 
@@ -64,6 +66,9 @@ interface IGameContext {
     vipExpiresAt: Date | null;   // Thời hạn VIP
     vipLuckySpinClaims: number;  // Số lượt đã nhận x2 trong ngày (Max 5)
 
+    // --- ADS DATA (NEW) ---
+    adsData: AdData;
+
     // UI States
     isBackgroundPaused: boolean;
     showRateLimitToast: boolean;
@@ -98,6 +103,10 @@ interface IGameContext {
 
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleVipLuckySpinClaim: () => Promise<boolean>;
+    
+    // --- ADS FUNCTION (NEW) ---
+    handleRegisterAdWatch: () => Promise<boolean>;
+
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
     getEquippedSkillsDetails: () => (OwnedSkill & SkillBlueprint)[];
     handleStateUpdateFromChest: (updates: { newCoins: number; newGems: number; newTotalVocab: number }) => void;
@@ -188,6 +197,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [vipExpiresAt, setVipExpiresAt] = useState<Date | null>(null);
   const [vipLuckySpinClaims, setVipLuckySpinClaims] = useState(0);
 
+  // --- ADS STATE (NEW) ---
+  const [adsData, setAdsData] = useState<AdData>({
+      watchedToday: 0,
+      lastWatchedAt: null,
+      nextAvailableAt: null,
+      streakCount: 0
+  });
+
   // States for managing overlay visibility
   const [isRankOpen, setIsRankOpen] = useState(false);
   const [isPvpArenaOpen, setIsPvpArenaOpen] = useState(false);
@@ -258,6 +275,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
       setVipLuckySpinClaims(gameData.vipLuckySpinClaims || 0);
 
+      // Load Ads Data
+      setAdsData(gameData.ads || { watchedToday: 0, lastWatchedAt: null, nextAvailableAt: null, streakCount: 0 });
+
     } catch (error) { 
         console.error("Error refreshing user data:", error);
     } finally { 
@@ -301,8 +321,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setPickaxes(gameData.pickaxes ?? 50);
                 
                 // Real-time Energy Update (Value Only)
-                // Lưu ý: Realtime snapshot chỉ cập nhật giá trị Energy, 
-                // còn Timer thì do logic interval và syncEnergyWithServer quản lý
                 setEnergy(gameData.energy ?? 50);
 
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
@@ -336,6 +354,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setAccountType(gameData.accountType ?? 'Normal');
                 setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
                 setVipLuckySpinClaims(gameData.vipLuckySpinClaims ?? 0);
+
+                // Update Ads Data
+                setAdsData(gameData.ads || { watchedToday: 0, lastWatchedAt: null, nextAvailableAt: null, streakCount: 0 });
 
             } else {
                 console.warn("User document not found, attempting to create one.");
@@ -385,6 +406,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setAccountType('Normal');
         setVipExpiresAt(null);
         setVipLuckySpinClaims(0);
+
+        // Reset Ads Data
+        setAdsData({ watchedToday: 0, lastWatchedAt: null, nextAvailableAt: null, streakCount: 0 });
       }
     });
 
@@ -578,6 +602,24 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           return false;
       }
   };
+
+  // --- NEW: HANDLE REGISTER AD WATCH ---
+  const handleRegisterAdWatch = async (): Promise<boolean> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId) return false;
+      
+      try {
+          // Gọi service để update DB (tăng count, set cooldown)
+          const newAdsData = await registerAdWatch(userId);
+          
+          // Update local state ngay lập tức (optimistic)
+          setAdsData(newAdsData);
+          return true;
+      } catch (error) {
+          console.error("Ad watch failed:", error);
+          return false;
+      }
+  };
   
   const createToggleFunction = (setter: React.Dispatch<React.SetStateAction<boolean>>) => () => {
       const isLoading = isLoadingUserData || !assetsLoaded;
@@ -700,6 +742,10 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     
     // VIP Values
     accountType, vipExpiresAt, vipLuckySpinClaims,
+
+    // --- ADS DATA & FUNCTION ---
+    adsData,
+    handleRegisterAdWatch,
 
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
