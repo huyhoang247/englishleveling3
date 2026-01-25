@@ -39,15 +39,23 @@ export interface EnhancementStones {
     high: number;
 }
 
+// --- THÊM INTERFACE CHO QUẢNG CÁO (NEW) ---
+export interface AdData {
+    watchedToday: number;       // Số lượt đã xem trong ngày
+    lastWatchedAt: Timestamp | null; // Thời điểm xem gần nhất
+    nextAvailableAt: Timestamp | null; // Thời điểm được xem tiếp theo (quan trọng nhất)
+    streakCount: number;        // Đếm số lượt xem liên tiếp (để tính block 60p)
+}
+
 export interface UserGameData {
   coins: number;
   gems: number;
   masteryCards: number;
   pickaxes: number;
   
-  // --- ENERGY FIELDS (UPDATED) ---
+  // --- ENERGY FIELDS ---
   energy?: number; 
-  lastEnergyUpdate?: Timestamp; // Thời điểm cuối cùng năng lượng thay đổi hoặc được tính toán
+  lastEnergyUpdate?: Timestamp; 
   
   minerChallengeHighestFloor: number;
   stats: { hp: number; atk: number; def: number; };
@@ -79,12 +87,15 @@ export interface UserGameData {
   accountType?: string; 
   vipExpiresAt?: Timestamp | null;
   vipLuckySpinClaims?: number;
+
+  // --- TRƯỜNG ADS (NEW) ---
+  ads: AdData;
 }
 
 
 /**
  * Lấy dữ liệu game của người dùng. Nếu chưa có, tạo mới với giá trị mặc định.
- * Cập nhật logic khởi tạo Energy timestamp.
+ * Cập nhật logic khởi tạo Energy timestamp và Ads Data.
  * @param userId - ID của người dùng.
  * @returns {Promise<UserGameData>} Dữ liệu game của người dùng.
  */
@@ -93,6 +104,14 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
 
   const userDocRef = doc(db, 'users', userId);
   const docSnap = await getDoc(userDocRef);
+
+  // Cấu trúc mặc định cho Ads (NEW)
+  const defaultAds: AdData = {
+      watchedToday: 0,
+      lastWatchedAt: null,
+      nextAvailableAt: null,
+      streakCount: 0
+  };
 
   if (docSnap.exists()) {
     const data = docSnap.data();
@@ -126,7 +145,6 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       
       // --- ENERGY LOGIC ---
       energy: typeof data.energy === 'number' ? data.energy : 50,
-      // Nếu user cũ chưa có field này, gán tạm là hiện tại để bắt đầu tính từ bây giờ
       lastEnergyUpdate: data.lastEnergyUpdate || Timestamp.now(),
 
       minerChallengeHighestFloor: data.minerChallengeHighestFloor || 0,
@@ -151,6 +169,10 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       accountType: data.accountType || 'Normal',
       vipExpiresAt: data.vipExpiresAt || null,
       vipLuckySpinClaims: data.vipLuckySpinClaims || 0,
+
+      // --- ADS DATA (NEW) ---
+      ads: data.ads || defaultAds,
+
     } as UserGameData;
   } else {
     // Tạo user mới hoàn toàn
@@ -159,7 +181,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       
       // --- INIT ENERGY & TIMESTAMP ---
       energy: 50,
-      lastEnergyUpdate: Timestamp.now(), // Đánh dấu thời điểm tạo
+      lastEnergyUpdate: Timestamp.now(),
 
       minerChallengeHighestFloor: 0, stats: { hp: 0, atk: 0, def: 0 },
       bossBattleHighestFloor: 0, ancientBooks: 0,
@@ -167,12 +189,7 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       totalVocabCollected: 0, cardCapacity: 100,
       
       // Initialize Resources
-      wood: 0,
-      leather: 0,
-      ore: 0,
-      cloth: 0,
-      feather: 0, 
-      coal: 0,    
+      wood: 0, leather: 0, ore: 0, cloth: 0, feather: 0, coal: 0,    
 
       equipment: { 
           pieces: 100, 
@@ -188,7 +205,10 @@ export const fetchOrCreateUserGameData = async (userId: string): Promise<UserGam
       claimedQuizRewards: {},
       accountType: 'Normal',
       vipExpiresAt: null,
-      vipLuckySpinClaims: 0
+      vipLuckySpinClaims: 0,
+      
+      // --- INIT ADS ---
+      ads: defaultAds,
     };
     await setDoc(userDocRef, newUserData);
     return newUserData;
@@ -242,9 +262,7 @@ export const updateUserGems = async (userId: string, amount: number): Promise<nu
     });
 };
 
-// --- NEW FUNCTION: ĐỒNG BỘ NĂNG LƯỢNG (OFFLINE CALCULATION) ---
-// Hàm này tính toán số năng lượng đã hồi phục dựa trên thời gian offline
-// Gọi hàm này khi khởi động App hoặc khi cần đồng bộ chính xác
+// --- FUNCTION: ĐỒNG BỘ NĂNG LƯỢNG (OFFLINE CALCULATION) ---
 export const syncEnergyWithServer = async (userId: string): Promise<{ currentEnergy: number, nextRefillIn: number }> => {
     const userDocRef = doc(db, 'users', userId);
     
@@ -256,13 +274,10 @@ export const syncEnergyWithServer = async (userId: string): Promise<{ currentEne
         let currentEnergy = typeof data.energy === 'number' ? data.energy : 50;
         const maxEnergy = 50;
         
-        // Lấy thời điểm update cuối, nếu không có thì lấy hiện tại
         const lastUpdate = data.lastEnergyUpdate ? data.lastEnergyUpdate.toDate() : new Date();
         const now = new Date();
 
-        // 1. Nếu năng lượng đã đầy, không cần tính toán, reset timer về 0
         if (currentEnergy >= maxEnergy) {
-            // Nếu DB chưa chuẩn (ví dụ > 50), ta cap lại về 50 cho sạch
             if (currentEnergy > maxEnergy) {
                  t.update(userDocRef, { energy: maxEnergy });
                  return { currentEnergy: maxEnergy, nextRefillIn: 0 };
@@ -270,11 +285,9 @@ export const syncEnergyWithServer = async (userId: string): Promise<{ currentEne
             return { currentEnergy: maxEnergy, nextRefillIn: 0 };
         }
 
-        // 2. Tính số giây trôi qua
         const elapsedSeconds = Math.floor((now.getTime() - lastUpdate.getTime()) / 1000);
-        const REGEN_INTERVAL = 300; // 5 phút = 300 giây
+        const REGEN_INTERVAL = 300; 
 
-        // 3. Nếu chưa đủ 5 phút
         if (elapsedSeconds < REGEN_INTERVAL) {
              return { 
                  currentEnergy, 
@@ -282,23 +295,17 @@ export const syncEnergyWithServer = async (userId: string): Promise<{ currentEne
              };
         }
 
-        // 4. Nếu đủ thời gian hồi ít nhất 1 điểm
         const energyGained = Math.floor(elapsedSeconds / REGEN_INTERVAL);
         let newEnergy = Math.min(maxEnergy, currentEnergy + energyGained);
         
-        // Tính toán lại timestamp để giữ lại phần dư thời gian (progress cho điểm tiếp theo)
-        // Ví dụ: Trôi qua 350s -> Hồi 1 điểm (300s), dư 50s.
-        // Timestamp mới phải lùi lại 50s so với hiện tại để điểm tiếp theo chỉ cần chờ 250s nữa.
         const remainingSecondsForNextPoint = elapsedSeconds % REGEN_INTERVAL;
         const newLastUpdateDate = new Date(now.getTime() - (remainingSecondsForNextPoint * 1000));
         
-        // Cập nhật DB
         t.update(userDocRef, {
             energy: newEnergy,
             lastEnergyUpdate: Timestamp.fromDate(newLastUpdateDate)
         });
 
-        // Nếu sau khi hồi mà đầy bình, thời gian chờ là 0
         if (newEnergy >= maxEnergy) {
             return { currentEnergy: newEnergy, nextRefillIn: 0 };
         }
@@ -310,11 +317,9 @@ export const syncEnergyWithServer = async (userId: string): Promise<{ currentEne
     });
 };
 
-// --- UPDATED FUNCTION: CẬP NHẬT NĂNG LƯỢNG & RESET TIMER ---
-// Hàm này được gọi khi tiêu hao năng lượng (đánh boss, sweep...)
+// --- FUNCTION: CẬP NHẬT NĂNG LƯỢNG & RESET TIMER ---
 export const updateUserEnergy = async (userId: string, newEnergy: number): Promise<void> => {
     if (!userId) return;
-    // Giới hạn max energy là 50, min là 0
     const finalAmount = Math.max(0, Math.min(50, newEnergy));
     
     const userDocRef = doc(db, 'users', userId);
@@ -324,18 +329,12 @@ export const updateUserEnergy = async (userId: string, newEnergy: number): Promi
         if(!userDoc.exists()) return;
 
         const currentDbEnergy = userDoc.data().energy ?? 50;
-        
         const updates: any = { energy: finalAmount };
 
-        // QUAN TRỌNG: Logic Reset Timer
-        // Chỉ reset timestamp bắt đầu đếm giờ hồi phục KHI:
-        // Năng lượng hiện tại đang Đầy (>=50) VÀ Năng lượng mới < 50.
-        // Nếu năng lượng đang là 40, đánh boss còn 30 -> KHÔNG reset timestamp, để nó tiếp tục hồi điểm đang dở.
         if (currentDbEnergy >= 50 && finalAmount < 50) {
             updates.lastEnergyUpdate = serverTimestamp();
         }
         
-        // Nếu trường hợp mua năng lượng hoặc hồi đầy (newEnergy >= 50), cũng update timestamp cho gọn
         if (finalAmount >= 50) {
             updates.lastEnergyUpdate = serverTimestamp();
         }
@@ -397,10 +396,8 @@ export const updateUserSkills = async (userId: string, updates: { newOwned: Owne
 
 // --- ADDITIONS START: SLOT MACHINE (777) GAME SERVICES ---
 
-// Tham chiếu đến document lưu trữ tất cả jackpot pools của game 777
 const slotJackpotDocRef = doc(db, 'miniGames', 'slotMachineJackpots');
 
-// Hàm để khởi tạo jackpot nếu document chưa tồn tại
 const initializeSlotJackpots = async (initialPools: { [key: number]: number }) => {
     try {
         await setDoc(slotJackpotDocRef, initialPools);
@@ -410,9 +407,6 @@ const initializeSlotJackpots = async (initialPools: { [key: number]: number }) =
     }
 };
 
-/**
- * Lắng nghe sự thay đổi của jackpot pools trong real-time.
- */
 export const listenToJackpotPools = (
     callback: (pools: { [key: number]: number }) => void,
     initialPools: { [key: number]: number }
@@ -432,9 +426,6 @@ export const listenToJackpotPools = (
     return unsubscribe;
 };
 
-/**
- * Đóng góp vào jackpot pool của một phòng cụ thể trong game Slot Machine.
- */
 export const contributeToJackpot = async (roomId: number, contribution: number) => {
     if (contribution <= 0) return;
     try {
@@ -446,9 +437,6 @@ export const contributeToJackpot = async (roomId: number, contribution: number) 
     }
 };
 
-/**
- * Reset jackpot của một phòng về giá trị ban đầu sau khi có người thắng.
- */
 export const resetJackpot = async (roomId: number, initialValue: number) => {
      try {
         await updateDoc(slotJackpotDocRef, {
@@ -460,6 +448,81 @@ export const resetJackpot = async (roomId: number, initialValue: number) => {
     }
 };
 // --- ADDITIONS END ---
+
+// --- NEW FUNCTION: XỬ LÝ LOGIC XEM QUẢNG CÁO (COOLDOWN & LIMIT) ---
+// Hàm này được gọi khi người dùng xem xong quảng cáo
+export const registerAdWatch = async (userId: string): Promise<AdData> => {
+    const userRef = doc(db, 'users', userId);
+
+    return runTransaction(db, async (t) => {
+        const userDoc = await t.get(userRef);
+        if (!userDoc.exists()) throw new Error("User not found");
+
+        const data = userDoc.data();
+        const currentAds: AdData = data.ads || { 
+            watchedToday: 0, 
+            lastWatchedAt: null, 
+            nextAvailableAt: null, 
+            streakCount: 0 
+        };
+
+        const now = new Date();
+        const nowTs = Timestamp.fromDate(now);
+
+        // 1. KIỂM TRA QUA NGÀY: Reset nếu ngày hiện tại khác ngày lastWatchedAt
+        let watchedToday = currentAds.watchedToday;
+        let streakCount = currentAds.streakCount;
+        
+        if (currentAds.lastWatchedAt) {
+            const lastDate = currentAds.lastWatchedAt.toDate();
+            // So sánh ngày/tháng/năm để chắc chắn là ngày mới
+            if (lastDate.toDateString() !== now.toDateString()) {
+                watchedToday = 0;
+                streakCount = 0;
+            }
+        }
+
+        // 2. KIỂM TRA LIMIT NGÀY (Max 30)
+        if (watchedToday >= 30) {
+            throw new Error("Daily ad limit reached (30/30). Come back tomorrow!");
+        }
+
+        // 3. KIỂM TRA THỜI GIAN CHỜ (COOLDOWN)
+        if (currentAds.nextAvailableAt && nowTs.toMillis() < currentAds.nextAvailableAt.toMillis()) {
+            throw new Error("Please wait before watching another ad.");
+        }
+
+        // 4. TÍNH TOÁN LOGIC MỚI
+        watchedToday += 1;
+        streakCount += 1;
+        
+        let cooldownSeconds = 0;
+
+        // RULE: Sau 5 lượt xem -> Block 60 phút
+        if (streakCount >= 5) {
+            cooldownSeconds = 60 * 60; // 3600s = 60 phút
+            streakCount = 0; // Reset streak sau khi bị phạt
+        } else {
+            // RULE: Giữa các lượt thường -> Random 2-5 phút (120s - 300s)
+            const min = 120;
+            const max = 300;
+            cooldownSeconds = Math.floor(Math.random() * (max - min + 1) + min);
+        }
+
+        const nextAvailableDate = new Date(now.getTime() + cooldownSeconds * 1000);
+
+        const newAdsData: AdData = {
+            watchedToday,
+            streakCount,
+            lastWatchedAt: nowTs,
+            nextAvailableAt: Timestamp.fromDate(nextAvailableDate)
+        };
+
+        t.update(userRef, { ads: newAdsData });
+
+        return newAdsData;
+    });
+};
 
 
 // --- START: ADMIN PANEL SERVICE FUNCTIONS ---
@@ -522,14 +585,12 @@ export const adminUpdateUserData = async (userId: string, updates: { [key: strin
     
     t.update(userDocRef, updatePayload);
     
-    // Tạo object trả về đã được cập nhật (để UI phản hồi ngay lập tức)
     const updatedData = JSON.parse(JSON.stringify(data));
     for(const key in updatePayload){
         if (key.includes('.')) {
             const keys = key.split('.');
             let temp = updatedData;
             for (let i = 0; i < keys.length - 1; i++) {
-                // Tạo object nếu chưa tồn tại trong cấu trúc local
                 if (!temp[keys[i]]) temp[keys[i]] = {}; 
                 temp = temp[keys[i]];
             }
