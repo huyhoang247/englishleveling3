@@ -25,18 +25,25 @@ export const uiAssets = {
   vocabularyChestIcon: require("./assets/images/vocabulary-chest.webp"),
   skillIcon: require("./assets/images/skill-icon.webp"),
   backIcon: require("./assets/images/back-icon.webp"),
-  // -- Thêm mới từ lat-the.tsx --
+  
+  // -- Icons cho Tiền tệ & Lucky Game --
   priceIcon: require("./assets/images/coin.webp"),
+  coinIcon: require("./assets/images/coin.webp"),
+  jackpotIcon: "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/jackpot.webp",
+  
   cardCapacityIcon: require("./assets/images/card-capacity.webp"),
+  
   // -- Thêm mới từ upgrade-stats.tsx --
   statCoinIcon: require("./assets/images/coin.webp"),
   statHpIcon: require("./assets/images/stats-hp.webp"),
   statAtkIcon: require("./assets/images/stats-atk.webp"),
   statDefIcon: require("./assets/images/stats-def.webp"),
   statHeroStoneIcon: require("./assets/images/character-stone.webp"),
+  
   // -- Thêm mới từ skill.tsx & skill-data.tsx --
   bookIcon: require("./assets/images/ancient-book.webp"),
   goldIcon: require("./assets/images/coin.webp"),
+  
   // -- Thêm mới từ sidebar.tsx --
   awardIcon: require("./assets/images/coin.webp"),
   rankFrameIcon: require("./assets/images/rank-icon.webp"),
@@ -44,6 +51,7 @@ export const uiAssets = {
   upgradeIcon: require("./assets/images/upgrade-icon.webp"),
   gavelIcon: require("./assets/images/auction-icon.webp"),
   checkInIcon: require("./assets/images/check-in-icon.webp"),
+  
   // -- Thêm mới từ achievement-ui.tsx --
   masteryCardIcon: require("./assets/images/mastery-icon.webp"),
   vocaAchievementIcon: require("./assets/images/voca-achievement.webp"),
@@ -53,7 +61,6 @@ export const uiAssets = {
 
 /**
  * Tài nguyên cho màn hình Nâng cấp (Upgrade Modal)
- * (Được chuyển từ upgrade-modal.tsx sang)
  */
 export const upgradeAssets = {
   upgradeButton: require("./assets/images/upgrade-button.webp"),
@@ -62,7 +69,6 @@ export const upgradeAssets = {
   stoneBasic: require("./assets/images/basic-stone.webp"),
   stoneIntermediate: require("./assets/images/intermediate-stone.webp"),
   stoneAdvanced: require("./assets/images/advanced-stone.webp"),
-  // *** THÊM MỚI: Background cho màn hình nâng cấp ***
   background: require("./assets/images/background-upgrade.webp"),
 };
 
@@ -95,7 +101,6 @@ export const quizHomeAssets = {
 export const equipmentUiAssets = {
   goldIcon: require("./assets/images/coin.webp"),
   equipmentPieceIcon: require("./assets/images/equipment-piece.webp"),
-  // *** THÊM MỚI: Icon cho các ô trang bị ***
   weaponIcon: require("./assets/images/weapon.webp"),
   armorIcon: require("./assets/images/armor.webp"),
   helmetIcon: require("./assets/images/helmet.webp"),
@@ -165,7 +170,6 @@ export const skillAssets = {
 
 /**
  * Tài nguyên Hiệu ứng kỹ năng (Skill Effects / Sprites)
- * Thêm mới cho skill-effect.tsx
  */
 export const effectAssets = {
     playerSkillOrb: require("./assets/effect/skill-1.webp"),
@@ -201,7 +205,6 @@ export const bossBattleAssets = {
   energyIcon: require("./assets/images/energy-icon.webp"),
   victoryIcon: require("./assets/images/victory-icon.webp"),
   defeatIcon: require("./assets/images/defeat-icon.webp"),
-  // *** THÊM MỚI TỪ tower-ui.tsx ***
   skipBattleIcon: require("./assets/images/skip-battle.webp"),
   sweepBattleIcon: require("./assets/images/sweep-battle.webp"),
   fightButtonIcon: require("./assets/images/fight.webp"),
@@ -238,12 +241,12 @@ export const allImageUrls = [
     ...Object.values(quizHomeAssets),
     ...Object.values(equipmentUiAssets),
     ...Object.values(itemAssets),
-    ...Object.values(resourceAssets), // Thêm tài nguyên nguyên liệu
-    ...Object.values(tradeAssets),    // Thêm tài nguyên trade
+    ...Object.values(resourceAssets),
+    ...Object.values(tradeAssets),
     ...Object.values(skillAssets).filter(url => typeof url === 'string'),
-    ...Object.values(effectAssets).filter(url => typeof url === 'string'), // Thêm tài nguyên effect
+    ...Object.values(effectAssets).filter(url => typeof url === 'string'),
     ...Object.values(treasureAssets).filter(url => typeof url === 'string'),
     ...Object.values(bossBattleAssets),
     ...Object.values(minerAssets),
-    ...Object.values(characterAssets), // Thêm tài nguyên nhân vật
+    ...Object.values(characterAssets),
 ];
