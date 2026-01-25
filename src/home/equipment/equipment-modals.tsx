@@ -125,19 +125,20 @@ export const ItemDetailModal = memo(({
         return null;
     }
     
+    // Logic sắp xếp Stats: HP -> ATK -> DEF
     const sortedStats = useMemo(() => {
-        const order = ['hp', 'atk', 'def'];
-        const stats = ownedItem.stats || {};
-        const orderedEntries: [string, any][] = [];
-        const remainingEntries = { ...stats };
-        for (const key of order) {
-            if (stats.hasOwnProperty(key)) {
-                orderedEntries.push([key, stats[key]]);
-                delete remainingEntries[key];
-            }
-        }
-        orderedEntries.push(...Object.entries(remainingEntries));
-        return orderedEntries;
+        const entries = Object.entries(ownedItem.stats || {});
+        const priority = ['hp', 'atk', 'def'];
+
+        return entries.sort(([keyA], [keyB]) => {
+            const indexA = priority.indexOf(keyA.toLowerCase());
+            const indexB = priority.indexOf(keyB.toLowerCase());
+            
+            const rankA = indexA === -1 ? 99 : indexA;
+            const rankB = indexB === -1 ? 99 : indexB;
+            
+            return rankA - rankB;
+        });
     }, [ownedItem.stats]);
     
     const isUpgradable = !!itemDef.stats && sortedStats.some(([_, value]) => typeof value === 'number');
