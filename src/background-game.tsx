@@ -12,7 +12,7 @@ import { SidebarLayout } from './sidebar.tsx';
 import EnhancedLeaderboard from './rank.tsx';
 import StickGame from './home/stick-game.tsx';
 import DungeonCanvasBackground from './background-canvas.tsx';
-import LuckyChestGame from './lucky-game.tsx';
+import LuckyChestGame from './home/lucky-game/lucky-game-ui.tsx';
 import { uiAssets, lottieAssets } from './game-assets.ts';
 import BossBattle from './home/tower/tower-ui.tsx';
 import Shop from './home/shop/shop-ui.tsx';
