@@ -6,8 +6,7 @@ import {
     OwnedSkill, 
     SkillBlueprint, 
     getActivationChance, 
-    getRarityTextColor,
-    ALL_SKILLS 
+    getRarityTextColor 
 } from '../skill-game/skill-data.tsx';
 import { useGame } from '../../GameContext.tsx';
 
@@ -80,6 +79,9 @@ interface BossBattleActions {
     retryCurrentFloor: () => void;
     handleNextFloor: () => void;
     handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: BattleRewards | null }>;
+    
+    // NEW: Hàm xác nhận nhận thưởng (x1 hoặc x2)
+    confirmClaimRewards: (multiplier: 1 | 2) => Promise<void>;
 }
 
 type BossBattleContextType = BossBattleState & BossBattleActions;
@@ -282,7 +284,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     }, [equippedSkills, currentBossData]);
 
     // --- EFFECT: TÍNH TOÁN PHẦN THƯỞNG TIỀM NĂNG (ĐỒNG BỘ 1 LẦN KHI ĐỔI TẦNG) ---
-    // Đây là logic mới để đảm bảo Popup hiển thị đúng những gì sẽ nhận được
     useEffect(() => {
         if (currentBossData) {
             // 1. Lấy Coins cố định từ Data
@@ -300,6 +301,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
     }, [currentFloor, currentBossData]);
 
     // --- GAME CONTROL FUNCTIONS ---
+    
+    // UPDATED: endGame KHÔNG TỰ ĐỘNG SAVE REWARDS VÀO DB NỮA
     const endGame = useCallback(async (result: 'win' | 'lose') => {
         if (isEndingGame.current) return;
         isEndingGame.current = true;
@@ -308,30 +311,48 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         setGameOver(result);
         setBattleState('finished');
 
-        // Lấy phần thưởng đã tính trước (potentialRewards)
-        // Nếu vì lý do gì đó mà null (ít xảy ra), tính lại như fallback
-        let finalRewards: BattleRewards = potentialRewards || { 
-            coins: currentBossData?.rewards?.coins || 0, 
-            resources: calculateResourceRewards(currentFloor) 
-        };
-
         if (result === 'win') {
+            // Lấy phần thưởng đã tính trước (potentialRewards)
+            let finalRewards: BattleRewards = potentialRewards || { 
+                coins: currentBossData?.rewards?.coins || 0, 
+                resources: calculateResourceRewards(currentFloor) 
+            };
+
+            // CHỈ LƯU VÀO STATE ĐỂ UI HIỂN THỊ POPUP
             setLastRewards(finalRewards);
-
-            // Optimistic UI Update cho Coins
-            if (finalRewards.coins > 0) {
-                game.updateCoins(finalRewards.coins);
-            }
-
-            // Gọi Service để lưu Resources và Coins vào Firestore
-            try {
-                await claimTowerRewards(userId, finalRewards);
-            } catch (err) {
-                console.error("Error saving rewards:", err);
-            }
+            
+            // NOTE: Không gọi claimTowerRewards() ở đây nữa.
+            // Việc nhận thưởng sẽ do confirmClaimRewards() xử lý.
         }
         
-    }, [currentBossData, game, userId, currentFloor, potentialRewards]);
+    }, [currentBossData, currentFloor, potentialRewards]);
+
+    // NEW: HÀM XÁC NHẬN NHẬN THƯỞNG (GỌI TỪ MODAL)
+    const confirmClaimRewards = useCallback(async (multiplier: 1 | 2) => {
+        if (!lastRewards) return;
+
+        // 1. Tính toán reward thực tế dựa trên multiplier
+        const finalRewards: BattleRewards = {
+            coins: lastRewards.coins * multiplier,
+            resources: lastRewards.resources.map(r => ({ ...r, amount: r.amount * multiplier }))
+        };
+
+        // 2. Cập nhật Coins cho Game Context (Hiển thị ngay trên UI)
+        if (finalRewards.coins > 0) {
+            game.updateCoins(finalRewards.coins);
+        }
+
+        // 3. Lưu vào Database
+        try {
+            await claimTowerRewards(userId, finalRewards);
+        } catch (err) {
+            console.error("Error saving claimed rewards:", err);
+        }
+
+        // 4. Update lại state lastRewards để UI animation hiển thị đúng số lượng
+        setLastRewards(finalRewards);
+
+    }, [lastRewards, game, userId]);
 
     const runBattleTurn = useCallback(() => {
         if (!playerStats || !bossStats) return;
@@ -451,7 +472,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
-    // --- CẬP NHẬT HANDLE SWEEP: TRỪ NĂNG LƯỢNG THẬT & TÍNH REWARDS ---
+    // --- CẬP NHẬT HANDLE SWEEP: GIỮ NGUYÊN (VẪN TỰ ĐỘNG NHẬN) ---
+    // Sweep hiện tại vẫn giữ cơ chế nhận ngay (x1) để nhanh gọn
     const handleSweep = useCallback(async () => {
         // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
@@ -472,7 +494,6 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         const previousBossData = BOSS_DATA[previousFloorIndex];
         
         // 3. Tính phần thưởng
-        // Sweep thì tính ngay tại chỗ (vì là tầng cũ, không dùng potentialRewards của tầng hiện tại)
         const earnedCoins = previousBossData.rewards?.coins || 0;
         const earnedResources = calculateResourceRewards(previousFloorIndex);
 
@@ -615,12 +636,13 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         currentBossData,
         lastTurnEvents,
         lastRewards,
-        potentialRewards, // Export biến này cho UI sử dụng
+        potentialRewards, 
         startGame,
         skipBattle,
         retryCurrentFloor,
         handleNextFloor,
         handleSweep,
+        confirmClaimRewards, // EXPORT HÀM MỚI
     };
     
     return (
