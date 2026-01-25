@@ -11,7 +11,6 @@ import {
 import { useGame } from '../../GameContext.tsx';
 
 // --- IMPORT SERVICE ---
-// Sử dụng hàm calculateBattleRewards mới để tính cả Coin và Resource
 import { calculateBattleRewards, claimTowerRewards, BattleRewards } from './tower-service.ts';
 
 // --- TYPE DEFINITIONS ---
@@ -326,22 +325,21 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             resources: lastRewards.resources.map(r => ({ ...r, amount: r.amount * multiplier }))
         };
 
-        // 2. Cập nhật Coins cho Game Context (Hiển thị ngay trên UI)
-        if (finalRewards.coins > 0) {
-            game.updateCoins(finalRewards.coins);
-        }
+        // --- QUAN TRỌNG: ĐÃ XÓA game.updateCoins(finalRewards.coins) ---
+        // Để tránh Double Write (Ghi 2 lần), gây ra lỗi x4 vàng.
+        // Chỉ dùng claimTowerRewards để ghi vào DB, UI sẽ tự cập nhật khi DB thay đổi.
 
-        // 3. Lưu vào Database
+        // 2. Lưu vào Database (Transaction: Coins + Resources)
         try {
             await claimTowerRewards(userId, finalRewards);
         } catch (err) {
             console.error("Error saving claimed rewards:", err);
         }
 
-        // 4. Update lại state lastRewards để UI animation (loot rơi) hiển thị đúng số lượng đã nhân
+        // 3. Update lại state lastRewards để UI animation (loot rơi) hiển thị đúng số lượng đã nhân
         setLastRewards(finalRewards);
 
-    }, [lastRewards, game, userId]);
+    }, [lastRewards, userId]); // Đã xóa game khỏi dependency vì không dùng nữa
 
     const runBattleTurn = useCallback(() => {
         if (!playerStats || !bossStats) return;
