@@ -423,8 +423,8 @@ function EquipmentScreenContent({ onClose }: { onClose: (data: EquipmentScreenEx
                         <div className="flex items-center gap-3">
                             <EquipmentPieceIcon className="w-10 h-10" />
                             <div className="flex items-baseline gap-1 font-lilita tracking-wide">
-                                <span className="text-2xl text-white">{equipmentPieces.toLocaleString()}</span>
-                                <span className="text-xl text-slate-400">/ {CRAFTING_COST}</span>
+                                <span className="text-xl text-white">{equipmentPieces.toLocaleString()}</span>
+                                <span className="text-lg text-slate-400">/ {CRAFTING_COST}</span>
                             </div>
                         </div>
                         <button 
