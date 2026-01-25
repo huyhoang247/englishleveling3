@@ -73,7 +73,8 @@ const StoneIcon = ({ tier, className = '' }: { tier?: 'low' | 'medium' | 'high',
 // --- COMPONENT HEADER ---
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
-        <header className="flex-shrink-0 w-full bg-slate-900 border-b border-slate-700 z-20 relative">
+        // Changed bg-slate-900 to bg-slate-900/80 for transparency
+        <header className="flex-shrink-0 w-full bg-slate-900/80 border-b border-slate-700/50 backdrop-blur-sm z-20 relative">
             <div className="w-full max-w-5xl mx-auto flex justify-between items-center py-3 px-4 sm:px-6">
                 <HomeButton onClick={onClose} />
                 <div className="flex items-center">
@@ -116,7 +117,8 @@ const MarketTimer = memo(() => {
     }, []);
 
     return (
-        <div className="flex items-center gap-3 bg-slate-900 border border-slate-600 px-5 py-2 rounded-full mx-auto w-fit mb-4 animate-fadeIn">
+        // Changed bg-slate-900 to bg-slate-900/80 for transparency
+        <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600/50 px-5 py-2 rounded-full mx-auto w-fit mb-4 animate-fadeIn backdrop-blur-sm">
             <div className="relative flex h-3 w-3">
                 <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
             </div>
@@ -205,11 +207,12 @@ const TradeOptionCard = memo(({
     });
 
     return (
-        <div className="relative bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
+        // Changed bg-slate-900 to bg-slate-900/80 for transparency
+        <div className="relative bg-slate-900/80 rounded-2xl border border-slate-700/50 overflow-hidden backdrop-blur-sm">
             <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
                 
                 {/* INGREDIENTS */}
-                <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-6 bg-black/20 p-5 rounded-2xl border border-slate-800">
+                <div className="flex-1 w-full flex items-center justify-center lg:justify-start gap-4 md:gap-6 bg-black/20 p-5 rounded-2xl border border-slate-800/50">
                     {option.ingredients.map((ing, idx) => {
                         const userHas = resources[ing.type] || 0;
                         const requiredAmount = ing.amount * quantity;
@@ -254,7 +257,7 @@ const TradeOptionCard = memo(({
                 </div>
 
                 {/* RESULT & CONTROLS */}
-                <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 bg-black/20 p-5 rounded-2xl border border-slate-800">
+                <div className="flex-1 w-full flex flex-col items-center justify-center gap-4 bg-black/20 p-5 rounded-2xl border border-slate-800/50">
                     
                     {/* Item Icon */}
                     <div className="relative">
@@ -497,13 +500,15 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     return (
         <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans bg-black">
             
-            {/* BACKGROUND */}
+            {/* BACKGROUND + OVERLAY (40% Black) */}
             <div className="absolute inset-0 z-0">
                 <img 
                     src={tradeAssets.background} 
                     alt="Background" 
-                    className="w-full h-full object-cover opacity-30" 
+                    className="w-full h-full object-cover" 
                 />
+                {/* 40% Black Overlay */}
+                <div className="absolute inset-0 bg-black/40"></div>
             </div>
 
             <Header onClose={onClose} displayedCoins={displayedCoins} />
