@@ -29,13 +29,13 @@ import {
 // --- UTILS: NUMBER FORMATTING ---
 const formatNumber = (num: number): string => {
     if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'b';
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
     }
     if (num >= 1000000) {
-        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
     }
     if (num >= 1000) {
-        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
     return num.toString();
 };
@@ -90,7 +90,7 @@ const StepSelectBtn = ({ label, isSelected, onClick }: { label: string, isSelect
     <button
         onClick={onClick}
         className={`
-            px-1 py-1 text-[10px] sm:text-xs font-bold rounded border transition-all duration-200 flex-1
+            px-1 py-1 text-[10px] sm:text-xs font-lilita rounded border transition-all duration-200 flex-1 tracking-wide
             ${isSelected 
                 ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-900/50 scale-105 z-10' 
                 : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
@@ -180,7 +180,7 @@ const TradeOptionCard = memo(({
                                         <ResourceIcon type={ing.type} className="w-14 h-14 md:w-16 md:h-16" />
                                     </div>
                                     
-                                    <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5 whitespace-nowrap">
+                                    <div className="text-xs md:text-sm font-lilita tracking-wide bg-black/40 px-3 py-1 rounded-full border border-white/5 whitespace-nowrap">
                                         <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
                                             {formatNumber(userHas)}
                                         </span>
@@ -224,8 +224,8 @@ const TradeOptionCard = memo(({
                             ) : (
                                 <AncientBookIcon className="w-14 h-14 md:w-16 md:h-16 object-contain" />
                             )}
-                            <div className="absolute -top-3 -right-3 bg-slate-700 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-500 z-20">
-                                x{formatNumber(option.receiveAmount * quantity)}
+                            <div className="absolute -top-3 -right-3 bg-slate-700 text-white text-[11px] font-lilita tracking-wide px-2 py-1 rounded-full border border-slate-500 z-20">
+                                X{formatNumber(option.receiveAmount * quantity)}
                             </div>
                         </div>
                     </div>
@@ -249,7 +249,7 @@ const TradeOptionCard = memo(({
                                 onClick={() => onOpenNumpad(option.id, quantity, maxAffordable)}
                                 className="flex-1 bg-black/40 h-10 flex items-center justify-center rounded border border-slate-700 cursor-pointer hover:border-slate-500 active:bg-black/60 transition-colors select-none"
                             >
-                                <span className="font-lilita text-xl text-amber-500">
+                                <span className="font-lilita text-xl text-amber-500 tracking-wide">
                                     {quantity}
                                 </span>
                             </div>
@@ -269,21 +269,21 @@ const TradeOptionCard = memo(({
                             {/* MIN Button */}
                             <button
                                 onClick={() => onSetQuantity(option.id, 1)}
-                                className="px-2 py-1 text-[10px] sm:text-xs font-bold rounded border transition-colors flex-1 bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
+                                className="px-2 py-1 text-[10px] sm:text-xs font-lilita rounded border transition-colors flex-1 bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
                             >
                                 Min
                             </button>
 
                             {/* Dynamic Step 1 */}
                             <StepSelectBtn 
-                                label={`x${formatNumber(dynamicSteps[0])}`} 
+                                label={`X${formatNumber(dynamicSteps[0])}`} 
                                 isSelected={step === dynamicSteps[0]} 
                                 onClick={() => setStep(dynamicSteps[0])} 
                             />
 
                             {/* Dynamic Step 2 */}
                             <StepSelectBtn 
-                                label={`x${formatNumber(dynamicSteps[1])}`} 
+                                label={`X${formatNumber(dynamicSteps[1])}`} 
                                 isSelected={step === dynamicSteps[1]} 
                                 onClick={() => setStep(dynamicSteps[1])} 
                             />
@@ -293,7 +293,7 @@ const TradeOptionCard = memo(({
                                 onClick={() => onSetQuantity(option.id, Math.max(1, maxAffordable))}
                                 disabled={maxAffordable === 0}
                                 className={`
-                                    px-2 py-1 text-[10px] sm:text-xs font-bold rounded border transition-colors flex-1
+                                    px-2 py-1 text-[10px] sm:text-xs font-lilita rounded border transition-colors flex-1
                                     ${maxAffordable === 0 
                                         ? 'bg-slate-800 border-slate-700 text-slate-600' 
                                         : 'bg-indigo-900 border-indigo-700 text-indigo-200 hover:bg-indigo-800 hover:text-white'
