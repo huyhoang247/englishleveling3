@@ -65,8 +65,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const {
         isLoading, error, playerStats, bossStats, gameOver,
         battleState, currentFloor, displayedCoins, currentBossData, lastTurnEvents,
-        lastRewards,      // Phần thưởng thực nhận khi thắng
-        potentialRewards, // Phần thưởng xem trước (đã tính toán đồng bộ)
+        lastRewards,      // Phần thưởng thực nhận khi thắng (dùng cho Ads Modal)
+        potentialRewards, // Phần thưởng xem trước (dùng cho Preview Modal)
         startGame, skipBattle, retryCurrentFloor, handleNextFloor, handleSweep,
         confirmClaimRewards // Hàm xác nhận nhận thưởng từ Context
     } = useBossBattle();
@@ -91,8 +91,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const [statsModalTarget, setStatsModalTarget] = useState<null | 'player' | 'boss'>(null);
     const [showRewardsModal, setShowRewardsModal] = useState(false);
     
-    // NEW STATE: ADS MODAL
+    // NEW STATE: ADS MODAL & SWEEP CLAIM FLAG
     const [showAdsModal, setShowAdsModal] = useState(false);
+    const [isClaimingFromSweep, setIsClaimingFromSweep] = useState(false);
     
     const [isSweeping, setIsSweeping] = useState(false);
     
@@ -221,7 +222,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     }, [addDamageText]);
 
 
-    // --- EFFECT: HANDLE VICTORY SEQUENCE ---
+    // --- EFFECT: HANDLE VICTORY SEQUENCE (NORMAL BATTLE) ---
     // UPDATED: Now shows Ads Modal instead of instant loot drop
     useEffect(() => {
         // Trigger chỉ khi thắng và chưa bắt đầu sequence
@@ -229,6 +230,9 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
             const isLastBoss = currentFloor === BOSS_DATA.length - 1;
 
             if (!isLastBoss) {
+                // Đánh dấu đây là claim từ battle thường (để tí còn next floor)
+                setIsClaimingFromSweep(false);
+                
                 setSequenceState('victory_sequence');
                 
                 // 1. Boss chết (1.5s)
@@ -244,33 +248,41 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                         setShowAdsModal(true);
                     }, 1500); 
 
-                }, 1200); // Thời gian animation 'dying' của Boss
+                }, 1200); 
             }
         }
     }, [gameOver, currentFloor, sequenceState, addDamageText]);
 
-    // --- FUNCTION: HANDLE CLAIM FROM MODAL ---
+    // --- FUNCTION: HANDLE CLAIM FROM MODAL (X1 or X2) ---
+    // Dùng chung cho cả Battle Thường và Sweep
     const handleClaimReward = async (multiplier: 1 | 2) => {
         // 1. Đóng Modal
         setShowAdsModal(false);
 
-        // 2. Lưu vào DB & Update Game Context
+        // 2. Lưu vào DB & Update Game Context (Thông qua hàm mới trong Context)
         await confirmClaimRewards(multiplier);
 
-        // 3. Tạo visual rewards (phải tính toán thủ công để animation chạy đúng số)
+        // 3. Tạo visual rewards (lấy lastRewards hiện tại nhân với multiplier để hiển thị)
         const visualRewards = lastRewards ? {
             coins: lastRewards.coins * multiplier,
             resources: lastRewards.resources.map(r => ({ ...r, amount: r.amount * multiplier }))
         } : null;
 
-        // 4. Chạy animation rơi đồ, sau đó Next Floor
+        // 4. Chạy animation rơi đồ
         animateLootDrop(visualRewards, () => {
-            handleNextFloor();
-            setBossState('appearing');
-            setTimeout(() => {
-                setBossState('idle');
-                setSequenceState('none');
-            }, 1200);
+            // Sau khi nhặt đồ xong thì kiểm tra xem đi tiếp hay ở lại
+            if (isClaimingFromSweep) {
+                // Nếu là Sweep: Reset flag, KHÔNG chuyển tầng
+                setIsClaimingFromSweep(false);
+            } else {
+                // Nếu là Battle thường: Chuyển tầng tiếp theo
+                handleNextFloor();
+                setBossState('appearing');
+                setTimeout(() => {
+                    setBossState('idle');
+                    setSequenceState('none');
+                }, 1200);
+            }
         });
     };
 
@@ -492,21 +504,27 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
 
     }, [lastTurnEvents, addDamageText]); 
 
-    // --- HANDLE SWEEP CLICK ---
+    // --- HANDLE SWEEP CLICK (UPDATED FOR ADS) ---
     const handleSweepClick = async () => {
         if (!playerStats) return;
         setIsSweeping(true);
-        // Gọi hàm sweep, nhận về kết quả và phần thưởng
+        
+        // Gọi hàm sweep từ context (lúc này context chỉ tính reward chứ chưa claim)
         const { result, rewards } = await handleSweep();
         
         if (result === 'win' && rewards) {
-             // 1. Hiển thị text Sweep thành công
+            // 1. Hiển thị text Sweep thành công
             addDamageText("SWEEP SUCCESS", "#FFFFFF", "custom", 18, 50, 15, 2500, "tracking-widest");
             
-            // 2. Chạy animation rơi vật phẩm trực tiếp
-            animateLootDrop(rewards, () => {
-                setIsSweeping(false);
-            });
+            // 2. Đánh dấu là đang claim từ Sweep (để không nhảy tầng)
+            setIsClaimingFromSweep(true);
+
+            // 3. Đợi 1 chút cho chữ hiện lên rồi BẬT POPUP ADS
+            setTimeout(() => {
+                setShowAdsModal(true);
+                setIsSweeping(false); 
+            }, 800); 
+            
         } else {
              // Thất bại
              addDamageText("SWEEP FAILED", "#ef4444", "custom", 30, 50, 20, 2000);
@@ -529,7 +547,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
       
             {statsModalTarget && playerStats && bossStats && <CharacterStatsModal character={statsModalTarget === 'player' ? playerStats : bossStats} characterType={statsModalTarget} onClose={() => setStatsModalTarget(null)}/>}
             
-            {/* UPDATED: Truyền potentialRewards vào RewardsModal */}
+            {/* PREVIEW REWARDS MODAL */}
             {showRewardsModal && (
                 <RewardsModal 
                     onClose={() => setShowRewardsModal(false)} 
@@ -537,7 +555,7 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
                 />
             )}
 
-            {/* NEW: ADS REWARD MODAL */}
+            {/* NEW: ADS REWARD MODAL (Dùng cho cả Battle Win & Sweep) */}
             {showAdsModal && (
                 <AdsRewardModal 
                     rewards={lastRewards}
