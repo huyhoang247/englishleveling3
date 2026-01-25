@@ -180,29 +180,42 @@ const UpgradeModal = memo(({ isOpen, onClose, item, onUpgrade, isProcessing, sto
                         
                         <h4 className={`text-lg font-bold ${getRarityTextColor(itemDef.rarity)} mb-6 text-center`}>{itemDef.name}</h4>
 
-                        {/* Danh sách chỉ số */}
+                        {/* Danh sách chỉ số (Đã sửa logic sắp xếp) */}
                         <div className="w-full space-y-2">
-                            {Object.entries(item.stats).map(([key, value]) => {
-                                if (typeof value !== 'number') return null;
-                                const config = STAT_CONFIG[key.toLowerCase()];
-                                
-                                // Tính toán giá trị dự kiến (Tăng 1%, tối thiểu +1)
-                                const increase = Math.max(1, Math.round(value * 0.01));
-                                const nextValue = value + increase;
+                            {Object.entries(item.stats)
+                                .sort(([keyA], [keyB]) => {
+                                    const order = ['hp', 'atk', 'def'];
+                                    const indexA = order.indexOf(keyA.toLowerCase());
+                                    const indexB = order.indexOf(keyB.toLowerCase());
+                                    
+                                    // Nếu tìm thấy (index > -1) thì giữ index, không tìm thấy thì đẩy xuống cuối (99)
+                                    const rankA = indexA === -1 ? 99 : indexA;
+                                    const rankB = indexB === -1 ? 99 : indexB;
+                                    
+                                    return rankA - rankB;
+                                })
+                                .map(([key, value]) => {
+                                    if (typeof value !== 'number') return null;
+                                    const config = STAT_CONFIG[key.toLowerCase()];
+                                    
+                                    // Tính toán giá trị dự kiến (Tăng 1%, tối thiểu +1)
+                                    const increase = Math.max(1, Math.round(value * 0.01));
+                                    const nextValue = value + increase;
 
-                                return (
-                                    <div key={key} className="flex justify-between items-center bg-black/30 px-3 py-3 rounded-lg border border-slate-700/50">
-                                        <div className="flex items-center gap-3">
-                                            {config && <config.Icon className="w-6 h-6" />}
-                                            <span className="text-base text-slate-300 uppercase font-lilita tracking-wide">{key}</span>
+                                    return (
+                                        <div key={key} className="flex justify-between items-center bg-black/30 px-3 py-3 rounded-lg border border-slate-700/50">
+                                            <div className="flex items-center gap-3">
+                                                {config && <config.Icon className="w-6 h-6" />}
+                                                <span className="text-base text-slate-300 uppercase font-lilita tracking-wide">{config ? config.name : key}</span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <span className="text-white text-lg font-lilita">{value}</span>
+                                                <span className="text-xs text-green-500 font-lilita">➜ {nextValue}</span>
+                                            </div>
                                         </div>
-                                        <div className="flex items-center gap-2">
-                                            <span className="text-white text-lg font-lilita">{value}</span>
-                                            <span className="text-xs text-green-500 font-lilita">➜ {nextValue}</span>
-                                        </div>
-                                    </div>
-                                );
-                            })}
+                                    );
+                                })
+                            }
                         </div>
                     </div>
 
