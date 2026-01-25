@@ -62,6 +62,8 @@ export const upgradeAssets = {
   stoneBasic: require("./assets/images/basic-stone.webp"),
   stoneIntermediate: require("./assets/images/intermediate-stone.webp"),
   stoneAdvanced: require("./assets/images/advanced-stone.webp"),
+  // *** THÊM MỚI: Background cho màn hình nâng cấp ***
+  background: require("./assets/images/background-upgrade.webp"),
 };
 
 /**
