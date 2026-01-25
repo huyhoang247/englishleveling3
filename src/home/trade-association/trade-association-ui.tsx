@@ -125,7 +125,8 @@ const MarketTimer = memo(() => {
     );
 });
 
-// --- NUMPAD MODAL COMPONENT (Bàn phím ảo) ---
+// --- NUMPAD MODAL COMPONENT ---
+// OPTIMIZATION: Removed backdrop-blur to save resources
 interface NumpadModalProps {
     isOpen: boolean;
     initialValue: number;
@@ -150,8 +151,7 @@ const NumpadModal = ({ isOpen, initialValue, maxValue, title, onClose, onConfirm
         setDisplayValue(prev => {
             if (prev === "0") return num.toString();
             const next = prev + num.toString();
-            // Prevent crazy long numbers
-            if (next.length > 9) return prev;
+            if (next.length > 9) return prev; // Limit length
             return next;
         });
     };
@@ -179,7 +179,8 @@ const NumpadModal = ({ isOpen, initialValue, maxValue, title, onClose, onConfirm
     };
 
     return (
-        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 animate-fadeIn backdrop-blur-sm">
+        // Changed bg-black/80 (no blur) for performance
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/80 animate-fadeIn">
             <div className="bg-slate-900 border border-slate-600 rounded-2xl w-full max-w-[320px] shadow-2xl overflow-hidden animate-zoom-in">
                 {/* Header */}
                 <div className="bg-slate-800 p-4 border-b border-slate-700 flex justify-between items-center">
@@ -191,7 +192,7 @@ const NumpadModal = ({ isOpen, initialValue, maxValue, title, onClose, onConfirm
                     </button>
                 </div>
 
-                {/* Display Area */}
+                {/* Display */}
                 <div className="p-4 bg-black/40">
                     <div className="bg-slate-950 border border-slate-700 rounded-xl p-3 text-right h-16 flex items-center justify-end">
                         <span className="text-3xl font-lilita text-amber-400 tracking-wider">
@@ -203,7 +204,7 @@ const NumpadModal = ({ isOpen, initialValue, maxValue, title, onClose, onConfirm
                     </div>
                 </div>
 
-                {/* Keypad Grid */}
+                {/* Keypad */}
                 <div className="grid grid-cols-4 gap-2 p-4 bg-slate-900 select-none">
                     {[1, 2, 3].map(n => (
                         <button key={n} onClick={() => handleNumberClick(n)} className="h-14 bg-slate-800 hover:bg-slate-700 rounded-lg text-xl font-bold text-slate-200 shadow-sm active:translate-y-0.5 transition-all">{n}</button>
@@ -255,7 +256,7 @@ interface TradeCardProps {
     resources: Record<string, number>;
     onQuantityChange: (id: string, delta: number) => void;
     onOpenNumpad: (id: string, currentVal: number, maxVal: number) => void; 
-    onSetMax: (id: string, maxVal: number) => void;
+    onSetQuantity: (id: string, value: number) => void;
     onExchange: (option: TradeOption, qty: number) => void;
     isProcessing: boolean;
 }
@@ -266,16 +267,11 @@ const TradeOptionCard = memo(({
     resources, 
     onQuantityChange, 
     onOpenNumpad,
-    onSetMax,
+    onSetQuantity,
     onExchange, 
     isProcessing 
 }: TradeCardProps) => {
     
-    // Internal state for "Step" multiplier (1, 10, 100, 1000)
-    const [step, setStep] = useState(1);
-
-    let canAffordAll = true;
-
     // Calculate maximum possible trade based on ingredients
     const maxAffordable = useMemo(() => {
         let max = Infinity;
@@ -289,6 +285,30 @@ const TradeOptionCard = memo(({
         return max === Infinity ? 0 : max;
     }, [option.ingredients, resources]);
 
+    // --- DYNAMIC STEPS LOGIC ---
+    // Calculate which steps to show based on maxAffordable
+    const dynamicSteps = useMemo(() => {
+        if (maxAffordable < 100) return [1, 10];
+        if (maxAffordable < 1000) return [10, 100];
+        if (maxAffordable < 10000) return [100, 1000];
+        return [1000, 10000];
+    }, [maxAffordable]);
+
+    // Current Step State (default to the first available dynamic step if current step is weird, else keep 1)
+    const [step, setStep] = useState(dynamicSteps[0]);
+
+    // Update step if the dynamic range changes drastically and current step becomes too small
+    useEffect(() => {
+        if (!dynamicSteps.includes(step)) {
+            setStep(dynamicSteps[0]);
+        }
+    }, [dynamicSteps]);
+
+    let canAffordAll = true;
+    option.ingredients.forEach(ing => {
+        if ((resources[ing.type] || 0) < ing.amount * quantity) canAffordAll = false;
+    });
+
     return (
         <div className="relative bg-slate-900 rounded-2xl border border-slate-700 overflow-hidden">
             <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
@@ -299,8 +319,7 @@ const TradeOptionCard = memo(({
                         const userHas = resources[ing.type] || 0;
                         const requiredAmount = ing.amount * quantity;
                         const isEnough = userHas >= requiredAmount;
-                        if (!isEnough) canAffordAll = false;
-
+                        
                         return (
                             <React.Fragment key={ing.type}>
                                 <div className="flex flex-col items-center gap-3 min-w-[80px]">
@@ -363,7 +382,6 @@ const TradeOptionCard = memo(({
                         
                         {/* +/- and Display Row */}
                         <div className="flex items-center justify-center gap-2 bg-slate-900 p-1.5 rounded-lg border border-slate-700">
-                            {/* Minus Button uses Step */}
                             <button 
                                 onClick={() => onQuantityChange(option.id, -step)}
                                 className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 shrink-0 transition-colors"
@@ -383,7 +401,6 @@ const TradeOptionCard = memo(({
                                 </span>
                             </div>
                             
-                            {/* Plus Button uses Step */}
                             <button 
                                 onClick={() => onQuantityChange(option.id, step)}
                                 className="w-10 h-10 flex items-center justify-center bg-slate-700 hover:bg-slate-600 active:bg-slate-800 rounded-md text-slate-200 shrink-0 transition-colors"
@@ -394,16 +411,33 @@ const TradeOptionCard = memo(({
                             </button>
                         </div>
 
-                        {/* Step Select Buttons + Max */}
+                        {/* SMART BUTTONS: Min | Step 1 | Step 2 | Max */}
                         <div className="flex gap-1 justify-between">
-                            <StepSelectBtn label="x1" isSelected={step === 1} onClick={() => setStep(1)} />
-                            <StepSelectBtn label="x10" isSelected={step === 10} onClick={() => setStep(10)} />
-                            <StepSelectBtn label="x100" isSelected={step === 100} onClick={() => setStep(100)} />
-                            <StepSelectBtn label="x1k" isSelected={step === 1000} onClick={() => setStep(1000)} />
-                            
-                            {/* Max Button */}
+                            {/* MIN Button */}
                             <button
-                                onClick={() => onSetMax(option.id, maxAffordable)}
+                                onClick={() => onSetQuantity(option.id, 1)}
+                                className="px-2 py-1 text-[10px] sm:text-xs font-bold rounded border transition-colors flex-1 bg-slate-800 border-slate-700 text-slate-400 hover:bg-slate-700 hover:text-white"
+                            >
+                                Min
+                            </button>
+
+                            {/* Dynamic Step 1 */}
+                            <StepSelectBtn 
+                                label={`x${formatNumber(dynamicSteps[0])}`} 
+                                isSelected={step === dynamicSteps[0]} 
+                                onClick={() => setStep(dynamicSteps[0])} 
+                            />
+
+                            {/* Dynamic Step 2 */}
+                            <StepSelectBtn 
+                                label={`x${formatNumber(dynamicSteps[1])}`} 
+                                isSelected={step === dynamicSteps[1]} 
+                                onClick={() => setStep(dynamicSteps[1])} 
+                            />
+                            
+                            {/* MAX Button */}
+                            <button
+                                onClick={() => onSetQuantity(option.id, Math.max(1, maxAffordable))}
                                 disabled={maxAffordable === 0}
                                 className={`
                                     px-2 py-1 text-[10px] sm:text-xs font-bold rounded border transition-colors flex-1
@@ -413,7 +447,7 @@ const TradeOptionCard = memo(({
                                     }
                                 `}
                             >
-                                MAX
+                                Max
                             </button>
                         </div>
                     </div>
@@ -502,12 +536,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
             [optionId]: value < 1 ? 1 : value
         }));
     }, []);
-
-    // Handle Max Button Click
-    const handleSetMax = useCallback((optionId: string, maxVal: number) => {
-        const val = Math.max(1, maxVal);
-        handleSetQuantity(optionId, val);
-    }, [handleSetQuantity]);
 
     // Open Numpad logic
     const handleOpenNumpad = useCallback((optionId: string, currentVal: number, maxVal: number) => {
@@ -607,7 +635,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                                 resources={resources}
                                 onQuantityChange={handleQuantityChange}
                                 onOpenNumpad={handleOpenNumpad}
-                                onSetMax={handleSetMax}
+                                onSetQuantity={handleSetQuantity}
                                 onExchange={handleExchange}
                                 isProcessing={isProcessing}
                             />
@@ -616,7 +644,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 </div>
             </div>
             
-            {/* NUMPAD OVERLAY (Rendered once at root of Modal) */}
+            {/* NUMPAD OVERLAY */}
             <NumpadModal 
                 isOpen={numpadState.isOpen}
                 initialValue={numpadState.currentValue}
