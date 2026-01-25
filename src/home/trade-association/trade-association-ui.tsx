@@ -22,6 +22,20 @@ import {
     ResourceType 
 } from './trade-service.ts';
 
+// --- UTILS: NUMBER FORMATTING ---
+const formatNumber = (num: number): string => {
+    if (num >= 1000000000) {
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'b';
+    }
+    if (num >= 1000000) {
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+    }
+    if (num >= 1000) {
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    }
+    return num.toString();
+};
+
 // --- IMAGE ICONS (UI Only) ---
 // Đã loại bỏ drop-shadow để giảm tải render
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
@@ -55,7 +69,6 @@ const StoneIcon = ({ tier, className = '' }: { tier?: 'low' | 'medium' | 'high',
 };
 
 // --- COMPONENT HEADER ---
-// Sử dụng màu nền đặc (bg-slate-900) thay vì trong suốt mờ (blur)
 const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, displayedCoins: number }) => {
     return (
         <header className="flex-shrink-0 w-full bg-slate-900 border-b border-slate-700 z-20 relative">
@@ -70,7 +83,6 @@ const Header = memo(({ onClose, displayedCoins }: { onClose: () => void, display
 });
 
 // --- MARKET TIMER COMPONENT ---
-// Loại bỏ backdrop-blur và box-shadow
 const MarketTimer = memo(() => {
     const [timeLeft, setTimeLeft] = useState('');
 
@@ -115,7 +127,6 @@ const MarketTimer = memo(() => {
 });
 
 // --- SUB-COMPONENT: TRADE OPTION CARD ---
-// Tách thành component riêng và dùng React.memo để ngăn việc re-render toàn bộ danh sách khi thay đổi số lượng ở 1 item
 interface TradeCardProps {
     option: TradeOption;
     quantity: number;
@@ -156,10 +167,11 @@ const TradeOptionCard = memo(({
                                         <ResourceIcon type={ing.type} className="w-14 h-14 md:w-16 md:h-16" />
                                     </div>
                                     <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5">
+                                        {/* Hiển thị số lượng với format k/m/b */}
                                         <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
-                                            {userHas > 999 ? '999+' : userHas}
+                                            {formatNumber(userHas)}
                                         </span>
-                                        <span className="text-slate-500 ml-1">/ {requiredAmount}</span>
+                                        <span className="text-slate-500 ml-1">/ {formatNumber(requiredAmount)}</span>
                                     </div>
                                 </div>
                                 
@@ -200,7 +212,7 @@ const TradeOptionCard = memo(({
                                 <AncientBookIcon className="w-14 h-14 md:w-16 md:h-16 object-contain" />
                             )}
                             <div className="absolute -top-3 -right-3 bg-slate-700 text-white text-[11px] font-bold px-2 py-1 rounded-full border border-slate-500 z-20">
-                                x{option.receiveAmount * quantity}
+                                x{formatNumber(option.receiveAmount * quantity)}
                             </div>
                         </div>
                     </div>
@@ -268,14 +280,12 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     
     const [tradeQuantities, setTradeQuantities] = useState<Record<string, number>>({});
 
-    // OPTIMIZATION: Wrap resources trong useMemo để component con (TradeOptionCard) không bị re-render thừa
     const resources = useMemo(() => ({
         wood, leather, ore, cloth, feather, coal
     }), [wood, leather, ore, cloth, feather, coal]);
 
     const currentTradeOptions = useMemo(() => getTradeOptions(), []); 
 
-    // Dùng useCallback để tránh tạo hàm mới mỗi lần render
     const getQuantity = useCallback((optionId: string) => tradeQuantities[optionId] || 1, [tradeQuantities]);
 
     const handleQuantityChange = useCallback((optionId: string, change: number) => {
@@ -310,7 +320,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
             await executeTradeTransaction(userId, option, quantity);
 
-            setToastState({ show: true, message: 'Đã đổi thành công.' });
+            setToastState({ show: true, message: 'Exchange Successful!' });
             
             await refreshUserData();
             setTradeQuantities(prev => ({ ...prev, [option.id]: 1 }));
@@ -329,7 +339,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     return (
         <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans bg-black">
             
-            {/* BACKGROUND: Giảm opacity và dùng bg-black để tránh render lớp phủ nặng */}
+            {/* BACKGROUND */}
             <div className="absolute inset-0 z-0">
                 <img 
                     src={tradeAssets.background} 
