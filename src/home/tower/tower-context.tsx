@@ -11,7 +11,8 @@ import {
 import { useGame } from '../../GameContext.tsx';
 
 // --- IMPORT SERVICE ---
-import { calculateResourceRewards, claimTowerRewards, BattleRewards } from './tower-service.ts';
+// Sử dụng hàm calculateBattleRewards mới để tính cả Coin và Resource
+import { calculateBattleRewards, claimTowerRewards, BattleRewards } from './tower-service.ts';
 
 // --- TYPE DEFINITIONS ---
 export type ActiveSkill = OwnedSkill & SkillBlueprint;
@@ -80,7 +81,7 @@ interface BossBattleActions {
     handleNextFloor: () => void;
     handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: BattleRewards | null }>;
     
-    // NEW: Hàm xác nhận nhận thưởng (x1 hoặc x2) - Dùng chung cho cả Battle và Sweep
+    // Hàm xác nhận nhận thưởng (x1 hoặc x2) - Dùng chung cho cả Battle và Sweep
     confirmClaimRewards: (multiplier: 1 | 2) => Promise<void>;
 }
 
@@ -283,26 +284,17 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         return { player, boss, turnLogs, winner, turnEvents };
     }, [equippedSkills, currentBossData]);
 
-    // --- EFFECT: TÍNH TOÁN PHẦN THƯỞNG TIỀM NĂNG (ĐỒNG BỘ 1 LẦN KHI ĐỔI TẦNG) ---
+    // --- EFFECT: TÍNH TOÁN PHẦN THƯỞNG TIỀM NĂNG (COIN + RESOURCE) ---
+    // Được gọi khi currentFloor thay đổi
     useEffect(() => {
-        if (currentBossData) {
-            // 1. Lấy Coins cố định từ Data
-            const coins = currentBossData.rewards?.coins || 0;
-            
-            // 2. Tính Resources ngẫu nhiên NGAY LÚC NÀY
-            const resources = calculateResourceRewards(currentFloor);
-            
-            // 3. Lưu vào State để dùng chung (Hiển thị Popup xem trước)
-            setPotentialRewards({
-                coins,
-                resources
-            });
-        }
-    }, [currentFloor, currentBossData]);
+        // Tính toán toàn bộ reward (Coins + Resources) ngay khi đổi tầng
+        const rewards = calculateBattleRewards(currentFloor);
+        setPotentialRewards(rewards);
+    }, [currentFloor]);
 
     // --- GAME CONTROL FUNCTIONS ---
     
-    // UPDATED: endGame KHÔNG TỰ ĐỘNG SAVE REWARDS VÀO DB NỮA
+    // endGame KHÔNG TỰ ĐỘNG SAVE REWARDS VÀO DB NỮA
     const endGame = useCallback(async (result: 'win' | 'lose') => {
         if (isEndingGame.current) return;
         isEndingGame.current = true;
@@ -312,11 +304,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         setBattleState('finished');
 
         if (result === 'win') {
-            // Lấy phần thưởng đã tính trước (potentialRewards)
-            let finalRewards: BattleRewards = potentialRewards || { 
-                coins: currentBossData?.rewards?.coins || 0, 
-                resources: calculateResourceRewards(currentFloor) 
-            };
+            // Lấy phần thưởng đã tính trước (potentialRewards) hoặc tính mới nếu chưa có
+            let finalRewards: BattleRewards = potentialRewards || calculateBattleRewards(currentFloor);
 
             // CHỈ LƯU VÀO STATE ĐỂ UI HIỂN THỊ POPUP
             setLastRewards(finalRewards);
@@ -325,9 +314,9 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             // Việc nhận thưởng sẽ do confirmClaimRewards() xử lý sau khi user click.
         }
         
-    }, [currentBossData, currentFloor, potentialRewards]);
+    }, [currentFloor, potentialRewards]);
 
-    // NEW: HÀM XÁC NHẬN NHẬN THƯỞNG (GỌI TỪ MODAL)
+    // HÀM XÁC NHẬN NHẬN THƯỞNG (GỌI TỪ MODAL)
     const confirmClaimRewards = useCallback(async (multiplier: 1 | 2) => {
         if (!lastRewards) return;
 
@@ -472,7 +461,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
-    // --- CẬP NHẬT HANDLE SWEEP: KHÔNG TỰ ĐỘNG NHẬN THƯỞNG ---
+    // --- HANDLE SWEEP: KHÔNG TỰ ĐỘNG NHẬN THƯỞNG ---
     const handleSweep = useCallback(async () => {
         // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
@@ -480,33 +469,20 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     
         // 1. Trừ năng lượng ở Local State & Global State NGAY LẬP TỨC
-        // (Tránh user spam nút sweep hoặc đổi ý sau khi xem reward)
         setPlayerStats(prev => {
             if(!prev) return null;
             return { ...prev, energy: prev.energy - 10 }
         });
         game.handleUpdateEnergy(-10);
     
-        // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
+        // 2. Tính toán reward cho tầng TRƯỚC ĐÓ (Vì sweep là quét tầng đã qua)
         const previousFloorIndex = currentFloor - 1;
-        const previousBossData = BOSS_DATA[previousFloorIndex];
+        const rewards = calculateBattleRewards(previousFloorIndex);
         
-        // 3. Tính phần thưởng
-        const earnedCoins = previousBossData.rewards?.coins || 0;
-        const earnedResources = calculateResourceRewards(previousFloorIndex);
-
-        const rewards: BattleRewards = {
-            coins: earnedCoins,
-            resources: earnedResources
-        };
-        
-        // 4. LƯU VÀO STATE ĐỂ UI HIỂN THỊ POPUP
+        // 3. LƯU VÀO STATE ĐỂ UI HIỂN THỊ POPUP
         setLastRewards(rewards);
         
-        // NOTE: KHÔNG gọi game.updateCoins() hay claimTowerRewards() ở đây.
-        // Chờ confirmClaimRewards() xử lý.
-        
-        // 5. Trả về kết quả thắng
+        // 4. Trả về kết quả thắng
         return { result: 'win' as const, rewards: rewards };
     }, [playerStats, currentFloor, game]);
 
