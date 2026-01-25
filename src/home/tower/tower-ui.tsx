@@ -329,7 +329,8 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
     const displayableEnergy = isLoading || !playerStats ? 0 : playerStats.energy ?? 0;
     const animatedEnergy = useAnimateValue(displayableEnergy);
 
-    const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}k` : String(Math.ceil(num));
+    // CHANGED: k -> K
+    const formatDamageText = (num: number): string => num >= 1000 ? `${parseFloat((num / 1000).toFixed(1))}K` : String(Math.ceil(num));
 
     // --- TURN SEQUENCE LOGIC ---
     useEffect(() => {
