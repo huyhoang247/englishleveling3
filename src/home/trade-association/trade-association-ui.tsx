@@ -37,7 +37,6 @@ const formatNumber = (num: number): string => {
 };
 
 // --- IMAGE ICONS (UI Only) ---
-// Đã loại bỏ drop-shadow để giảm tải render
 const ResourceIcon = ({ type, className = "w-6 h-6" }: { type: ResourceType, className?: string }) => {
     let src = "";
     switch (type) {
@@ -166,8 +165,9 @@ const TradeOptionCard = memo(({
                                     <div className={`relative p-3 rounded-xl border transition-colors ${isEnough ? 'bg-slate-800 border-slate-600' : 'bg-red-950/30 border-red-900'}`}>
                                         <ResourceIcon type={ing.type} className="w-14 h-14 md:w-16 md:h-16" />
                                     </div>
-                                    <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5">
-                                        {/* Hiển thị số lượng với format k/m/b */}
+                                    
+                                    {/* SỬ DỤNG WHITESPACE-NOWRAP ĐỂ KHÔNG XUỐNG DÒNG */}
+                                    <div className="text-xs md:text-sm font-mono font-bold bg-black/40 px-3 py-1 rounded-full border border-white/5 whitespace-nowrap">
                                         <span className={isEnough ? "text-emerald-400" : "text-red-500"}>
                                             {formatNumber(userHas)}
                                         </span>
