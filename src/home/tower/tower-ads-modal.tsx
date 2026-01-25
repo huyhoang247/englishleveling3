@@ -1,8 +1,8 @@
 // --- START OF FILE tower-ads-modal.tsx ---
 
 import React, { useState } from 'react';
-import { bossBattleAssets, resourceAssets } from '../../game-assets';
-import { BattleRewards } from './tower-service';
+import { bossBattleAssets, resourceAssets } from '../../game-assets.ts';
+import { BattleRewards } from './tower-service.ts';
 
 // --- HELPER FORMAT ---
 const formatNum = (num: number) => {
