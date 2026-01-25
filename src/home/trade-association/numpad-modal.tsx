@@ -1,17 +1,15 @@
-// --- START OF FILE src/ui/numpad-modal.tsx ---
-
 import React, { useState, useEffect } from 'react';
 
 // Hàm helper format số (Copy vào đây để component hoạt động độc lập)
 const formatNumber = (num: number): string => {
     if (num >= 1000000000) {
-        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'b';
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
     }
     if (num >= 1000000) {
-        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'm';
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
     }
     if (num >= 1000) {
-        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
     return num.toString();
 };
@@ -108,8 +106,9 @@ const NumpadModal = ({ isOpen, initialValue, maxValue, title, onClose, onConfirm
                         <button key={n} onClick={() => handleNumberClick(n)} className="h-14 bg-slate-800 hover:bg-slate-700 rounded-lg text-xl font-bold text-slate-200 shadow-sm active:translate-y-0.5 transition-all">{n}</button>
                     ))}
                     <button onClick={handleBackspace} className="h-14 bg-slate-800 hover:bg-slate-700 rounded-lg flex items-center justify-center text-slate-400">
+                        {/* Đã thay đổi icon Backspace chuẩn */}
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-6 h-6">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9.75L14.25 12m0 0l2.25 2.25M14.25 12l2.25-2.25M14.25 12l-2.25 2.25m-4.28 4.28a2.25 2.25 0 01-3.18 0L2.98 12.02a2.25 2.25 0 010-3.18l6.76-6.76a2.25 2.25 0 013.18 0l6.76 6.76a2.25 2.25 0 010 3.18l-6.76 6.76z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414a2 2 0 001.414.586H19a2 2 0 002-2V7a2 2 0 00-2-2h-8.172a2 2 0 00-1.414.586L3 12z" />
                         </svg>
                     </button>
 
