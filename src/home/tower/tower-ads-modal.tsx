@@ -33,7 +33,8 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
     if (!rewards) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
+        // UPDATED: Removed 'backdrop-blur-sm' and changed 'bg-black/90' to 'bg-black/80' for better performance
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
             {/* Main Container */}
             <div className="relative w-[340px] bg-slate-900 border-2 border-slate-600 rounded-3xl shadow-2xl flex flex-col items-center overflow-hidden animate-fade-in-scale-fast">
                 
