@@ -2,7 +2,7 @@
 
 import React from 'react';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import { uiAssets } from '../../game-assets.ts';
+import { uiAssets, upgradeAssets } from '../../game-assets.ts'; // Cập nhật import upgradeAssets
 import UpgradeStatsSkeleton from './upgrade-loading.tsx';
 import StatUpgradeToast from './upgrade-toast.tsx';
 import { UpgradeStatsProvider, useUpgradeStats } from './upgrade-context.tsx';
@@ -82,7 +82,8 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
   const displayGold = isLoading ? 0 : gold;
   const animatedGold = useAnimateValue(displayGold);
   
-  const bgImage = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/background-upgrade.webp";
+  // SỬA ĐỔI: Sử dụng ảnh từ upgradeAssets thay vì link cứng
+  const bgImage = upgradeAssets.background;
 
   return (
     <div 
@@ -112,7 +113,6 @@ function UpgradeStatsView({ onClose }: { onClose: () => void }) {
             </header>
 
             {message && (
-              // Fixed: Removed backdrop-blur-sm, kept bg-red-600/60
               <div className="fixed top-24 left-1/2 -translate-x-1/2 bg-red-600/60 border border-red-500 text-white py-2 px-6 rounded-lg shadow-lg z-50 font-lilita animate-bounce flex items-center gap-2">
                 {message === 'ko đủ vàng' ? (
                   <>
