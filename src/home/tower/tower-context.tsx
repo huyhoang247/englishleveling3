@@ -80,7 +80,7 @@ interface BossBattleActions {
     handleNextFloor: () => void;
     handleSweep: () => Promise<{ result: 'win' | 'lose'; rewards: BattleRewards | null }>;
     
-    // NEW: Hàm xác nhận nhận thưởng (x1 hoặc x2)
+    // NEW: Hàm xác nhận nhận thưởng (x1 hoặc x2) - Dùng chung cho cả Battle và Sweep
     confirmClaimRewards: (multiplier: 1 | 2) => Promise<void>;
 }
 
@@ -292,7 +292,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             // 2. Tính Resources ngẫu nhiên NGAY LÚC NÀY
             const resources = calculateResourceRewards(currentFloor);
             
-            // 3. Lưu vào State để dùng chung (Hiển thị Popup & Trả thưởng)
+            // 3. Lưu vào State để dùng chung (Hiển thị Popup xem trước)
             setPotentialRewards({
                 coins,
                 resources
@@ -321,8 +321,8 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             // CHỈ LƯU VÀO STATE ĐỂ UI HIỂN THỊ POPUP
             setLastRewards(finalRewards);
             
-            // NOTE: Không gọi claimTowerRewards() ở đây nữa.
-            // Việc nhận thưởng sẽ do confirmClaimRewards() xử lý.
+            // NOTE: Không gọi claimTowerRewards() hay updateCoins() ở đây.
+            // Việc nhận thưởng sẽ do confirmClaimRewards() xử lý sau khi user click.
         }
         
     }, [currentBossData, currentFloor, potentialRewards]);
@@ -349,7 +349,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             console.error("Error saving claimed rewards:", err);
         }
 
-        // 4. Update lại state lastRewards để UI animation hiển thị đúng số lượng
+        // 4. Update lại state lastRewards để UI animation (loot rơi) hiển thị đúng số lượng đã nhân
         setLastRewards(finalRewards);
 
     }, [lastRewards, game, userId]);
@@ -399,7 +399,7 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         endGame(finalWinner);
     }, [playerStats, bossStats, turnCounter, executeFullTurn, endGame]);
     
-    // --- CẬP NHẬT START GAME: TRỪ NĂNG LƯỢNG THẬT ---
+    // --- START GAME: TRỪ NĂNG LƯỢNG THẬT ---
     const startGame = useCallback(() => {
         if (battleState !== 'idle' || (playerStats?.energy || 0) < 10) return;
         isEndingGame.current = false;
@@ -472,21 +472,19 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
         }
     }, [currentFloor, resetAllStateForNewBattle, game]);
 
-    // --- CẬP NHẬT HANDLE SWEEP: GIỮ NGUYÊN (VẪN TỰ ĐỘNG NHẬN) ---
-    // Sweep hiện tại vẫn giữ cơ chế nhận ngay (x1) để nhanh gọn
+    // --- CẬP NHẬT HANDLE SWEEP: KHÔNG TỰ ĐỘNG NHẬN THƯỞNG ---
     const handleSweep = useCallback(async () => {
         // Validation: Cần data gốc, không ở tầng 1, và đủ năng lượng
         if (!initialPlayerStatsRef.current || currentFloor <= 0 || (playerStats?.energy || 0) < 10) {
             return { result: 'lose' as const, rewards: null };
         }
     
-        // 1. Trừ năng lượng ở Local State
+        // 1. Trừ năng lượng ở Local State & Global State NGAY LẬP TỨC
+        // (Tránh user spam nút sweep hoặc đổi ý sau khi xem reward)
         setPlayerStats(prev => {
             if(!prev) return null;
             return { ...prev, energy: prev.energy - 10 }
         });
-
-        // CẬP NHẬT NĂNG LƯỢNG TOÀN CỤC & DATABASE
         game.handleUpdateEnergy(-10);
     
         // 2. Lấy data boss tầng trước (Vì sweep là quét tầng đã qua)
@@ -502,21 +500,15 @@ export const BossBattleProvider = ({ children, userId }: { children: ReactNode; 
             resources: earnedResources
         };
         
-        // Lưu state để UI hiển thị
+        // 4. LƯU VÀO STATE ĐỂ UI HIỂN THỊ POPUP
         setLastRewards(rewards);
         
-        // 4. Cập nhật Coins cho User (Optimistic - Hiện ngay)
-        if (rewards.coins > 0) {
-            game.updateCoins(rewards.coins);
-        }
-    
-        // 5. Lưu vào Firestore (FIRE AND FORGET)
-        claimTowerRewards(userId, rewards)
-            .catch(err => console.error("Background sweep save error:", err));
+        // NOTE: KHÔNG gọi game.updateCoins() hay claimTowerRewards() ở đây.
+        // Chờ confirmClaimRewards() xử lý.
         
-        // 6. Trả về kết quả thắng ngay lập tức
+        // 5. Trả về kết quả thắng
         return { result: 'win' as const, rewards: rewards };
-    }, [playerStats, currentFloor, game, userId]);
+    }, [playerStats, currentFloor, game]);
 
     // --- REACT HOOKS & EFFECTS ---
 
