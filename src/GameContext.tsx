@@ -1,7 +1,6 @@
 // --- START OF FILE GameContext.tsx ---
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode, useMemo } from 'react';
-import { User } from 'firebase/auth';
 import { auth, db } from './firebase.js'; 
 import { doc, onSnapshot, updateDoc } from 'firebase/firestore'; 
 import { OwnedSkill, ALL_SKILLS, SkillBlueprint } from './home/skill-game/skill-data.tsx';
@@ -9,11 +8,15 @@ import { OwnedItem, EquippedItems } from './home/equipment/equipment-ui.tsx';
 import { 
   fetchOrCreateUserGameData, updateUserCoins, updateUserGems, fetchJackpotPool, updateJackpotPool,
   updateUserBossFloor, updateUserPickaxes, updateUserEnergy,
-  syncEnergyWithServer, // Import hàm đồng bộ
-  registerAdWatch,      // Import hàm đăng ký xem quảng cáo
-  AdData                // Import kiểu dữ liệu AdData
+  syncEnergyWithServer, 
+  registerAdWatch,      
+  AdData                
 } from './gameDataService.ts';
 import { SkillScreenExitData } from './home/skill-game/skill-context.tsx';
+
+// --- IMPORTS CHO LUCKY GAME MỚI ---
+import { processLuckySpinTransaction } from './home/lucky-game/lucky-game-service.ts';
+import { Item } from './home/lucky-game/lucky-game-data.tsx';
 
 // --- Define the shape of the context ---
 interface IGameContext {
@@ -28,7 +31,7 @@ interface IGameContext {
     
     // --- ENERGY STATES ---
     energy: number;
-    timeUntilNextEnergy: number; // Export số (nếu null sẽ convert thành 0 để UI không lỗi)
+    timeUntilNextEnergy: number; 
 
     minerChallengeHighestFloor: number;
     userStatsLevel: { hp: number; atk: number; def: number; };
@@ -62,11 +65,11 @@ interface IGameContext {
     lastCheckIn: Date | null;
     
     // --- VIP FIELDS ---
-    accountType: string;         // 'Normal' | 'VIP'
-    vipExpiresAt: Date | null;   // Thời hạn VIP
-    vipLuckySpinClaims: number;  // Số lượt đã nhận x2 trong ngày (Max 5)
+    accountType: string;         
+    vipExpiresAt: Date | null;   
+    vipLuckySpinClaims: number;  
 
-    // --- ADS DATA (NEW) ---
+    // --- ADS DATA ---
     adsData: AdData;
 
     // UI States
@@ -104,7 +107,10 @@ interface IGameContext {
     handleUpdateJackpotPool: (amount: number, reset?: boolean) => Promise<void>;
     handleVipLuckySpinClaim: () => Promise<boolean>;
     
-    // --- ADS FUNCTION (NEW) ---
+    // --- LUCKY SPIN FUNCTION (NEW) ---
+    handleLuckySpin: (cost: number, item: Item, multiplier: number) => Promise<boolean>;
+
+    // --- ADS FUNCTION ---
     handleRegisterAdWatch: () => Promise<boolean>;
 
     getPlayerBattleStats: () => { maxHp: number; hp: number; atk: number; def: number; maxEnergy: number; energy: number; };
@@ -161,8 +167,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   
   // --- ENERGY STATES ---
   const [energy, setEnergy] = useState(50);
-  
-  // FIX: Khởi tạo là NULL để đánh dấu trạng thái "đang tải"
   const [timeUntilNextEnergy, setTimeUntilNextEnergy] = useState<number | null>(null);
 
   const [minerChallengeHighestFloor, setMinerChallengeHighestFloor] = useState(0);
@@ -197,7 +201,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
   const [vipExpiresAt, setVipExpiresAt] = useState<Date | null>(null);
   const [vipLuckySpinClaims, setVipLuckySpinClaims] = useState(0);
 
-  // --- ADS STATE (NEW) ---
+  // --- ADS STATE ---
   const [adsData, setAdsData] = useState<AdData>({
       watchedToday: 0,
       lastWatchedAt: null,
@@ -295,17 +299,15 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       if (user) {
         setIsLoadingUserData(true);
         
-        // --- SYNC ENERGY TỪ SERVER (QUAN TRỌNG) ---
-        // Gọi hàm này ngay lập tức để lấy thời gian còn lại chuẩn từ server
         syncEnergyWithServer(user.uid)
             .then(result => {
                 setEnergy(result.currentEnergy);
-                setTimeUntilNextEnergy(result.nextRefillIn); // Gán thời gian chuẩn
+                setTimeUntilNextEnergy(result.nextRefillIn); 
                 console.log(`Energy Sync Success: ${result.currentEnergy}, Next: ${result.nextRefillIn}s`);
             })
             .catch(err => {
                 console.error("Energy sync failed:", err);
-                setTimeUntilNextEnergy(300); // Fallback nếu lỗi
+                setTimeUntilNextEnergy(300); 
             });
 
         const userDocRef = doc(db, 'users', user.uid);
@@ -320,7 +322,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setMasteryCards(gameData.masteryCards ?? 0);
                 setPickaxes(gameData.pickaxes ?? 50);
                 
-                // Real-time Energy Update (Value Only)
                 setEnergy(gameData.energy ?? 50);
 
                 setMinerChallengeHighestFloor(gameData.minerChallengeHighestFloor ?? 0);
@@ -355,7 +356,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
                 setVipExpiresAt(gameData.vipExpiresAt ? gameData.vipExpiresAt.toDate() : null);
                 setVipLuckySpinClaims(gameData.vipLuckySpinClaims ?? 0);
 
-                // Update Ads Data
                 setAdsData(gameData.ads || { watchedToday: 0, lastWatchedAt: null, nextAvailableAt: null, streakCount: 0 });
 
             } else {
@@ -381,15 +381,14 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setIsAchievementsOpen(false); setIsAdminPanelOpen(false); setIsUpgradeScreenOpen(false); setIsBackgroundPaused(false); setCoins(0); setDisplayedCoins(0); setGems(0); setMasteryCards(0);
         setPickaxes(0); setMinerChallengeHighestFloor(0); 
         
-        setEnergy(50); // Reset Energy
-        setTimeUntilNextEnergy(null); // Reset Timer về null
+        setEnergy(50); 
+        setTimeUntilNextEnergy(null); 
 
         setUserStatsLevel({ hp: 0, atk: 0, def: 0 }); 
         setUserStatsValue({ hp: 0, atk: 0, def: 0 });
         setBossBattleHighestFloor(0); setAncientBooks(0);
         setOwnedSkills([]); setEquippedSkillIds([null, null, null]); setTotalVocabCollected(0); 
         
-        // Reset resources
         setWood(0); setLeather(0); setOre(0); setCloth(0);
         setFeather(0); setCoal(0);
 
@@ -407,7 +406,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
         setVipExpiresAt(null);
         setVipLuckySpinClaims(0);
 
-        // Reset Ads Data
         setAdsData({ watchedToday: 0, lastWatchedAt: null, nextAvailableAt: null, streakCount: 0 });
       }
     });
@@ -418,9 +416,8 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     };
   }, []);
 
-  // --- EFFECT: ENERGY REGENERATION TIMER (UPDATED FIX) ---
+  // --- EFFECT: ENERGY REGENERATION TIMER ---
   useEffect(() => {
-    // Nếu đầy năng lượng thì dừng đếm ngược
     if (energy >= 50) {
         setTimeUntilNextEnergy(0);
         return;
@@ -428,36 +425,27 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
 
     const timer = setInterval(() => {
         setTimeUntilNextEnergy((prev) => {
-            // FIX QUAN TRỌNG:
-            // Nếu prev là null (nghĩa là đang load hoặc chưa sync xong với server), giữ nguyên null.
-            // Điều này ngăn chặn việc "Race Condition" khi F5 khiến nó tự set về 300s.
             if (prev === null) return null; 
 
             if (prev <= 1) {
-                // Hết giờ -> Tự động hồi 1 năng lượng ở Client & Sync Server
                 handleRegenerateEnergyTick();
-                return 300; // Reset về 5 phút (300 giây)
+                return 300; 
             }
             return prev - 1;
         });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [energy]); // Phụ thuộc vào energy để biết khi nào dừng/chạy
-
+  }, [energy]); 
 
   // --- HELPER: HỒI NĂNG LƯỢNG TỰ ĐỘNG ---
   const handleRegenerateEnergyTick = async () => {
       const userId = auth.currentUser?.uid;
       
-      // Update Client State (Optimistic)
       setEnergy(prev => Math.min(50, prev + 1));
 
-      // Trigger Server Sync (Background calculation)
-      // Hàm này trong service sẽ tự tính toán và update DB chuẩn xác
       if (userId) {
           try {
-              // Gọi sync để DB update timestamp chuẩn
               await syncEnergyWithServer(userId);
           } catch (e) {
               console.error("Background energy sync error:", e);
@@ -554,16 +542,12 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     }
   };
 
-  // --- HANDLE UPDATE ENERGY ---
   const handleUpdateEnergy = async (amount: number) => {
     const userId = auth.currentUser?.uid;
     if (!userId) return;
     
-    // Optimistic Update
     setEnergy(prev => {
         const newVal = Math.max(0, Math.min(50, prev + amount));
-        
-        // Nếu đang đầy (hoặc hơn) mà bị trừ xuống dưới 50, bắt đầu đếm ngược 5 phút
         if (prev >= 50 && newVal < 50) {
             setTimeUntilNextEnergy(300);
         }
@@ -609,14 +593,69 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
       if (!userId) return false;
       
       try {
-          // Gọi service để update DB (tăng count, set cooldown)
           const newAdsData = await registerAdWatch(userId);
-          
-          // Update local state ngay lập tức (optimistic)
           setAdsData(newAdsData);
           return true;
       } catch (error) {
           console.error("Ad watch failed:", error);
+          return false;
+      }
+  };
+
+  // --- NEW: HANDLE LUCKY SPIN ---
+  const handleLuckySpin = async (cost: number, item: Item, multiplier: number): Promise<boolean> => {
+      const userId = auth.currentUser?.uid;
+      if (!userId || coins < cost) return false;
+
+      const rewardAmount = (item.rewardAmount || 1) * multiplier;
+
+      // 1. Optimistic Update (Cập nhật giao diện ngay lập tức)
+      setCoins(prev => prev - cost); 
+
+      if (item.rarity === 'jackpot') {
+          setCoins(prev => prev + jackpotPool);
+          setJackpotPool(200);
+      } else {
+           // Cập nhật Local State dựa trên ID
+          switch (item.id) {
+              case 'wood': setWood(prev => prev + rewardAmount); break;
+              case 'cloth': setCloth(prev => prev + rewardAmount); break;
+              case 'ore': setOre(prev => prev + rewardAmount); break;
+              case 'leather': setLeather(prev => prev + rewardAmount); break;
+              case 'feather': setFeather(prev => prev + rewardAmount); break;
+              case 'coal': setCoal(prev => prev + rewardAmount); break;
+              
+              case 'stone_low': setStones(prev => ({ ...prev, low: prev.low + rewardAmount })); break;
+              case 'stone_medium': setStones(prev => ({ ...prev, medium: prev.medium + rewardAmount })); break;
+              case 'stone_high': setStones(prev => ({ ...prev, high: prev.high + rewardAmount })); break;
+
+              case 'pickaxe': setPickaxes(prev => prev + rewardAmount); break;
+              case 'coins_pack': setCoins(prev => prev + rewardAmount); break;
+              
+              case 'equipment_piece': setEquipmentPieces(prev => prev + rewardAmount); break;
+              case 'ancient_book': setAncientBooks(prev => prev + rewardAmount); break;
+          }
+      }
+
+      // 2. Gọi Transaction Service để xử lý an toàn
+      try {
+          const result = await processLuckySpinTransaction(userId, cost, item, multiplier);
+
+          if (result.success) {
+              // Đồng bộ lại tiền và Jackpot chính xác từ server
+              setCoins(result.newCoins);
+              if (item.rarity !== 'jackpot') {
+                  setJackpotPool(result.newJackpot);
+              }
+              return true;
+          } else {
+              console.error("Spin transaction failed:", result.error);
+              refreshUserData(); // Rollback nếu lỗi
+              return false;
+          }
+      } catch (error) {
+          console.error("Spin logic error:", error);
+          refreshUserData();
           return false;
       }
   };
@@ -629,7 +668,6 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
           const newState = !prev;
           if (newState) {
               hideNavBar();
-              // Đảm bảo đóng tất cả các modal khác
               [ 
                   setIsRankOpen, setIsPvpArenaOpen, setIsLuckyGameOpen, setIsMinerChallengeOpen, 
                   setIsBossBattleOpen, setIsShopOpen, setIsVocabularyChestOpen, setIsSkillScreenOpen, 
@@ -721,7 +759,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     
     // --- EXPORT ENERGY & FUNCTION ---
     energy,
-    timeUntilNextEnergy: timeUntilNextEnergy ?? 0, // Fallback nếu null để UI không lỗi
+    timeUntilNextEnergy: timeUntilNextEnergy ?? 0, 
     handleUpdateEnergy,
 
     userStatsLevel, 
@@ -729,7 +767,7 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     jackpotPool,
     bossBattleHighestFloor, ancientBooks, ownedSkills, equippedSkillIds, totalVocabCollected, cardCapacity, 
     
-    wood, leather, ore, cloth, feather, coal, // Export Resources
+    wood, leather, ore, cloth, feather, coal, 
 
     equipmentPieces, 
     ownedItems, 
@@ -746,6 +784,9 @@ export const GameProvider: React.FC<GameProviderProps> = ({ children, hideNavBar
     // --- ADS DATA & FUNCTION ---
     adsData,
     handleRegisterAdWatch,
+
+    // --- LUCKY GAME FUNCTION ---
+    handleLuckySpin,
 
     isBackgroundPaused, showRateLimitToast, isRankOpen, isPvpArenaOpen, isLuckyGameOpen, isMinerChallengeOpen, isBossBattleOpen, isShopOpen,
     isVocabularyChestOpen, isAchievementsOpen, isAdminPanelOpen, isUpgradeScreenOpen, isBaseBuildingOpen, isSkillScreenOpen, isEquipmentOpen,
