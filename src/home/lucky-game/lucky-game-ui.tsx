@@ -472,7 +472,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
               </div>
               
               <div className="text-slate-400 text-xs mt-2 font-medium tracking-wide">
-                 Xác suất JACKPOT: <span className="text-yellow-400 font-bold">0.05%</span>
+                 Xác suất JACKPOT: <span className="text-yellow-400 font-bold">0.02%</span>
               </div>
             </div>
         </div>
