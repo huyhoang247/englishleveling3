@@ -53,7 +53,7 @@ export const processLuckySpinTransaction = async (
             
             // Xử lý phần thưởng
             const rewardAmount = (item.rewardAmount || 1) * multiplier;
-            const rewardType = item.rewardType; // 'resource' | 'currency' | 'stone' | ...
+            // const rewardType = item.rewardType; // Biến này có thể dùng nếu cần log type
 
             if (item.rarity === 'jackpot') {
                 // TRÚNG JACKPOT
@@ -87,10 +87,8 @@ export const processLuckySpinTransaction = async (
                     case 'pickaxe': 
                         updates.pickaxes = (userData.pickaxes || 0) + rewardAmount; 
                         break;
-                    case 'coins_pack': 
-                         // Note: newCoins đã trừ cost ở trên, giờ cộng thêm thưởng
-                        updates.coins = newCoins + rewardAmount; 
-                        break;
+                    
+                    // Lưu ý: Case 'coins_pack' đã bị loại bỏ ở đây
 
                     // Epic
                     case 'equipment_piece': 
