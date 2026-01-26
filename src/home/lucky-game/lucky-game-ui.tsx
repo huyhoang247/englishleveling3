@@ -63,7 +63,7 @@ const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
 const SPIN_DURATION_SEC = 6;
 
-// --- COMPONENT: GameCard ---
+// --- COMPONENT: GameCard (Đã chỉnh sửa theo yêu cầu) ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
@@ -75,23 +75,25 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
             <div className={`
                 relative w-full aspect-[4/5] rounded-xl 
                 ${style.bg} border ${style.border}
-                flex flex-col items-center justify-center gap-2
+                flex flex-col items-center justify-center gap-3
                 shadow-sm 
             `}> 
                 
-                <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-14 h-14 flex items-center justify-center">
+                {/* Tăng kích thước khung chứa icon từ w-14/h-14 lên w-20/h-20 */}
+                <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-20 h-20 flex items-center justify-center">
+                    {/* Tăng kích thước icon từ w-9/h-9 lên w-14/h-14 */}
                     {typeof item.icon === 'string' ? (
-                        <img src={item.icon} alt={item.name} loading="lazy" className="w-9 h-9 object-contain" />
+                        <img src={item.icon} alt={item.name} loading="lazy" className="w-14 h-14 object-contain" />
                     ) : (
-                        <item.icon className={`w-9 h-9 ${item.color}`} />
+                        <item.icon className={`w-14 h-14 ${item.color}`} />
                     )}
                 </div>
                 
                 <div className="relative z-10 text-center w-full px-1">
-                    <div className={`text-[10px] font-bold uppercase tracking-wider opacity-90 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
-                        {item.name || item.rarity}
-                    </div>
-                    <div className="text-sm font-black text-white mt-1 font-lilita tracking-wide">
+                    {/* Đã ẩn phần tên vật phẩm ở đây */}
+                    
+                    {/* Tăng kích thước chữ số lượng/giá trị lên text-xl */}
+                    <div className="text-xl font-black text-white font-lilita tracking-wide drop-shadow-md">
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
                 </div>
@@ -120,8 +122,6 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
     // Lưu ý: Logic x2 VIP ở đây vẫn giữ logic thủ công vì handleLuckySpin ở Context
     // đã thực hiện transaction cho lần quay đầu tiên.
-    // Nếu muốn an toàn tuyệt đối, nên tách logic x2 ra 1 service riêng,
-    // nhưng để đơn giản ta vẫn dùng các hàm update cục bộ cho phần thưởng thêm này.
     const handleClaim = async (isDouble: boolean) => {
         if (isDouble) {
              const success = await handleVipLuckySpinClaim();
@@ -129,20 +129,14 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
              
              // Cộng thêm 1 lần nữa giá trị phần thưởng
              if (item.rarity === 'jackpot') {
-                 // Jackpot thường không được x2, nhưng nếu muốn thì uncomment:
-                 // updateCoins(item.value); 
+                 // Jackpot thường không được x2
              } else {
                  if (item.rewardType === 'coin') {
                      updateCoins(item.value); 
                  } else if (item.rewardType === 'pickaxe' && item.rewardAmount) {
                      handleUpdatePickaxes(item.rewardAmount);
                  } 
-                 // Với Resource/Item khác, hiện tại logic x2 VIP đơn giản 
-                 // chưa hỗ trợ updateResources trực tiếp từ UI này 
-                 // (cần thêm hàm vào Context nếu muốn x2 Gỗ/Đá).
-                 // Tạm thời chỉ x2 Vàng và Cúp.
                  else {
-                     // Nếu muốn hỗ trợ x2 tài nguyên, bạn cần thêm hàm updateResources vào Context
                      console.log("x2 VIP for resources not fully implemented in UI layer yet.");
                  }
              }
@@ -576,4 +570,3 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 };
 
 export default LuckyChestGame;
-// --- END OF FILE lucky-game-ui.tsx ---
