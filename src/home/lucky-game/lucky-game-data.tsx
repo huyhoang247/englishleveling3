@@ -156,7 +156,7 @@ export const BASE_ITEMS: Item[] = [
     { 
         id: 'stone_low', 
         icon: upgradeAssets.stoneBasic, 
-        name: 'Low Stone', 
+        name: 'Basic Stone', 
         value: 0, 
         rarity: 'uncommon', 
         color: 'text-emerald-400', 
@@ -166,7 +166,7 @@ export const BASE_ITEMS: Item[] = [
     { 
         id: 'stone_medium', 
         icon: upgradeAssets.stoneIntermediate, 
-        name: 'Med Stone', 
+        name: 'Intermediate Stone', 
         value: 0, 
         rarity: 'uncommon', 
         color: 'text-cyan-400', 
@@ -176,7 +176,7 @@ export const BASE_ITEMS: Item[] = [
     { 
         id: 'stone_high', 
         icon: upgradeAssets.stoneAdvanced, 
-        name: 'High Stone', 
+        name: 'Advanced Stone', 
         value: 0, 
         rarity: 'uncommon', 
         color: 'text-violet-400', 
