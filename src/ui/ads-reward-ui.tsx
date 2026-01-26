@@ -1,7 +1,9 @@
 // --- START OF FILE ads-reward-ui.tsx ---
 
 import React from 'react';
-import { bossBattleAssets } from '../game-assets.ts'; // Chỉ import assets cơ bản nếu cần icon mặc định
+// Đảm bảo đường dẫn import assets đúng với dự án của bạn
+// Nếu bạn không muốn import assets ở đây, có thể truyền icon qua props từ cha
+import { bossBattleAssets } from '../game-assets.ts'; 
 
 // --- TYPES ---
 export interface FormattedRewardItem {
@@ -78,6 +80,7 @@ export const AdsRewardUI = ({ rewards, adsStatus, onClaimX1, onWatchAdX2 }: AdsR
     // Logic màu sắc
     let statusColor = "bg-blue-500";
     let statusText = "text-blue-200";
+    
     if (watchedToday >= dailyLimit - 5) {
         statusColor = "bg-orange-500";
         statusText = "text-orange-200";
