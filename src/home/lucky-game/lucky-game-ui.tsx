@@ -215,16 +215,16 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       coins, 
       jackpotPool, 
       handleLuckySpin, 
-      // updateCoins, // Không cần dùng trực tiếp nữa
-      // handleUpdatePickaxes, // Không cần dùng trực tiếp nữa
-      // refreshUserData // Không cần dùng trực tiếp nữa
   } = useGame();
 
   const animatedCoins = useAnimateValue(coins, 800);
   const animatedJackpot = useAnimateValue(jackpotPool, 800);
 
   const [isSpinning, setIsSpinning] = useState(false);
-  const [spinMultiplier, setSpinMultiplier] = useState<1 | 10>(1);
+  
+  // Update state type to include 100
+  const [spinMultiplier, setSpinMultiplier] = useState<1 | 10 | 100>(1);
+  
   const [jackpotWon, setJackpotWon] = useState(false);
   const [jackpotAnimation, setJackpotAnimation] = useState(false);
   
@@ -365,10 +365,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           if (wonRewardDetails.rarity === 'jackpot') {
                // Jackpot thường không được nhân đôi (tùy logic game, ở đây bỏ qua)
           } else {
-               // --- SỬA LỖI TẠI ĐÂY ---
-               // Thay vì gọi updateCoins, handleUpdatePickaxes hay refreshUserData thủ công.
                // Ta gọi lại hàm handleLuckySpin với giá 0 (Free) để hệ thống tự cộng quà thêm 1 lần nữa.
-               // wonRewardDetails đã chứa số lượng sau khi nhân (VD: base*10).
+               // wonRewardDetails đã chứa số lượng sau khi nhân (VD: base*100).
                // Nên ta truyền multiplier = 1 để giữ nguyên giá trị đó.
                
                console.log("Processing x2 reward via transaction...");
@@ -455,9 +453,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
         {/* CONTROLS */}
         <div className="flex flex-col items-center justify-center z-20">
-              <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 mb-4 shadow-md">
-                 <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x1</button>
-                 <button onClick={() => !isSpinning && setSpinMultiplier(10)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x10</button>
+              <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 mb-4 shadow-md gap-1">
+                 <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-5 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x1</button>
+                 <button onClick={() => !isSpinning && setSpinMultiplier(10)} className={`px-5 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 10 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x10</button>
+                 <button onClick={() => !isSpinning && setSpinMultiplier(100)} className={`px-5 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 100 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x100</button>
               </div>
 
               <button
@@ -497,7 +496,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           />
       )}
       
-      {/* REPLACE OLD RewardPopup WITH NEW ADS MODAL */}
+      {/* REWARD MODAL */}
       {showRewardPopup && wonRewardDetails && ( 
           <LuckyAdsRewardModal 
             item={wonRewardDetails}
@@ -522,4 +521,3 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 };
 
 export default LuckyChestGame;
-// --- END OF FILE lucky-game-ui.tsx ---
