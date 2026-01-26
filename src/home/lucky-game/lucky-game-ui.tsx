@@ -102,7 +102,14 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
 
 // --- REWARD POPUP ---
 const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
-    const { accountType, vipLuckySpinClaims, handleVipLuckySpinClaim, updateCoins, handleUpdatePickaxes, handleUpdateJackpotPool } = useGame();
+    const { 
+        accountType, 
+        vipLuckySpinClaims, 
+        handleVipLuckySpinClaim, 
+        updateCoins, 
+        handleUpdatePickaxes, 
+        handleUpdateJackpotPool 
+    } = useGame();
     
     const isVip = accountType === 'VIP';
     const vipMaxClaims = 5;
@@ -111,19 +118,32 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
     const rarityColor = getRarityColor(item.rarity);
 
+    // Lưu ý: Logic x2 VIP ở đây vẫn giữ logic thủ công vì handleLuckySpin ở Context
+    // đã thực hiện transaction cho lần quay đầu tiên.
+    // Nếu muốn an toàn tuyệt đối, nên tách logic x2 ra 1 service riêng,
+    // nhưng để đơn giản ta vẫn dùng các hàm update cục bộ cho phần thưởng thêm này.
     const handleClaim = async (isDouble: boolean) => {
         if (isDouble) {
              const success = await handleVipLuckySpinClaim();
              if (!success) return; 
              
+             // Cộng thêm 1 lần nữa giá trị phần thưởng
              if (item.rarity === 'jackpot') {
-                 updateCoins(item.value * 2); 
-                 handleUpdateJackpotPool(0, true);
+                 // Jackpot thường không được x2, nhưng nếu muốn thì uncomment:
+                 // updateCoins(item.value); 
              } else {
                  if (item.rewardType === 'coin') {
                      updateCoins(item.value); 
                  } else if (item.rewardType === 'pickaxe' && item.rewardAmount) {
                      handleUpdatePickaxes(item.rewardAmount);
+                 } 
+                 // Với Resource/Item khác, hiện tại logic x2 VIP đơn giản 
+                 // chưa hỗ trợ updateResources trực tiếp từ UI này 
+                 // (cần thêm hàm vào Context nếu muốn x2 Gỗ/Đá).
+                 // Tạm thời chỉ x2 Vàng và Cúp.
+                 else {
+                     // Nếu muốn hỗ trợ x2 tài nguyên, bạn cần thêm hàm updateResources vào Context
+                     console.log("x2 VIP for resources not fully implemented in UI layer yet.");
                  }
              }
         }
@@ -177,10 +197,14 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
                             <span className="text-4xl font-black text-yellow-400">{item.value.toLocaleString()}</span>
                         </>
                     )}
-                    {(item.rewardType === 'pickaxe' || item.rewardType === 'other') && (
+                    {/* Hiển thị cho các loại tài nguyên khác */}
+                    {(item.rewardType !== 'coin') && (
                         <>
                             {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-8 h-8" />}
-                            {item.rewardType === 'other' && typeof item.icon !== 'string' && <item.icon className={`w-8 h-8 ${item.color}`} />}
+                            {/* Render icon động cho resource/stone */}
+                            {(item.rewardType === 'resource' || item.rewardType === 'stone' || item.rewardType === 'material') && typeof item.icon !== 'string' && 
+                                <item.icon className={`w-8 h-8 ${item.color}`} />
+                            }
                             <span className="text-4xl font-black text-white">x{item.rewardAmount?.toLocaleString()}</span>
                         </>
                     )}
@@ -262,7 +286,12 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
 
 // --- MAIN COMPONENT ---
 const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGameProps) => {
-  const { coins, updateCoins, handleUpdatePickaxes, jackpotPool, handleUpdateJackpotPool } = useGame();
+  const { 
+      coins, 
+      jackpotPool, 
+      handleLuckySpin // Lấy hàm xử lý transaction từ Context
+  } = useGame();
+
   const animatedCoins = useAnimateValue(coins, 800);
   const animatedJackpot = useAnimateValue(jackpotPool, 800);
 
@@ -275,7 +304,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   const [wonRewardDetails, setWonRewardDetails] = useState<Item | null>(null);
   const [showRatePopup, setShowRatePopup] = useState(false);
   
-  const [pendingContribution, setPendingContribution] = useState(0);
   const [lastWinItem, setLastWinItem] = useState<StripItem | null>(null);
 
   const [strip, setStrip] = useState<StripItem[]>([]);
@@ -320,16 +348,15 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
 
-    updateCoins(-cost);
+    // Lưu ý: Không gọi updateCoins(-cost) ở đây nữa.
+    // Việc trừ tiền sẽ do handleLuckySpin trong Context đảm nhận để đảm bảo atomic.
     
-    const contribution = (Math.random() * (100 - 10) + 10) * spinMultiplier;
-    setPendingContribution(Math.floor(contribution)); 
-
     setTimeout(() => {
         setIsSpinning(true);
         setJackpotWon(false);
         setShowRewardPopup(false);
 
+        // --- Logic chọn winner visual ---
         let totalWeight = 0;
         const weightedPool = displayItems.map(item => {
             const weight = getItemWeight(item.rarity);
@@ -347,6 +374,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             randomValue -= item.weight;
         }
 
+        // --- Tạo Strip cho Animation ---
         const TARGET_INDEX = 50; 
         const newStrip: StripItem[] = [];
 
@@ -377,12 +405,13 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             setTransitionDuration(SPIN_DURATION_SEC);
             setOffset(finalOffset);
             
+            // --- KẾT THÚC QUAY ---
             setTimeout(() => {
                 setIsSpinning(false);
                 
                 let actualValue = winner.value;
-                if (winner.rewardType === 'pickaxe' && winner.rewardAmount) {
-                    actualValue = winner.rewardAmount;
+                if (winner.rewardAmount) {
+                    actualValue = winner.rewardAmount; // Đã nhân multiplier ở displayItems
                 } else if (winner.rarity === 'jackpot') {
                     actualValue = jackpotPool; 
                     setJackpotWon(true);
@@ -390,38 +419,27 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                     setTimeout(() => setJackpotAnimation(false), 3000);
                 }
                 
+                // GỌI CONTEXT ĐỂ XỬ LÝ GIAO DỊCH (TRỪ TIỀN + CỘNG QUÀ)
+                // Phải gọi ở đây để đảm bảo sau khi quay xong mới tính toán
+                handleLuckySpin(cost, winner, spinMultiplier);
+
                 setLastWinItem(winner);
                 setWonRewardDetails({ ...winner, value: actualValue });
                 setShowRewardPopup(true);
+
             }, (SPIN_DURATION_SEC * 1000) + 100); 
         }, 50);
     }, 10);
 
-  }, [isSpinning, coins, displayItems, updateCoins, jackpotPool, getRandomFiller, spinMultiplier, lastWinItem, strip, getItemWeight]);
+  }, [isSpinning, coins, displayItems, jackpotPool, getRandomFiller, spinMultiplier, lastWinItem, strip, getItemWeight, handleLuckySpin]);
   
   const handleClaimReward = useCallback(() => {
-      if (!wonRewardDetails) {
-          setShowRewardPopup(false);
-          return;
-      }
-
-      if (wonRewardDetails.rarity === 'jackpot') {
-          updateCoins(wonRewardDetails.value); 
-          handleUpdateJackpotPool(0, true);
-      } else {
-          handleUpdateJackpotPool(pendingContribution);
-          if (wonRewardDetails.rewardType === 'coin') {
-              updateCoins(wonRewardDetails.value);
-          } else if (wonRewardDetails.rewardType === 'pickaxe' && wonRewardDetails.rewardAmount) {
-              handleUpdatePickaxes(wonRewardDetails.rewardAmount);
-          }
-      }
-
+      // Chỉ cần đóng popup vì handleLuckySpin đã xử lý việc cộng quà vào DB rồi.
       setShowRewardPopup(false);
       setWonRewardDetails(null);
       setJackpotWon(false);
 
-  }, [wonRewardDetails, pendingContribution, updateCoins, handleUpdateJackpotPool, handleUpdatePickaxes]);
+  }, []);
 
   const currentCost = BASE_COST * spinMultiplier;
 
@@ -558,3 +576,4 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 };
 
 export default LuckyChestGame;
+// --- END OF FILE lucky-game-ui.tsx ---
