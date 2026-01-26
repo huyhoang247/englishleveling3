@@ -113,13 +113,15 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
     if (!rewards) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
+        // Đã loại bỏ 'backdrop-blur-sm' ở dòng dưới đây
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
             {/* Main Container */}
             <div className="relative w-[360px] bg-[#1a1b26] border-2 border-slate-600 rounded-3xl shadow-2xl flex flex-col items-center overflow-hidden animate-fade-in-scale-fast">
                 
                 {/* --- HEADER --- */}
                 <div className="mt-6 z-10 flex flex-col items-center relative">
-                    <h2 className="text-3xl font-lilita text-white tracking-widest drop-shadow-sm">VICTORY</h2>
+                    {/* Đã đổi VICTORY thành REWARDS */}
+                    <h2 className="text-3xl font-lilita text-white tracking-widest drop-shadow-sm">REWARDS</h2>
                     <div className="h-[2px] w-12 bg-slate-500 rounded-full mt-2 mb-1 opacity-50"></div>
                 </div>
 
