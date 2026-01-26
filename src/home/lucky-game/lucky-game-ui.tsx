@@ -8,15 +8,15 @@ import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 
 // --- IMPORT COMPONENT MỚI TÁCH RA ---
 import RateInfoPopup from './rate-info-popup.tsx';
+import { AdsRewardUI, FormattedRewardItem } from '../../ui/ads-reward-ui.tsx';
+import { bossBattleAssets } from '../../game-assets.ts';
 
 // --- IMPORT DATA & HELPERS ---
 import { 
     CoinsIcon, 
-    PickaxeIcon, 
     Item, 
     BASE_ITEMS, 
     RARITY_WEIGHTS, 
-    getRarityColor, 
     getCardStyle
 } from './lucky-game-data.tsx';
 
@@ -25,18 +25,6 @@ const InfoIcon = ({ className }: { className?: string }) => (
     <svg className={className} fill="currentColor" viewBox="0 0 20 20"> 
         <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" /> 
     </svg> 
-);
-
-const CrownIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path d="M5 16L3 5L8.5 10L12 4L15.5 10L21 5L19 16H5ZM19 19C19 19.6 18.6 20 18 20H6C5.4 20 5 19.6 5 19V18H19V19Z" />
-  </svg>
-);
-
-const LockIcon = ({ className }: { className?: string }) => (
-  <svg className={className} viewBox="0 0 24 24" fill="currentColor">
-    <path fillRule="evenodd" clipRule="evenodd" d="M12 1.5C9.23858 1.5 7 3.73858 7 6.5V9H6C4.89543 9 4 9.89543 4 11V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V11C20 9.89543 19.1046 9 18 9H17V6.5C17 3.73858 14.7614 1.5 12 1.5ZM12 3.5C13.6569 3.5 15 4.84315 15 6.5V9H9V6.5C9 4.84315 10.3431 3.5 12 3.5Z" />
-  </svg>
 );
 
 // --- INTERFACES ---
@@ -49,10 +37,12 @@ interface LuckyChestGameProps {
   isStatsFullscreen?: boolean; 
 }
 
-interface RewardPopupProps {
+interface LuckyAdsRewardModalProps {
   item: Item;
+  multiplier: number;
   jackpotWon: boolean;
-  onClose: () => void;
+  onClaimX1: () => void;
+  onClaimX2: () => void;
 }
 
 // --- CONFIG ---
@@ -62,6 +52,54 @@ const ITEM_FULL_WIDTH = CARD_WIDTH + CARD_GAP;
 const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
 const SPIN_DURATION_SEC = 6;
+
+// --- CUSTOM HOOK: ADS COOLDOWN LOGIC ---
+const useAdsCooldown = (adsData: any) => {
+    const [timeRemaining, setTimeRemaining] = useState(0);
+    const [isAvailable, setIsAvailable] = useState(false);
+
+    useEffect(() => {
+        const calculateTime = () => {
+            // Nếu không có nextAvailableAt nghĩa là chưa xem hoặc đã hết thời gian chờ
+            if (!adsData.nextAvailableAt) {
+                setTimeRemaining(0);
+                setIsAvailable(true);
+                return;
+            }
+
+            const now = new Date().getTime();
+            
+            // Xử lý an toàn cho trường hợp nextAvailableAt là Firestore Timestamp hoặc Date string
+            let availableAt = 0;
+            if (adsData.nextAvailableAt && typeof adsData.nextAvailableAt.toDate === 'function') {
+                availableAt = adsData.nextAvailableAt.toDate().getTime();
+            } else {
+                availableAt = new Date(adsData.nextAvailableAt).getTime();
+            }
+
+            const diff = Math.ceil((availableAt - now) / 1000);
+
+            if (diff > 0) {
+                setTimeRemaining(diff);
+                setIsAvailable(false);
+            } else {
+                setTimeRemaining(0);
+                setIsAvailable(true);
+            }
+        };
+
+        // Chạy ngay lần đầu
+        calculateTime();
+        
+        // Cập nhật mỗi giây
+        const timer = setInterval(calculateTime, 1000);
+        
+        // Cleanup khi unmount
+        return () => clearInterval(timer);
+    }, [adsData.nextAvailableAt]);
+
+    return { timeRemaining, isAvailable };
+};
 
 // --- COMPONENT: GameCard ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
@@ -79,9 +117,8 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
                 shadow-sm 
             `}> 
                 
-                {/* UPGRADE: Tăng kích thước container từ w-14 h-14 -> w-16 h-16 */}
+                {/* Icon Container */}
                 <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-16 h-16 flex items-center justify-center">
-                    {/* UPGRADE: Tăng kích thước icon từ w-9 h-9 -> w-11 h-11 */}
                     {typeof item.icon === 'string' ? (
                         <img src={item.icon} alt={item.name} loading="lazy" className="w-11 h-11 object-contain" />
                     ) : (
@@ -102,180 +139,73 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
     );
 });
 
-// --- REWARD POPUP ---
-const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
-    const { 
-        accountType, 
-        vipLuckySpinClaims, 
-        handleVipLuckySpinClaim, 
-        updateCoins, 
-        handleUpdatePickaxes, 
-        handleUpdateJackpotPool 
-    } = useGame();
-    
-    const isVip = accountType === 'VIP';
-    const vipMaxClaims = 5;
-    const vipClaimsLeft = Math.max(0, vipMaxClaims - vipLuckySpinClaims);
-    const canUseVipClaim = isVip && vipClaimsLeft > 0;
+// --- NEW REWARD MODAL (USING ADS UI) ---
+const LuckyAdsRewardModal = ({ item, multiplier, jackpotWon, onClaimX1, onClaimX2 }: LuckyAdsRewardModalProps) => {
+    const { adsData, handleRegisterAdWatch } = useGame();
+    const [isWatchingAd, setIsWatchingAd] = useState(false);
+    const { timeRemaining, isAvailable } = useAdsCooldown(adsData);
 
-    const rarityColor = getRarityColor(item.rarity);
-
-    // Lưu ý: Logic x2 VIP ở đây vẫn giữ logic thủ công vì handleLuckySpin ở Context
-    // đã thực hiện transaction cho lần quay đầu tiên.
-    const handleClaim = async (isDouble: boolean) => {
-        if (isDouble) {
-             const success = await handleVipLuckySpinClaim();
-             if (!success) return; 
-             
-             // Cộng thêm 1 lần nữa giá trị phần thưởng
-             if (item.rarity === 'jackpot') {
-                 // Jackpot thường không được x2
-             } else {
-                 if (item.rewardType === 'coin') {
-                     updateCoins(item.value); 
-                 } else if (item.rewardType === 'pickaxe' && item.rewardAmount) {
-                     handleUpdatePickaxes(item.rewardAmount);
-                 } 
-                 else {
-                     console.log("x2 VIP for resources not fully implemented in UI layer yet.");
-                 }
-             }
-        }
-        onClose(); 
+    const handleAdClick = async () => {
+        // Kiểm tra giới hạn
+        if (!isAvailable || adsData.watchedToday >= 30) return;
+        
+        setIsWatchingAd(true);
+        
+        // Giả lập xem quảng cáo (Thay bằng gọi SDK thực tế ở đây)
+        setTimeout(async () => {
+            const success = await handleRegisterAdWatch();
+            setIsWatchingAd(false);
+            
+            if (success) {
+                onClaimX2();
+            } else {
+                console.error("Ad watch failed or cancelled");
+                // Có thể thêm toast lỗi ở đây
+            }
+        }, 3000);
     };
 
-    const handleLockedClick = () => {
-        alert("Tính năng x2 chỉ dành cho VIP! Hãy nâng cấp ngay để nhận x2 quà tặng mỗi ngày!");
+    // Helper: AdsRewardUI cần icon dạng string URL.
+    // Nếu item.icon là React Component (SVG), fallback về icon mặc định.
+    const resolveIcon = (i: Item): string => {
+        if (typeof i.icon === 'string') return i.icon;
+        
+        // Fallback logic cho các icon SVG dựa trên rewardType
+        if (i.rewardType === 'coin') return bossBattleAssets.coinIcon;
+        // Có thể mở rộng thêm mapping cho các resource khác nếu cần
+        
+        return bossBattleAssets.coinIcon; // Default fallback
     };
+
+    // Chuẩn bị data hiển thị
+    // Lưu ý: Giá trị hiển thị là giá trị BASE * MULTIPLIER (đã tính ở parent component)
+    const displayValue = jackpotWon 
+        ? item.value // Jackpot pool value
+        : (item.rewardAmount || item.value);
+
+    const formattedRewards: FormattedRewardItem[] = [{
+        icon: resolveIcon(item),
+        label: jackpotWon ? "JACKPOT" : (item.name || item.id),
+        amount: displayValue
+    }];
+
+    // Nếu trúng Jackpot, thường game không cho x2 (hoặc tùy logic game)
+    // Ở đây ta disable ads nếu là jackpot để tránh lạm phát quá lớn
+    const disableAds = jackpotWon; 
 
     return (
-    <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-[100] p-4 animate-fade-in" onClick={onClose}>
-      <div 
-        className={`relative w-[340px] bg-slate-900 border-2 rounded-3xl shadow-xl animate-fade-in-scale-fast text-white font-lilita flex flex-col items-center p-6 text-center mt-8
-            ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`
-        }
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="absolute -top-14 left-1/2 -translate-x-1/2">
-             <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-lg ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
-                {/* UPGRADE: Tăng kích thước icon popup từ w-16 h-16 -> w-20 h-20 */}
-                {typeof item.icon === 'string' ? (
-                    <img src={item.icon} alt={item.name} className="w-20 h-20 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Error'; }} />
-                ) : (
-                    <item.icon className={`w-20 h-20 ${item.color}`} />
-                )}
-             </div>
-        </div>
-
-        <div className="mt-14 mb-2">
-            {jackpotWon ? (
-                <>
-                    <h2 className="text-4xl font-black text-yellow-400 tracking-widest uppercase mb-1 animate-pulse">JACKPOT!</h2>
-                    <p className="font-sans text-yellow-200/80 text-sm">Bạn đã trúng toàn bộ quỹ thưởng!</p>
-                </>
-            ) : (
-                <>
-                    <h2 className="text-3xl font-bold uppercase tracking-wide" style={{ color: rarityColor }}>{item.name || item.rarity}</h2>
-                    <p className="font-sans text-slate-400 text-xs uppercase tracking-widest mt-1 font-semibold">{item.rarity} Reward</p>
-                </>
-            )}
-        </div>
-
-        <div className="flex flex-col gap-2 w-full my-6">
-            <div className="bg-slate-800 rounded-2xl p-4 border border-slate-700 flex flex-col items-center justify-center relative overflow-hidden">
-                 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-24 h-24 bg-white/5 blur-2xl rounded-full"></div>
-                 <span className="text-slate-400 text-[10px] font-sans font-bold uppercase tracking-widest mb-1 relative z-10">BẠN NHẬN ĐƯỢC</span>
-                 <div className="flex items-center gap-3 relative z-10">
-                    {item.rewardType === 'coin' && (
-                        <>
-                            <CoinsIcon className="w-8 h-8" />
-                            <span className="text-4xl font-black text-yellow-400">{item.value.toLocaleString()}</span>
-                        </>
-                    )}
-                    {/* Hiển thị cho các loại tài nguyên khác */}
-                    {(item.rewardType !== 'coin') && (
-                        <>
-                            {item.rewardType === 'pickaxe' && <PickaxeIcon className="w-8 h-8" />}
-                            {/* Render icon động cho resource/stone */}
-                            {(item.rewardType === 'resource' || item.rewardType === 'stone' || item.rewardType === 'material') && typeof item.icon !== 'string' && 
-                                <item.icon className={`w-8 h-8 ${item.color}`} />
-                            }
-                            <span className="text-4xl font-black text-white">x{item.rewardAmount?.toLocaleString()}</span>
-                        </>
-                    )}
-                 </div>
-            </div>
-        </div>
-        
-        <div className="flex w-full gap-3 mt-1 h-14">
-            {canUseVipClaim && (
-                <button 
-                    onClick={() => handleClaim(true)} 
-                    className="group relative flex-1 overflow-hidden rounded-xl active:scale-95 transition-all shadow-[0_0_15px_rgba(234,179,8,0.3)] hover:shadow-[0_0_20px_rgba(234,179,8,0.5)] border border-yellow-300/50"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-amber-500 to-yellow-600"></div>
-                    <div className="absolute inset-0 bg-white/10 opacity-20"></div>
-                    <div className="absolute top-0 -left-[100%] w-[50%] h-full bg-white/30 skew-x-[-20deg] animate-[shine_2s_infinite]"></div>
-
-                    <div className="relative h-full flex flex-col items-center justify-center py-1">
-                        <div className="flex items-center gap-1.5">
-                            <CrownIcon className="w-5 h-5 text-yellow-100 drop-shadow-sm" />
-                            <span className="text-xl font-black text-white italic tracking-wide drop-shadow-md">VIP x2</span>
-                        </div>
-                        <div className="flex items-center gap-1 mt-0.5 bg-black/20 px-2 py-0.5 rounded-full">
-                            <div className="flex gap-0.5">
-                                {[...Array(vipMaxClaims)].map((_, i) => (
-                                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${i < vipClaimsLeft ? 'bg-white shadow-[0_0_4px_white]' : 'bg-black/30'}`} />
-                                ))}
-                            </div>
-                            <span className="text-[9px] font-bold text-yellow-100 ml-1 leading-none">{vipClaimsLeft}/{vipMaxClaims}</span>
-                        </div>
-                    </div>
-                </button>
-            )}
-
-            {isVip && vipClaimsLeft === 0 && (
-                <button disabled className="relative flex-1 bg-slate-800 rounded-xl border border-slate-700 flex flex-col items-center justify-center opacity-70 cursor-not-allowed">
-                     <span className="text-slate-500 font-bold text-sm uppercase">VIP Limit Reached</span>
-                     <span className="text-slate-600 text-[10px]">Reset tomorrow</span>
-                </button>
-            )}
-
-            {!isVip && (
-                <button 
-                    onClick={handleLockedClick}
-                    className="group relative flex-1 overflow-hidden rounded-xl active:scale-95 transition-all border border-yellow-500/30 hover:border-yellow-400/60"
-                >
-                    <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900 group-hover:from-slate-800 group-hover:to-yellow-900/20 transition-colors"></div>
-                    <div className="relative h-full flex flex-col items-center justify-center">
-                        <div className="flex items-center gap-1.5 mb-0.5 opacity-50 group-hover:opacity-100 transition-opacity">
-                            <CrownIcon className="w-5 h-5 text-yellow-500" />
-                            <span className="text-xl font-black text-yellow-500/50 group-hover:text-yellow-400 italic tracking-wide">VIP x2</span>
-                        </div>
-                        <div className="flex items-center gap-1 bg-yellow-500/10 border border-yellow-500/20 px-2 py-0.5 rounded-full">
-                            <LockIcon className="w-3 h-3 text-yellow-500" />
-                            <span className="text-[10px] font-bold text-yellow-500 uppercase tracking-wider">Locked</span>
-                        </div>
-                    </div>
-                </button>
-            )}
-
-            <button 
-                onClick={() => handleClaim(false)} 
-                className="flex-[0.8] bg-slate-700 hover:bg-slate-600 border border-slate-600 hover:border-slate-500 rounded-xl shadow-md flex items-center justify-center active:scale-95 transition-all"
-            >
-                <span className="text-slate-200 font-bold text-lg uppercase tracking-wider">Claim</span>
-            </button>
-        </div>
-      </div>
-      <style jsx>{`
-        @keyframes shine {
-            0% { left: -100%; opacity: 0; }
-            40% { opacity: 0.5; }
-            100% { left: 200%; opacity: 0; }
-        }
-      `}</style>
-    </div>
+        <AdsRewardUI 
+            rewards={formattedRewards}
+            adsStatus={{
+                watchedToday: adsData.watchedToday,
+                dailyLimit: 30,
+                isAvailable: isAvailable && !disableAds,
+                isWatching: isWatchingAd,
+                timeRemaining: timeRemaining
+            }}
+            onClaimX1={onClaimX1}
+            onWatchAdX2={handleAdClick}
+        />
     );
 };
 
@@ -284,7 +214,10 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   const { 
       coins, 
       jackpotPool, 
-      handleLuckySpin // Lấy hàm xử lý transaction từ Context
+      handleLuckySpin, 
+      updateCoins, 
+      handleUpdatePickaxes,
+      refreshUserData // Dùng để refresh resource nếu cần
   } = useGame();
 
   const animatedCoins = useAnimateValue(coins, 800);
@@ -343,8 +276,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     const cost = BASE_COST * spinMultiplier;
     if (isSpinning || coins < cost) return;
 
-    // Lưu ý: Không gọi updateCoins(-cost) ở đây nữa.
-    
     setTimeout(() => {
         setIsSpinning(true);
         setJackpotWon(false);
@@ -405,7 +336,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 
                 let actualValue = winner.value;
                 if (winner.rewardAmount) {
-                    actualValue = winner.rewardAmount; // Đã nhân multiplier ở displayItems
+                    actualValue = winner.rewardAmount; 
                 } else if (winner.rarity === 'jackpot') {
                     actualValue = jackpotPool; 
                     setJackpotWon(true);
@@ -413,7 +344,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                     setTimeout(() => setJackpotAnimation(false), 3000);
                 }
                 
-                // GỌI CONTEXT ĐỂ XỬ LÝ GIAO DỊCH (TRỪ TIỀN + CỘNG QUÀ)
+                // GỌI CONTEXT ĐỂ XỬ LÝ GIAO DỊCH (Lần 1 - Base Reward)
                 handleLuckySpin(cost, winner, spinMultiplier);
 
                 setLastWinItem(winner);
@@ -426,13 +357,40 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
   }, [isSpinning, coins, displayItems, jackpotPool, getRandomFiller, spinMultiplier, lastWinItem, strip, getItemWeight, handleLuckySpin]);
   
-  const handleClaimReward = useCallback(() => {
-      // Chỉ cần đóng popup vì handleLuckySpin đã xử lý việc cộng quà vào DB rồi.
+  // --- HANDLER CHO ADS POPUP ---
+  const handleClaimReward = useCallback(async (isDouble: boolean) => {
+      // Nếu người chơi chọn x2 và có thông tin phần thưởng
+      if (isDouble && wonRewardDetails) {
+          // Logic: Phần thưởng gốc đã được cộng tại handleLuckySpin.
+          // Ở đây ta cộng thêm 1 lần nữa giá trị đó để tổng thành x2.
+          
+          if (wonRewardDetails.rarity === 'jackpot') {
+               // Jackpot thường không được nhân đôi (tùy logic game, ở đây bỏ qua)
+          } else {
+               if (wonRewardDetails.rewardType === 'coin') {
+                   // Cộng thêm Coin
+                   updateCoins(wonRewardDetails.value); 
+               } else if (wonRewardDetails.rewardType === 'pickaxe' && wonRewardDetails.rewardAmount) {
+                   // Cộng thêm Pickaxe
+                   handleUpdatePickaxes(wonRewardDetails.rewardAmount);
+               } 
+               else {
+                   // Với Resource (wood, ore...) hoặc Item khác
+                   // Do GameContext có thể chưa expose hàm update từng loại resource riêng lẻ
+                   // Ta gọi refreshUserData để đồng bộ lại từ server (giả sử backend đã xử lý việc cộng quà ads nếu có api riêng)
+                   // Hoặc ở đây tạm thời chỉ log vì chưa có hàm updateResource trực tiếp
+                   console.log("x2 for resources triggered via Ads. Syncing data...");
+                   refreshUserData();
+               }
+          }
+      }
+
+      // Đóng popup và reset trạng thái
       setShowRewardPopup(false);
       setWonRewardDetails(null);
       setJackpotWon(false);
 
-  }, []);
+  }, [wonRewardDetails, updateCoins, handleUpdatePickaxes, refreshUserData]);
 
   const currentCost = BASE_COST * spinMultiplier;
 
@@ -453,6 +411,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
       <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
         
+        {/* JACKPOT DISPLAY */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
             <div className={`
                 relative p-4 rounded-2xl border-4 transition-all duration-500 overflow-hidden
@@ -477,6 +436,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             </div>
         </div>
         
+        {/* SPIN STRIP */}
         <div className="relative w-full max-w-4xl mb-12">
             <div className="relative h-60 w-full bg-[#0a0a0a] rounded-xl border border-slate-800 shadow-lg overflow-hidden">
                 <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-r from-[#050505] via-transparent to-[#050505] opacity-80"></div>
@@ -502,6 +462,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             </div>
         </div>
 
+        {/* CONTROLS */}
         <div className="flex flex-col items-center justify-center z-20">
               <div className="flex bg-slate-800 p-1 rounded-lg border border-slate-700 mb-4 shadow-md">
                  <button onClick={() => !isSpinning && setSpinMultiplier(1)} className={`px-6 py-1.5 rounded-md font-lilita text-sm tracking-wide transition-all ${spinMultiplier === 1 ? 'bg-cyan-700 text-white shadow-sm' : 'text-slate-400 hover:text-slate-200'}`} disabled={isSpinning}>x1</button>
@@ -545,11 +506,14 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
           />
       )}
       
+      {/* REPLACE OLD RewardPopup WITH NEW ADS MODAL */}
       {showRewardPopup && wonRewardDetails && ( 
-          <RewardPopup 
-            item={wonRewardDetails} 
-            jackpotWon={jackpotWon} 
-            onClose={handleClaimReward} 
+          <LuckyAdsRewardModal 
+            item={wonRewardDetails}
+            multiplier={spinMultiplier}
+            jackpotWon={jackpotWon}
+            onClaimX1={() => handleClaimReward(false)}
+            onClaimX2={() => handleClaimReward(true)}
           /> 
       )}
 
@@ -560,8 +524,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         .animate-fade-in { animation: fade-in 0.3s ease-out forwards; }
         @keyframes fade-in-scale-fast { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
         .animate-fade-in-scale-fast { animation: fade-in-scale-fast 0.2s ease-out forwards; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
         .will-change-transform { will-change: transform; }
       `}</style>
     </div>
