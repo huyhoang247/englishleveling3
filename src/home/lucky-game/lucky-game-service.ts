@@ -1,8 +1,8 @@
 // --- START OF FILE lucky-game-service.ts ---
 
-import { db } from './firebase'; // Đảm bảo đường dẫn đúng tới firebase config của bạn
+import { db } from '../../firebase'; // Đảm bảo đường dẫn đúng tới firebase config của bạn
 import { doc, runTransaction, increment } from 'firebase/firestore';
-import { Item } from './home/lucky-game/lucky-game-data'; // Đường dẫn tới file data bên dưới
+import { Item } from './lucky-game-data.tsx'; // Đường dẫn tới file data bên dưới
 
 // ID của document chứa Jackpot global
 const JACKPOT_DOC_REF = doc(db, 'appData', 'jackpotPoolData');
