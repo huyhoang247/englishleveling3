@@ -166,7 +166,7 @@ export const BASE_ITEMS: Item[] = [
     { 
         id: 'stone_medium', 
         icon: upgradeAssets.stoneIntermediate, 
-        name: 'Intermediate Stone', 
+        name: 'Inter. Stone', 
         value: 0, 
         rarity: 'uncommon', 
         color: 'text-cyan-400', 
