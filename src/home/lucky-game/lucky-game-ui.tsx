@@ -215,9 +215,9 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       coins, 
       jackpotPool, 
       handleLuckySpin, 
-      updateCoins, 
-      handleUpdatePickaxes,
-      refreshUserData // Dùng để refresh resource nếu cần
+      // updateCoins, // Không cần dùng trực tiếp nữa
+      // handleUpdatePickaxes, // Không cần dùng trực tiếp nữa
+      // refreshUserData // Không cần dùng trực tiếp nữa
   } = useGame();
 
   const animatedCoins = useAnimateValue(coins, 800);
@@ -357,31 +357,22 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 
   }, [isSpinning, coins, displayItems, jackpotPool, getRandomFiller, spinMultiplier, lastWinItem, strip, getItemWeight, handleLuckySpin]);
   
-  // --- HANDLER CHO ADS POPUP ---
+  // --- HANDLER CHO ADS POPUP (SỬA LỖI) ---
   const handleClaimReward = useCallback(async (isDouble: boolean) => {
       // Nếu người chơi chọn x2 và có thông tin phần thưởng
       if (isDouble && wonRewardDetails) {
-          // Logic: Phần thưởng gốc đã được cộng tại handleLuckySpin.
-          // Ở đây ta cộng thêm 1 lần nữa giá trị đó để tổng thành x2.
           
           if (wonRewardDetails.rarity === 'jackpot') {
                // Jackpot thường không được nhân đôi (tùy logic game, ở đây bỏ qua)
           } else {
-               if (wonRewardDetails.rewardType === 'coin') {
-                   // Cộng thêm Coin
-                   updateCoins(wonRewardDetails.value); 
-               } else if (wonRewardDetails.rewardType === 'pickaxe' && wonRewardDetails.rewardAmount) {
-                   // Cộng thêm Pickaxe
-                   handleUpdatePickaxes(wonRewardDetails.rewardAmount);
-               } 
-               else {
-                   // Với Resource (wood, ore...) hoặc Item khác
-                   // Do GameContext có thể chưa expose hàm update từng loại resource riêng lẻ
-                   // Ta gọi refreshUserData để đồng bộ lại từ server (giả sử backend đã xử lý việc cộng quà ads nếu có api riêng)
-                   // Hoặc ở đây tạm thời chỉ log vì chưa có hàm updateResource trực tiếp
-                   console.log("x2 for resources triggered via Ads. Syncing data...");
-                   refreshUserData();
-               }
+               // --- SỬA LỖI TẠI ĐÂY ---
+               // Thay vì gọi updateCoins, handleUpdatePickaxes hay refreshUserData thủ công.
+               // Ta gọi lại hàm handleLuckySpin với giá 0 (Free) để hệ thống tự cộng quà thêm 1 lần nữa.
+               // wonRewardDetails đã chứa số lượng sau khi nhân (VD: base*10).
+               // Nên ta truyền multiplier = 1 để giữ nguyên giá trị đó.
+               
+               console.log("Processing x2 reward via transaction...");
+               await handleLuckySpin(0, wonRewardDetails, 1);
           }
       }
 
@@ -390,7 +381,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
       setWonRewardDetails(null);
       setJackpotWon(false);
 
-  }, [wonRewardDetails, updateCoins, handleUpdatePickaxes, refreshUserData]);
+  }, [wonRewardDetails, handleLuckySpin]);
 
   const currentCost = BASE_COST * spinMultiplier;
 
