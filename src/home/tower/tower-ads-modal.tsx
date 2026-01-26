@@ -1,5 +1,3 @@
-// --- START OF FILE tower-ads-modal.tsx ---
-
 import React, { useState, useEffect } from 'react';
 import { bossBattleAssets, resourceAssets } from '../../game-assets.ts';
 import { BattleRewards } from './tower-service.ts';
@@ -159,7 +157,7 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
                                 <path fillRule="evenodd" d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v11.25c0 1.035.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875V4.875C22.5 3.84 21.66 3 20.625 3H3.375zm.75 12.75h15.75v-9H4.125v9zM12 15.75l-4.5-3 4.5-3v6z" clipRule="evenodd" />
                             </svg>
                             <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                                Daily Limit
+                                Daily Watch ADS
                             </span>
                         </div>
 
