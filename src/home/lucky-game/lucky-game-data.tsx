@@ -147,7 +147,7 @@ export const getCardStyle = (rarity: Item['rarity']) => {
 export const RARITY_WEIGHTS = {
     'common': 4500,    // Tỷ lệ rơi cao nhất (Nguyên liệu)
     'uncommon': 1200,  // Tỷ lệ rơi trung bình (Đá)
-    'rare': 400,       // Tỷ lệ rơi thấp (Pickaxe, Vàng)
+    'rare': 400,       // Tỷ lệ rơi thấp (Chỉ còn Pickaxe)
     'epic': 50,        // Tỷ lệ rơi rất thấp (Sách, Mảnh trang bị)
     'legendary': 0,    // Tạm ẩn
     'jackpot': 5       // Cực hiếm
@@ -249,7 +249,7 @@ export const BASE_ITEMS: Item[] = [
         rewardAmount: 1 
     },
 
-    // --- RARE (Pickaxe x5, Coins x300) ---
+    // --- RARE (Pickaxe x5) - Coins Pack removed ---
     { 
         id: 'pickaxe', 
         icon: pickaxeIconUrl, 
@@ -259,16 +259,6 @@ export const BASE_ITEMS: Item[] = [
         color: '', 
         rewardType: 'pickaxe', 
         rewardAmount: 5 
-    },
-    { 
-        id: 'coins_pack', 
-        icon: coinIconUrl, 
-        name: 'Coins', 
-        value: 300, 
-        rarity: 'rare', 
-        color: '', 
-        rewardType: 'coin', 
-        rewardAmount: 300 
     },
 
     // --- EPIC (Equipment Piece x10, Ancient Book x10) ---
