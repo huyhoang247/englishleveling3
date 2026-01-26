@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { bossBattleAssets, resourceAssets } from '../../game-assets.ts';
 import { BattleRewards } from './tower-service.ts';
-import { useGame } from '../../GameContext.tsx'; // Import Context để lấy dữ liệu Ads
+import { useGame } from '../../GameContext.tsx';
 
 // --- HELPER FORMAT NUMBERS ---
 const formatNum = (num: number) => {
@@ -47,6 +47,7 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
             }
 
             const now = new Date().getTime();
+            // Lưu ý: nextAvailableAt thường là Firestore Timestamp, cần gọi toDate()
             const availableAt = adsData.nextAvailableAt.toDate().getTime();
             const diff = Math.ceil((availableAt - now) / 1000);
 
@@ -94,10 +95,27 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
 
     const isDailyLimitReached = adsData.watchedToday >= 30;
 
+    // --- TÍNH TOÁN UI CHO PROGRESS BAR ---
+    // Tính phần trăm hiển thị (max 100%)
+    const progressPercent = Math.min((adsData.watchedToday / 30) * 100, 100);
+    
+    // Logic đổi màu dựa trên trạng thái (Xanh -> Cam -> Đỏ)
+    let statusColor = "bg-blue-500";
+    let statusText = "text-blue-200";
+    
+    if (adsData.watchedToday >= 25) {
+        statusColor = "bg-orange-500"; // Sắp hết
+        statusText = "text-orange-200";
+    }
+    if (isDailyLimitReached) {
+        statusColor = "bg-red-500"; // Đã hết
+        statusText = "text-red-200";
+    }
+
     if (!rewards) return null;
 
     return (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in backdrop-blur-sm">
             {/* Main Container */}
             <div className="relative w-[360px] bg-[#1a1b26] border-2 border-slate-600 rounded-3xl shadow-2xl flex flex-col items-center overflow-hidden animate-fade-in-scale-fast">
                 
@@ -129,11 +147,38 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
                     </div>
                 </div>
 
-                {/* --- FOOTER STATUS (DAILY LIMIT) --- */}
-                <div className="w-full px-5 text-center mb-2">
-                    <span className="text-[10px] text-slate-400 font-mono tracking-wide">
-                        Daily Limit: <span className={isDailyLimitReached ? "text-red-400 font-bold" : "text-white font-bold"}>{adsData.watchedToday}/30</span>
-                    </span>
+                {/* --- DAILY LIMIT STATUS BAR (NEW DESIGN) --- */}
+                <div className="w-full px-6 mb-3">
+                    <div className="flex items-center justify-between bg-black/40 rounded-full p-1.5 pl-3 border border-white/5">
+                        
+                        {/* Left: Label & Icon */}
+                        <div className="flex items-center gap-2">
+                            {/* Icon TV nhỏ */}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className={`w-3.5 h-3.5 ${statusText}`}>
+                                <path d="M19.5 6h-15v9h15V6z" />
+                                <path fillRule="evenodd" d="M3.375 3C2.339 3 1.5 3.84 1.5 4.875v11.25c0 1.035.84 1.875 1.875 1.875h17.25c1.035 0 1.875-.84 1.875-1.875V4.875C22.5 3.84 21.66 3 20.625 3H3.375zm.75 12.75h15.75v-9H4.125v9zM12 15.75l-4.5-3 4.5-3v6z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                                Daily Limit
+                            </span>
+                        </div>
+
+                        {/* Right: Progress Bar & Count */}
+                        <div className="flex items-center gap-2 pr-1">
+                            {/* Thanh Bar */}
+                            <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                <div 
+                                    className={`h-full rounded-full transition-all duration-500 ${statusColor}`} 
+                                    style={{ width: `${progressPercent}%` }}
+                                ></div>
+                            </div>
+                            {/* Số đếm */}
+                            <span className={`text-[10px] font-mono font-bold ${statusText}`}>
+                                {adsData.watchedToday}<span className="text-slate-500">/30</span>
+                            </span>
+                        </div>
+
+                    </div>
                 </div>
 
                 {/* --- ACTION BUTTONS --- */}
@@ -209,7 +254,7 @@ export const AdsRewardModal = ({ rewards, onClaimX1, onClaimX2 }: AdsRewardModal
     );
 };
 
-// --- SUB COMPONENT: REWARD ROW (Giữ nguyên UI) ---
+// --- SUB COMPONENT: REWARD ROW ---
 const RewardRow = ({ icon, label, amount }: { icon: string, label: string, amount: number }) => (
     <div className="relative flex items-center justify-between bg-[#15161e] p-2.5 rounded-xl border border-white/5 group hover:border-white/10 transition-colors">
         {/* Left: Normal Amount */}
@@ -236,5 +281,3 @@ const RewardRow = ({ icon, label, amount }: { icon: string, label: string, amoun
         </div>
     </div>
 );
-
-// --- END OF FILE tower-ads-modal.tsx ---
