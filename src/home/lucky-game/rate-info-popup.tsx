@@ -1,5 +1,3 @@
-// --- START OF FILE rate-info-popup.tsx ---
-
 import React, { useMemo } from 'react';
 import { 
     Item, 
@@ -69,11 +67,11 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                         return (
                             <div key={idx} className={`flex items-center justify-between p-3 rounded-xl border bg-slate-800 ${isJackpot ? 'border-yellow-500/50' : 'border-slate-700/50'}`}>
                                 <div className="flex items-center gap-3">
-                                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${style.bg} border ${style.border} shadow-sm`}>
+                                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${style.bg} border ${style.border} shadow-sm`}>
                                          {typeof item.icon === 'string' ? (
-                                            <img src={item.icon} alt={item.name} className="w-6 h-6 object-contain" />
+                                            <img src={item.icon} alt={item.name} className="w-8 h-8 object-contain" />
                                         ) : (
-                                            <item.icon className={`w-6 h-6 ${item.color}`} />
+                                            <item.icon className={`w-8 h-8 ${item.color}`} />
                                         )}
                                     </div>
                                     <div>
