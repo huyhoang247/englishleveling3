@@ -63,7 +63,7 @@ const VISIBLE_CARDS = 5;
 const BASE_COST = 100;
 const SPIN_DURATION_SEC = 6;
 
-// --- COMPONENT: GameCard (Đã chỉnh sửa theo yêu cầu) ---
+// --- COMPONENT: GameCard ---
 const GameCard = React.memo(({ item }: { item: StripItem }) => {
     const style = getCardStyle(item.rarity);
     
@@ -75,25 +75,25 @@ const GameCard = React.memo(({ item }: { item: StripItem }) => {
             <div className={`
                 relative w-full aspect-[4/5] rounded-xl 
                 ${style.bg} border ${style.border}
-                flex flex-col items-center justify-center gap-3
+                flex flex-col items-center justify-center gap-2
                 shadow-sm 
             `}> 
                 
-                {/* Tăng kích thước khung chứa icon từ w-14/h-14 lên w-20/h-20 */}
-                <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-20 h-20 flex items-center justify-center">
-                    {/* Tăng kích thước icon từ w-9/h-9 lên w-14/h-14 */}
+                {/* UPGRADE: Tăng kích thước container từ w-14 h-14 -> w-16 h-16 */}
+                <div className="relative z-10 p-2 rounded-xl bg-slate-900/50 w-16 h-16 flex items-center justify-center">
+                    {/* UPGRADE: Tăng kích thước icon từ w-9 h-9 -> w-11 h-11 */}
                     {typeof item.icon === 'string' ? (
-                        <img src={item.icon} alt={item.name} loading="lazy" className="w-14 h-14 object-contain" />
+                        <img src={item.icon} alt={item.name} loading="lazy" className="w-11 h-11 object-contain" />
                     ) : (
-                        <item.icon className={`w-14 h-14 ${item.color}`} />
+                        <item.icon className={`w-11 h-11 ${item.color}`} />
                     )}
                 </div>
                 
                 <div className="relative z-10 text-center w-full px-1">
-                    {/* Đã ẩn phần tên vật phẩm ở đây */}
-                    
-                    {/* Tăng kích thước chữ số lượng/giá trị lên text-xl */}
-                    <div className="text-xl font-black text-white font-lilita tracking-wide drop-shadow-md">
+                    <div className={`text-[10px] font-bold uppercase tracking-wider opacity-90 truncate ${item.rarity === 'jackpot' ? 'text-yellow-400' : 'text-slate-300'}`}>
+                        {item.name || item.rarity}
+                    </div>
+                    <div className="text-sm font-black text-white mt-1 font-lilita tracking-wide">
                         {item.rarity === 'jackpot' ? 'JACKPOT' : (item.rewardAmount ? `x${item.rewardAmount}` : item.value)}
                     </div>
                 </div>
@@ -158,10 +158,11 @@ const RewardPopup = ({ item, jackpotWon, onClose }: RewardPopupProps) => {
       >
         <div className="absolute -top-14 left-1/2 -translate-x-1/2">
              <div className={`w-28 h-28 rounded-full flex items-center justify-center bg-slate-800 border-4 shadow-lg ${jackpotWon ? 'border-yellow-400' : 'border-slate-600'}`}>
+                {/* UPGRADE: Tăng kích thước icon popup từ w-16 h-16 -> w-20 h-20 */}
                 {typeof item.icon === 'string' ? (
-                    <img src={item.icon} alt={item.name} className="w-16 h-16 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Error'; }} />
+                    <img src={item.icon} alt={item.name} className="w-20 h-20 object-contain" onError={(e) => { e.currentTarget.src = 'https://placehold.co/56x56/cccccc/000000?text=Error'; }} />
                 ) : (
-                    <item.icon className={`w-16 h-16 ${item.color}`} />
+                    <item.icon className={`w-20 h-20 ${item.color}`} />
                 )}
              </div>
         </div>
@@ -343,7 +344,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
     if (isSpinning || coins < cost) return;
 
     // Lưu ý: Không gọi updateCoins(-cost) ở đây nữa.
-    // Việc trừ tiền sẽ do handleLuckySpin trong Context đảm nhận để đảm bảo atomic.
     
     setTimeout(() => {
         setIsSpinning(true);
@@ -414,7 +414,6 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
                 }
                 
                 // GỌI CONTEXT ĐỂ XỬ LÝ GIAO DỊCH (TRỪ TIỀN + CỘNG QUÀ)
-                // Phải gọi ở đây để đảm bảo sau khi quay xong mới tính toán
                 handleLuckySpin(cost, winner, spinMultiplier);
 
                 setLastWinItem(winner);
@@ -570,3 +569,4 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
 };
 
 export default LuckyChestGame;
+// --- END OF FILE lucky-game-ui.tsx ---
