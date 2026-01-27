@@ -169,32 +169,33 @@ const App = () => {
       {/* --- NAVIGATION BAR --- */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-start bg-transparent">
         
-        {/* LEFT SIDE: LIVE AIRDROP BADGE (Moved from body) */}
-        <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60 mt-1">
-            <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
-                <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                </span>
-                <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
-            </div>
-            <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
-        </div>
-
-        {/* RIGHT SIDE: WALLET & MASTERY */}
-        <div className="flex flex-col items-end gap-3">
+        {/* LEFT SIDE: WALLET & AIRDROP BADGE */}
+        <div className="flex flex-col items-start gap-3">
+             {/* Connect Wallet Button */}
             <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
                 <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
-                <div className="flex flex-col items-start">
+                <div className="flex flex-col items-center"> {/* items-center để căn giữa chữ */}
                     <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
                     <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
                 </div>
             </button>
-            
-            {/* Mastery Display Added Here */}
-            <div>
-                 <MasteryDisplay masteryCount={userMastery} />
+
+            {/* Live Airdrop Badge - Nằm dưới nút Connect Wallet */}
+            <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60">
+                <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
+                </div>
+                <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
             </div>
+        </div>
+
+        {/* RIGHT SIDE: MASTERY */}
+        <div className="flex flex-col items-end pt-1">
+             <MasteryDisplay masteryCount={userMastery} />
         </div>
       </nav>
 
@@ -203,8 +204,6 @@ const App = () => {
         {/* LEFT COLUMN: Mining Dashboard */}
         <div className="w-full lg:w-7/12 space-y-6">
           
-          {/* Badge Airdrop removed from here */}
-
           <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
             {/* OPTIMIZED GLOW: Dùng Radial Gradient thay cho Blur */}
             <div 
@@ -313,7 +312,7 @@ const App = () => {
                 </div>
               </div>
             </div>
-            {/* Đã xóa phần Mastery Simulator tại đây */}
+            
           </div>
         </div>
 
