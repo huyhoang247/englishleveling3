@@ -1,4 +1,4 @@
-// Filename: check-in-ui.tsx
+// --- START OF FILE check-in-ui.tsx ---
 
 import React, { memo } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
@@ -123,7 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Cập nhật vị trí số lượng (Overlay icon góc phải dưới)
+// 4. RewardItem: Đã cập nhật khung chứa số lượng
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -156,18 +156,20 @@ const RewardItem = memo(({
                     Day {reward.day}
                 </div>
                 
-                {/* 2. ICON + SỐ LƯỢNG (Chồng lên nhau) */}
+                {/* 2. ICON + SỐ LƯỢNG (Container) */}
                 <div className="flex-1 flex items-center justify-center pl-2"> 
-                    {/* Wrapper Relative để chứa số lượng absolute */}
+                    {/* Wrapper Relative */}
                     <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                         {/* Icon Container */}
                         <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
                             <div className="w-9 h-9">{reward.icon}</div>
                         </div>
 
-                        {/* Số lượng: Nằm đè lên góc phải dưới, nhỏ (text-sm), opacity 60% */}
-                        <div className={`absolute bottom-0.5 right-1.5 text-sm font-lilita leading-none drop-shadow-md ${isClaimable ? 'text-white/60' : 'text-slate-300/60'}`}>
-                            x{formattedAmount}
+                        {/* UPDATED: Container số lượng (Box style like Tower UI, No drop-shadow) */}
+                        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-black/80 px-2 py-0.5 rounded-full border border-slate-600/50 flex items-center justify-center min-w-[2.5rem] z-20 shadow-sm">
+                            <span className={`text-[10px] font-bold leading-none ${isClaimable ? 'text-cyan-300' : 'text-slate-200'}`}>
+                                x{formattedAmount}
+                            </span>
                         </div>
                     </div>
                 </div>
