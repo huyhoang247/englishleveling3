@@ -164,9 +164,16 @@ const RewardItem = memo(({
                 ${isClaimable ? 'bg-slate-800/90 border-purple-500/30' : 'bg-slate-800/85 border-slate-700/30'}
             `}>
                 
-                {/* --- LỚP PHỦ CHO NGÀY CHƯA CHECK-IN (LOCKED) --- */}
+                {/* --- LỚP PHỦ NỀN ĐEN --- */}
+                
+                {/* 1. Lớp phủ cho ngày chưa check-in (Locked - Tương lai) */}
                 {isLocked && (
                     <div className="absolute inset-0 bg-black/60 z-20 pointer-events-none"></div>
+                )}
+
+                {/* 2. Lớp phủ cho ngày ĐÃ check-in (Claimed - Quá khứ) */}
+                {isClaimed && (
+                    <div className="absolute inset-0 bg-black/50 z-20 pointer-events-none"></div>
                 )}
 
                 {/* --- HEADER NGÀY --- */}
@@ -177,7 +184,7 @@ const RewardItem = memo(({
                 </div>
                 
                 {/* --- NỘI DUNG CHÍNH (Icon + Amount) --- */}
-                {/* Khi đã claim, giảm opacity nội dung xuống để icon tích xanh nổi bật */}
+                {/* Giữ opacity-50 cho Claimed để text trông mờ hơn một chút dưới lớp phủ đen */}
                 <div className={`flex-1 flex items-center justify-center w-full py-3 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
                     <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                         {/* Icon Wrapper */}
@@ -204,14 +211,14 @@ const RewardItem = memo(({
                     </div>
                 )}
                 
-                {/* --- LOADING SPINNER (Không backdrop blur) --- */}
+                {/* --- LOADING SPINNER --- */}
                 {isClaiming && isClaimable && (
                      <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center z-40 rounded-xl">
                         <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     </div>
                 )}
 
-                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN (Thay vì giữa) --- */}
+                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN (Nằm trên lớp phủ đen z-30) --- */}
                 {isClaimed && (
                     <div className="absolute top-1.5 right-1.5 z-30">
                          <div className="bg-green-500 rounded-full p-0.5 shadow-lg border border-slate-900 flex items-center justify-center">
