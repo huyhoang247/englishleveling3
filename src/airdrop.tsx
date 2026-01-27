@@ -214,18 +214,18 @@ const App = () => {
             <div className={`absolute top-0 right-0 w-[250px] h-[250px] bg-cyan-500/5 rounded-full blur-[80px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
 
             <div className="relative z-10">
-              {/* PHẦN SỐ DƯ ĐÃ THIẾT KẾ LẠI NHỎ GỌN HƠN */}
+              {/* SỐ DƯ ĐÃ ĐƯỢC THU NHỎ VÀ DÙNG FONT LILITA ONE */}
               <div className="flex items-center gap-4 mb-5">
-                <div className={`p-2.5 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
-                  <ActivityIcon size={20} className={isMining ? "animate-pulse" : ""} />
+                <div className={`p-2 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
+                  <ActivityIcon size={18} className={isMining ? "animate-pulse" : ""} />
                 </div>
                 <div>
-                  <div className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-0.5 opacity-70">Số dư khai thác</div>
+                  <div className="text-slate-400 text-[9px] uppercase tracking-[0.2em] font-bold mb-0.5 opacity-60">Mining Balance</div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl md:text-5xl font-mono font-bold text-white tracking-tighter drop-shadow-lg">
+                    <span className="text-2xl md:text-4xl font-lilita text-white tracking-normal drop-shadow-md">
                       {balance.toFixed(4)}
                     </span>
-                    <span className="text-cyan-400 font-bold text-sm tracking-widest">ENGO</span>
+                    <span className="text-cyan-400 font-lilita text-xs md:text-sm tracking-widest opacity-80">ENGO</span>
                   </div>
                 </div>
               </div>
@@ -233,7 +233,7 @@ const App = () => {
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1">
-                    <TrendingDownIcon size={12} /> Tốc độ gốc
+                    <TrendingDownIcon size={12} /> Base Rate
                   </div>
                   <div className="text-lg font-bold text-white">
                     +{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/h</span>
@@ -241,7 +241,7 @@ const App = () => {
                 </div>
                 <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group-hover:border-purple-500/40 transition-colors">
                   <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1">
-                    <ZapIcon size={12} /> Mastery Boost
+                    <ZapIcon size={12} /> Boost
                   </div>
                   <div className="text-lg font-bold text-purple-400">
                     +{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-normal">/h</span>
@@ -251,7 +251,7 @@ const App = () => {
 
               <div className="flex flex-col gap-5 pt-4 border-t border-white/5">
                 <div className="flex justify-between items-center">
-                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Tổng sản lượng thực tế</div>
+                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Production</div>
                    <div className="text-lg font-bold text-green-400 flex items-center gap-1.5">
                       <PickaxeIcon size={16} className={isMining ? "animate-bounce" : ""} /> 
                       {totalMiningRate.toFixed(4)} <span className="text-xs text-green-400/60">/h</span>
@@ -262,10 +262,10 @@ const App = () => {
                     <button disabled className="w-full py-4 rounded-2xl font-bold flex items-center justify-between px-6 transition-all bg-slate-800/80 border border-slate-700 text-cyan-400 cursor-default">
                        <div className="flex items-center gap-3">
                           <div className="relative flex items-center justify-center">
-                             <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full animate-ping absolute"></div>
-                             <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full relative"></div>
+                             <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
+                             <div className="w-2 h-2 bg-cyan-500 rounded-full relative"></div>
                           </div>
-                          <span className="text-sm font-bold tracking-wide">Đang khai thác...</span>
+                          <span className="text-sm font-bold tracking-wide">MINING...</span>
                        </div>
                        <div className="font-mono text-xl tracking-widest">{timeLeft}</div>
                     </button>
@@ -275,13 +275,13 @@ const App = () => {
                       className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:scale-[1.01] active:scale-[0.99]"
                     >
                       <ZapIcon size={24} fill="currentColor" />
-                      Bắt đầu khai thác
+                      START MINING
                     </button>
                 )}
                 
                 {!isMining && (
                    <div className="text-center text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-tighter opacity-60">
-                      <ClockIcon size={12} /> Phiên khai thác sẽ tự động dừng sau 24 giờ
+                      <ClockIcon size={12} /> SESSIONS LAST 24 HOURS
                    </div>
                 )}
               </div>
@@ -290,8 +290,8 @@ const App = () => {
             {/* Mastery Simulator */}
             <div className="mt-6 pt-4 border-t border-dashed border-slate-700/50">
                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Giả lập Mastery</span>
-                    <span className="text-xs text-purple-400 font-bold">{userMastery} Điểm</span>
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Mastery Simulator</span>
+                    <span className="text-xs text-purple-400 font-bold">{userMastery} PTS</span>
                  </div>
                  <input 
                     type="range" 
@@ -392,8 +392,8 @@ const App = () => {
              </div>
 
              <div className="mt-8 pt-6 border-t border-white/5 flex gap-4 text-[10px] text-slate-500 uppercase font-bold tracking-wider justify-center">
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>Đã đạt</div>
-                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-400"></div>Hiện tại</div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>DONE</div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-400"></div>ACTIVE</div>
              </div>
 
           </div>
@@ -401,6 +401,12 @@ const App = () => {
       </main>
       
       <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+
+        .font-lilita {
+          font-family: 'Lilita One', cursive;
+        }
+
         @keyframes spin-slow {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
