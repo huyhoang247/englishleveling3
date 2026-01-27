@@ -34,9 +34,9 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                 className="relative w-full max-w-md bg-slate-900 border border-slate-700 rounded-2xl shadow-xl flex flex-col max-h-[80vh] animate-fade-in-scale-fast"
                 onClick={(e) => e.stopPropagation()}
             >
+                {/* Header: Không có icon bên cạnh chữ Drop Rate */}
                 <div className="flex items-center justify-between p-4 border-b border-slate-700 bg-slate-800 rounded-t-2xl">
                     <div className="flex items-center">
-                         {/* Đã xóa icon ở đây */}
                          <h3 className="text-xl font-lilita text-white tracking-wide uppercase">Drop Rate</h3>
                     </div>
                     <button onClick={onClose} className="p-1 hover:bg-white/10 rounded-full transition-colors">
@@ -46,8 +46,7 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                     </button>
                 </div>
 
-                {/* Class [&::-webkit-scrollbar]:hidden ẩn scrollbar trên Chrome/Safari/Edge */}
-                {/* Class [scrollbar-width:none] ẩn scrollbar trên Firefox */}
+                {/* Content: Ẩn thanh scroll nhưng vẫn cuộn được */}
                 <div className="overflow-y-auto p-4 space-y-2 [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
                     {sortedItems.map((item, idx) => {
                         const isJackpot = item.rarity === 'jackpot';
@@ -67,7 +66,8 @@ const RateInfoPopup = React.memo(({ items, onClose, getWeight }: RateInfoPopupPr
                                         )}
                                     </div>
                                     <div>
-                                        <div className="font-bold text-sm text-slate-200">{item.name || 'Item'}</div>
+                                        {/* Cập nhật: Font Lilita, Uppercase, Text nhỏ hơn (13px) */}
+                                        <div className="font-lilita uppercase text-[13px] text-slate-200 tracking-wide">{item.name || 'Item'}</div>
                                         <div className="text-[10px] uppercase font-bold tracking-wider" style={{ color: getRarityColor(item.rarity) }}>
                                             {item.rarity}
                                             {!isJackpot && <span className="text-slate-500 ml-1">• {item.rewardAmount ? `x${item.rewardAmount}` : item.value}</span>}
