@@ -1,6 +1,114 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Users, Zap, Pickaxe, TrendingDown, ArrowUpCircle, Info, Activity, ChevronRight, Check, Lock, MapPin, Clock, Timer, Link2, Database, RefreshCw } from 'lucide-react';
 
+// --- ICON COMPONENTS (Inline SVG replacement for Lucide) ---
+const Icon = ({ children, size = 24, className = "" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    {children}
+  </svg>
+);
+
+const WalletIcon = (props) => (
+  <Icon {...props}>
+    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+    <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+    <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+  </Icon>
+);
+
+const ActivityIcon = (props) => (
+  <Icon {...props}>
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  </Icon>
+);
+
+const TrendingDownIcon = (props) => (
+  <Icon {...props}>
+    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+    <polyline points="17 18 23 18 23 12" />
+  </Icon>
+);
+
+const ZapIcon = (props) => (
+  <Icon {...props}>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </Icon>
+);
+
+const PickaxeIcon = (props) => (
+  <Icon {...props}>
+    <path d="M14.5 5.5l-4 4" />
+    <path d="M3 21l6-6" />
+    <path d="M13 11l6-6" />
+    <path d="M21 3l-6 6" />
+    <path d="M9 13l-4 4" />
+    <path d="M11 5l3-3" />
+    <path d="M5 11l-3 3" />
+  </Icon>
+);
+
+const ClockIcon = (props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </Icon>
+);
+
+const MapPinIcon = (props) => (
+  <Icon {...props}>
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </Icon>
+);
+
+const UsersIcon = (props) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </Icon>
+);
+
+const RefreshCwIcon = (props) => (
+  <Icon {...props}>
+    <path d="M23 4v6h-6" />
+    <path d="M1 20v-6h6" />
+    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
+  </Icon>
+);
+
+const CheckIcon = (props) => (
+  <Icon {...props}>
+    <polyline points="20 6 9 17 4 12" />
+  </Icon>
+);
+
+const LockIcon = (props) => (
+  <Icon {...props}>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </Icon>
+);
+
+const Link2Icon = (props) => (
+  <Icon {...props}>
+    <path d="M15 7h2a5 5 0 0 1 0 10h-2M9 17H7A5 5 0 0 1 7 7h2" />
+    <line x1="8" y1="12" x2="16" y2="12" />
+  </Icon>
+);
+
+// --- MAIN COMPONENT ---
 const App = () => {
   // --- STATE QUẢN LÝ ---
   const [balance, setBalance] = useState(124.5938);
@@ -88,7 +196,7 @@ const App = () => {
           className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 hover:opacity-100 transition-opacity group"
         >
           <div className="text-slate-500 group-hover:text-cyan-400 transition-colors">
-            <Wallet size={20} />
+            <WalletIcon size={20} />
           </div>
           <div className="flex flex-col items-start">
             <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
@@ -126,7 +234,7 @@ const App = () => {
             <div className="relative z-10">
               <div className="flex items-center gap-3 mb-6">
                 <div className={`p-3 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
-                  <Activity size={24} className={isMining ? "animate-pulse" : ""} />
+                  <ActivityIcon size={24} className={isMining ? "animate-pulse" : ""} />
                 </div>
                 <div>
                   <div className="text-slate-400 text-xs uppercase tracking-widest font-bold">Số dư khai thác</div>
@@ -143,7 +251,7 @@ const App = () => {
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-slate-800/40 p-4 rounded-2xl border border-white/5">
                   <div className="flex items-center gap-2 text-slate-400 text-xs mb-1">
-                    <TrendingDown size={14} /> Tốc độ cơ bản
+                    <TrendingDownIcon size={14} /> Tốc độ cơ bản
                   </div>
                   <div className="text-xl font-bold text-white">
                     +{currentBaseRate.toFixed(4)} <span className="text-xs text-slate-500 font-normal">/h</span>
@@ -151,7 +259,7 @@ const App = () => {
                 </div>
                 <div className="bg-gradient-to-br from-purple-900/40 to-slate-800/40 p-4 rounded-2xl border border-purple-500/30">
                   <div className="flex items-center gap-2 text-purple-300 text-xs mb-1">
-                    <Zap size={14} /> Mastery Boost
+                    <ZapIcon size={14} /> Mastery Boost
                   </div>
                   <div className="text-xl font-bold text-purple-400">
                     +{masteryBoost.toFixed(4)} <span className="text-xs text-purple-300/50 font-normal">/h</span>
@@ -164,7 +272,7 @@ const App = () => {
                 <div className="flex justify-between items-center">
                    <div className="text-xs text-slate-500">Tổng tốc độ</div>
                    <div className="text-xl font-bold text-green-400 flex items-center gap-1">
-                      <Pickaxe size={18} className={isMining ? "animate-bounce" : ""} /> 
+                      <PickaxeIcon size={18} className={isMining ? "animate-bounce" : ""} /> 
                       {totalMiningRate.toFixed(4)} <span className="text-sm">/h</span>
                    </div>
                 </div>
@@ -186,14 +294,14 @@ const App = () => {
                       onClick={startMiningSession}
                       className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:scale-[1.01] active:scale-[0.99]"
                     >
-                      <Zap size={24} fill="currentColor" />
+                      <ZapIcon size={24} fill="currentColor" />
                       Bắt đầu phiên khai thác
                     </button>
                 )}
                 
                 {!isMining && (
                    <div className="text-center text-xs text-slate-500 flex items-center justify-center gap-2">
-                      <Clock size={14} /> Phiên khai thác sẽ tự động dừng sau 24 giờ.
+                      <ClockIcon size={14} /> Phiên khai thác sẽ tự động dừng sau 24 giờ.
                    </div>
                 )}
               </div>
@@ -224,13 +332,13 @@ const App = () => {
              {/* Header */}
              <div className="flex justify-between items-center mb-10 relative z-10">
                 <div className="flex items-center gap-2">
-                   <MapPin size={18} className="text-cyan-400" />
+                   <MapPinIcon size={18} className="text-cyan-400" />
                    <h3 className="text-sm font-bold text-white tracking-widest uppercase opacity-90">
                       Roadmap
                    </h3>
                 </div>
 
-                {/* Redesigned Total Users Box (Single Line Content + Boxed) */}
+                {/* Redesigned Total Users Box (Single Line Content + Boxed + Centered Update Text) */}
                 <div className="flex flex-col items-end">
                    <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 backdrop-blur-sm shadow-lg min-w-[140px]">
                        <div className="flex items-center justify-between gap-3">
@@ -243,7 +351,7 @@ const App = () => {
                            </div>
                        </div>
                        <div className="flex items-center justify-center gap-1 mt-1.5 pt-1.5 border-t border-white/5 text-[9px] text-slate-600 font-medium">
-                          <RefreshCw size={8} className="animate-spin-slow" />
+                          <RefreshCwIcon size={8} className="animate-spin-slow" />
                           <span>Update after 24h</span>
                        </div>
                    </div>
@@ -268,10 +376,10 @@ const App = () => {
                             ${status === 'completed' ? 'bg-[#0B0C15] border-green-500 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 
                               status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110' : 
                               'bg-[#0B0C15] border-slate-700 text-slate-600'}`}>
-                            {status === 'completed' && <Check size={18} strokeWidth={3} />}
+                            {status === 'completed' && <CheckIcon size={18} strokeWidth={3} />}
                             {status === 'active' && <div className="w-3 h-3 bg-cyan-400 rounded-full animate-ping" />}
                             {status === 'active' && <div className="absolute w-3 h-3 bg-cyan-400 rounded-full" />}
-                            {status === 'locked' && <Lock size={16} />}
+                            {status === 'locked' && <LockIcon size={16} />}
                          </div>
 
                          {/* Content Card */}
@@ -288,7 +396,7 @@ const App = () => {
                                ${milestone.chainStatus === 'On-Chain' 
                                   ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]' 
                                   : 'bg-slate-700/50 text-slate-400'}`}>
-                               {milestone.chainStatus === 'On-Chain' && <Link2 size={10} className="inline mr-1 -mt-0.5" />}
+                               {milestone.chainStatus === 'On-Chain' && <Link2Icon size={10} className="inline mr-1 -mt-0.5" />}
                                {milestone.chainStatus}
                             </div>
 
@@ -302,7 +410,7 @@ const App = () => {
                             <div className="flex items-center gap-3 mt-1">
                                {/* Users Badge */}
                                <div className="flex items-center gap-1.5 bg-slate-950/40 rounded-md px-2 py-1 border border-white/5">
-                                  <Users size={12} className="text-slate-500" />
+                                  <UsersIcon size={12} className="text-slate-500" />
                                   <span className="text-[10px] text-slate-400 font-mono font-medium">
                                     {milestone.threshold.toLocaleString()} Users
                                   </span>
@@ -313,7 +421,7 @@ const App = () => {
 
                                {/* Rate */}
                                <div className={`flex items-center gap-1.5 text-[10px] font-medium ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
-                                  <Zap size={10} className={status === 'active' ? 'text-cyan-400 fill-cyan-400/20' : 'text-slate-600'} />
+                                  <ZapIcon size={10} className={status === 'active' ? 'text-cyan-400 fill-cyan-400/20' : 'text-slate-600'} />
                                   <span>{milestone.rate} <span className="opacity-50 text-[9px]">Engo/h</span></span>
                                </div>
                             </div>
