@@ -179,9 +179,9 @@ const App = () => {
   }, [isMining, miningEndTime, ratePerSecond]);
 
   return (
-    <div className="min-h-screen bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-hidden flex flex-col">
+    <div className="h-full w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
       
-      {/* Background Effects */}
+      {/* Background Effects (Fixed to not scroll with content) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
@@ -190,7 +190,7 @@ const App = () => {
       {/* Navbar */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center border-b border-white/5 bg-[#0B0C15]/80 backdrop-blur-md sticky top-0">
         
-        {/* Wallet Button - MOVED TO RIGHT */}
+        {/* Wallet Button */}
         <button 
           disabled
           className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 hover:opacity-100 transition-opacity group"
@@ -338,7 +338,7 @@ const App = () => {
                    </h3>
                 </div>
 
-                {/* Redesigned Total Users Box (Single Line Content + Boxed + Centered Update Text) */}
+                {/* Total Users Box */}
                 <div className="flex flex-col items-end">
                    <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 backdrop-blur-sm shadow-lg min-w-[140px]">
                        <div className="flex items-center justify-between gap-3">
@@ -364,8 +364,7 @@ const App = () => {
                 <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-800/50"></div>
 
                 {halvingMilestones.map((milestone, index) => {
-                   // Determine Status
-                   let status = 'locked'; // locked, active, completed
+                   let status = 'locked'; 
                    if (currentPhaseIndex > index) status = 'completed';
                    if (currentPhaseIndex === index) status = 'active';
 
@@ -391,7 +390,6 @@ const App = () => {
                                   : 'bg-transparent border-transparent opacity-40'
                             }`}>
                             
-                            {/* Chain Type Tag */}
                             <div className={`absolute top-0 right-0 px-2 py-0.5 rounded-bl-lg text-[9px] font-bold uppercase tracking-wider
                                ${milestone.chainStatus === 'On-Chain' 
                                   ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]' 
@@ -406,33 +404,25 @@ const App = () => {
                                </span>
                             </div>
                             
-                            {/* Info Row (Minimalist) */}
                             <div className="flex items-center gap-3 mt-1">
-                               {/* Users Badge */}
                                <div className="flex items-center gap-1.5 bg-slate-950/40 rounded-md px-2 py-1 border border-white/5">
                                   <UsersIcon size={12} className="text-slate-500" />
                                   <span className="text-[10px] text-slate-400 font-mono font-medium">
                                     {milestone.threshold.toLocaleString()} Users
                                   </span>
                                </div>
-
-                               {/* Divider */}
                                <div className="w-px h-3 bg-slate-700/50"></div>
-
-                               {/* Rate */}
                                <div className={`flex items-center gap-1.5 text-[10px] font-medium ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
                                   <ZapIcon size={10} className={status === 'active' ? 'text-cyan-400 fill-cyan-400/20' : 'text-slate-600'} />
                                   <span>{milestone.rate} <span className="opacity-50 text-[9px]">Engo/h</span></span>
                                </div>
                             </div>
-
                          </div>
                       </div>
                    );
                 })}
              </div>
 
-             {/* Legend */}
              <div className="mt-8 pt-6 border-t border-white/5 flex gap-4 text-[10px] text-slate-500 uppercase font-bold tracking-wider justify-center">
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>Completed</div>
                 <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-400"></div>Active Phase</div>
@@ -442,7 +432,6 @@ const App = () => {
         </div>
       </main>
       
-      {/* Custom Keyframes for slow spin */}
       <style>{`
         @keyframes spin-slow {
           from { transform: rotate(0deg); }
@@ -457,5 +446,3 @@ const App = () => {
 };
 
 export default App;
-
-
