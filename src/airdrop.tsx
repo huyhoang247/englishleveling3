@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from './GameContext.tsx';
-import MasteryDisplay from './ui/dispkay/mastery-display.tsx'; // Import component MasteryDisplay
+import MasteryDisplay from './ui/display/mastery-display.tsx'; // Import component MasteryDisplay
 
 // --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
 const Icon = ({ children, size = 24, className = "" }) => (
