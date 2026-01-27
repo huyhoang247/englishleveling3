@@ -453,8 +453,8 @@ const App = () => {
             onClick={() => setShowBoostDetails(false)}
           ></div>
           
-          {/* Popup Content */}
-          <div className="relative bg-[#13141F] border border-purple-500/30 w-full max-w-sm rounded-3xl p-6 shadow-2xl shadow-purple-900/40 animate-in fade-in zoom-in-95 duration-200">
+          {/* Popup Content - Đã loại bỏ shadow */}
+          <div className="relative bg-[#13141F] border border-purple-500/30 w-full max-w-sm rounded-3xl p-6 animate-in fade-in zoom-in-95 duration-200">
             
             {/* Close Button */}
             <button 
