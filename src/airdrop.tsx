@@ -115,7 +115,7 @@ const App = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
-  const [userMastery, setUserMastery] = useState(45); // Điểm ban đầu
+  const [userMastery, setUserMastery] = useState(46); // Giá trị Mastery ban đầu
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -175,15 +175,9 @@ const App = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
       </div>
 
-      {/* --- NAVBAR --- */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
-        <button 
-          disabled
-          className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 transition-opacity group"
-        >
-          <div className="text-slate-500 group-hover:text-cyan-400 transition-colors">
-            <WalletIcon size={20} />
-          </div>
+        <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
+          <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
           <div className="flex flex-col items-start">
             <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
             <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
@@ -191,12 +185,10 @@ const App = () => {
         </button>
       </nav>
 
-      {/* Main Layout */}
       <main className="relative z-10 flex-1 container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-8 items-start">
         
         {/* LEFT COLUMN: Mining Dashboard */}
         <div className="w-full lg:w-7/12 space-y-6">
-          
           <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-md mb-2">
             <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                 <span className="relative flex h-2 w-2">
@@ -205,27 +197,22 @@ const App = () => {
                 </span>
                 <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
             </div>
-            <span className="text-slate-200 text-sm font-semibold tracking-wide uppercase">
-                AIRDROP
-            </span>
+            <span className="text-slate-200 text-sm font-semibold tracking-wide uppercase">AIRDROP</span>
           </div>
 
           <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
-            {/* Glow effect */}
             <div className={`absolute top-0 right-0 w-[250px] h-[250px] bg-cyan-500/5 rounded-full blur-[80px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
 
             <div className="relative z-10">
               {/* BALANCE SECTION */}
               <div className="flex items-center gap-4 mb-5">
-                <div className={`p-2 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
+                <div className={`p-2 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-500'}`}>
                   <ActivityIcon size={18} className={isMining ? "animate-pulse" : ""} />
                 </div>
                 <div>
                   <div className="text-slate-400 text-[9px] uppercase tracking-[0.2em] font-bold mb-0.5 opacity-60">Mining Balance</div>
                   <div className="flex items-baseline gap-2">
-                    <span className="text-2xl md:text-4xl font-lilita text-white tracking-normal drop-shadow-md">
-                      {balance.toFixed(4)}
-                    </span>
+                    <span className="text-2xl md:text-4xl font-lilita text-white">{balance.toFixed(4)}</span>
                     <span className="text-cyan-400 font-lilita text-xs md:text-sm tracking-widest opacity-80">ENGO</span>
                   </div>
                 </div>
@@ -234,20 +221,12 @@ const App = () => {
               {/* STATS GRID */}
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5">
-                  <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1">
-                    <TrendingDownIcon size={12} /> Base Rate
-                  </div>
-                  <div className="text-lg text-white font-lilita tracking-wider">
-                    +{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans font-normal">/h</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1"><TrendingDownIcon size={12} /> Base Rate</div>
+                  <div className="text-lg text-white font-lilita">+{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans">/h</span></div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20">
-                  <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1">
-                    <ZapIcon size={12} /> Boost
-                  </div>
-                  <div className="text-lg text-purple-400 font-lilita tracking-wider">
-                    +{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans font-normal">/h</span>
-                  </div>
+                  <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1"><ZapIcon size={12} /> Boost</div>
+                  <div className="text-lg text-purple-400 font-lilita">+{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans">/h</span></div>
                 </div>
               </div>
 
@@ -255,16 +234,16 @@ const App = () => {
               <div className="flex flex-col gap-5 pt-4 border-t border-white/5">
                 <div className="flex justify-between items-center">
                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Production</div>
-                   <div className="text-lg text-green-400 flex items-center gap-1.5 font-lilita tracking-wider">
+                   <div className="text-lg text-green-400 flex items-center gap-1.5 font-lilita">
                       <PickaxeIcon size={16} className={isMining ? "animate-bounce" : ""} /> 
                       {totalMiningRate.toFixed(4)} <span className="text-xs text-green-400/60 font-sans">/h</span>
                    </div>
                 </div>
 
-                {/* --- REDESIGNED START MINING BUTTON & PROGRESS --- */}
-                <div className="flex flex-col items-center gap-4">
+                {/* --- START MINING UI --- */}
+                <div className="flex flex-col items-center gap-5">
                   {isMining ? (
-                      <div className="w-full py-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between px-6 transition-all duration-300 shadow-inner">
+                      <div className="w-full py-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between px-6 transition-all duration-300">
                          <div className="flex items-center gap-3">
                             <div className="relative flex items-center justify-center">
                                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
@@ -275,46 +254,49 @@ const App = () => {
                          <div className="font-mono text-xl text-cyan-400 tracking-widest">{timeLeft}</div>
                       </div>
                   ) : (
-                      <div className="w-full flex flex-col items-center gap-4">
+                      <div className="w-full flex flex-col items-center gap-5">
                         <button 
                           onClick={startMiningSession}
                           disabled={userMastery < 100}
                           className={`
-                            relative group/btn px-12 py-3 rounded-full font-lilita text-lg tracking-[0.05em] transition-all duration-300 flex items-center gap-3 overflow-hidden
+                            relative px-12 py-3 rounded-full font-lilita text-lg tracking-[0.05em] transition-all duration-300 flex items-center gap-3 overflow-hidden
                             ${userMastery >= 100 
-                              ? "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] hover:scale-[1.05] active:scale-95" 
-                              : "bg-slate-800/50 border border-slate-700 text-slate-500 cursor-not-allowed opacity-60"}
+                              ? "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-105 active:scale-95 cursor-pointer" 
+                              : "bg-slate-800/50 border border-slate-700 text-slate-500 cursor-not-allowed"}
                           `}
                         >
                           {userMastery >= 100 ? (
-                            <>
-                              <ZapIcon size={20} fill="currentColor" className="group-hover/btn:animate-pulse" />
-                              <span>START MINING</span>
-                            </>
+                            <><ZapIcon size={20} fill="currentColor" /> START MINING</>
                           ) : (
-                            <>
-                              <LockIcon size={18} />
-                              <span>LOCKED</span>
-                            </>
+                            <><LockIcon size={18} /> LOCKED</>
                           )}
                         </button>
 
-                        {/* --- TINH TẾ: PROGRESS BAR MỞ KHÓA --- */}
+                        {/* --- MASTERY PROGRESS UI --- */}
                         {userMastery < 100 && (
-                          <div className="w-full max-w-[280px] px-2">
-                             <div className="flex justify-between items-end mb-1.5 px-1">
-                                <div className="flex items-center gap-1.5">
-                                   <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse"></div>
-                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Mastery Unlock</span>
+                          <div className="w-full max-w-[280px] flex flex-col items-center">
+                             <div className="w-full flex justify-between items-center mb-2 px-1">
+                                <div className="flex items-center gap-2">
+                                   <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]"></div>
+                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Requirement</span>
                                 </div>
-                                <span className="text-[10px] font-bold text-orange-400 font-mono tracking-tighter">{userMastery}/100</span>
+                                
+                                {/* Ô chỉ số Mastery: Chữ trắng, Box tối */}
+                                <div className="bg-[#0B0C15] border border-white/10 px-3 py-1 rounded-lg shadow-xl flex items-center justify-center">
+                                   <span className="text-white font-mono text-[11px] font-bold tracking-tight">
+                                      {userMastery}<span className="text-white/30 mx-0.5">/</span>100
+                                   </span>
+                                </div>
                              </div>
-                             <div className="h-1 w-full bg-slate-800/60 rounded-full overflow-hidden border border-white/5 p-[1px]">
+
+                             {/* Thanh tiến độ tinh tế */}
+                             <div className="h-1.5 w-full bg-slate-800/60 rounded-full overflow-hidden border border-white/5 p-[0.5px]">
                                 <div 
-                                  className="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-yellow-400 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.4)] transition-all duration-700 ease-out"
+                                  className="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-yellow-400 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.4)] transition-all duration-1000 ease-out"
                                   style={{ width: `${Math.min(userMastery, 100)}%` }}
                                 />
                              </div>
+                             <span className="mt-2 text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Need 100 Mastery to start</span>
                           </div>
                         )}
 
@@ -340,7 +322,7 @@ const App = () => {
                  <input 
                     type="range" 
                     min="0" 
-                    max="400" 
+                    max="200" 
                     value={userMastery}
                     onChange={(e) => setUserMastery(parseInt(e.target.value))}
                     className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
@@ -361,17 +343,12 @@ const App = () => {
                    </h3>
                 </div>
 
-                <div className="flex flex-col items-end">
-                   <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 backdrop-blur-sm shadow-lg min-w-[140px]">
-                       <div className="flex items-center justify-between gap-3">
-                           <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Users</span>
-                           <div className="flex items-center gap-2">
-                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.6)]"></div>
-                               <span className="font-mono text-sm font-bold text-white leading-none">
-                                  {totalUsers.toLocaleString()}
-                               </span>
-                           </div>
-                       </div>
+                <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 min-w-[140px]">
+                   <div className="flex items-center justify-between gap-3">
+                       <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Users</span>
+                       <span className="font-mono text-sm font-bold text-white leading-none">
+                          {totalUsers.toLocaleString()}
+                       </span>
                    </div>
                 </div>
              </div>
@@ -385,8 +362,8 @@ const App = () => {
                    return (
                       <div key={index} className="relative flex gap-6 pb-8 last:pb-0 group">
                          <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shrink-0
-                            ${status === 'completed' ? 'bg-[#0B0C15] border-green-500 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 
-                              status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110' : 
+                            ${status === 'completed' ? 'bg-[#0B0C15] border-green-500 text-green-500' : 
+                              status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 scale-110 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 
                               'bg-[#0B0C15] border-slate-700 text-slate-600'}`}>
                             {status === 'completed' && <CheckIcon size={18} strokeWidth={3} />}
                             {status === 'active' && <ZapIcon size={16} fill="currentColor" />}
@@ -394,29 +371,24 @@ const App = () => {
                          </div>
                          <div className={`flex-1 rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden flex flex-col gap-2 justify-center
                             ${status === 'active' 
-                               ? 'bg-gradient-to-r from-cyan-900/20 to-transparent border-cyan-500/30' 
+                               ? 'bg-gradient-to-r from-cyan-900/10 to-transparent border-cyan-500/30' 
                                : 'bg-transparent border-transparent opacity-40'
                             }`}>
                             <div className={`absolute top-0 right-0 px-2 py-0.5 rounded-bl-lg text-[9px] font-bold uppercase tracking-wider
                                ${milestone.chainStatus === 'On-Chain' 
-                                  ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]' 
+                                  ? 'bg-orange-500 text-white' 
                                   : 'bg-slate-700/50 text-slate-400'}`}>
                                {milestone.chainStatus}
                             </div>
                             <span className={`text-xs font-bold uppercase tracking-wider ${status === 'active' ? 'text-cyan-400' : 'text-slate-500'}`}>
                                 {milestone.label}
                             </span>
-                            <div className="flex items-center gap-3 mt-1">
-                               <div className="flex items-center gap-1.5 bg-slate-950/40 rounded-md px-2 py-1 border border-white/5">
+                            <div className="flex items-center gap-3 mt-1 text-[10px]">
+                               <div className="flex items-center gap-1.5 bg-slate-950/40 rounded px-2 py-1">
                                   <UsersIcon size={12} className="text-slate-500" />
-                                  <span className="text-[10px] text-slate-400 font-mono font-medium">
-                                    {milestone.threshold.toLocaleString()}
-                                  </span>
+                                  <span className="text-slate-400">{milestone.threshold.toLocaleString()}</span>
                                </div>
-                               <div className={`flex items-center gap-1.5 text-[10px] font-medium ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
-                                  <ZapIcon size={10} className={status === 'active' ? 'text-cyan-400' : 'text-slate-600'} />
-                                  <span>{milestone.rate} <span className="opacity-50 text-[9px]">Engo/h</span></span>
-                               </div>
+                               <span className="text-slate-500 font-medium">{milestone.rate} Engo/h</span>
                             </div>
                          </div>
                       </div>
@@ -441,24 +413,11 @@ const App = () => {
           font-family: 'Lilita One', cursive;
         }
 
-        @keyframes spin-slow {
-          from { transform: rotate(0deg); }
-          to { transform: rotate(360deg); }
-        }
-        .animate-spin-slow {
-          animation: spin-slow 3s linear infinite;
-        }
-
         input[type='range']::-webkit-slider-thumb {
-          -webkit-appearance: none;
-          appearance: none;
-          width: 14px;
-          height: 14px;
-          background: #a855f7;
-          cursor: pointer;
-          border-radius: 50%;
+          -webkit-appearance: none; appearance: none;
+          width: 14px; height: 14px; background: #a855f7;
+          cursor: pointer; border-radius: 50%; border: 2px solid white;
           box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-          border: 2px solid white;
         }
       `}</style>
     </div>
