@@ -123,7 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Cập nhật vị trí số lượng (Dùng Flexbox + Height cố định để cân bằng)
+// 4. RewardItem: Cập nhật vị trí số lượng (Cân bằng lại Top/Bottom)
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -166,13 +166,10 @@ const RewardItem = memo(({
                         </div>
 
                         {/* Số lượng: 
-                            - flex items-center justify-center: Căn giữa tuyệt đối text trong box.
-                            - h-[16px]: Chiều cao cố định cực thấp.
-                            - -bottom-1.5 -right-1.5: Vị trí lệch ra ngoài.
-                            - pb-[1px]: Mẹo nhỏ để đẩy visual text lên 1 tí nếu font vẫn bị lệch.
+                            - pt-[2px]: Đẩy text xuống dưới để bù lại khoảng hụt ở Top.
                         */}
                         <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
-                            <span className={`text-[11px] font-lilita leading-none pb-[1px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
+                            <span className={`text-[11px] font-lilita leading-none pt-[2px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
                                 x{formattedAmount}
                             </span>
                         </div>
