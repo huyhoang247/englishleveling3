@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
+// --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ) ---
 const Icon = ({ children, size = 24, className = "" }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -80,14 +80,6 @@ const UsersIcon = (props) => (
   </Icon>
 );
 
-const RefreshCwIcon = (props) => (
-  <Icon {...props}>
-    <path d="M23 4v6h-6" />
-    <path d="M1 20v-6h6" />
-    <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15" />
-  </Icon>
-);
-
 const CheckIcon = (props) => (
   <Icon {...props}>
     <polyline points="20 6 9 17 4 12" />
@@ -101,13 +93,6 @@ const LockIcon = (props) => (
   </Icon>
 );
 
-const Link2Icon = (props) => (
-  <Icon {...props}>
-    <path d="M15 7h2a5 5 0 0 1 0 10h-2M9 17H7A5 5 0 0 1 7 7h2" />
-    <line x1="8" y1="12" x2="16" y2="12" />
-  </Icon>
-);
-
 // --- MAIN COMPONENT ---
 const App = () => {
   const [balance, setBalance] = useState(124.5938);
@@ -115,7 +100,7 @@ const App = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
-  const [userMastery, setUserMastery] = useState(46); // Giá trị Mastery ban đầu
+  const [userMastery, setUserMastery] = useState(46); 
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -175,6 +160,7 @@ const App = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
       </div>
 
+      {/* Top Navigation */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
         <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
           <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
@@ -249,27 +235,25 @@ const App = () => {
                                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
                                <div className="w-2 h-2 bg-cyan-500 rounded-full relative"></div>
                             </div>
-                            <span className="text-sm font-lilita text-cyan-400 tracking-wider uppercase">MINING...</span>
+                            <span className="text-xs font-lilita text-cyan-400 tracking-wider uppercase">MINING...</span>
                          </div>
-                         <div className="font-mono text-xl text-cyan-400 tracking-widest">{timeLeft}</div>
+                         {/* TIMER: Size nhỏ hơn, font lilita */}
+                         <div className="font-lilita text-lg text-cyan-400 tracking-widest">{timeLeft}</div>
                       </div>
                   ) : (
                       <div className="w-full flex flex-col items-center gap-5">
+                        {/* BUTTON: Darker design, no icon */}
                         <button 
                           onClick={startMiningSession}
                           disabled={userMastery < 100}
                           className={`
-                            relative px-12 py-3 rounded-full font-lilita text-lg tracking-[0.05em] transition-all duration-300 flex items-center gap-3 overflow-hidden
+                            relative px-12 py-3.5 rounded-2xl font-lilita text-lg tracking-[0.1em] transition-all duration-300 flex items-center justify-center overflow-hidden w-full max-w-[320px]
                             ${userMastery >= 100 
-                              ? "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:scale-105 active:scale-95 cursor-pointer" 
-                              : "bg-slate-800/50 border border-slate-700 text-slate-500 cursor-not-allowed"}
+                              ? "bg-slate-900 border border-slate-700 text-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:bg-black hover:border-cyan-500/50 hover:text-white hover:shadow-cyan-500/10 active:scale-95 cursor-pointer" 
+                              : "bg-slate-900/40 border border-slate-800/50 text-slate-600 cursor-not-allowed"}
                           `}
                         >
-                          {userMastery >= 100 ? (
-                            <><ZapIcon size={20} fill="currentColor" /> START MINING</>
-                          ) : (
-                            <><LockIcon size={18} /> LOCKED</>
-                          )}
+                          {userMastery >= 100 ? "START MINING" : "LOCKED"}
                         </button>
 
                         {/* --- MASTERY PROGRESS UI --- */}
@@ -281,7 +265,6 @@ const App = () => {
                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Requirement</span>
                                 </div>
                                 
-                                {/* Ô chỉ số Mastery: Chữ trắng, Box tối */}
                                 <div className="bg-[#0B0C15] border border-white/10 px-3 py-1 rounded-lg shadow-xl flex items-center justify-center">
                                    <span className="text-white font-mono text-[11px] font-bold tracking-tight">
                                       {userMastery}<span className="text-white/30 mx-0.5">/</span>100
@@ -289,7 +272,6 @@ const App = () => {
                                 </div>
                              </div>
 
-                             {/* Thanh tiến độ tinh tế */}
                              <div className="h-1.5 w-full bg-slate-800/60 rounded-full overflow-hidden border border-white/5 p-[0.5px]">
                                 <div 
                                   className="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-yellow-400 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.4)] transition-all duration-1000 ease-out"
