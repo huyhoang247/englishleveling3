@@ -11,6 +11,33 @@ interface DailyCheckInProps {
   onClose: () => void;
 }
 
+// --- HELPER: FORMAT SỐ (1K, 1M, 1B) ---
+// Hàm này chuyển đổi số dạng chuỗi hoặc số thành dạng rút gọn
+const formatCompactNumber = (amount: string | number): string => {
+    // Nếu là string có dấu phẩy (ví dụ "1,000"), loại bỏ dấu phẩy trước khi parse
+    const num = typeof amount === 'string' 
+        ? parseFloat(amount.replace(/,/g, '')) 
+        : amount;
+
+    if (isNaN(num)) return amount.toString();
+
+    if (num >= 1000000000) {
+        // Tỷ (Billion)
+        return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+    }
+    if (num >= 1000000) {
+        // Triệu (Million)
+        return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+    }
+    if (num >= 1000) {
+        // Nghìn (Thousand)
+        return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
+    }
+    
+    // Số nhỏ hơn 1000 giữ nguyên
+    return num.toString();
+};
+
 // 1. CoinWrapper: Tách ra để Coin nhảy số không render lại cả trang
 const CoinWrapper = memo(() => {
     const { coins } = useCheckIn();
@@ -18,9 +45,8 @@ const CoinWrapper = memo(() => {
     return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />;
 });
 
-// 2. MiniCalendar: Tối ưu logic render class
+// 2. MiniCalendar: Tối ưu logic render class cho lịch 7 ngày
 const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStreak }: any) => {
-    // Helper tính trạng thái
     const getStatus = (day: number) => {
         if (canClaimToday && day === claimableDay) return 'claimable';
         
@@ -42,7 +68,6 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
                 let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 relative ";
                 if (status === 'claimed') dayClasses += "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
                 else if (status === 'claimable') dayClasses += "bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
-                // THAY ĐỔI: Thêm /85 vào bg-slate-700 để có opacity 85%
                 else dayClasses += "bg-slate-700/85 text-slate-400";
 
                 return (
@@ -68,15 +93,15 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     );
 });
 
-// 3. NextGoalCard: Thẻ mục tiêu tiếp theo
+// 3. NextGoalCard: Thẻ mục tiêu tiếp theo (Streak reward)
 const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     if (!nextStreakGoal) return null;
     
-    // Tính toán % width đơn giản
+    // Tính toán % width cho thanh progress
     const percentage = Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100);
+    const formattedAmount = formatCompactNumber(nextStreakGoal.amount);
 
     return (
-        // THAY ĐỔI: bg-slate-800/85 (Opacity 85%)
         <div className="group relative rounded-xl overflow-hidden bg-slate-800/85 border border-slate-700 shadow-lg p-4 mb-4">
             <div className="flex items-center gap-4">
                 <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
@@ -99,14 +124,15 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
                             <span className="text-xs text-slate-400 font-mono">/{nextStreakGoal.streakGoal}</span>
                         </div>
                     </div>
-                    <p className="text-indigo-300 text-lg font-bold font-lilita">x{nextStreakGoal.amount}</p>
+                    <p className="text-indigo-300 text-lg font-bold font-lilita">x{formattedAmount}</p>
                 </div>
             </div>
         </div>
     );
 });
 
-// 4. RewardItem: Đã tối ưu render có điều kiện
+// 4. RewardItem: Component hiển thị từng ngày
+// LAYOUT MỚI: Day (Góc trái) -> Icon (Giữa) -> Số lượng (Dưới icon, mờ) -> Nút Claim (Phải)
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -118,6 +144,7 @@ const RewardItem = memo(({
         isClaimed = reward.day <= completedDaysInCycle;
     }
     const isClaimable = canClaimToday && reward.day === claimableDay;
+    const formattedAmount = formatCompactNumber(reward.amount);
 
     const handleClaim = () => {
         if (isClaimable && !isClaiming && !isSyncingData) {
@@ -131,63 +158,58 @@ const RewardItem = memo(({
                 <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
             )}
             
-            {/* THAY ĐỔI: bg-slate-800/85 (Opacity 85%) cho cả trạng thái claimable và thường */}
-            <div className={`relative flex items-center gap-4 p-4 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
-            {/* THAY ĐỔI: bg-slate-700/85 cho tag ngày */}
-            <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300">Day {reward.day}</div>
+            <div className={`relative flex items-center justify-between p-3 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
             
-            <div className={`w-16 h-16 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
-                    <div className="w-10 h-10">{reward.icon}</div>
-                </div>
-            </div>
-            
-            <div className="flex-1 min-w-0">
-                <div className={`inline-flex items-center px-2.5 py-1 rounded-md border mb-1.5 shadow-sm ${
-                    isClaimable 
-                    ? 'bg-indigo-950/40 border-indigo-500/30 text-indigo-100' 
-                    : 'bg-slate-900/60 border-white/5 text-slate-400'
-                }`}>
-                    <span className="text-[10px] font-bold tracking-widest uppercase truncate max-w-[120px]">
-                        {reward.name}
-                    </span>
+                {/* 1. TAG NGÀY: Nằm bên trái (Absolute) */}
+                <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300 z-10">
+                    Day {reward.day}
                 </div>
                 
-                <p className={`text-base font-lilita leading-none ml-1 ${isClaimable ? 'text-white' : 'text-slate-300'}`}>
-                    x{reward.amount}
-                </p>
-            </div>
+                {/* 2. CỤM ICON VÀ SỐ LƯỢNG: Nằm giữa (Flex Column) */}
+                <div className="flex-1 flex flex-col items-center justify-center pl-2"> 
+                    {/* Icon */}
+                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                        <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
+                            <div className="w-9 h-9">{reward.icon}</div>
+                        </div>
+                    </div>
 
-            <button 
-                onClick={handleClaim} 
-                disabled={!isClaimable || isClaiming || isSyncingData} 
-                className={`min-w-[90px] h-10 flex-shrink-0 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
-                isClaimed ? 'bg-green-600 text-white' : 
-                isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg active:scale-95' : 
-                'bg-slate-700 text-slate-400'
-                }`}
-            >
-                { isClaimed ? 'Received' : 
-                isClaiming && isClaimable ? (
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                ) : 'Claim' 
-                }
-            </button>
-            
-            {isClaimed && (
-                <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-10">
-                    <div className="bg-green-600 rounded-full p-2 transform rotate-12 shadow-lg">
-                        <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    {/* Số lượng: Nằm dưới Icon, Opacity 60% */}
+                    <div className={`text-lg font-lilita mt-1 leading-none ${isClaimable ? 'text-white/60' : 'text-slate-300/60'}`}>
+                        x{formattedAmount}
                     </div>
                 </div>
-            )}
+
+                {/* 3. NÚT CLAIM: Nằm bên phải */}
+                <button 
+                    onClick={handleClaim} 
+                    disabled={!isClaimable || isClaiming || isSyncingData} 
+                    className={`min-w-[80px] h-10 ml-2 flex-shrink-0 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
+                    isClaimed ? 'bg-green-600 text-white' : 
+                    isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg active:scale-95' : 
+                    'bg-slate-700 text-slate-400'
+                    }`}
+                >
+                    { isClaimed ? 'Done' : 
+                    isClaiming && isClaimable ? (
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    ) : 'Claim' 
+                    }
+                </button>
+                
+                {isClaimed && (
+                    <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-20">
+                        <div className="bg-green-600 rounded-full p-2 transform rotate-12 shadow-lg">
+                            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
 });
 
-// 5. CheckInMainContent: [QUAN TRỌNG NHẤT] - Component chứa list
-// Component này SẼ KHÔNG Render lại khi particles (hiệu ứng) ở cha thay đổi
+// 5. CheckInMainContent: Component chứa list
 const CheckInMainContent = memo(({ 
     dailyRewards, canClaimToday, claimableDay, loginStreak, nextStreakGoal, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -201,7 +223,7 @@ const CheckInMainContent = memo(({
             />
         
             <div className="pb-6">
-                <div className="grid grid-cols-1 gap-4">
+                <div className="grid grid-cols-1 gap-3">
                     <NextGoalCard nextStreakGoal={nextStreakGoal} loginStreak={loginStreak} />
 
                     {dailyRewards.map((reward: any) => (
@@ -222,7 +244,7 @@ const CheckInMainContent = memo(({
     );
 });
 
-// 6. RewardAnimationOverlay: Component riêng cho hiệu ứng và modal
+// 6. RewardAnimationOverlay: Component popup hiệu ứng
 const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, particles }: any) => {
     if (!showRewardAnimation || !animatingReward) return null;
 
@@ -280,7 +302,7 @@ const DailyCheckInView = () => {
         />
       </div>
 
-      {/* 2. LỚP PHỦ MÀU ĐEN OPACITY 75% */}
+      {/* 2. LỚP PHỦ MÀU ĐEN OPACITY 85% */}
       <div className="absolute inset-0 z-0 bg-black/85"></div>
 
       {/* 3. NỘI DUNG CHÍNH (z-10 để nổi lên trên nền) */}
