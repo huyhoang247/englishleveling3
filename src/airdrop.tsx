@@ -135,7 +135,7 @@ const App = () => {
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
 
-  // --- HỆ SỐ MASTERY BOOST ĐÃ CẬP NHẬT THÀNH 0.2 ---
+  // --- MASTERY BOOST (0.2) ---
   const masteryBoost = (userMastery / 100) * 0.2; 
   
   const totalMiningRate = currentBaseRate + masteryBoost;
@@ -171,7 +171,7 @@ const App = () => {
   return (
     <div className="h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
       
-      {/* Background Effects (Fixed) */}
+      {/* Background Effects */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
@@ -217,6 +217,7 @@ const App = () => {
             <div className={`absolute top-0 right-0 w-[250px] h-[250px] bg-cyan-500/5 rounded-full blur-[80px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
 
             <div className="relative z-10">
+              {/* BALANCE SECTION */}
               <div className="flex items-center gap-4 mb-5">
                 <div className={`p-2 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
                   <ActivityIcon size={18} className={isMining ? "animate-pulse" : ""} />
@@ -232,31 +233,33 @@ const App = () => {
                 </div>
               </div>
 
+              {/* STATS GRID */}
               <div className="grid grid-cols-2 gap-3 mb-6">
                 <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1">
                     <TrendingDownIcon size={12} /> Base Rate
                   </div>
-                  <div className="text-lg font-bold text-white">
-                    +{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/h</span>
+                  <div className="text-lg text-white font-lilita tracking-wider">
+                    +{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans font-normal">/h</span>
                   </div>
                 </div>
                 <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group-hover:border-purple-500/40 transition-colors">
                   <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1">
                     <ZapIcon size={12} /> Boost
                   </div>
-                  <div className="text-lg font-bold text-purple-400">
-                    +{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-normal">/h</span>
+                  <div className="text-lg text-purple-400 font-lilita tracking-wider">
+                    +{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans font-normal">/h</span>
                   </div>
                 </div>
               </div>
 
+              {/* PRODUCTION SECTION */}
               <div className="flex flex-col gap-5 pt-4 border-t border-white/5">
                 <div className="flex justify-between items-center">
                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Production</div>
-                   <div className="text-lg font-bold text-green-400 flex items-center gap-1.5">
+                   <div className="text-lg text-green-400 flex items-center gap-1.5 font-lilita tracking-wider">
                       <PickaxeIcon size={16} className={isMining ? "animate-bounce" : ""} /> 
-                      {totalMiningRate.toFixed(4)} <span className="text-xs text-green-400/60">/h</span>
+                      {totalMiningRate.toFixed(4)} <span className="text-xs text-green-400/60 font-sans">/h</span>
                    </div>
                 </div>
 
@@ -351,8 +354,7 @@ const App = () => {
                               status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110' : 
                               'bg-[#0B0C15] border-slate-700 text-slate-600'}`}>
                             {status === 'completed' && <CheckIcon size={18} strokeWidth={3} />}
-                            {status === 'active' && <div className="w-3 h-3 bg-cyan-400 rounded-full animate-ping" />}
-                            {status === 'active' && <div className="absolute w-3 h-3 bg-cyan-400 rounded-full" />}
+                            {status === 'active' && <div className="absolute w-3 h-3 bg-cyan-400 rounded-full animate-ping" />}
                             {status === 'locked' && <LockIcon size={16} />}
                          </div>
                          <div className={`flex-1 rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden flex flex-col gap-2 justify-center
