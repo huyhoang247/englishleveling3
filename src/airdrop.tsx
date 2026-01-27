@@ -154,10 +154,10 @@ const App = () => {
   return (
     <div className="h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
       
-      {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
+      {/* --- OPTIMIZED BACKGROUND EFFECTS (Không dùng Blur nặng) --- */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_15%_15%,rgba(88,28,135,0.15),transparent_40%)]"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_85%_85%,rgba(22,78,99,0.15),transparent_40%)]"></div>
       </div>
 
       <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
@@ -174,7 +174,8 @@ const App = () => {
         
         {/* LEFT COLUMN: Mining Dashboard */}
         <div className="w-full lg:w-7/12 space-y-6">
-          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-md mb-2">
+          {/* Badge Airdrop: Bỏ backdrop-blur để mượt hơn */}
+          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60 mb-2">
             <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                 <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -186,7 +187,10 @@ const App = () => {
           </div>
 
           <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
-            <div className={`absolute top-0 right-0 w-[250px] h-[250px] bg-cyan-500/5 rounded-full blur-[80px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
+            {/* OPTIMIZED GLOW: Dùng Radial Gradient thay cho Blur */}
+            <div 
+                className={`absolute top-[-50%] right-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(6,182,212,0.1)_0%,transparent_60%)] transition-opacity duration-1000 pointer-events-none ${isMining ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
 
             <div className="relative z-10">
               {/* BALANCE SECTION */}
@@ -241,7 +245,7 @@ const App = () => {
                       </div>
                   ) : (
                       <div className="w-full flex flex-col items-center gap-5">
-                        {/* --- NÚT START MINING THIẾT KẾ MỚI --- */}
+                        {/* --- NÚT START MINING --- */}
                         <button 
                           onClick={startMiningSession}
                           disabled={userMastery < 100}
@@ -261,7 +265,6 @@ const App = () => {
                              <div className="w-full flex justify-between items-center mb-2 px-1">
                                 <div className="flex items-center gap-2">
                                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]"></div>
-                                   {/* Đổi Requirement -> Mastery */}
                                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Mastery</span>
                                 </div>
                                 
@@ -278,7 +281,6 @@ const App = () => {
                                   style={{ width: `${Math.min(userMastery, 100)}%` }}
                                 />
                              </div>
-                             {/* Loại bỏ dòng "Need 100 mastery to start" tại đây */}
                           </div>
                         )}
 
@@ -293,7 +295,7 @@ const App = () => {
               </div>
             </div>
             
-            {/* Mastery Simulator - Giữ lại để bạn chỉnh Mastery test nút bấm */}
+            {/* Mastery Simulator */}
             <div className="mt-8 pt-4 border-t border-dashed border-slate-700/50">
                  <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Mastery Simulator</span>
