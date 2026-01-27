@@ -54,33 +54,28 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     };
 
     return (
-        <div className="mb-6 mt-4 flex justify-between px-2">
+        <div className="mb-6 mt-4 flex justify-between px-1">
             {dailyRewards.map((reward: any) => {
                 const status = getStatus(reward.day);
                 
-                // Base classes: Hình tròn, border, transition
-                let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300 relative border ";
-                
-                if (status === 'claimed') {
-                    // Đã nhận: Màu xanh
-                    dayClasses += "bg-gradient-to-r from-green-600 to-emerald-700 text-white border-green-500/50";
-                } else if (status === 'claimable') {
-                    // Hôm nay (Claimable): Màu tím, Zoom to hơn (scale-110), z-index cao để nổi lên
-                    dayClasses += "bg-gradient-to-r from-purple-500 to-indigo-600 text-white border-purple-400 scale-110 z-10 ring-2 ring-purple-500/30";
-                } else {
-                    // Chưa đến: Màu xám tối
-                    dayClasses += "bg-slate-700/85 text-slate-400 border-slate-600";
-                }
+                let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 relative ";
+                if (status === 'claimed') dayClasses += "bg-gradient-to-r from-green-500 to-emerald-600 text-white shadow-md";
+                else if (status === 'claimable') dayClasses += "bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg";
+                else dayClasses += "bg-slate-700/85 text-slate-400";
 
                 return (
-                    <div key={reward.day} className="relative group flex justify-center">
+                    <div key={reward.day} className="relative group">
                         <div className={dayClasses}>
-                            <span className="font-lilita z-10 text-sm">{reward.day}</span>
-                            
-                            {/* Dấu tích xanh khi đã nhận */}
+                            <span className="font-lilita z-10">{reward.day}</span>
+                            {status === 'claimable' && (
+                                <>
+                                    <div className="absolute inset-0 rounded-full animate-ping opacity-30 bg-indigo-400"></div>
+                                    <div className="absolute -inset-1 rounded-full bg-gradient-to-r from-purple-400 to-indigo-500 opacity-30 blur-sm"></div>
+                                </>
+                            )}
                             {status === 'claimed' && (
-                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center z-20">
-                                    <svg className="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
+                                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-slate-900 flex items-center justify-center shadow-lg z-20">
+                                    <svg className="w-2 h-2 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
                                 </div>
                             )}
                         </div>
@@ -99,19 +94,16 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     const formattedAmount = formatCompactNumber(nextStreakGoal.amount);
 
     return (
-        <div className="group relative rounded-xl overflow-hidden bg-slate-800/85 border border-slate-700/50 p-4 mb-4">
+        <div className="group relative rounded-xl overflow-hidden bg-slate-800/85 border border-slate-700 shadow-lg p-4 mb-4">
             <div className="flex items-center gap-4">
-                {/* Icon Box - Không shadow */}
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 p-1">
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
                     <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80">
                         <div className="w-10 h-10">{nextStreakGoal.icon}</div>
                     </div>
                 </div>
-                
                 <div className="flex-1">
                     <div className="mb-2 flex items-center gap-3">
-                        {/* Progress Bar - Không shadow */}
-                        <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden p-0.5">
+                        <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
                             <div 
                                 className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
                                 style={{ width: `${percentage}%` }}
@@ -131,7 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem
+// 4. RewardItem: Cập nhật vị trí số lượng (Overlay icon góc phải dưới)
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -152,57 +144,57 @@ const RewardItem = memo(({
     };
 
     return (
-        // Wrapper: Nếu là ngày nhận quà (isClaimable) thì Scale to lên 5% (scale-[1.05])
-        <div className={`group relative rounded-xl overflow-hidden transition-all duration-300 ${isClaimed ? 'opacity-60' : ''} ${isClaimable ? 'scale-[1.05] z-10 my-1' : 'hover:scale-[1.01]'}`}>
+        <div className={`group relative rounded-xl overflow-hidden transition-transform duration-300 ${isClaimed ? 'opacity-60' : 'hover:scale-[1.01]'} transform-gpu`}>
+            {isClaimable && (
+                <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
+            )}
             
-            <div className={`relative flex items-center justify-between p-3 rounded-xl border ${ isClaimable ? 'bg-slate-800 border-purple-500' : 'bg-slate-800/85 border-slate-700/30'}`}>
+            <div className={`relative flex items-center justify-between p-3 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
             
-                {/* 1. TAG NGÀY */}
-                <div className={`absolute top-0 left-0 p-1 px-2 text-[10px] rounded-br-lg uppercase font-lilita z-10 ${isClaimable ? 'bg-purple-600 text-white' : 'bg-slate-700/85 text-slate-300'}`}>
+                {/* 1. TAG NGÀY: Bên trái */}
+                <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300 z-10">
                     Day {reward.day}
                 </div>
                 
-                {/* 2. ICON + SỐ LƯỢNG */}
+                {/* 2. ICON + SỐ LƯỢNG (Chồng lên nhau) */}
                 <div className="flex-1 flex items-center justify-center pl-2"> 
-                    {/* Container Icon - Không shadow */}
-                    <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-500' : 'bg-gradient-to-br from-slate-700 to-slate-900 border border-slate-700/50' } p-1`}>
-                        
-                        {/* Icon */}
-                        <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800' : 'bg-slate-800'}`}>
-                            <div className="w-8 h-8">{reward.icon}</div>
+                    {/* Wrapper Relative để chứa số lượng absolute */}
+                    <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                        {/* Icon Container */}
+                        <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
+                            <div className="w-9 h-9">{reward.icon}</div>
                         </div>
 
-                        {/* Ô CHỨA SỐ LƯỢNG (Mới) */}
-                        <div className="absolute -bottom-1 -right-1 bg-black/70 border border-white/10 rounded-md px-1.5 py-0.5 backdrop-blur-sm z-20">
-                            <span className={`text-[10px] font-lilita leading-none ${isClaimable ? 'text-white' : 'text-slate-300'}`}>
+                        {/* Số lượng: Có box nền, không drop-shadow, nhỏ hơn */}
+                        <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'}`}>
+                            <span className={`text-xs font-lilita leading-none ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
                                 x{formattedAmount}
                             </span>
                         </div>
                     </div>
                 </div>
 
-                {/* 3. NÚT CLAIM */}
+                {/* 3. NÚT CLAIM: Bên phải */}
                 <button 
                     onClick={handleClaim} 
                     disabled={!isClaimable || isClaiming || isSyncingData} 
                     className={`min-w-[80px] h-10 ml-2 flex-shrink-0 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
                     isClaimed ? 'bg-green-600 text-white' : 
-                    isClaimable ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white active:scale-95' : 
+                    isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg active:scale-95' : 
                     'bg-slate-700 text-slate-400'
                     }`}
                 >
                     { isClaimed ? 'Done' : 
                     isClaiming && isClaimable ? (
-                        <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     ) : 'Claim' 
                     }
                 </button>
                 
-                {/* Lớp phủ khi đã nhận */}
                 {isClaimed && (
-                    <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center z-20">
-                        <div className="bg-green-600 rounded-full p-1.5 transform rotate-12">
-                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-20">
+                        <div className="bg-green-600 rounded-full p-2 transform rotate-12 shadow-lg">
+                            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                         </div>
                     </div>
                 )}
@@ -252,9 +244,9 @@ const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, par
 
     return (
         <div className="fixed inset-0 bg-slate-900/95 flex items-center justify-center z-50">
-            <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 border border-slate-700 animate-float">
+            <div className="relative max-w-xs w-full bg-gradient-to-b from-slate-800 to-slate-900 rounded-2xl p-6 shadow-2xl animate-float">
                 <div className="absolute -top-20 left-1/2 transform -translate-x-1/2">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-400 to-indigo-600 p-1 shadow-lg shadow-indigo-500/50">
                         <div className="w-full h-full rounded-full bg-slate-900/60 flex items-center justify-center">
                             <div className="w-12 h-12 animate-pulse">{animatingReward.daily?.icon}</div>
                         </div>
@@ -307,7 +299,7 @@ const DailyCheckInView = () => {
       <div className="absolute inset-0 z-0 bg-black/85"></div>
 
       {/* 3. NỘI DUNG CHÍNH */}
-      <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4">
+      <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
           <CoinWrapper />
@@ -341,6 +333,8 @@ const DailyCheckInView = () => {
         @keyframes float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
         
         .animate-spin { animation: spin 1s linear infinite; }
+        .animate-pulse-slow { animation: pulse-slow 2s ease-in-out infinite; }
+        @keyframes pulse-slow { 0%, 100% { opacity: 0.3; } 50% { opacity: 0.7; } }
         .animate-float { animation: float 3s ease-in-out infinite; }
 
         @keyframes float-particle-1 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-100px, -100px) scale(0); opacity: 0; } }
