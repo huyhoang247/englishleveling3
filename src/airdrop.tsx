@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ) ---
+// --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
 const Icon = ({ children, size = 24, className = "" }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -160,7 +160,6 @@ const App = () => {
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
       </div>
 
-      {/* Top Navigation */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
         <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
           <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
@@ -237,12 +236,12 @@ const App = () => {
                             </div>
                             <span className="text-xs font-lilita text-cyan-400 tracking-wider uppercase">MINING...</span>
                          </div>
-                         {/* TIMER: Size nhỏ hơn, font lilita */}
+                         {/* --- ĐỒNG HỒ ĐẾM NGƯỢC --- */}
                          <div className="font-lilita text-lg text-cyan-400 tracking-widest">{timeLeft}</div>
                       </div>
                   ) : (
                       <div className="w-full flex flex-col items-center gap-5">
-                        {/* BUTTON: Darker design, no icon */}
+                        {/* --- NÚT START MINING THIẾT KẾ MỚI --- */}
                         <button 
                           onClick={startMiningSession}
                           disabled={userMastery < 100}
@@ -262,7 +261,8 @@ const App = () => {
                              <div className="w-full flex justify-between items-center mb-2 px-1">
                                 <div className="flex items-center gap-2">
                                    <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]"></div>
-                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Requirement</span>
+                                   {/* Đổi Requirement -> Mastery */}
+                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Mastery</span>
                                 </div>
                                 
                                 <div className="bg-[#0B0C15] border border-white/10 px-3 py-1 rounded-lg shadow-xl flex items-center justify-center">
@@ -278,7 +278,7 @@ const App = () => {
                                   style={{ width: `${Math.min(userMastery, 100)}%` }}
                                 />
                              </div>
-                             <span className="mt-2 text-[9px] text-slate-500 font-bold uppercase tracking-tighter">Need 100 Mastery to start</span>
+                             {/* Loại bỏ dòng "Need 100 mastery to start" tại đây */}
                           </div>
                         )}
 
@@ -293,7 +293,7 @@ const App = () => {
               </div>
             </div>
             
-            {/* Mastery Simulator */}
+            {/* Mastery Simulator - Giữ lại để bạn chỉnh Mastery test nút bấm */}
             <div className="mt-8 pt-4 border-t border-dashed border-slate-700/50">
                  <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Mastery Simulator</span>
