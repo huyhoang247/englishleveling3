@@ -184,7 +184,7 @@ export const BASE_ITEMS: Item[] = [
         rewardAmount: 1 
     },
 
-    // --- RARE (Pickaxe x5) ---
+    // --- RARE (Pickaxe x2) ---
     { 
         id: 'pickaxe', 
         icon: minerAssets.pickaxeIcon, 
@@ -193,10 +193,10 @@ export const BASE_ITEMS: Item[] = [
         rarity: 'rare', 
         color: '', 
         rewardType: 'pickaxe', 
-        rewardAmount: 5 
+        rewardAmount: 2 
     },
 
-    // --- EPIC (Equipment Piece x10, Ancient Book x10) ---
+    // --- EPIC (Equipment Piece x5, Ancient Book x5) ---
     { 
         id: 'equipment_piece', 
         icon: equipmentUiAssets.equipmentPieceIcon, 
@@ -205,7 +205,7 @@ export const BASE_ITEMS: Item[] = [
         rarity: 'epic', 
         color: 'text-fuchsia-400', 
         rewardType: 'material', 
-        rewardAmount: 10 
+        rewardAmount: 5 
     },
     { 
         id: 'ancient_book', 
@@ -215,7 +215,7 @@ export const BASE_ITEMS: Item[] = [
         rarity: 'epic', 
         color: 'text-purple-300', 
         rewardType: 'material', 
-        rewardAmount: 10 
+        rewardAmount: 5 
     },
 
     // --- LEGENDARY (Tạm ẩn) ---
