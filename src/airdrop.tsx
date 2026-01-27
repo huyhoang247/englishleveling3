@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-// --- ICON COMPONENTS (Inline SVG replacement for Lucide) ---
+// --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
 const Icon = ({ children, size = 24, className = "" }) => (
   <svg 
     xmlns="http://www.w3.org/2000/svg" 
@@ -165,38 +165,27 @@ const App = () => {
     return () => clearInterval(interval);
   }, [isMining, miningEndTime, ratePerSecond]);
 
-  // Tách số dư để hiển thị đẹp hơn
-  const balanceInteger = Math.floor(balance);
-  const balanceDecimal = (balance % 1).toFixed(4).substring(1);
-
   return (
-    <div className="h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-20">
+    <div className="h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
       
-      {/* Background Effects */}
+      {/* Background Effects (Fixed) */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-purple-900/10 rounded-full blur-[150px]"></div>
         <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-cyan-900/10 rounded-full blur-[150px]"></div>
-        <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: `radial-gradient(#fff 1px, transparent 1px)`, backgroundSize: '32px 32px' }}></div>
       </div>
 
-      {/* NAVBAR */}
-      <nav className="relative z-20 w-full px-6 py-6 flex justify-between items-center">
-        <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-gradient-to-br from-cyan-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg shadow-cyan-500/20">
-                <ZapIcon size={24} fill="white" stroke="none" />
-            </div>
-            <span className="text-xl font-black tracking-tighter uppercase">Engo<span className="text-cyan-400">Network</span></span>
-        </div>
+      {/* --- NAVBAR --- */}
+      <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
         <button 
           disabled
-          className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md cursor-not-allowed opacity-80 hover:opacity-100 transition-all group"
+          className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 hover:opacity-100 transition-opacity group"
         >
           <div className="text-slate-500 group-hover:text-cyan-400 transition-colors">
             <WalletIcon size={20} />
           </div>
           <div className="flex flex-col items-start">
-            <span className="text-xs font-bold text-slate-300 leading-none">Connect Wallet</span>
-            <span className="text-[8px] text-slate-500 font-bold uppercase tracking-[0.1em]">Coming Soon</span>
+            <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
+            <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
           </div>
         </button>
       </nav>
@@ -207,109 +196,102 @@ const App = () => {
         {/* LEFT COLUMN: Mining Dashboard */}
         <div className="w-full lg:w-7/12 space-y-6">
           
-          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-white/5 border border-white/10 backdrop-blur-md hover:border-cyan-500/50 transition-colors cursor-default group mb-2">
+          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-md hover:border-cyan-500/50 transition-colors cursor-default group mb-2">
             <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                 <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                 </span>
-                <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">Live</span>
+                <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
             </div>
-            <span className="text-slate-400 text-[10px] font-bold tracking-widest uppercase group-hover:text-cyan-400 transition-colors">
-                Mining Mainnet Simulation
+            <span className="text-slate-200 text-sm font-semibold tracking-wide flex items-center gap-2 group-hover:text-cyan-400 transition-colors uppercase">
+                AIRDROP
             </span>
           </div>
 
-          {/* MAIN BALANCE CARD */}
-          <div className="relative bg-[#13141F] rounded-[2.5rem] p-8 md:p-12 border border-white/10 overflow-hidden group shadow-2xl">
-            {/* Glows */}
-            <div className={`absolute -top-24 -left-24 w-80 h-80 bg-cyan-500/10 rounded-full blur-[100px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
-            <div className={`absolute -bottom-24 -right-24 w-80 h-80 bg-purple-500/10 rounded-full blur-[100px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
+          <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
+            {/* Glow effect */}
+            <div className={`absolute top-0 right-0 w-[250px] h-[250px] bg-cyan-500/5 rounded-full blur-[80px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
 
-            <div className="relative z-10 flex flex-col items-center text-center">
-              <span className="text-slate-500 text-[11px] uppercase tracking-[0.4em] font-black mb-6 opacity-80">Current Balance</span>
-              
-              <div className="flex items-baseline justify-center mb-10">
-                <span className="text-7xl md:text-9xl font-black text-white tracking-tighter bg-clip-text text-transparent bg-gradient-to-b from-white to-white/40">
-                  {balanceInteger}
-                </span>
-                <span className="text-3xl md:text-5xl font-mono font-bold text-cyan-500/80 tracking-tighter">
-                  {balanceDecimal}
-                </span>
-              </div>
-
-              {/* Token Badge */}
-              <div className="inline-flex items-center gap-3 px-5 py-2 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl mb-12">
-                 <div className={`w-3 h-3 rounded-full bg-cyan-500 ${isMining ? 'animate-pulse shadow-[0_0_12px_rgba(34,211,238,0.8)]' : 'opacity-40'}`}></div>
-                 <span className="text-sm font-black text-white tracking-[0.2em] uppercase">Engo Tokens</span>
-              </div>
-
-              {/* Rates Grid */}
-              <div className="w-full grid grid-cols-2 gap-4 mb-10">
-                <div className="bg-slate-900/40 backdrop-blur-sm p-5 rounded-3xl border border-white/5 text-left group/card hover:border-white/10 transition-colors">
-                  <div className="flex items-center gap-2 text-slate-500 text-[10px] font-bold uppercase tracking-widest mb-2">
-                    <TrendingDownIcon size={14} className="text-cyan-500" /> Base
-                  </div>
-                  <div className="text-xl font-black text-white flex items-baseline gap-1">
-                    +{currentBaseRate.toFixed(4)}
-                    <span className="text-[10px] text-slate-600">/h</span>
-                  </div>
+            <div className="relative z-10">
+              {/* PHẦN SỐ DƯ ĐÃ THIẾT KẾ LẠI NHỎ GỌN HƠN */}
+              <div className="flex items-center gap-4 mb-5">
+                <div className={`p-2.5 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
+                  <ActivityIcon size={20} className={isMining ? "animate-pulse" : ""} />
                 </div>
-                <div className="bg-purple-500/5 backdrop-blur-sm p-5 rounded-3xl border border-purple-500/10 text-left group/card hover:border-purple-500/20 transition-colors">
-                  <div className="flex items-center gap-2 text-purple-400 text-[10px] font-bold uppercase tracking-widest mb-2">
-                    <ZapIcon size={14} className="text-purple-400" /> Mastery
-                  </div>
-                  <div className="text-xl font-black text-purple-400 flex items-baseline gap-1">
-                    +{masteryBoost.toFixed(4)}
-                    <span className="text-[10px] text-purple-900 font-bold">/h</span>
+                <div>
+                  <div className="text-slate-400 text-[10px] uppercase tracking-widest font-bold mb-0.5 opacity-70">Số dư khai thác</div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-4xl md:text-5xl font-mono font-bold text-white tracking-tighter drop-shadow-lg">
+                      {balance.toFixed(4)}
+                    </span>
+                    <span className="text-cyan-400 font-bold text-sm tracking-widest">ENGO</span>
                   </div>
                 </div>
               </div>
 
-              {/* Action Button Area */}
-              <div className="w-full space-y-6">
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
+                  <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1">
+                    <TrendingDownIcon size={12} /> Tốc độ gốc
+                  </div>
+                  <div className="text-lg font-bold text-white">
+                    +{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-normal">/h</span>
+                  </div>
+                </div>
+                <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group-hover:border-purple-500/40 transition-colors">
+                  <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1">
+                    <ZapIcon size={12} /> Mastery Boost
+                  </div>
+                  <div className="text-lg font-bold text-purple-400">
+                    +{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-normal">/h</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-5 pt-4 border-t border-white/5">
+                <div className="flex justify-between items-center">
+                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Tổng sản lượng thực tế</div>
+                   <div className="text-lg font-bold text-green-400 flex items-center gap-1.5">
+                      <PickaxeIcon size={16} className={isMining ? "animate-bounce" : ""} /> 
+                      {totalMiningRate.toFixed(4)} <span className="text-xs text-green-400/60">/h</span>
+                   </div>
+                </div>
+
                 {isMining ? (
-                    <div className="relative w-full overflow-hidden rounded-[2rem] p-[1px] bg-gradient-to-r from-cyan-500/30 via-white/10 to-purple-500/30">
-                        <div className="bg-[#0B0C15] rounded-[2rem] px-8 py-6 flex justify-between items-center transition-all">
-                            <div className="flex items-center gap-4">
-                                <div className="flex items-end gap-1 h-5">
-                                    <div className="w-1.5 bg-cyan-500 rounded-full animate-[mining-bar_1s_ease-in-out_infinite]"></div>
-                                    <div className="w-1.5 bg-cyan-500/60 rounded-full animate-[mining-bar_1s_ease-in-out_0.2s_infinite]"></div>
-                                    <div className="w-1.5 bg-cyan-500/30 rounded-full animate-[mining-bar_1s_ease-in-out_0.4s_infinite]"></div>
-                                </div>
-                                <span className="text-sm font-bold text-slate-400 uppercase tracking-widest">Active session</span>
-                            </div>
-                            <div className="text-3xl font-mono font-black text-white tabular-nums tracking-widest">
-                                {timeLeft}
-                            </div>
-                        </div>
-                    </div>
+                    <button disabled className="w-full py-4 rounded-2xl font-bold flex items-center justify-between px-6 transition-all bg-slate-800/80 border border-slate-700 text-cyan-400 cursor-default">
+                       <div className="flex items-center gap-3">
+                          <div className="relative flex items-center justify-center">
+                             <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full animate-ping absolute"></div>
+                             <div className="w-2.5 h-2.5 bg-cyan-500 rounded-full relative"></div>
+                          </div>
+                          <span className="text-sm font-bold tracking-wide">Đang khai thác...</span>
+                       </div>
+                       <div className="font-mono text-xl tracking-widest">{timeLeft}</div>
+                    </button>
                 ) : (
                     <button 
                       onClick={startMiningSession}
-                      className="group relative w-full py-6 rounded-[2rem] font-black text-lg uppercase tracking-[0.3em] text-white transition-all overflow-hidden"
+                      className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:scale-[1.01] active:scale-[0.99]"
                     >
-                      <div className="absolute inset-0 bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 transition-all group-hover:scale-105"></div>
-                      <div className="relative flex items-center justify-center gap-3">
-                        <PickaxeIcon size={24} strokeWidth={3} />
-                        <span>Start Mining</span>
-                      </div>
+                      <ZapIcon size={24} fill="currentColor" />
+                      Bắt đầu khai thác
                     </button>
                 )}
                 
                 {!isMining && (
-                   <div className="text-[10px] text-slate-600 font-bold uppercase tracking-[0.2em] flex items-center justify-center gap-2">
-                      <ClockIcon size={12} /> Session length: 24.00.00
+                   <div className="text-center text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-tighter opacity-60">
+                      <ClockIcon size={12} /> Phiên khai thác sẽ tự động dừng sau 24 giờ
                    </div>
                 )}
               </div>
             </div>
             
             {/* Mastery Simulator */}
-            <div className="mt-12 pt-8 border-t border-white/5">
-                 <div className="flex justify-between items-center mb-4">
-                    <span className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em]">Mastery Level Simulator</span>
-                    <span className="px-3 py-1 bg-purple-500/10 border border-purple-500/20 rounded-lg text-xs text-purple-400 font-bold">{userMastery} Points</span>
+            <div className="mt-6 pt-4 border-t border-dashed border-slate-700/50">
+                 <div className="flex justify-between items-center mb-2">
+                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Giả lập Mastery</span>
+                    <span className="text-xs text-purple-400 font-bold">{userMastery} Điểm</span>
                  </div>
                  <input 
                     type="range" 
@@ -317,7 +299,7 @@ const App = () => {
                     max="2000" 
                     value={userMastery}
                     onChange={(e) => setUserMastery(parseInt(e.target.value))}
-                    className="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                   />
             </div>
           </div>
@@ -325,77 +307,82 @@ const App = () => {
 
         {/* RIGHT COLUMN: Roadmap */}
         <div className="w-full lg:w-5/12">
-          <div className="bg-[#13141F] rounded-[2.5rem] p-8 md:p-10 border border-white/10 h-full relative overflow-hidden">
+          <div className="bg-[#13141F] rounded-3xl p-6 md:p-8 border border-white/10 h-full relative overflow-hidden">
              
-             <div className="flex justify-between items-start mb-12 relative z-10">
-                <div className="space-y-1">
-                   <h3 className="text-xs font-black text-cyan-400 tracking-[0.3em] uppercase opacity-90">Roadmap</h3>
-                   <p className="text-[10px] text-slate-500 uppercase font-bold tracking-widest">Network Progression</p>
+             <div className="flex justify-between items-center mb-10 relative z-10">
+                <div className="flex items-center gap-2">
+                   <MapPinIcon size={18} className="text-cyan-400" />
+                   <h3 className="text-sm font-bold text-white tracking-widest uppercase opacity-90">
+                      Roadmap
+                   </h3>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-2xl p-4 backdrop-blur-xl shadow-2xl min-w-[160px]">
-                   <div className="flex items-center justify-between gap-4 mb-2">
-                       <span className="text-[10px] text-slate-500 uppercase font-black tracking-widest">Global Users</span>
-                       <div className="flex items-center gap-2">
-                           <div className="w-1.5 h-1.5 rounded-full bg-green-500 shadow-[0_0_8px_rgba(34,197,94,1)]"></div>
-                           <span className="font-mono text-sm font-black text-white">
-                              {totalUsers.toLocaleString()}
-                           </span>
+                <div className="flex flex-col items-end">
+                   <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 backdrop-blur-sm shadow-lg min-w-[140px]">
+                       <div className="flex items-center justify-between gap-3">
+                           <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Users</span>
+                           <div className="flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.6)]"></div>
+                               <span className="font-mono text-sm font-bold text-white leading-none">
+                                  {totalUsers.toLocaleString()}
+                               </span>
+                           </div>
                        </div>
-                   </div>
-                   <div className="flex items-center justify-center gap-1.5 pt-2 border-t border-white/5 text-[9px] text-slate-600 font-bold uppercase tracking-widest">
-                      <RefreshCwIcon size={10} className="animate-spin" style={{ animationDuration: '4s' }} />
-                      <span>Syncing nodes...</span>
+                       <div className="flex items-center justify-center gap-1 mt-1.5 pt-1.5 border-t border-white/5 text-[9px] text-slate-600 font-medium">
+                          <RefreshCwIcon size={8} className="animate-spin-slow" />
+                          <span>Update after 24h</span>
+                       </div>
                    </div>
                 </div>
              </div>
 
-             <div className="relative space-y-2 z-10">
-                <div className="absolute left-[23px] top-6 bottom-6 w-px bg-gradient-to-b from-cyan-500/50 via-slate-800 to-transparent"></div>
-                
+             <div className="relative space-y-0 z-10">
+                <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-800/50"></div>
                 {halvingMilestones.map((milestone, index) => {
                    let status = 'locked'; 
                    if (currentPhaseIndex > index) status = 'completed';
                    if (currentPhaseIndex === index) status = 'active';
                    return (
-                      <div key={index} className="relative flex gap-8 pb-8 last:pb-0 group">
-                         <div className={`relative z-10 w-12 h-12 rounded-2xl flex items-center justify-center border-2 transition-all duration-500 shrink-0
-                            ${status === 'completed' ? 'bg-green-500/10 border-green-500/40 text-green-500' : 
-                              status === 'active' ? 'bg-cyan-500/20 border-cyan-400 text-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.3)] scale-110' : 
-                              'bg-slate-900 border-slate-800 text-slate-600'}`}>
-                            {status === 'completed' && <CheckIcon size={20} strokeWidth={3} />}
-                            {status === 'active' && <ZapIcon size={20} fill="currentColor" />}
-                            {status === 'locked' && <LockIcon size={18} />}
+                      <div key={index} className="relative flex gap-6 pb-8 last:pb-0 group">
+                         <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shrink-0
+                            ${status === 'completed' ? 'bg-[#0B0C15] border-green-500 text-green-500 shadow-[0_0_10px_rgba(34,197,94,0.3)]' : 
+                              status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110' : 
+                              'bg-[#0B0C15] border-slate-700 text-slate-600'}`}>
+                            {status === 'completed' && <CheckIcon size={18} strokeWidth={3} />}
+                            {status === 'active' && <div className="w-3 h-3 bg-cyan-400 rounded-full animate-ping" />}
+                            {status === 'active' && <div className="absolute w-3 h-3 bg-cyan-400 rounded-full" />}
+                            {status === 'locked' && <LockIcon size={16} />}
                          </div>
-                         <div className={`flex-1 rounded-3xl p-5 border transition-all duration-500 relative overflow-hidden
+                         <div className={`flex-1 rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden flex flex-col gap-2 justify-center
                             ${status === 'active' 
-                               ? 'bg-gradient-to-r from-white/5 to-transparent border-white/10' 
+                               ? 'bg-gradient-to-r from-cyan-900/20 to-transparent border-cyan-500/30 translate-x-1' 
                                : status === 'completed' 
-                                  ? 'bg-slate-800/20 border-white/5 opacity-60' 
-                                  : 'bg-transparent border-transparent opacity-30'
+                                  ? 'bg-slate-800/20 border-white/5 opacity-60 hover:opacity-100' 
+                                  : 'bg-transparent border-transparent opacity-40'
                             }`}>
-                            
-                            <div className="flex justify-between items-center mb-3">
-                               <span className={`text-xs font-black uppercase tracking-widest ${status === 'active' ? 'text-cyan-400' : 'text-slate-500'}`}>
+                            <div className={`absolute top-0 right-0 px-2 py-0.5 rounded-bl-lg text-[9px] font-bold uppercase tracking-wider
+                               ${milestone.chainStatus === 'On-Chain' 
+                                  ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]' 
+                                  : 'bg-slate-700/50 text-slate-400'}`}>
+                               {milestone.chainStatus === 'On-Chain' && <Link2Icon size={10} className="inline mr-1 -mt-0.5" />}
+                               {milestone.chainStatus}
+                            </div>
+                            <div className="flex justify-between items-center pr-12">
+                               <span className={`text-xs font-bold uppercase tracking-wider ${status === 'active' ? 'text-cyan-400' : 'text-slate-500'}`}>
                                   {milestone.label}
                                </span>
-                               <div className={`px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-widest
-                                  ${milestone.chainStatus === 'On-Chain' 
-                                     ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' 
-                                     : 'bg-slate-800 text-slate-500'}`}>
-                                  {milestone.chainStatus}
-                               </div>
                             </div>
-
-                            <div className="flex items-center gap-4">
-                               <div className="flex items-center gap-1.5 text-slate-400">
-                                  <UsersIcon size={12} />
-                                  <span className="text-[10px] font-mono font-bold">{milestone.threshold.toLocaleString()}</span>
+                            <div className="flex items-center gap-3 mt-1">
+                               <div className="flex items-center gap-1.5 bg-slate-950/40 rounded-md px-2 py-1 border border-white/5">
+                                  <UsersIcon size={12} className="text-slate-500" />
+                                  <span className="text-[10px] text-slate-400 font-mono font-medium">
+                                    {milestone.threshold.toLocaleString()}
+                                  </span>
                                </div>
-                               <div className="w-1 h-1 rounded-full bg-slate-700"></div>
-                               <div className={`flex items-center gap-1.5 text-[10px] font-bold ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
-                                  <ActivityIcon size={12} className={status === 'active' ? 'text-cyan-400' : ''} />
-                                  <span>{milestone.rate} ENGO/H</span>
+                               <div className="w-px h-3 bg-slate-700/50"></div>
+                               <div className={`flex items-center gap-1.5 text-[10px] font-medium ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
+                                  <ZapIcon size={10} className={status === 'active' ? 'text-cyan-400 fill-cyan-400/20' : 'text-slate-600'} />
+                                  <span>{milestone.rate} <span className="opacity-50 text-[9px]">Engo/h</span></span>
                                </div>
                             </div>
                          </div>
@@ -404,34 +391,32 @@ const App = () => {
                 })}
              </div>
 
-             <div className="mt-12 pt-8 border-t border-white/5 flex gap-6 text-[10px] text-slate-600 uppercase font-black tracking-[0.2em] justify-center">
-                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-green-500"></div> Passed</div>
-                <div className="flex items-center gap-2"><div className="w-2 h-2 rounded-full bg-cyan-400 animate-pulse"></div> Current</div>
+             <div className="mt-8 pt-6 border-t border-white/5 flex gap-4 text-[10px] text-slate-500 uppercase font-bold tracking-wider justify-center">
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>Đã đạt</div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-400"></div>Hiện tại</div>
              </div>
 
           </div>
         </div>
       </main>
       
-      {/* GLOBAL ANIMATIONS */}
       <style>{`
-        @keyframes mining-bar {
-          0%, 100% { height: 8px; }
-          50% { height: 20px; }
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
         }
         input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none;
           appearance: none;
-          width: 16px;
-          height: 16px;
-          background: #22d3ee;
-          border-radius: 50%;
+          width: 12px;
+          height: 12px;
+          background: #a855f7;
           cursor: pointer;
-          box-shadow: 0 0 10px rgba(34, 211, 238, 0.5);
-          transition: all 0.2s ease-in-out;
-        }
-        input[type='range']::-webkit-slider-thumb:hover {
-          scale: 1.2;
-          box-shadow: 0 0 20px rgba(34, 211, 238, 0.8);
+          border-radius: 50%;
+          box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
         }
       `}</style>
     </div>
