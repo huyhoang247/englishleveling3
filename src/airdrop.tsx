@@ -203,7 +203,7 @@ const App = () => {
       {/* --- NAVIGATION BAR --- */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-start bg-transparent">
         
-        {/* LEFT SIDE: AIRDROP & REFERRAL (Đã đổi vị trí) */}
+        {/* LEFT SIDE: AIRDROP & REFERRAL (Đã đổi vị trí theo yêu cầu) */}
         <div className="flex flex-col items-start gap-3">
              {/* Live Airdrop Badge */}
             <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60">
@@ -224,7 +224,7 @@ const App = () => {
              </button>
         </div>
 
-        {/* RIGHT SIDE: WALLET & MASTERY (Đã đổi vị trí) */}
+        {/* RIGHT SIDE: WALLET & MASTERY (Đã đổi vị trí theo yêu cầu) */}
         <div className="flex flex-col items-end gap-3">
              {/* Connect Wallet Button - Cùng hàng với Live Airdrop */}
              <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
@@ -443,15 +443,13 @@ const App = () => {
         </div>
       </main>
 
-      {/* --- BOOST BREAKDOWN POPUP (LOW COST PERFORMANCE) --- */}
+      {/* --- BOOST BREAKDOWN POPUP (DARK OVERLAY - NO BACKDROP BLUR) --- */}
       {showBoostDetails && (
-        // Dùng fixed inset-0 để bao trùm màn hình
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
           
-          {/* Lớp phủ trong suốt (Transparent Overlay) - Nhẹ hơn blur/dark overlay */}
-          {/* Vẫn bắt sự kiện onClick để đóng popup khi click ra ngoài */}
+          {/* Lớp phủ tối màu (bg-black/60) thay vì blur - Hiệu năng cao */}
           <div 
-            className="absolute inset-0 bg-transparent" 
+            className="absolute inset-0 bg-black/60 transition-opacity" 
             onClick={() => setShowBoostDetails(false)}
           ></div>
           
