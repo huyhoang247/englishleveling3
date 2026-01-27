@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useGame } from './GameContext.tsx';
 
 // --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
 const Icon = ({ children, size = 24, className = "" }) => (
@@ -95,12 +96,15 @@ const LockIcon = (props) => (
 
 // --- MAIN COMPONENT ---
 const App = () => {
+  // Lấy dữ liệu Mastery Cards thực tế từ Context
+  const { masteryCards } = useGame();
+  const userMastery = masteryCards; 
+
   const [balance, setBalance] = useState(124.5938);
   const [miningEndTime, setMiningEndTime] = useState(null);
   const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
-  const [userMastery, setUserMastery] = useState(46); 
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -295,24 +299,7 @@ const App = () => {
                 </div>
               </div>
             </div>
-            
-            {/* Mastery Simulator */}
-            <div className="mt-8 pt-4 border-t border-dashed border-slate-700/50">
-                 <div className="flex justify-between items-center mb-2">
-                    <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Mastery Simulator</span>
-                    <span className={`text-xs font-bold ${userMastery >= 100 ? 'text-green-400' : 'text-purple-400'}`}>
-                      {userMastery} PTS {userMastery >= 100 && "✓"}
-                    </span>
-                 </div>
-                 <input 
-                    type="range" 
-                    min="0" 
-                    max="200" 
-                    value={userMastery}
-                    onChange={(e) => setUserMastery(parseInt(e.target.value))}
-                    className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
-                  />
-            </div>
+            {/* Đã xóa phần Mastery Simulator tại đây */}
           </div>
         </div>
 
