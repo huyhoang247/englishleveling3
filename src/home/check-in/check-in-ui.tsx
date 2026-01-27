@@ -12,9 +12,7 @@ interface DailyCheckInProps {
 }
 
 // --- HELPER: FORMAT SỐ (1K, 1M, 1B) ---
-// Hàm này chuyển đổi số dạng chuỗi hoặc số thành dạng rút gọn
 const formatCompactNumber = (amount: string | number): string => {
-    // Nếu là string có dấu phẩy (ví dụ "1,000"), loại bỏ dấu phẩy trước khi parse
     const num = typeof amount === 'string' 
         ? parseFloat(amount.replace(/,/g, '')) 
         : amount;
@@ -22,30 +20,25 @@ const formatCompactNumber = (amount: string | number): string => {
     if (isNaN(num)) return amount.toString();
 
     if (num >= 1000000000) {
-        // Tỷ (Billion)
         return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
     }
     if (num >= 1000000) {
-        // Triệu (Million)
         return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
     }
     if (num >= 1000) {
-        // Nghìn (Thousand)
         return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'K';
     }
-    
-    // Số nhỏ hơn 1000 giữ nguyên
     return num.toString();
 };
 
-// 1. CoinWrapper: Tách ra để Coin nhảy số không render lại cả trang
+// 1. CoinWrapper
 const CoinWrapper = memo(() => {
     const { coins } = useCheckIn();
     const animatedCoins = useAnimateValue(coins, 500);
     return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />;
 });
 
-// 2. MiniCalendar: Tối ưu logic render class cho lịch 7 ngày
+// 2. MiniCalendar
 const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStreak }: any) => {
     const getStatus = (day: number) => {
         if (canClaimToday && day === claimableDay) return 'claimable';
@@ -93,11 +86,10 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     );
 });
 
-// 3. NextGoalCard: Thẻ mục tiêu tiếp theo (Streak reward)
+// 3. NextGoalCard
 const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     if (!nextStreakGoal) return null;
     
-    // Tính toán % width cho thanh progress
     const percentage = Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100);
     const formattedAmount = formatCompactNumber(nextStreakGoal.amount);
 
@@ -131,8 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Component hiển thị từng ngày
-// LAYOUT MỚI: Day (Góc trái) -> Icon (Giữa) -> Số lượng (Dưới icon, mờ) -> Nút Claim (Phải)
+// 4. RewardItem: Cập nhật vị trí số lượng (Overlay icon góc phải dưới)
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -160,27 +151,28 @@ const RewardItem = memo(({
             
             <div className={`relative flex items-center justify-between p-3 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
             
-                {/* 1. TAG NGÀY: Nằm bên trái (Absolute) */}
+                {/* 1. TAG NGÀY: Bên trái */}
                 <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300 z-10">
                     Day {reward.day}
                 </div>
                 
-                {/* 2. CỤM ICON VÀ SỐ LƯỢNG: Nằm giữa (Flex Column) */}
-                <div className="flex-1 flex flex-col items-center justify-center pl-2"> 
-                    {/* Icon */}
-                    <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                {/* 2. ICON + SỐ LƯỢNG (Chồng lên nhau) */}
+                <div className="flex-1 flex items-center justify-center pl-2"> 
+                    {/* Wrapper Relative để chứa số lượng absolute */}
+                    <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                        {/* Icon Container */}
                         <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
                             <div className="w-9 h-9">{reward.icon}</div>
                         </div>
-                    </div>
 
-                    {/* Số lượng: Nằm dưới Icon, Opacity 60% */}
-                    <div className={`text-lg font-lilita mt-1 leading-none ${isClaimable ? 'text-white/60' : 'text-slate-300/60'}`}>
-                        x{formattedAmount}
+                        {/* Số lượng: Nằm đè lên góc phải dưới, nhỏ (text-sm), opacity 60% */}
+                        <div className={`absolute bottom-0.5 right-1.5 text-sm font-lilita leading-none drop-shadow-md ${isClaimable ? 'text-white/60' : 'text-slate-300/60'}`}>
+                            x{formattedAmount}
+                        </div>
                     </div>
                 </div>
 
-                {/* 3. NÚT CLAIM: Nằm bên phải */}
+                {/* 3. NÚT CLAIM: Bên phải */}
                 <button 
                     onClick={handleClaim} 
                     disabled={!isClaimable || isClaiming || isSyncingData} 
@@ -209,7 +201,7 @@ const RewardItem = memo(({
     );
 });
 
-// 5. CheckInMainContent: Component chứa list
+// 5. CheckInMainContent
 const CheckInMainContent = memo(({ 
     dailyRewards, canClaimToday, claimableDay, loginStreak, nextStreakGoal, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -244,7 +236,7 @@ const CheckInMainContent = memo(({
     );
 });
 
-// 6. RewardAnimationOverlay: Component popup hiệu ứng
+// 6. RewardAnimationOverlay
 const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, particles }: any) => {
     if (!showRewardAnimation || !animatingReward) return null;
 
@@ -273,7 +265,6 @@ const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, par
                 </div>
             </div>
             
-            {/* Particles render here - isolated from the main list */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 {particles.map((particle: any) => (<div key={particle.id} className={particle.className} style={particle.style} />))}
             </div>
@@ -305,7 +296,7 @@ const DailyCheckInView = () => {
       {/* 2. LỚP PHỦ MÀU ĐEN OPACITY 85% */}
       <div className="absolute inset-0 z-0 bg-black/85"></div>
 
-      {/* 3. NỘI DUNG CHÍNH (z-10 để nổi lên trên nền) */}
+      {/* 3. NỘI DUNG CHÍNH */}
       <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
@@ -313,7 +304,6 @@ const DailyCheckInView = () => {
         </div>
       </header>
       
-      {/* Phần list nặng được tách ra CheckInMainContent */}
       <div className="relative z-10 flex-1 overflow-y-auto hide-scrollbar overscroll-none" style={{ willChange: 'scroll-position' }}>
          <CheckInMainContent 
             dailyRewards={dailyRewards}
@@ -333,7 +323,6 @@ const DailyCheckInView = () => {
          particles={particles}
       />
 
-      {/* --- CSS --- */}
       <style jsx>{`
         .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
@@ -348,7 +337,6 @@ const DailyCheckInView = () => {
 
         @keyframes float-particle-1 { 0% { transform: translate(0, 0) scale(1); opacity: 1; } 100% { transform: translate(-100px, -100px) scale(0); opacity: 0; } }
         .animate-float-particle-1 { animation: float-particle-1 2s ease-out forwards; }
-        /* Các animation particle bổ sung nếu cần */
         .animate-float-particle-2 { animation: float-particle-1 2.5s ease-out forwards; }
         .animate-float-particle-3 { animation: float-particle-1 3s ease-out forwards; }
         .animate-float-particle-4 { animation: float-particle-1 1.5s ease-out forwards; }
