@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useGame } from './GameContext.tsx';
+import MasteryDisplay from './ui/dispkay/mastery-display.tsx'; // Import component MasteryDisplay
 
 // --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
 const Icon = ({ children, size = 24, className = "" }) => (
@@ -165,22 +166,11 @@ const App = () => {
         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_85%_85%,rgba(22,78,99,0.15),transparent_40%)]"></div>
       </div>
 
-      <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
-        <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
-          <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
-          <div className="flex flex-col items-start">
-            <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
-            <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
-          </div>
-        </button>
-      </nav>
-
-      <main className="relative z-10 flex-1 container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-8 items-start">
+      {/* --- NAVIGATION BAR --- */}
+      <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-start bg-transparent">
         
-        {/* LEFT COLUMN: Mining Dashboard */}
-        <div className="w-full lg:w-7/12 space-y-6">
-          {/* Badge Airdrop: Bỏ backdrop-blur để mượt hơn */}
-          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60 mb-2">
+        {/* LEFT SIDE: LIVE AIRDROP BADGE (Moved from body) */}
+        <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60 mt-1">
             <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                 <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -189,7 +179,31 @@ const App = () => {
                 <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
             </div>
             <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
-          </div>
+        </div>
+
+        {/* RIGHT SIDE: WALLET & MASTERY */}
+        <div className="flex flex-col items-end gap-3">
+            <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
+                <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
+                <div className="flex flex-col items-start">
+                    <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
+                    <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
+                </div>
+            </button>
+            
+            {/* Mastery Display Added Here */}
+            <div>
+                 <MasteryDisplay masteryCount={userMastery} />
+            </div>
+        </div>
+      </nav>
+
+      <main className="relative z-10 flex-1 container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-8 items-start">
+        
+        {/* LEFT COLUMN: Mining Dashboard */}
+        <div className="w-full lg:w-7/12 space-y-6">
+          
+          {/* Badge Airdrop removed from here */}
 
           <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
             {/* OPTIMIZED GLOW: Dùng Radial Gradient thay cho Blur */}
