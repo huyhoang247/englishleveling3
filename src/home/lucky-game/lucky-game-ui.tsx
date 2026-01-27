@@ -397,8 +397,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
             }}
         />
 
-        {/* Black Overlay 80% */}
-        <div className="absolute inset-0 bg-black/80"></div>
+        {/* Black Overlay 85% - Tăng độ tối nền */}
+        <div className="absolute inset-0 bg-black/85"></div>
 
         {/* Glow Effect */}
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/10 blur-[80px] rounded-full"></div>
@@ -411,7 +411,8 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         </div>
       </header>
 
-      <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px]">
+      {/* Main Content Container - Opacity 90% */}
+      <div className="w-full max-w-5xl px-4 flex-1 flex flex-col items-center justify-center relative z-10 pt-[53px] opacity-90">
         
         {/* JACKPOT DISPLAY */}
         <div className="text-center mb-10 -mt-12 w-full max-w-lg z-10 transform hover:scale-105 transition-transform duration-300">
