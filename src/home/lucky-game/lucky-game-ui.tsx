@@ -398,7 +398,7 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
         />
 
         {/* Black Overlay 85% */}
-        <div className="absolute inset-0 bg-black/85"></div>
+        <div className="absolute inset-0 bg-black/90"></div>
 
         {/* Glow Effect */}
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/10 blur-[80px] rounded-full"></div>
