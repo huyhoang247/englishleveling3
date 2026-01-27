@@ -152,7 +152,8 @@ const App = () => {
   }, [isMining, miningEndTime, ratePerSecond]);
 
   return (
-    <div className="h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
+    // THÊM CLASS 'scrollbar-hide' ĐỂ ẨN THANH CUỘN
+    <div className="scrollbar-hide h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
       
       {/* --- OPTIMIZED BACKGROUND EFFECTS (Không dùng Blur nặng) --- */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
@@ -183,7 +184,6 @@ const App = () => {
                 </span>
                 <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
             </div>
-            {/* Đã cập nhật font-lilita ở đây */}
             <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
           </div>
 
@@ -403,6 +403,15 @@ const App = () => {
           width: 14px; height: 14px; background: #a855f7;
           cursor: pointer; border-radius: 50%; border: 2px solid white;
           box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+
+        /* ẨN SCROLLBAR NHƯNG VẪN CUỘN ĐƯỢC */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
         }
       `}</style>
     </div>
