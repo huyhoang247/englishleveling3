@@ -115,7 +115,7 @@ const App = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
-  const [userMastery, setUserMastery] = useState(50); // Mặc định 50 để người dùng thấy trạng thái Locked ban đầu
+  const [userMastery, setUserMastery] = useState(45); // Điểm ban đầu
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -134,17 +134,12 @@ const App = () => {
 
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
-
-  // --- MASTERY BOOST ---
   const masteryBoost = (userMastery / 100) * 0.2; 
-  
   const totalMiningRate = currentBaseRate + masteryBoost;
   const ratePerSecond = totalMiningRate / 3600;
 
   const startMiningSession = () => {
-    // Chỉ cho phép đào nếu Mastery >= 100
     if (userMastery < 100) return;
-
     const endTime = Date.now() + 24 * 60 * 60 * 1000;
     setMiningEndTime(endTime);
     setIsMining(true);
@@ -184,7 +179,7 @@ const App = () => {
       <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center bg-transparent">
         <button 
           disabled
-          className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 hover:opacity-100 transition-opacity group"
+          className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 transition-opacity group"
         >
           <div className="text-slate-500 group-hover:text-cyan-400 transition-colors">
             <WalletIcon size={20} />
@@ -202,7 +197,7 @@ const App = () => {
         {/* LEFT COLUMN: Mining Dashboard */}
         <div className="w-full lg:w-7/12 space-y-6">
           
-          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-md hover:border-cyan-500/50 transition-colors cursor-default group mb-2">
+          <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900/80 border border-slate-700/60 backdrop-blur-md mb-2">
             <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                 <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
@@ -210,7 +205,7 @@ const App = () => {
                 </span>
                 <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
             </div>
-            <span className="text-slate-200 text-sm font-semibold tracking-wide flex items-center gap-2 group-hover:text-cyan-400 transition-colors uppercase">
+            <span className="text-slate-200 text-sm font-semibold tracking-wide uppercase">
                 AIRDROP
             </span>
           </div>
@@ -238,7 +233,7 @@ const App = () => {
 
               {/* STATS GRID */}
               <div className="grid grid-cols-2 gap-3 mb-6">
-                <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5 group-hover:border-white/10 transition-colors">
+                <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5">
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1">
                     <TrendingDownIcon size={12} /> Base Rate
                   </div>
@@ -246,7 +241,7 @@ const App = () => {
                     +{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans font-normal">/h</span>
                   </div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group-hover:border-purple-500/40 transition-colors">
+                <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20">
                   <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1">
                     <ZapIcon size={12} /> Boost
                   </div>
@@ -256,7 +251,7 @@ const App = () => {
                 </div>
               </div>
 
-              {/* PRODUCTION SECTION */}
+              {/* PRODUCTION & ACTION SECTION */}
               <div className="flex flex-col gap-5 pt-4 border-t border-white/5">
                 <div className="flex justify-between items-center">
                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Production</div>
@@ -266,10 +261,10 @@ const App = () => {
                    </div>
                 </div>
 
-                {/* --- REDESIGNED START MINING BUTTON --- */}
-                <div className="flex flex-col items-center gap-3">
+                {/* --- REDESIGNED START MINING BUTTON & PROGRESS --- */}
+                <div className="flex flex-col items-center gap-4">
                   {isMining ? (
-                      <div className="w-full py-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between px-6 transition-all duration-300">
+                      <div className="w-full py-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between px-6 transition-all duration-300 shadow-inner">
                          <div className="flex items-center gap-3">
                             <div className="relative flex items-center justify-center">
                                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
@@ -280,43 +275,55 @@ const App = () => {
                          <div className="font-mono text-xl text-cyan-400 tracking-widest">{timeLeft}</div>
                       </div>
                   ) : (
-                      <button 
-                        onClick={startMiningSession}
-                        disabled={userMastery < 100}
-                        className={`
-                          relative group/btn px-10 py-3 rounded-full font-lilita text-lg tracking-[0.05em] transition-all duration-300 flex items-center gap-3 overflow-hidden
-                          ${userMastery >= 100 
-                            ? "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] hover:scale-[1.03] active:scale-95" 
-                            : "bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed opacity-60"}
-                        `}
-                      >
-                        {userMastery >= 100 ? (
-                          <>
-                            <ZapIcon size={20} fill="currentColor" className="group-hover/btn:animate-pulse" />
-                            <span>START MINING</span>
-                            {/* Reflection effect */}
-                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
-                          </>
-                        ) : (
-                          <>
-                            <LockIcon size={18} />
-                            <span>LOCKED</span>
-                          </>
-                        )}
-                      </button>
-                  )}
-                  
-                  {/* Warning label when locked */}
-                  {!isMining && userMastery < 100 && (
-                     <div className="flex items-center gap-1.5 text-[10px] text-orange-400/80 font-bold uppercase tracking-tighter">
-                        <ActivityIcon size={10} /> Reach 100 Mastery to unlock mining
-                     </div>
-                  )}
+                      <div className="w-full flex flex-col items-center gap-4">
+                        <button 
+                          onClick={startMiningSession}
+                          disabled={userMastery < 100}
+                          className={`
+                            relative group/btn px-12 py-3 rounded-full font-lilita text-lg tracking-[0.05em] transition-all duration-300 flex items-center gap-3 overflow-hidden
+                            ${userMastery >= 100 
+                              ? "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] hover:scale-[1.05] active:scale-95" 
+                              : "bg-slate-800/50 border border-slate-700 text-slate-500 cursor-not-allowed opacity-60"}
+                          `}
+                        >
+                          {userMastery >= 100 ? (
+                            <>
+                              <ZapIcon size={20} fill="currentColor" className="group-hover/btn:animate-pulse" />
+                              <span>START MINING</span>
+                            </>
+                          ) : (
+                            <>
+                              <LockIcon size={18} />
+                              <span>LOCKED</span>
+                            </>
+                          )}
+                        </button>
 
-                  {!isMining && userMastery >= 100 && (
-                     <div className="text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-widest opacity-60">
-                        <ClockIcon size={12} /> 24 HOURS SESSIONS
-                     </div>
+                        {/* --- TINH TẾ: PROGRESS BAR MỞ KHÓA --- */}
+                        {userMastery < 100 && (
+                          <div className="w-full max-w-[280px] px-2">
+                             <div className="flex justify-between items-end mb-1.5 px-1">
+                                <div className="flex items-center gap-1.5">
+                                   <div className="w-1 h-1 bg-orange-500 rounded-full animate-pulse"></div>
+                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Mastery Unlock</span>
+                                </div>
+                                <span className="text-[10px] font-bold text-orange-400 font-mono tracking-tighter">{userMastery}/100</span>
+                             </div>
+                             <div className="h-1 w-full bg-slate-800/60 rounded-full overflow-hidden border border-white/5 p-[1px]">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-yellow-400 rounded-full shadow-[0_0_10px_rgba(249,115,22,0.4)] transition-all duration-700 ease-out"
+                                  style={{ width: `${Math.min(userMastery, 100)}%` }}
+                                />
+                             </div>
+                          </div>
+                        )}
+
+                        {userMastery >= 100 && (
+                           <div className="text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-widest opacity-60">
+                              <ClockIcon size={12} /> 24 HOURS SESSIONS READY
+                           </div>
+                        )}
+                      </div>
                   )}
                 </div>
               </div>
@@ -333,7 +340,7 @@ const App = () => {
                  <input 
                     type="range" 
                     min="0" 
-                    max="500" 
+                    max="400" 
                     value={userMastery}
                     onChange={(e) => setUserMastery(parseInt(e.target.value))}
                     className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
@@ -365,10 +372,6 @@ const App = () => {
                                </span>
                            </div>
                        </div>
-                       <div className="flex items-center justify-center gap-1 mt-1.5 pt-1.5 border-t border-white/5 text-[9px] text-slate-600 font-medium">
-                          <RefreshCwIcon size={8} className="animate-spin-slow" />
-                          <span>Update after 24h</span>
-                       </div>
                    </div>
                 </div>
              </div>
@@ -386,28 +389,23 @@ const App = () => {
                               status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.5)] scale-110' : 
                               'bg-[#0B0C15] border-slate-700 text-slate-600'}`}>
                             {status === 'completed' && <CheckIcon size={18} strokeWidth={3} />}
-                            {status === 'active' && <div className="absolute w-3 h-3 bg-cyan-400 rounded-full animate-ping" />}
+                            {status === 'active' && <ZapIcon size={16} fill="currentColor" />}
                             {status === 'locked' && <LockIcon size={16} />}
                          </div>
                          <div className={`flex-1 rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden flex flex-col gap-2 justify-center
                             ${status === 'active' 
-                               ? 'bg-gradient-to-r from-cyan-900/20 to-transparent border-cyan-500/30 translate-x-1' 
-                               : status === 'completed' 
-                                  ? 'bg-slate-800/20 border-white/5 opacity-60 hover:opacity-100' 
-                                  : 'bg-transparent border-transparent opacity-40'
+                               ? 'bg-gradient-to-r from-cyan-900/20 to-transparent border-cyan-500/30' 
+                               : 'bg-transparent border-transparent opacity-40'
                             }`}>
                             <div className={`absolute top-0 right-0 px-2 py-0.5 rounded-bl-lg text-[9px] font-bold uppercase tracking-wider
                                ${milestone.chainStatus === 'On-Chain' 
                                   ? 'bg-orange-500 text-white shadow-[0_0_10px_rgba(249,115,22,0.4)]' 
                                   : 'bg-slate-700/50 text-slate-400'}`}>
-                               {milestone.chainStatus === 'On-Chain' && <Link2Icon size={10} className="inline mr-1 -mt-0.5" />}
                                {milestone.chainStatus}
                             </div>
-                            <div className="flex justify-between items-center pr-12">
-                               <span className={`text-xs font-bold uppercase tracking-wider ${status === 'active' ? 'text-cyan-400' : 'text-slate-500'}`}>
-                                  {milestone.label}
-                               </span>
-                            </div>
+                            <span className={`text-xs font-bold uppercase tracking-wider ${status === 'active' ? 'text-cyan-400' : 'text-slate-500'}`}>
+                                {milestone.label}
+                            </span>
                             <div className="flex items-center gap-3 mt-1">
                                <div className="flex items-center gap-1.5 bg-slate-950/40 rounded-md px-2 py-1 border border-white/5">
                                   <UsersIcon size={12} className="text-slate-500" />
@@ -415,9 +413,8 @@ const App = () => {
                                     {milestone.threshold.toLocaleString()}
                                   </span>
                                </div>
-                               <div className="w-px h-3 bg-slate-700/50"></div>
                                <div className={`flex items-center gap-1.5 text-[10px] font-medium ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
-                                  <ZapIcon size={10} className={status === 'active' ? 'text-cyan-400 fill-cyan-400/20' : 'text-slate-600'} />
+                                  <ZapIcon size={10} className={status === 'active' ? 'text-cyan-400' : 'text-slate-600'} />
                                   <span>{milestone.rate} <span className="opacity-50 text-[9px]">Engo/h</span></span>
                                </div>
                             </div>
