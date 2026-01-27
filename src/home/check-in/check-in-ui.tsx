@@ -123,7 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Cập nhật vị trí số lượng (Overlay icon góc phải dưới)
+// 4. RewardItem: Cập nhật vị trí số lượng (Box sát chữ hơn, sát góc hơn)
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -165,8 +165,8 @@ const RewardItem = memo(({
                             <div className="w-9 h-9">{reward.icon}</div>
                         </div>
 
-                        {/* Số lượng: Có box nền, không drop-shadow, nhỏ hơn */}
-                        <div className={`absolute bottom-1 right-1 px-1.5 py-0.5 rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'}`}>
+                        {/* Số lượng: py-[1px] (giảm chiều cao), bottom-0.5 right-0.5 (dịch xuống và sang phải) */}
+                        <div className={`absolute bottom-0.5 right-0.5 px-1.5 py-[1px] rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'}`}>
                             <span className={`text-xs font-lilita leading-none ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
                                 x{formattedAmount}
                             </span>
