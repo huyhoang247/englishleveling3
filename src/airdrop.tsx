@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useGame } from './GameContext.tsx';
 import MasteryDisplay from './ui/display/mastery-display.tsx'; // Import component MasteryDisplay
 
@@ -95,6 +95,22 @@ const LockIcon = (props) => (
   </Icon>
 );
 
+const InfoIcon = (props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </Icon>
+);
+
+const ShareIcon = (props) => (
+  <Icon {...props}>
+    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
+    <polyline points="16 6 12 2 8 6" />
+    <line x1="12" y1="2" x2="12" y2="15" />
+  </Icon>
+);
+
 // --- MAIN COMPONENT ---
 const App = () => {
   // Lấy dữ liệu Mastery Cards thực tế từ Context
@@ -106,6 +122,14 @@ const App = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
+  
+  // State cho Boost Detail Popup
+  const [showBoostDetail, setShowBoostDetail] = useState(false);
+  const boostDetailRef = useRef(null);
+
+  // --- DỮ LIỆU GIẢ LẬP REFERRAL (Có thể thay thế bằng dữ liệu thật sau này) ---
+  const referralCount = 5; // Ví dụ người dùng có 5 ref
+  const boostPerReferral = 0.02; // Mỗi ref tăng 0.02 rate
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -124,8 +148,13 @@ const App = () => {
 
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
+
+  // --- TÍNH TOÁN BOOST ---
   const masteryBoost = (userMastery / 100) * 0.2; 
-  const totalMiningRate = currentBaseRate + masteryBoost;
+  const referralBoost = referralCount * boostPerReferral;
+  const totalBoost = masteryBoost + referralBoost;
+
+  const totalMiningRate = currentBaseRate + totalBoost;
   const ratePerSecond = totalMiningRate / 3600;
 
   const startMiningSession = () => {
@@ -134,6 +163,17 @@ const App = () => {
     setMiningEndTime(endTime);
     setIsMining(true);
   };
+
+  // Đóng popup khi click ra ngoài
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (boostDetailRef.current && !boostDetailRef.current.contains(event.target)) {
+        setShowBoostDetail(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [boostDetailRef]);
 
   useEffect(() => {
     if (!isMining || !miningEndTime) return;
@@ -193,9 +233,15 @@ const App = () => {
             </div>
         </div>
 
-        {/* RIGHT SIDE: MASTERY */}
-        <div className="flex flex-col items-end pt-1">
+        {/* RIGHT SIDE: MASTERY & REFERRAL */}
+        <div className="flex flex-col items-end gap-3 pt-1">
              <MasteryDisplay masteryCount={userMastery} />
+             
+             {/* --- NÚT REFERRAL MỚI --- */}
+             <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1A1C29] border border-slate-700/50 hover:bg-slate-800 hover:border-cyan-500/30 transition-all group">
+                <ShareIcon size={14} className="text-cyan-400" />
+                <span className="text-[11px] font-bold text-slate-400 group-hover:text-white tracking-wide uppercase">Referral</span>
+             </button>
         </div>
       </nav>
 
@@ -231,9 +277,47 @@ const App = () => {
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1"><TrendingDownIcon size={12} /> Base Rate</div>
                   <div className="text-lg text-white font-lilita">+{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans">/h</span></div>
                 </div>
-                <div className="bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20">
-                  <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1"><ZapIcon size={12} /> Boost</div>
-                  <div className="text-lg text-purple-400 font-lilita">+{masteryBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans">/h</span></div>
+
+                {/* --- BOOST CARD VỚI POPUP --- */}
+                <div className="relative bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20" ref={boostDetailRef}>
+                  <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase">
+                        <ZapIcon size={12} /> Boost
+                      </div>
+                      
+                      {/* --- INFO BUTTON --- */}
+                      <button 
+                        onClick={() => setShowBoostDetail(!showBoostDetail)}
+                        className={`text-purple-400/60 hover:text-purple-300 transition-colors p-1 rounded-full hover:bg-purple-500/10 ${showBoostDetail ? 'text-purple-300 bg-purple-500/10' : ''}`}
+                      >
+                        <InfoIcon size={12} />
+                      </button>
+                  </div>
+
+                  <div className="text-lg text-purple-400 font-lilita">+{totalBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans">/h</span></div>
+
+                  {/* --- BOOST DETAIL POPUP --- */}
+                  {showBoostDetail && (
+                    <div className="absolute top-full right-0 mt-2 w-48 bg-[#1A1C29] border border-purple-500/30 rounded-xl p-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 backdrop-blur-md">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400 font-bold uppercase">Mastery</span>
+                          <span className="text-orange-400 font-mono">+{masteryBoost.toFixed(4)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px]">
+                          <span className="text-slate-400 font-bold uppercase">Referral</span>
+                          <span className="text-cyan-400 font-mono">+{referralBoost.toFixed(4)}</span>
+                        </div>
+                        <div className="h-px bg-white/10 my-1"></div>
+                        <div className="flex justify-between items-center text-[10px] font-bold">
+                          <span className="text-purple-300 uppercase">Total</span>
+                          <span className="text-white font-mono">+{totalBoost.toFixed(4)}</span>
+                        </div>
+                      </div>
+                      {/* Arrow */}
+                      <div className="absolute -top-1 right-4 w-2 h-2 bg-[#1A1C29] border-l border-t border-purple-500/30 rotate-45"></div>
+                    </div>
+                  )}
                 </div>
               </div>
 
