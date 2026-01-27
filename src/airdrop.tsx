@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from './GameContext.tsx';
 import MasteryDisplay from './ui/display/mastery-display.tsx'; // Import component MasteryDisplay
 
@@ -95,6 +95,7 @@ const LockIcon = (props) => (
   </Icon>
 );
 
+// --- CÁC ICON MỚI THÊM VÀO ---
 const InfoIcon = (props) => (
   <Icon {...props}>
     <circle cx="12" cy="12" r="10" />
@@ -103,11 +104,19 @@ const InfoIcon = (props) => (
   </Icon>
 );
 
-const ShareIcon = (props) => (
+const XIcon = (props) => (
   <Icon {...props}>
-    <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8" />
-    <polyline points="16 6 12 2 8 6" />
-    <line x1="12" y1="2" x2="12" y2="15" />
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </Icon>
+);
+
+const UserPlusIcon = (props) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <line x1="20" y1="8" x2="20" y2="14" />
+    <line x1="23" y1="11" x2="17" y2="11" />
   </Icon>
 );
 
@@ -123,13 +132,9 @@ const App = () => {
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
   
-  // State cho Boost Detail Popup
-  const [showBoostDetail, setShowBoostDetail] = useState(false);
-  const boostDetailRef = useRef(null);
-
-  // --- DỮ LIỆU GIẢ LẬP REFERRAL (Có thể thay thế bằng dữ liệu thật sau này) ---
-  const referralCount = 5; // Ví dụ người dùng có 5 ref
-  const boostPerReferral = 0.02; // Mỗi ref tăng 0.02 rate
+  // State mới cho popup và referral
+  const [showBoostDetails, setShowBoostDetails] = useState(false);
+  const [referrals, setReferrals] = useState(5); // Giả lập 5 người đã mời
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -148,13 +153,14 @@ const App = () => {
 
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
-
+  
   // --- TÍNH TOÁN BOOST ---
   const masteryBoost = (userMastery / 100) * 0.2; 
-  const referralBoost = referralCount * boostPerReferral;
-  const totalBoost = masteryBoost + referralBoost;
-
-  const totalMiningRate = currentBaseRate + totalBoost;
+  const referralRate = 0.05; // 0.05 Engo/h mỗi người mời
+  const referralBoost = referrals * referralRate;
+  
+  const totalBoost = masteryBoost + referralBoost; // Tổng boost
+  const totalMiningRate = currentBaseRate + totalBoost; // Tổng tốc độ đào
   const ratePerSecond = totalMiningRate / 3600;
 
   const startMiningSession = () => {
@@ -163,17 +169,6 @@ const App = () => {
     setMiningEndTime(endTime);
     setIsMining(true);
   };
-
-  // Đóng popup khi click ra ngoài
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (boostDetailRef.current && !boostDetailRef.current.contains(event.target)) {
-        setShowBoostDetail(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [boostDetailRef]);
 
   useEffect(() => {
     if (!isMining || !miningEndTime) return;
@@ -214,7 +209,7 @@ const App = () => {
              {/* Connect Wallet Button */}
             <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
                 <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
-                <div className="flex flex-col items-center"> {/* items-center để căn giữa chữ */}
+                <div className="flex flex-col items-center"> 
                     <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
                     <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
                 </div>
@@ -233,14 +228,15 @@ const App = () => {
             </div>
         </div>
 
-        {/* RIGHT SIDE: MASTERY & REFERRAL */}
-        <div className="flex flex-col items-end gap-3 pt-1">
+        {/* RIGHT SIDE: MASTERY & REFERRAL (ĐÃ CHỈNH SỬA) */}
+        <div className="flex flex-col items-end pt-1 gap-2">
+             {/* Component Mastery cũ */}
              <MasteryDisplay masteryCount={userMastery} />
              
-             {/* --- NÚT REFERRAL MỚI --- */}
-             <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-[#1A1C29] border border-slate-700/50 hover:bg-slate-800 hover:border-cyan-500/30 transition-all group">
-                <ShareIcon size={14} className="text-cyan-400" />
-                <span className="text-[11px] font-bold text-slate-400 group-hover:text-white tracking-wide uppercase">Referral</span>
+             {/* Nút Referral mới nằm dưới MasteryDisplay */}
+             <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition-all group cursor-pointer">
+                <UserPlusIcon size={14} className="text-indigo-400 group-hover:scale-110 transition-transform"/>
+                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Referral</span>
              </button>
         </div>
       </nav>
@@ -277,47 +273,21 @@ const App = () => {
                   <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1"><TrendingDownIcon size={12} /> Base Rate</div>
                   <div className="text-lg text-white font-lilita">+{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans">/h</span></div>
                 </div>
+                
+                {/* --- BOOST BOX CÓ NÚT INFO --- */}
+                <div className="relative bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group/boost">
+                  {/* Nút Chấm Than (!) hiển thị Popup */}
+                  <button 
+                    onClick={() => setShowBoostDetails(true)}
+                    className="absolute top-2 right-2 p-1 rounded-full text-purple-400/40 hover:text-purple-200 hover:bg-purple-500/20 transition-all z-20 cursor-pointer"
+                    title="View Boost Details"
+                  >
+                    <InfoIcon size={14} />
+                  </button>
 
-                {/* --- BOOST CARD VỚI POPUP --- */}
-                <div className="relative bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20" ref={boostDetailRef}>
-                  <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase">
-                        <ZapIcon size={12} /> Boost
-                      </div>
-                      
-                      {/* --- INFO BUTTON --- */}
-                      <button 
-                        onClick={() => setShowBoostDetail(!showBoostDetail)}
-                        className={`text-purple-400/60 hover:text-purple-300 transition-colors p-1 rounded-full hover:bg-purple-500/10 ${showBoostDetail ? 'text-purple-300 bg-purple-500/10' : ''}`}
-                      >
-                        <InfoIcon size={12} />
-                      </button>
-                  </div>
-
+                  <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1"><ZapIcon size={12} /> Boost</div>
+                  {/* Hiển thị Total Boost (Mastery + Referral) */}
                   <div className="text-lg text-purple-400 font-lilita">+{totalBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans">/h</span></div>
-
-                  {/* --- BOOST DETAIL POPUP --- */}
-                  {showBoostDetail && (
-                    <div className="absolute top-full right-0 mt-2 w-48 bg-[#1A1C29] border border-purple-500/30 rounded-xl p-3 shadow-[0_10px_40px_rgba(0,0,0,0.5)] z-50 backdrop-blur-md">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-slate-400 font-bold uppercase">Mastery</span>
-                          <span className="text-orange-400 font-mono">+{masteryBoost.toFixed(4)}</span>
-                        </div>
-                        <div className="flex justify-between items-center text-[10px]">
-                          <span className="text-slate-400 font-bold uppercase">Referral</span>
-                          <span className="text-cyan-400 font-mono">+{referralBoost.toFixed(4)}</span>
-                        </div>
-                        <div className="h-px bg-white/10 my-1"></div>
-                        <div className="flex justify-between items-center text-[10px] font-bold">
-                          <span className="text-purple-300 uppercase">Total</span>
-                          <span className="text-white font-mono">+{totalBoost.toFixed(4)}</span>
-                        </div>
-                      </div>
-                      {/* Arrow */}
-                      <div className="absolute -top-1 right-4 w-2 h-2 bg-[#1A1C29] border-l border-t border-purple-500/30 rotate-45"></div>
-                    </div>
-                  )}
                 </div>
               </div>
 
@@ -473,6 +443,78 @@ const App = () => {
           </div>
         </div>
       </main>
+
+      {/* --- BOOST BREAKDOWN POPUP (MỚI) --- */}
+      {showBoostDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          {/* Backdrop Blur */}
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowBoostDetails(false)}></div>
+          
+          {/* Popup Content */}
+          <div className="relative bg-[#13141F] border border-purple-500/30 w-full max-w-sm rounded-3xl p-6 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowBoostDetails(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors cursor-pointer"
+            >
+              <XIcon size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                <ZapIcon size={24} fill="currentColor" />
+              </div>
+              <div>
+                <h3 className="text-lg font-lilita text-white tracking-wide">Boost Details</h3>
+                <p className="text-xs text-slate-400 font-medium">Breakdown of your speed multiplier</p>
+              </div>
+            </div>
+
+            {/* List Breakdown */}
+            <div className="space-y-3">
+              {/* Mastery Row */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                    <CheckIcon size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Mastery Boost</span>
+                    <span className="text-[10px] text-slate-500">From Card Collection</span>
+                  </div>
+                </div>
+                <div className="font-mono text-sm font-bold text-orange-400">+{masteryBoost.toFixed(4)}/h</div>
+              </div>
+
+              {/* Referral Row */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                    <UsersIcon size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Referral Boost</span>
+                    <span className="text-[10px] text-slate-500">{referrals} Active Refs</span>
+                  </div>
+                </div>
+                <div className="font-mono text-sm font-bold text-indigo-400">+{referralBoost.toFixed(4)}/h</div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-white/10 my-2"></div>
+
+              {/* Total Row */}
+              <div className="flex items-center justify-between px-2">
+                 <span className="text-sm font-bold text-white uppercase tracking-wider">Total Boost</span>
+                 <span className="text-lg font-lilita text-purple-400">+{totalBoost.toFixed(4)}/h</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
       
       {/* Styles & Custom Fonts */}
       <style>{`
