@@ -95,7 +95,6 @@ const LockIcon = (props) => (
   </Icon>
 );
 
-// --- CÁC ICON MỚI THÊM VÀO ---
 const InfoIcon = (props) => (
   <Icon {...props}>
     <circle cx="12" cy="12" r="10" />
@@ -204,18 +203,9 @@ const App = () => {
       {/* --- NAVIGATION BAR --- */}
       <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-start bg-transparent">
         
-        {/* LEFT SIDE: WALLET & AIRDROP BADGE */}
+        {/* LEFT SIDE: AIRDROP & REFERRAL (Đã đổi vị trí) */}
         <div className="flex flex-col items-start gap-3">
-             {/* Connect Wallet Button */}
-            <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
-                <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
-                <div className="flex flex-col items-center"> 
-                    <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
-                    <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
-                </div>
-            </button>
-
-            {/* Live Airdrop Badge - Nằm dưới nút Connect Wallet */}
+             {/* Live Airdrop Badge */}
             <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60">
                 <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
                     <span className="relative flex h-2 w-2">
@@ -226,18 +216,27 @@ const App = () => {
                 </div>
                 <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
             </div>
-        </div>
 
-        {/* RIGHT SIDE: MASTERY & REFERRAL (ĐÃ CHỈNH SỬA) */}
-        <div className="flex flex-col items-end pt-1 gap-2">
-             {/* Component Mastery cũ */}
-             <MasteryDisplay masteryCount={userMastery} />
-             
-             {/* Nút Referral mới nằm dưới MasteryDisplay */}
+             {/* Referral Button - Nằm dưới Airdrop */}
              <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition-all group cursor-pointer">
                 <UserPlusIcon size={14} className="text-indigo-400 group-hover:scale-110 transition-transform"/>
                 <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Referral</span>
              </button>
+        </div>
+
+        {/* RIGHT SIDE: WALLET & MASTERY (Đã đổi vị trí) */}
+        <div className="flex flex-col items-end gap-3">
+             {/* Connect Wallet Button - Cùng hàng với Live Airdrop */}
+             <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
+                <div className="flex flex-col items-end"> 
+                    <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
+                    <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
+                </div>
+                <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
+            </button>
+
+            {/* Mastery Display - Nằm dưới Wallet */}
+             <MasteryDisplay masteryCount={userMastery} />
         </div>
       </nav>
 
@@ -276,7 +275,7 @@ const App = () => {
                 
                 {/* --- BOOST BOX CÓ NÚT INFO --- */}
                 <div className="relative bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group/boost">
-                  {/* Nút Chấm Than (!) hiển thị Popup */}
+                  {/* Nút Chấm Than (!) hiển thị Popup - Nút này ở góc phải */}
                   <button 
                     onClick={() => setShowBoostDetails(true)}
                     className="absolute top-2 right-2 p-1 rounded-full text-purple-400/40 hover:text-purple-200 hover:bg-purple-500/20 transition-all z-20 cursor-pointer"
@@ -444,14 +443,20 @@ const App = () => {
         </div>
       </main>
 
-      {/* --- BOOST BREAKDOWN POPUP (MỚI) --- */}
+      {/* --- BOOST BREAKDOWN POPUP (LOW COST PERFORMANCE) --- */}
       {showBoostDetails && (
+        // Dùng fixed inset-0 để bao trùm màn hình
         <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
-          {/* Backdrop Blur */}
-          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowBoostDetails(false)}></div>
+          
+          {/* Lớp phủ trong suốt (Transparent Overlay) - Nhẹ hơn blur/dark overlay */}
+          {/* Vẫn bắt sự kiện onClick để đóng popup khi click ra ngoài */}
+          <div 
+            className="absolute inset-0 bg-transparent" 
+            onClick={() => setShowBoostDetails(false)}
+          ></div>
           
           {/* Popup Content */}
-          <div className="relative bg-[#13141F] border border-purple-500/30 w-full max-w-sm rounded-3xl p-6 shadow-[0_0_50px_rgba(168,85,247,0.15)] animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-[#13141F] border border-purple-500/30 w-full max-w-sm rounded-3xl p-6 shadow-2xl shadow-purple-900/40 animate-in fade-in zoom-in-95 duration-200">
             
             {/* Close Button */}
             <button 
