@@ -386,8 +386,21 @@ const LuckyChestGame = ({ onClose, isStatsFullscreen = false }: LuckyChestGamePr
   return (
     <div className="fixed inset-0 bg-[#050505] flex flex-col items-center font-sans overflow-hidden z-50">
       
+      {/* Background & Atmosphere */}
       <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-0 w-full h-full bg-slate-950" />
+        
+        {/* Background Image */}
+        <div 
+            className="absolute inset-0 w-full h-full bg-cover bg-center bg-no-repeat"
+            style={{ 
+                backgroundImage: "url('https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/lucky-game-background.webp')" 
+            }}
+        />
+
+        {/* Black Overlay 80% */}
+        <div className="absolute inset-0 bg-black/80"></div>
+
+        {/* Glow Effect */}
         <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[800px] h-[500px] bg-cyan-900/10 blur-[80px] rounded-full"></div>
       </div>
 
