@@ -123,7 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Cập nhật vị trí số lượng (Lệch ra ngoài, thấp hơn)
+// 4. RewardItem: Cập nhật vị trí số lượng (Dùng Flexbox + Height cố định để cân bằng)
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
@@ -165,9 +165,14 @@ const RewardItem = memo(({
                             <div className="w-9 h-9">{reward.icon}</div>
                         </div>
 
-                        {/* Số lượng: py-0 (thấp nhất có thể), -bottom-1.5 -right-1.5 (lệch ra ngoài) */}
-                        <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 py-0 rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
-                            <span className={`text-[11px] font-lilita leading-none ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
+                        {/* Số lượng: 
+                            - flex items-center justify-center: Căn giữa tuyệt đối text trong box.
+                            - h-[16px]: Chiều cao cố định cực thấp.
+                            - -bottom-1.5 -right-1.5: Vị trí lệch ra ngoài.
+                            - pb-[1px]: Mẹo nhỏ để đẩy visual text lên 1 tí nếu font vẫn bị lệch.
+                        */}
+                        <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
+                            <span className={`text-[11px] font-lilita leading-none pb-[1px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
                                 x{formattedAmount}
                             </span>
                         </div>
