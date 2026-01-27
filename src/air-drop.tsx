@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Wallet, Users, Zap, Pickaxe, TrendingDown, ArrowUpCircle, Info, Activity, ChevronRight, Check, Lock, MapPin, Clock, Timer, Link2, Database } from 'lucide-react';
+import { Wallet, Users, Zap, Pickaxe, TrendingDown, ArrowUpCircle, Info, Activity, ChevronRight, Check, Lock, MapPin, Clock, Timer, Link2, Database, RefreshCw } from 'lucide-react';
 
 const App = () => {
   // --- STATE QUẢN LÝ ---
@@ -14,7 +14,7 @@ const App = () => {
   const [totalUsers, setTotalUsers] = useState(1); 
   const [userMastery, setUserMastery] = useState(250); 
 
-  // --- CẤU HÌNH HALVING ROADMAP ---
+  // --- CẤU HÌNH ROADMAP ---
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phrase 1", chainStatus: "Off-Chain" },
     { threshold: 50000, rate: 0.8, label: "Phrase 2", chainStatus: "Off-Chain" },
@@ -80,9 +80,9 @@ const App = () => {
       </div>
 
       {/* Navbar */}
-      <nav className="relative z-10 w-full px-6 py-6 flex justify-start items-center border-b border-white/5 bg-[#0B0C15]/80 backdrop-blur-md sticky top-0">
+      <nav className="relative z-10 w-full px-6 py-6 flex justify-end items-center border-b border-white/5 bg-[#0B0C15]/80 backdrop-blur-md sticky top-0">
         
-        {/* Wallet Button */}
+        {/* Wallet Button - MOVED TO RIGHT */}
         <button 
           disabled
           className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 hover:opacity-100 transition-opacity group"
@@ -217,29 +217,42 @@ const App = () => {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Halving Roadmap */}
+        {/* RIGHT COLUMN: Roadmap */}
         <div className="w-full lg:w-5/12">
           <div className="bg-[#13141F] rounded-3xl p-6 md:p-8 border border-white/10 h-full relative overflow-hidden">
              
              {/* Header */}
-             <div className="flex justify-between items-start mb-8 relative z-10">
-                <div>
-                   <h3 className="text-xl font-bold text-white flex items-center gap-2">
-                      <MapPin size={24} className="text-cyan-400" />
-                      HALVING ROADMAP
+             <div className="flex justify-between items-center mb-10 relative z-10">
+                <div className="flex items-center gap-2">
+                   <MapPin size={18} className="text-cyan-400" />
+                   <h3 className="text-sm font-bold text-white tracking-widest uppercase opacity-90">
+                      Roadmap
                    </h3>
-                   <p className="text-slate-400 text-xs mt-1">Lộ trình giảm tốc độ toàn cầu</p>
                 </div>
-                <div className="text-right">
-                   <div className="text-xs text-slate-500 uppercase tracking-widest">Total Users</div>
-                   <div className="text-xl font-mono font-bold text-white">{totalUsers.toLocaleString()}</div>
+
+                {/* Redesigned Total Users Box (Single Line Content + Boxed) */}
+                <div className="flex flex-col items-end">
+                   <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 backdrop-blur-sm shadow-lg min-w-[140px]">
+                       <div className="flex items-center justify-between gap-3">
+                           <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Users</span>
+                           <div className="flex items-center gap-2">
+                               <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse shadow-[0_0_5px_rgba(34,197,94,0.6)]"></div>
+                               <span className="font-mono text-sm font-bold text-white leading-none">
+                                  {totalUsers.toLocaleString()}
+                               </span>
+                           </div>
+                       </div>
+                       <div className="flex items-center justify-center gap-1 mt-1.5 pt-1.5 border-t border-white/5 text-[9px] text-slate-600 font-medium">
+                          <RefreshCw size={8} className="animate-spin-slow" />
+                          <span>Update after 24h</span>
+                       </div>
+                   </div>
                 </div>
              </div>
 
              {/* Roadmap Vertical Timeline */}
-             {/* Đã xóa padding-left để căn chỉnh đường kẻ dọc */}
              <div className="relative space-y-0 z-10">
-                {/* Vertical Line Connector - Căn chỉnh chính xác 100% (Left 19px cho circle 40px) */}
+                {/* Vertical Line Connector */}
                 <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-800/50"></div>
 
                 {halvingMilestones.map((milestone, index) => {
@@ -285,9 +298,9 @@ const App = () => {
                                </span>
                             </div>
                             
-                            {/* New Redesigned Info Row (Minimalist) */}
+                            {/* Info Row (Minimalist) */}
                             <div className="flex items-center gap-3 mt-1">
-                               {/* Users Badge (Clean) */}
+                               {/* Users Badge */}
                                <div className="flex items-center gap-1.5 bg-slate-950/40 rounded-md px-2 py-1 border border-white/5">
                                   <Users size={12} className="text-slate-500" />
                                   <span className="text-[10px] text-slate-400 font-mono font-medium">
@@ -298,7 +311,7 @@ const App = () => {
                                {/* Divider */}
                                <div className="w-px h-3 bg-slate-700/50"></div>
 
-                               {/* Rate Display (Subtle) */}
+                               {/* Rate */}
                                <div className={`flex items-center gap-1.5 text-[10px] font-medium ${status === 'active' || status === 'completed' ? 'text-slate-200' : 'text-slate-600'}`}>
                                   <Zap size={10} className={status === 'active' ? 'text-cyan-400 fill-cyan-400/20' : 'text-slate-600'} />
                                   <span>{milestone.rate} <span className="opacity-50 text-[9px]">Engo/h</span></span>
@@ -320,6 +333,17 @@ const App = () => {
           </div>
         </div>
       </main>
+      
+      {/* Custom Keyframes for slow spin */}
+      <style>{`
+        @keyframes spin-slow {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+        .animate-spin-slow {
+          animation: spin-slow 3s linear infinite;
+        }
+      `}</style>
     </div>
   );
 };
