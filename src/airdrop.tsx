@@ -134,7 +134,10 @@ const App = () => {
 
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
-  const masteryBoost = (userMastery / 100) * 0.1;
+
+  // --- HỆ SỐ MASTERY BOOST ĐÃ CẬP NHẬT THÀNH 0.2 ---
+  const masteryBoost = (userMastery / 100) * 0.2; 
+  
   const totalMiningRate = currentBaseRate + masteryBoost;
   const ratePerSecond = totalMiningRate / 3600;
 
@@ -214,7 +217,6 @@ const App = () => {
             <div className={`absolute top-0 right-0 w-[250px] h-[250px] bg-cyan-500/5 rounded-full blur-[80px] transition-opacity duration-1000 ${isMining ? 'opacity-100' : 'opacity-20'}`}></div>
 
             <div className="relative z-10">
-              {/* SỐ DƯ ĐÃ ĐƯỢC THU NHỎ VÀ DÙNG FONT LILITA ONE */}
               <div className="flex items-center gap-4 mb-5">
                 <div className={`p-2 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 'bg-slate-800 text-slate-500'}`}>
                   <ActivityIcon size={18} className={isMining ? "animate-pulse" : ""} />
