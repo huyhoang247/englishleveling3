@@ -123,9 +123,9 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Cập nhật vị trí số lượng (Cân bằng lại Top/Bottom)
+// 4. RewardItem: Grid Card, No Button, Active Dot, Top Header
 const RewardItem = memo(({ 
-    reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
+    reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
 }: any) => {
     let isClaimed;
     if (canClaimToday) {
@@ -144,30 +144,38 @@ const RewardItem = memo(({
     };
 
     return (
-        <div className={`group relative rounded-xl overflow-hidden transition-transform duration-300 ${isClaimed ? 'opacity-60' : 'hover:scale-[1.01]'} transform-gpu`}>
+        <button 
+            onClick={handleClaim} 
+            disabled={!isClaimable || isClaiming || isSyncingData} 
+            className={`group relative rounded-xl overflow-hidden transition-all duration-300 transform-gpu 
+                ${className} 
+                ${isClaimed ? 'opacity-60 grayscale-[0.3]' : ''} 
+                ${isClaimable ? 'hover:scale-[1.02] active:scale-95 cursor-pointer ring-1 ring-purple-500/50' : 'cursor-default border-transparent'}
+            `}
+        >
+            {/* Background Effect for Claimable */}
             {isClaimable && (
-                <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.2), transparent)`, backgroundSize: '200% 200%'}}></div>
+                <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.15), transparent)`, backgroundSize: '200% 200%'}}></div>
             )}
             
-            <div className={`relative flex items-center justify-between p-3 rounded-xl border ${ isClaimable ? 'bg-slate-800/85 border-purple-500/50' : 'bg-slate-800/85 border-transparent'}`}>
+            <div className={`relative flex flex-col items-center w-full h-full rounded-xl border shadow-lg ${ isClaimable ? 'bg-slate-800/90 border-purple-500/30' : 'bg-slate-800/85 border-slate-700/30'}`}>
             
-                {/* 1. TAG NGÀY: Bên trái */}
-                <div className="absolute top-0 left-0 p-1 px-2 text-xs bg-slate-700/85 rounded-br-lg uppercase font-lilita text-slate-300 z-10">
+                {/* 1. TOP HEADER: DAY X */}
+                <div className={`w-full text-center py-1.5 text-xs font-lilita uppercase tracking-wide border-b 
+                    ${isClaimable ? 'bg-gradient-to-r from-slate-800 via-purple-900/30 to-slate-800 text-purple-200 border-purple-500/20' : 'bg-black/20 text-slate-400 border-white/5'}
+                `}>
                     Day {reward.day}
                 </div>
                 
-                {/* 2. ICON + SỐ LƯỢNG (Chồng lên nhau) */}
-                <div className="flex-1 flex items-center justify-center pl-2"> 
-                    {/* Wrapper Relative để chứa số lượng absolute */}
+                {/* 2. CENTER CONTENT: ICON + AMOUNT */}
+                <div className="flex-1 flex items-center justify-center w-full py-3"> 
                     <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                         {/* Icon Container */}
                         <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
                             <div className="w-9 h-9">{reward.icon}</div>
                         </div>
 
-                        {/* Số lượng: 
-                            - pt-[2px]: Đẩy text xuống dưới để bù lại khoảng hụt ở Top.
-                        */}
+                        {/* Số lượng: Cân đối Top/Bottom */}
                         <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
                             <span className={`text-[11px] font-lilita leading-none pt-[2px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
                                 x{formattedAmount}
@@ -176,32 +184,33 @@ const RewardItem = memo(({
                     </div>
                 </div>
 
-                {/* 3. NÚT CLAIM: Bên phải */}
-                <button 
-                    onClick={handleClaim} 
-                    disabled={!isClaimable || isClaiming || isSyncingData} 
-                    className={`min-w-[80px] h-10 ml-2 flex-shrink-0 flex items-center justify-center py-2 px-3 rounded-lg font-lilita tracking-wide text-sm transition-all uppercase ${ 
-                    isClaimed ? 'bg-green-600 text-white' : 
-                    isClaimable ? 'bg-gradient-to-r from-purple-400 to-indigo-500 text-white shadow-lg active:scale-95' : 
-                    'bg-slate-700 text-slate-400'
-                    }`}
-                >
-                    { isClaimed ? 'Done' : 
-                    isClaiming && isClaimable ? (
-                        <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    ) : 'Claim' 
-                    }
-                </button>
+                {/* 3. ACTIVE INDICATOR (Green Dot) - Thay cho nút Claim */}
+                {isClaimable && (
+                    <div className="absolute top-2 right-2">
+                        <span className="relative flex h-3 w-3">
+                            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                            <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]"></span>
+                        </span>
+                    </div>
+                )}
                 
+                {/* 4. LOADING SPINNER (Khi đang claim) */}
+                {isClaiming && isClaimable && (
+                     <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center z-20 rounded-xl backdrop-blur-[1px]">
+                        <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    </div>
+                )}
+
+                {/* 5. CLAIMED OVERLAY (Dấu tích xanh) */}
                 {isClaimed && (
-                    <div className="absolute inset-0 bg-slate-900/70 flex items-center justify-center z-20">
-                        <div className="bg-green-600 rounded-full p-2 transform rotate-12 shadow-lg">
-                            <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center z-20 rounded-xl">
+                        <div className="bg-green-600 rounded-full p-1.5 transform rotate-12 shadow-lg border border-slate-800">
+                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
                         </div>
                     </div>
                 )}
             </div>
-        </div>
+        </button>
     );
 });
 
@@ -219,13 +228,16 @@ const CheckInMainContent = memo(({
             />
         
             <div className="pb-6">
-                <div className="grid grid-cols-1 gap-3">
-                    <NextGoalCard nextStreakGoal={nextStreakGoal} loginStreak={loginStreak} />
+                <NextGoalCard nextStreakGoal={nextStreakGoal} loginStreak={loginStreak} />
 
+                {/* GRID LAYOUT: 2 Columns */}
+                <div className="grid grid-cols-2 gap-3">
                     {dailyRewards.map((reward: any) => (
                         <RewardItem 
                             key={reward.day}
                             reward={reward}
+                            /* Nếu là ngày 7 -> col-span-2 (Full width) */
+                            className={reward.day === 7 ? "col-span-2 h-[100px]" : "col-span-1 h-[110px]"}
                             canClaimToday={canClaimToday}
                             claimableDay={claimableDay}
                             loginStreak={loginStreak}
