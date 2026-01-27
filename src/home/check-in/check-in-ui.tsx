@@ -123,7 +123,7 @@ const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
     );
 });
 
-// 4. RewardItem: Grid Card, No Button, Active Dot, Top Header
+// 4. RewardItem: Grid Card
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
 }: any) => {
@@ -135,6 +135,9 @@ const RewardItem = memo(({
         isClaimed = reward.day <= completedDaysInCycle;
     }
     const isClaimable = canClaimToday && reward.day === claimableDay;
+    // Trạng thái Locked: Không phải đã nhận, cũng không phải đang chờ nhận hôm nay (Tương lai)
+    const isLocked = !isClaimed && !isClaimable;
+    
     const formattedAmount = formatCompactNumber(reward.amount);
 
     const handleClaim = () => {
@@ -149,7 +152,6 @@ const RewardItem = memo(({
             disabled={!isClaimable || isClaiming || isSyncingData} 
             className={`group relative rounded-xl overflow-hidden transition-all duration-300 transform-gpu 
                 ${className} 
-                ${isClaimed ? 'opacity-60 grayscale-[0.3]' : ''} 
                 ${isClaimable ? 'hover:scale-[1.02] active:scale-95 cursor-pointer ring-1 ring-purple-500/50' : 'cursor-default border-transparent'}
             `}
         >
@@ -158,24 +160,32 @@ const RewardItem = memo(({
                 <div className="absolute inset-0 rounded-xl animate-pulse-slow pointer-events-none" style={{ background: `linear-gradient(45deg, transparent, rgba(139,92,246,0.15), transparent)`, backgroundSize: '200% 200%'}}></div>
             )}
             
-            <div className={`relative flex flex-col items-center w-full h-full rounded-xl border shadow-lg ${ isClaimable ? 'bg-slate-800/90 border-purple-500/30' : 'bg-slate-800/85 border-slate-700/30'}`}>
-            
-                {/* 1. TOP HEADER: DAY X */}
-                <div className={`w-full text-center py-1.5 text-xs font-lilita uppercase tracking-wide border-b 
+            <div className={`relative flex flex-col items-center w-full h-full rounded-xl border shadow-lg overflow-hidden
+                ${isClaimable ? 'bg-slate-800/90 border-purple-500/30' : 'bg-slate-800/85 border-slate-700/30'}
+            `}>
+                
+                {/* --- LỚP PHỦ CHO NGÀY CHƯA CHECK-IN (LOCKED) --- */}
+                {isLocked && (
+                    <div className="absolute inset-0 bg-black/60 z-20 pointer-events-none"></div>
+                )}
+
+                {/* --- HEADER NGÀY --- */}
+                <div className={`w-full text-center py-1.5 text-xs font-lilita uppercase tracking-wide border-b z-10
                     ${isClaimable ? 'bg-gradient-to-r from-slate-800 via-purple-900/30 to-slate-800 text-purple-200 border-purple-500/20' : 'bg-black/20 text-slate-400 border-white/5'}
                 `}>
                     Day {reward.day}
                 </div>
                 
-                {/* 2. CENTER CONTENT: ICON + AMOUNT */}
-                <div className="flex-1 flex items-center justify-center w-full py-3"> 
+                {/* --- NỘI DUNG CHÍNH (Icon + Amount) --- */}
+                {/* Khi đã claim, giảm opacity nội dung xuống để icon tích xanh nổi bật */}
+                <div className={`flex-1 flex items-center justify-center w-full py-3 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
                     <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                        {/* Icon Container */}
+                        {/* Icon Wrapper */}
                         <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
                             <div className="w-9 h-9">{reward.icon}</div>
                         </div>
 
-                        {/* Số lượng: Cân đối Top/Bottom */}
+                        {/* Số lượng */}
                         <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
                             <span className={`text-[11px] font-lilita leading-none pt-[2px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
                                 x{formattedAmount}
@@ -184,9 +194,9 @@ const RewardItem = memo(({
                     </div>
                 </div>
 
-                {/* 3. ACTIVE INDICATOR (Green Dot) - Thay cho nút Claim */}
+                {/* --- INDICATOR: CHẤM XANH NHÁY (Khi có thể claim) --- */}
                 {isClaimable && (
-                    <div className="absolute top-2 right-2">
+                    <div className="absolute top-2 right-2 z-30">
                         <span className="relative flex h-3 w-3">
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500 shadow-[0_0_10px_rgba(34,197,94,0.8)]"></span>
@@ -194,18 +204,18 @@ const RewardItem = memo(({
                     </div>
                 )}
                 
-                {/* 4. LOADING SPINNER (Khi đang claim) */}
+                {/* --- LOADING SPINNER (Không backdrop blur) --- */}
                 {isClaiming && isClaimable && (
-                     <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center z-20 rounded-xl backdrop-blur-[1px]">
+                     <div className="absolute inset-0 bg-slate-900/40 flex items-center justify-center z-40 rounded-xl">
                         <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
                     </div>
                 )}
 
-                {/* 5. CLAIMED OVERLAY (Dấu tích xanh) */}
+                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN (Thay vì giữa) --- */}
                 {isClaimed && (
-                    <div className="absolute inset-0 bg-slate-900/60 flex items-center justify-center z-20 rounded-xl">
-                        <div className="bg-green-600 rounded-full p-1.5 transform rotate-12 shadow-lg border border-slate-800">
-                            <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>
+                    <div className="absolute top-1.5 right-1.5 z-30">
+                         <div className="bg-green-500 rounded-full p-0.5 shadow-lg border border-slate-900 flex items-center justify-center">
+                            <svg className="w-3.5 h-3.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={4} d="M5 13l4 4L19 7" /></svg>
                         </div>
                     </div>
                 )}
@@ -236,7 +246,7 @@ const CheckInMainContent = memo(({
                         <RewardItem 
                             key={reward.day}
                             reward={reward}
-                            /* Nếu là ngày 7 -> col-span-2 (Full width) */
+                            /* Ngày 7 -> col-span-2 (Full width) */
                             className={reward.day === 7 ? "col-span-2 h-[100px]" : "col-span-1 h-[110px]"}
                             canClaimToday={canClaimToday}
                             claimableDay={claimableDay}
