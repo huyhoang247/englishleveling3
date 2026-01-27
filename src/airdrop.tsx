@@ -183,7 +183,8 @@ const App = () => {
                 </span>
                 <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
             </div>
-            <span className="text-slate-200 text-sm font-semibold tracking-wide uppercase">AIRDROP</span>
+            {/* Đã cập nhật font-lilita ở đây */}
+            <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
           </div>
 
           <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
