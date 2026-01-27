@@ -115,7 +115,7 @@ const App = () => {
   const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
-  const [userMastery, setUserMastery] = useState(250); 
+  const [userMastery, setUserMastery] = useState(50); // Mặc định 50 để người dùng thấy trạng thái Locked ban đầu
 
   const halvingMilestones = [
     { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
@@ -135,13 +135,16 @@ const App = () => {
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
 
-  // --- MASTERY BOOST (0.2) ---
+  // --- MASTERY BOOST ---
   const masteryBoost = (userMastery / 100) * 0.2; 
   
   const totalMiningRate = currentBaseRate + masteryBoost;
   const ratePerSecond = totalMiningRate / 3600;
 
   const startMiningSession = () => {
+    // Chỉ cho phép đào nếu Mastery >= 100
+    if (userMastery < 100) return;
+
     const endTime = Date.now() + 24 * 60 * 60 * 1000;
     setMiningEndTime(endTime);
     setIsMining(true);
@@ -263,45 +266,74 @@ const App = () => {
                    </div>
                 </div>
 
-                {isMining ? (
-                    <button disabled className="w-full py-4 rounded-2xl font-bold flex items-center justify-between px-6 transition-all bg-slate-800/80 border border-slate-700 text-cyan-400 cursor-default">
-                       <div className="flex items-center gap-3">
-                          <div className="relative flex items-center justify-center">
-                             <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
-                             <div className="w-2 h-2 bg-cyan-500 rounded-full relative"></div>
-                          </div>
-                          <span className="text-sm font-bold tracking-wide">MINING...</span>
-                       </div>
-                       <div className="font-mono text-xl tracking-widest">{timeLeft}</div>
-                    </button>
-                ) : (
-                    <button 
-                      onClick={startMiningSession}
-                      className="w-full py-4 rounded-2xl font-bold text-lg flex items-center justify-center gap-3 transition-all shadow-lg bg-gradient-to-r from-cyan-500 to-purple-600 text-white hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] hover:scale-[1.01] active:scale-[0.99]"
-                    >
-                      <ZapIcon size={24} fill="currentColor" />
-                      START MINING
-                    </button>
-                )}
-                
-                {!isMining && (
-                   <div className="text-center text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-tighter opacity-60">
-                      <ClockIcon size={12} /> SESSIONS LAST 24 HOURS
-                   </div>
-                )}
+                {/* --- REDESIGNED START MINING BUTTON --- */}
+                <div className="flex flex-col items-center gap-3">
+                  {isMining ? (
+                      <div className="w-full py-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between px-6 transition-all duration-300">
+                         <div className="flex items-center gap-3">
+                            <div className="relative flex items-center justify-center">
+                               <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
+                               <div className="w-2 h-2 bg-cyan-500 rounded-full relative"></div>
+                            </div>
+                            <span className="text-sm font-lilita text-cyan-400 tracking-wider uppercase">MINING...</span>
+                         </div>
+                         <div className="font-mono text-xl text-cyan-400 tracking-widest">{timeLeft}</div>
+                      </div>
+                  ) : (
+                      <button 
+                        onClick={startMiningSession}
+                        disabled={userMastery < 100}
+                        className={`
+                          relative group/btn px-10 py-3 rounded-full font-lilita text-lg tracking-[0.05em] transition-all duration-300 flex items-center gap-3 overflow-hidden
+                          ${userMastery >= 100 
+                            ? "bg-gradient-to-r from-cyan-500 via-blue-600 to-purple-600 text-white shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] hover:scale-[1.03] active:scale-95" 
+                            : "bg-slate-800 border border-slate-700 text-slate-500 cursor-not-allowed opacity-60"}
+                        `}
+                      >
+                        {userMastery >= 100 ? (
+                          <>
+                            <ZapIcon size={20} fill="currentColor" className="group-hover/btn:animate-pulse" />
+                            <span>START MINING</span>
+                            {/* Reflection effect */}
+                            <div className="absolute inset-0 bg-white/10 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300"></div>
+                          </>
+                        ) : (
+                          <>
+                            <LockIcon size={18} />
+                            <span>LOCKED</span>
+                          </>
+                        )}
+                      </button>
+                  )}
+                  
+                  {/* Warning label when locked */}
+                  {!isMining && userMastery < 100 && (
+                     <div className="flex items-center gap-1.5 text-[10px] text-orange-400/80 font-bold uppercase tracking-tighter">
+                        <ActivityIcon size={10} /> Reach 100 Mastery to unlock mining
+                     </div>
+                  )}
+
+                  {!isMining && userMastery >= 100 && (
+                     <div className="text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-widest opacity-60">
+                        <ClockIcon size={12} /> 24 HOURS SESSIONS
+                     </div>
+                  )}
+                </div>
               </div>
             </div>
             
             {/* Mastery Simulator */}
-            <div className="mt-6 pt-4 border-t border-dashed border-slate-700/50">
+            <div className="mt-8 pt-4 border-t border-dashed border-slate-700/50">
                  <div className="flex justify-between items-center mb-2">
                     <span className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Mastery Simulator</span>
-                    <span className="text-xs text-purple-400 font-bold">{userMastery} PTS</span>
+                    <span className={`text-xs font-bold ${userMastery >= 100 ? 'text-green-400' : 'text-purple-400'}`}>
+                      {userMastery} PTS {userMastery >= 100 && "✓"}
+                    </span>
                  </div>
                  <input 
                     type="range" 
                     min="0" 
-                    max="2000" 
+                    max="500" 
                     value={userMastery}
                     onChange={(e) => setUserMastery(parseInt(e.target.value))}
                     className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
@@ -404,6 +436,7 @@ const App = () => {
         </div>
       </main>
       
+      {/* Styles & Custom Fonts */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
 
@@ -418,15 +451,17 @@ const App = () => {
         .animate-spin-slow {
           animation: spin-slow 3s linear infinite;
         }
+
         input[type='range']::-webkit-slider-thumb {
           -webkit-appearance: none;
           appearance: none;
-          width: 12px;
-          height: 12px;
+          width: 14px;
+          height: 14px;
           background: #a855f7;
           cursor: pointer;
           border-radius: 50%;
           box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+          border: 2px solid white;
         }
       `}</style>
     </div>
