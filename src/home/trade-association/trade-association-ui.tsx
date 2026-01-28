@@ -320,7 +320,7 @@ const TradeOptionCard = memo(({
                                 ? 'scale-75 grayscale opacity-70 cursor-wait' // Processing: Thu nhỏ + Đen trắng
                                 : isDisabled
                                     ? 'grayscale opacity-50 cursor-not-allowed' // Disabled: Đen trắng
-                                    : 'hover:scale-105 active:scale-95 cursor-pointer hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' // Normal
+                                    : 'hover:scale-105 active:scale-95 cursor-pointer' // Normal: Không còn phát sáng (glow)
                             }
                         `}
                         title={isProcessing ? "Processing..." : isDisabled ? "Insufficient resources" : "Exchange"}
@@ -328,7 +328,8 @@ const TradeOptionCard = memo(({
                         <img 
                             src={EXCHANGE_ICON_URL}
                             alt="Exchange"
-                            className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-xl"
+                            // Tăng kích thước: w-28 (112px) trên mobile, w-32 (128px) trên desktop
+                            className="w-28 h-28 md:w-32 md:h-32 object-contain drop-shadow-xl"
                         />
                     </button>
                 </div>
