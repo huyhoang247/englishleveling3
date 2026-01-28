@@ -33,13 +33,10 @@ const formatCompactNumber = (amount: string | number): string => {
 };
 
 // --- COMPONENT: CHECK-IN TIMER ---
-// Đếm ngược đến 00:00 Giờ Việt Nam (UTC+7) + Hiển thị dòng Bonus Text
+// Đếm ngược đến 00:00 Giờ Việt Nam (UTC+7)
+// Đã loại bỏ Bonus Text và dấu chấm nháy, giảm size chữ
 const CheckInTimer = memo(() => {
-    const { masteryCards } = useCheckIn(); 
     const [timeLeft, setTimeLeft] = useState('');
-
-    // Tính toán multiplier hiện tại dựa trên Mastery để hiển thị
-    const currentMultiplier = getCheckInMultiplier(masteryCards);
 
     useEffect(() => {
         const calculateTimeLeft = () => {
@@ -85,27 +82,12 @@ const CheckInTimer = memo(() => {
     return (
         <div className="flex flex-col items-center w-full mb-4 mt-2">
             <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full shadow-lg backdrop-blur-sm select-none animate-fadeIn">
-                <div className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
-                </div>
                 <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset</div>
-                <div className="font-lilita text-2xl text-purple-200 tabular-nums tracking-widest min-w-[100px] text-center">
+                {/* Đã giảm từ text-2xl xuống text-xl */}
+                <div className="font-lilita text-xl text-purple-200 tabular-nums tracking-widest min-w-[90px] text-center">
                     {timeLeft}
                 </div>
             </div>
-
-            {/* --- HIỂN THỊ DÒNG BONUS NHỎ Ở DƯỚI --- */}
-            {currentMultiplier > 1 && (
-                <div className="mt-1.5 flex items-center gap-1.5 animate-pulse">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 text-yellow-400">
-                        <path fillRule="evenodd" d="M14.615 1.595a.75.75 0 01.359.852L12.982 9.75h7.268a.75.75 0 01.548 1.262l-10.5 11.25a.75.75 0 01-1.272-.71l1.992-7.302H3.75a.75.75 0 01-.548-1.262l10.5-11.25a.75.75 0 01.913-.143z" clipRule="evenodd" />
-                    </svg>
-                    <span className="text-xs font-lilita text-yellow-400 tracking-wider uppercase drop-shadow-md">
-                        MASTERY BONUS X{currentMultiplier} ACTIVE
-                    </span>
-                </div>
-            )}
         </div>
     );
 });
@@ -314,7 +296,7 @@ const CheckInMainContent = memo(({
                 loginStreak={loginStreak}
             />
 
-            {/* --- 2. TIMER + BONUS TEXT --- */}
+            {/* --- 2. TIMER (Đã xóa Bonus text) --- */}
             <CheckInTimer />
 
             {/* --- 3. LƯỚI DANH SÁCH QUÀ --- */}
