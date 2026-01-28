@@ -141,6 +141,7 @@ const TradeOptionCard = memo(({
     }, [option.ingredients, resources]);
 
     // --- DYNAMIC STEPS LOGIC ---
+    // Calculate which steps to show based on maxAffordable
     const dynamicSteps = useMemo(() => {
         if (maxAffordable < 100) return [1, 10];
         if (maxAffordable < 1000) return [10, 100];
@@ -148,8 +149,10 @@ const TradeOptionCard = memo(({
         return [1000, 10000];
     }, [maxAffordable]);
 
+    // Current Step State
     const [step, setStep] = useState(dynamicSteps[0]);
 
+    // Update step if the dynamic range changes drastically
     useEffect(() => {
         if (!dynamicSteps.includes(step)) {
             setStep(dynamicSteps[0]);
@@ -161,6 +164,7 @@ const TradeOptionCard = memo(({
         if ((resources[ing.type] || 0) < ing.amount * quantity) canAffordAll = false;
     });
 
+    // Xác định trạng thái disable
     const isDisabled = !canAffordAll || quantity <= 0 || isProcessing;
 
     return (
@@ -213,7 +217,6 @@ const TradeOptionCard = memo(({
                 </div>
 
                 {/* RESULT & CONTROLS */}
-                {/* UPDATE: gap-4 -> gap-1 để thu hẹp khoảng trống */}
                 <div className="flex-1 w-full flex flex-col items-center justify-center gap-1 bg-black/20 p-5 rounded-2xl border border-slate-800">
                     
                     {/* Item Icon */}
@@ -246,7 +249,7 @@ const TradeOptionCard = memo(({
                                 </svg>
                             </button>
                             
-                            {/* Read-only Display Trigger */}
+                            {/* Read-only Display Trigger (Opens Numpad) */}
                             <div 
                                 onClick={() => onOpenNumpad(option.id, quantity, maxAffordable)}
                                 className="flex-1 bg-black/40 h-10 flex items-center justify-center rounded border border-slate-700 cursor-pointer hover:border-slate-500 active:bg-black/60 transition-colors select-none"
@@ -311,11 +314,11 @@ const TradeOptionCard = memo(({
                     <button
                         onClick={() => onExchange(option, quantity)}
                         disabled={isDisabled}
-                        // Remove mt-2 to reduce space
+                        // Thêm mt-2 để tạo khoảng cách nhẹ
                         className={`
-                            transition-all duration-300 ease-in-out
+                            mt-2 transition-all duration-300 ease-in-out
                             ${isProcessing 
-                                ? 'scale-90 grayscale opacity-80 cursor-wait' // Processing: Thu nhỏ 10%
+                                ? 'scale-90 grayscale opacity-80 cursor-wait' 
                                 : isDisabled
                                     ? 'grayscale opacity-50 cursor-not-allowed'
                                     : 'hover:scale-105 active:scale-95 cursor-pointer'
@@ -326,7 +329,7 @@ const TradeOptionCard = memo(({
                         <img 
                             src={EXCHANGE_ICON_URL}
                             alt="Exchange"
-                            // Set width lớn, nhưng height auto để không bị tạo hộp vuông rỗng
+                            // w-32/w-40 nhưng h-auto để giữ tỷ lệ
                             className="w-32 md:w-40 h-auto object-contain"
                         />
                     </button>
@@ -382,6 +385,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
 
     const getQuantity = useCallback((optionId: string) => tradeQuantities[optionId] || 1, [tradeQuantities]);
 
+    // Update quantity based on delta (+/- step)
     const handleQuantityChange = useCallback((optionId: string, delta: number) => {
         setTradeQuantities(prev => {
             const current = prev[optionId] || 1;
@@ -391,6 +395,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         });
     }, []);
 
+    // Directly set quantity (from Max or Numpad)
     const handleSetQuantity = useCallback((optionId: string, value: number) => {
         setTradeQuantities(prev => ({
             ...prev,
@@ -398,6 +403,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         }));
     }, []);
 
+    // Open Numpad logic
     const handleOpenNumpad = useCallback((optionId: string, currentVal: number, maxVal: number) => {
         setNumpadState({
             isOpen: true,
@@ -407,16 +413,19 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         });
     }, []);
 
+    // Close Numpad logic
     const handleCloseNumpad = useCallback(() => {
         setNumpadState(prev => ({ ...prev, isOpen: false }));
     }, []);
 
+    // Confirm Numpad logic
     const handleConfirmNumpad = useCallback((value: number) => {
         if (numpadState.optionId) {
             handleSetQuantity(numpadState.optionId, value);
         }
     }, [numpadState.optionId, handleSetQuantity]);
 
+    // Transaction Execution
     const handleExchange = useCallback(async (option: TradeOption, quantity: number) => {
         const userId = auth.currentUser?.uid;
         if (!userId) {
@@ -430,6 +439,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
         setToastState(prev => ({ ...prev, show: false }));
 
         try {
+            // Client-side Validation
             for (const ing of option.ingredients) {
                 const totalRequired = ing.amount * quantity;
                 if ((resources[ing.type] || 0) < totalRequired) {
@@ -458,6 +468,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
     return (
         <div className="fixed inset-0 z-[110] text-slate-200 flex flex-col overflow-hidden animate-zoom-in font-sans bg-black">
             
+            {/* BACKGROUND */}
             <div className="absolute inset-0 z-0">
                 <img 
                     src={tradeAssets.background} 
@@ -473,6 +484,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 
                 <div className="relative p-4 md:p-10 min-h-full max-w-5xl mx-auto flex flex-col">
                     
+                    {/* MARKET TIMER COMPONENT */}
                     <MarketTimer />
 
                     <RateLimitToast 
@@ -500,6 +512,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 </div>
             </div>
             
+            {/* NUMPAD OVERLAY */}
             <NumpadModal 
                 isOpen={numpadState.isOpen}
                 initialValue={numpadState.currentValue}
