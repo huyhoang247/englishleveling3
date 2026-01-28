@@ -1,4 +1,4 @@
-// Filename: check-in-ui.tsx
+pp// Filename: check-in-ui.tsx
 
 import React, { memo, useState, useEffect } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
@@ -87,7 +87,7 @@ const CheckInTimer = memo(() => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
                 </div>
-                <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset (VN)</div>
+                <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset</div>
                 <div className="font-lilita text-2xl text-purple-200 tabular-nums tracking-widest min-w-[100px] text-center">
                     {timeLeft}
                 </div>
