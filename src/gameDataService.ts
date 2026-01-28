@@ -44,7 +44,7 @@ export interface AdData {
     watchedToday: number;       // Số lượt đã xem trong ngày
     lastWatchedAt: Timestamp | null; // Thời điểm xem gần nhất
     nextAvailableAt: Timestamp | null; // Thời điểm được xem tiếp theo (quan trọng nhất)
-    streakCount: number;        // Đếm số lượt xem liên tiếp (để tính block 60p)
+    streakCount: number;        // Đếm số lượt xem liên tiếp (để tính block 10p)
 }
 
 export interface UserGameData {
@@ -498,15 +498,13 @@ export const registerAdWatch = async (userId: string): Promise<AdData> => {
         
         let cooldownSeconds = 0;
 
-        // RULE: Sau 5 lượt xem -> Block 60 phút
+        // RULE: Sau 5 lượt xem -> Block 10 phút (Sửa đổi từ 60 phút)
         if (streakCount >= 5) {
-            cooldownSeconds = 60 * 60; // 3600s = 60 phút
+            cooldownSeconds = 10 * 60; // 600s = 10 phút
             streakCount = 0; // Reset streak sau khi bị phạt
         } else {
-            // RULE: Giữa các lượt thường -> Random 2-5 phút (120s - 300s)
-            const min = 120;
-            const max = 300;
-            cooldownSeconds = Math.floor(Math.random() * (max - min + 1) + min);
+            // RULE: Giữa các lượt thường -> 45 giây (Sửa đổi từ 120-300s)
+            cooldownSeconds = 45; 
         }
 
         const nextAvailableDate = new Date(now.getTime() + cooldownSeconds * 1000);
