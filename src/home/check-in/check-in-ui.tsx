@@ -32,15 +32,28 @@ const formatCompactNumber = (amount: string | number): string => {
 };
 
 // --- COMPONENT: CHECK-IN TIMER ---
-// Đếm ngược đến 00:00 UTC (Giờ reset logic của server check-in)
+// Đếm ngược đến 00:00 Giờ Việt Nam (UTC+7)
 const CheckInTimer = memo(() => {
     const [timeLeft, setTimeLeft] = useState('');
 
     useEffect(() => {
         const calculateTimeLeft = () => {
             const now = new Date();
-            // Logic Check-in dựa trên UTC, nên ta tính mốc 00:00 UTC ngày hôm sau
-            const nextReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
+            
+            // 1. Chuyển thời gian hiện tại sang giả lập giờ VN (Cộng thêm offset vào timestamp)
+            // Mục đích: Để dùng các hàm getUTC... lấy ra ngày/giờ VN hiện tại
+            const vnOffsetMs = 7 * 60 * 60 * 1000; // +7 giờ
+            const vnTime = new Date(now.getTime() + vnOffsetMs);
+
+            // 2. Lấy thông tin ngày hiện tại theo giờ VN
+            const vnYear = vnTime.getUTCFullYear();
+            const vnMonth = vnTime.getUTCMonth();
+            const vnDay = vnTime.getUTCDate();
+
+            // 3. Tạo mốc thời gian Reset tiếp theo: 00:00:00 ngày hôm sau (theo giờ VN)
+            // Lưu ý: Date.UTC sẽ tạo ra timestamp UTC thuần túy, nên ta phải trừ đi offset 
+            // để đưa nó về đúng mốc thời gian thực tế (UTC timestamp) tương ứng với 00:00 VN.
+            const nextReset = new Date(Date.UTC(vnYear, vnMonth, vnDay + 1, 0, 0, 0) - vnOffsetMs);
 
             const diff = nextReset.getTime() - now.getTime();
 
@@ -74,7 +87,7 @@ const CheckInTimer = memo(() => {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
                 </div>
-                <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset</div>
+                <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset (VN)</div>
                 <div className="font-lilita text-2xl text-purple-200 tabular-nums tracking-widest min-w-[100px] text-center">
                     {timeLeft}
                 </div>
