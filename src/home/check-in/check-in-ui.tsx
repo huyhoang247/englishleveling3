@@ -31,7 +31,7 @@ const formatCompactNumber = (amount: string | number): string => {
     return num.toString();
 };
 
-// --- COMPONENT: CHECK-IN TIMER (MỚI) ---
+// --- COMPONENT: CHECK-IN TIMER ---
 // Đếm ngược đến 00:00 UTC (Giờ reset logic của server check-in)
 const CheckInTimer = memo(() => {
     const [timeLeft, setTimeLeft] = useState('');
@@ -106,7 +106,7 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     };
 
     return (
-        <div className="mb-6 flex justify-between px-1">
+        <div className="mb-4 mt-4 flex justify-between px-1">
             {dailyRewards.map((reward: any) => {
                 const status = getStatus(reward.day);
                 
@@ -252,23 +252,20 @@ const CheckInMainContent = memo(({
 }: any) => {
     return (
         <div className="px-4 pt-2 pb-24">
-            {/* 
-               --- VỊ TRÍ TIMER --- 
-               Đặt timer ở đây sẽ nằm ngay dưới Header (số coin) vì CheckInMainContent 
-               được render ngay dưới Header trong DailyCheckInView.
-               Và nó nằm trên MiniCalendar (Day 1, 2...)
-            */}
-            <CheckInTimer />
-
+            
+            {/* --- 1. MINICALENDAR (DÃY SỐ NGÀY 1,2,3...) --- */}
             <MiniCalendar 
                 dailyRewards={dailyRewards}
                 canClaimToday={canClaimToday}
                 claimableDay={claimableDay}
                 loginStreak={loginStreak}
             />
-        
+
+            {/* --- 2. TIMER ĐẾM NGƯỢC --- */}
+            <CheckInTimer />
+
+            {/* --- 3. LƯỚI DANH SÁCH QUÀ --- */}
             <div className="pb-6">
-                {/* GRID LAYOUT: 2 Columns */}
                 <div className="grid grid-cols-2 gap-3">
                     {dailyRewards.map((reward: any) => (
                         <RewardItem 
