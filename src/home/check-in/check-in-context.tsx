@@ -5,62 +5,65 @@ import { useGame } from '../../GameContext.tsx';
 // Import upgradeAssets để lấy icon Đá cường hóa
 import { uiAssets, equipmentUiAssets, minerAssets, bossBattleAssets, upgradeAssets } from '../../game-assets.ts'; 
 import { auth } from '../../firebase.js';
-import { processDailyCheckIn } from './check-in-service.ts';
+import { processDailyCheckIn, getCheckInMultiplier } from './check-in-service.ts';
+
+// Re-export helper để UI sử dụng mà không cần import từ service
+export { getCheckInMultiplier };
 
 // --- CẬP NHẬT DỮ LIỆU UI VỚI ENERGY VÀ ĐÁ CƯỜNG HÓA ---
-// Mỗi ngày giờ đây chứa mảng 'items', trong đó item thứ 2 luôn là Energy x5 (trừ ngày 7 có 3 món)
+// Đã thêm trường 'type' để khớp với logic tính toán trong Service
 export const dailyRewardsUI = [
   { 
       day: 1, 
       items: [
-          { name: "Gold", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Gold", amount: "1000", type: 'coins', icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
   { 
       day: 2, 
       items: [
-          { name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Ancient Book", amount: "10", type: 'ancientBooks', icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
   { 
       day: 3, 
       items: [
-          { name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Equipment Piece", amount: "10", type: 'equipmentPieces', icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
   { 
       day: 4, 
       items: [
           // Đã thay đổi: Card Capacity -> Basic Stone
-          { name: "Basic Stone", amount: "10", icon: <img src={upgradeAssets.stoneBasic} alt="Basic Stone" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Basic Stone", amount: "10", type: 'stone_low', icon: <img src={upgradeAssets.stoneBasic} alt="Basic Stone" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
   { 
       day: 5, 
       items: [
-          { name: "Pickaxe", amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Pickaxe", amount: "5", type: 'pickaxes', icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
   { 
       day: 6, 
       items: [
           // Đã thay đổi: Card Capacity -> Intermediate Stone
-          { name: "Inter. Stone", amount: "10", icon: <img src={upgradeAssets.stoneIntermediate} alt="Intermediate Stone" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Inter. Stone", amount: "10", type: 'stone_medium', icon: <img src={upgradeAssets.stoneIntermediate} alt="Intermediate Stone" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
   { 
       day: 7, 
       items: [
-          { name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-full h-full object-contain" /> },
+          { name: "Pickaxe", amount: "10", type: 'pickaxes', icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-full h-full object-contain" /> },
           // Đã thêm: Advanced Stone
-          { name: "Adv. Stone", amount: "10", icon: <img src={upgradeAssets.stoneAdvanced} alt="Advanced Stone" className="w-full h-full object-contain" /> },
-          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+          { name: "Adv. Stone", amount: "10", type: 'stone_high', icon: <img src={upgradeAssets.stoneAdvanced} alt="Advanced Stone" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
 ];
@@ -82,7 +85,7 @@ interface CheckInContextType {
   animatingReward: any;
   particles: Particle[];
   coins: number;
-  masteryCards: number; // Thêm Mastery vào context để UI sử dụng
+  masteryCards: number; // Thêm Mastery vào context để UI sử dụng tính toán hiển thị
   claimReward: (day: number) => Promise<void>;
   handleClose: () => void;
 }
@@ -180,16 +183,23 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
       setIsSyncingData(true);
       
       // Gọi service để cập nhật DB
+      // dailyReward trả về ở đây chứa items đã được nhân theo multiplier
       const { dailyReward } = await processDailyCheckIn(userId);
       setIsSyncingData(false);
 
-      // Tìm cấu hình UI tương ứng với ngày vừa nhận để hiển thị animation
+      // Tìm cấu hình UI tương ứng với ngày vừa nhận để hiển thị animation (Lấy Icon và Tên)
       const dailyRewardUIItem = dailyRewardsUI.find(r => r.day === dailyReward.day);
       
-      // Animation hiển thị phần thưởng chính (Item đầu tiên trong mảng items)
-      // Phần UI Overlay sẽ chịu trách nhiệm hiển thị thêm dòng "+5 Energy"
+      // Lấy phần thưởng chính thực tế từ server trả về (Item đầu tiên)
+      const actualReceivedMainItem = dailyReward.items[0];
+
+      // Animation hiển thị phần thưởng chính
+      // Chúng ta merge thông tin UI (Icon, Tên) với thông tin Server (Số lượng thực nhận)
       setAnimatingReward({ 
-          daily: dailyRewardUIItem ? dailyRewardUIItem.items[0] : null
+          daily: dailyRewardUIItem ? {
+              ...dailyRewardUIItem.items[0], // Lấy Icon và Name từ UI Config
+              amount: actualReceivedMainItem.amount // Lấy số lượng ĐÃ NHÂN từ Server
+          } : null
       });
 
       // Tạo hiệu ứng hạt (Particles)
