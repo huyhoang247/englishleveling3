@@ -16,6 +16,9 @@ export const CHECK_IN_REWARDS = [
     { day: 7, type: 'pickaxes', amount: 10, name: "Cúp" },
 ];
 
+// Múi giờ Việt Nam: UTC + 7
+const VN_TIMEZONE_OFFSET = 7 * 60 * 60 * 1000;
+
 export const processDailyCheckIn = async (userId: string) => {
     const userDocRef = doc(db, 'users', userId);
 
@@ -26,25 +29,43 @@ export const processDailyCheckIn = async (userId: string) => {
         const data = userDoc.data();
         const lastCheckIn = data.lastCheckIn?.toDate();
         const loginStreak = data.loginStreak || 0;
-        const now = new Date(); // Thời gian client, chỉ dùng để so sánh. serverTimestamp() sẽ được dùng để ghi.
+        
+        // Thời gian hiện tại thực tế (UTC timestamp)
+        const now = new Date(); 
+        
+        // --- LOGIC CHUYỂN ĐỔI SANG GIỜ VN ĐỂ SO SÁNH ---
+        // Ta cộng thêm offset vào timestamp, sau đó dùng các hàm getUTC... 
+        // để lấy ra ngày/tháng/năm tương ứng với giờ VN.
+        
+        // Thời gian hiện tại theo VN
+        const vnNow = new Date(now.getTime() + VN_TIMEZONE_OFFSET);
 
-        // Kiểm tra xem đã điểm danh trong cùng ngày UTC chưa
-        if (lastCheckIn && 
-            lastCheckIn.getUTCFullYear() === now.getUTCFullYear() &&
-            lastCheckIn.getUTCMonth() === now.getUTCMonth() &&
-            lastCheckIn.getUTCDate() === now.getUTCDate()) {
-            throw new Error("Bạn đã điểm danh hôm nay rồi.");
+        if (lastCheckIn) {
+            // Thời gian check-in cuối cùng theo VN
+            const vnLastCheckIn = new Date(lastCheckIn.getTime() + VN_TIMEZONE_OFFSET);
+
+            // 1. Kiểm tra xem đã điểm danh trong cùng ngày VN chưa
+            if (vnLastCheckIn.getUTCFullYear() === vnNow.getUTCFullYear() &&
+                vnLastCheckIn.getUTCMonth() === vnNow.getUTCMonth() &&
+                vnLastCheckIn.getUTCDate() === vnNow.getUTCDate()) {
+                throw new Error("Bạn đã điểm danh hôm nay rồi (Giờ VN).");
+            }
         }
         
-        // --- LOGIC TÍNH STREAK ---
+        // --- LOGIC TÍNH STREAK (THEO GIỜ VN) ---
         let newStreak = 1; // Mặc định reset streak
         if (lastCheckIn) {
-            const yesterday = new Date(now);
-            yesterday.setUTCDate(now.getUTCDate() - 1);
-            // Kiểm tra xem lần cuối là ngày hôm qua (theo UTC) để tính chuỗi liên tiếp
-            if (lastCheckIn.getUTCFullYear() === yesterday.getUTCFullYear() &&
-                lastCheckIn.getUTCMonth() === yesterday.getUTCMonth() &&
-                lastCheckIn.getUTCDate() === yesterday.getUTCDate()) {
+            const vnLastCheckIn = new Date(lastCheckIn.getTime() + VN_TIMEZONE_OFFSET);
+            
+            // Tính ngày hôm qua theo giờ VN
+            // (Lấy thời gian hiện tại theo VN trừ đi 24h)
+            const vnYesterday = new Date(vnNow.getTime() - 24 * 60 * 60 * 1000);
+
+            // Kiểm tra xem lần cuối có phải là "hôm qua" theo giờ VN không
+            // So sánh từng thành phần ngày/tháng/năm để chính xác tuyệt đối
+            if (vnLastCheckIn.getUTCFullYear() === vnYesterday.getUTCFullYear() &&
+                vnLastCheckIn.getUTCMonth() === vnYesterday.getUTCMonth() &&
+                vnLastCheckIn.getUTCDate() === vnYesterday.getUTCDate()) {
                 // Streak tiếp tục tăng, không reset sau 7 ngày
                 newStreak = loginStreak + 1;
             }
