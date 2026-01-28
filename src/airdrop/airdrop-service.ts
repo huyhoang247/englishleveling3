@@ -1,6 +1,6 @@
 // --- START OF FILE airdrop-service.ts ---
 
-import { db } from './firebase'; // Đảm bảo đường dẫn này trỏ đúng file cấu hình firebase của bạn
+import { db } from '../firebase'; // Đảm bảo đường dẫn này trỏ đúng file cấu hình firebase của bạn
 import { 
   doc, 
   runTransaction, 
