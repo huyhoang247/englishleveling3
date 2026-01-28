@@ -5,7 +5,8 @@ import {
   doc, runTransaction, serverTimestamp
 } from 'firebase/firestore';
 
-// --- CẤU HÌNH PHẦN THƯỞNG CƠ BẢN (DAYS 1-7) ---
+// --- ĐỊNH NGHĨA CẤU TRÚC PHẦN THƯỞNG GỐC (BASE) ---
+// Đây là số lượng cơ bản, sẽ được nhân lên theo hệ số Mastery (trừ Energy)
 export const CHECK_IN_REWARDS = [
     { 
         day: 1, 
@@ -59,7 +60,7 @@ export const CHECK_IN_REWARDS = [
     },
 ];
 
-// Múi giờ Việt Nam: UTC + 7 (tính bằng milliseconds)
+// Múi giờ Việt Nam: UTC + 7
 const VN_TIMEZONE_OFFSET = 7 * 60 * 60 * 1000;
 
 /**
@@ -79,18 +80,17 @@ export const getCheckInMultiplier = (mastery: number): number => {
 
 /**
  * Xử lý logic điểm danh hàng ngày.
- * Tính toán streak dựa trên múi giờ Việt Nam.
- * Áp dụng Multiplier từ Mastery VÀ Ads cho rewards (trừ Energy).
+ * Tính toán streak dựa trên múi giờ Việt Nam và cộng dồn phần thưởng.
+ * Áp dụng Multiplier cho rewards (trừ Energy).
  * 
  * @param userId ID của người dùng
- * @param adMultiplier Hệ số nhân từ quảng cáo (1 = nhận thường, 2 = xem quảng cáo)
- * @returns Object chứa thông tin phần thưởng đã nhận và streak mới
+ * @param isDouble Boolean - Nếu true thì nhân đôi TẤT CẢ phần thưởng (bao gồm Energy)
+ * @returns Object chứa thông tin phần thưởng đã nhận (đã nhân) và streak mới
  */
-export const processDailyCheckIn = async (userId: string, adMultiplier: number = 1) => {
+export const processDailyCheckIn = async (userId: string, isDouble: boolean = false) => {
     const userDocRef = doc(db, 'users', userId);
 
     return runTransaction(db, async (t) => {
-        // 1. Lấy dữ liệu User
         const userDoc = await t.get(userDocRef);
         if (!userDoc.exists()) throw new Error("User not found.");
         
@@ -99,15 +99,20 @@ export const processDailyCheckIn = async (userId: string, adMultiplier: number =
         const loginStreak = data.loginStreak || 0;
         const currentMastery = data.masteryCards || 0; // Lấy mastery hiện tại để tính multiplier
         
-        // 2. Xử lý thời gian (UTC -> VN Time)
+        // Thời gian hiện tại thực tế (UTC timestamp)
         const now = new Date(); 
+        
+        // --- LOGIC CHUYỂN ĐỔI SANG GIỜ VN ĐỂ SO SÁNH ---
+        // Ta cộng thêm offset vào timestamp để giả lập giờ VN cho các phép so sánh ngày/tháng/năm
+        
+        // Thời gian hiện tại theo VN
         const vnNow = new Date(now.getTime() + VN_TIMEZONE_OFFSET);
 
         if (lastCheckIn) {
             // Thời gian check-in cuối cùng theo VN
             const vnLastCheckIn = new Date(lastCheckIn.getTime() + VN_TIMEZONE_OFFSET);
 
-            // Kiểm tra xem đã điểm danh trong cùng ngày VN chưa
+            // 1. Kiểm tra xem đã điểm danh trong cùng ngày VN chưa
             if (vnLastCheckIn.getUTCFullYear() === vnNow.getUTCFullYear() &&
                 vnLastCheckIn.getUTCMonth() === vnNow.getUTCMonth() &&
                 vnLastCheckIn.getUTCDate() === vnNow.getUTCDate()) {
@@ -115,24 +120,24 @@ export const processDailyCheckIn = async (userId: string, adMultiplier: number =
             }
         }
         
-        // 3. Tính toán Streak (Chuỗi đăng nhập)
-        let newStreak = 1; // Mặc định reset streak về 1
+        // --- LOGIC TÍNH STREAK (THEO GIỜ VN) ---
+        let newStreak = 1; // Mặc định reset streak
         if (lastCheckIn) {
             const vnLastCheckIn = new Date(lastCheckIn.getTime() + VN_TIMEZONE_OFFSET);
             
-            // Tính ngày "hôm qua" theo giờ VN
+            // Tính ngày hôm qua theo giờ VN
             const vnYesterday = new Date(vnNow.getTime() - 24 * 60 * 60 * 1000);
 
-            // Kiểm tra xem lần cuối có phải là "hôm qua" không
+            // Kiểm tra xem lần cuối có phải là "hôm qua" theo giờ VN không
             if (vnLastCheckIn.getUTCFullYear() === vnYesterday.getUTCFullYear() &&
                 vnLastCheckIn.getUTCMonth() === vnYesterday.getUTCMonth() &&
                 vnLastCheckIn.getUTCDate() === vnYesterday.getUTCDate()) {
-                // Nếu đúng là hôm qua -> Tăng streak
+                // Streak tiếp tục tăng, không reset sau 7 ngày
                 newStreak = loginStreak + 1;
             }
         }
 
-        // 4. Xác định phần thưởng
+        // Xác định ngày nhận thưởng trong chu kỳ 7 ngày
         const dailyRewardDay = (newStreak - 1) % 7 + 1;
         const rewardConfig = CHECK_IN_REWARDS.find(r => r.day === dailyRewardDay);
         
@@ -144,33 +149,39 @@ export const processDailyCheckIn = async (userId: string, adMultiplier: number =
             lastCheckIn: serverTimestamp(),
         };
 
-        // 5. Tính toán số lượng thực nhận (Applying Multipliers)
+        // --- TÍNH TOÁN MULTIPLIER ---
+        // 1. Hệ số Mastery (chỉ áp dụng cho tài nguyên, không áp dụng cho Energy)
         const masteryMultiplier = getCheckInMultiplier(currentMastery);
+        
+        // 2. Hệ số Quảng Cáo (x2) (áp dụng cho TOÀN BỘ, kể cả Energy)
+        const adsMultiplier = isDouble ? 2 : 1;
 
         // Mảng chứa các item thực tế sau khi đã nhân (dùng để trả về cho UI hiển thị)
         const finalRewardItems: any[] = [];
 
+        // --- HÀM CỘNG DỒN PHẦN THƯỞNG ---
+        // Lặp qua danh sách items của ngày hôm đó
         rewardConfig.items.forEach(reward => {
-            let finalAmount = 0;
+            
+            let amountAfterMastery = reward.amount;
 
-            // QUY TẮC: Energy KHÔNG nhân, các loại khác nhân với cả Mastery và Ads
-            if (reward.type === 'energy') {
-                finalAmount = reward.amount; 
-            } else {
-                // Công thức: Số lượng gốc * Hệ số Mastery * Hệ số Quảng cáo
-                finalAmount = reward.amount * masteryMultiplier * adMultiplier;
+            // Logic quan trọng: Nếu KHÔNG phải là Energy thì mới nhân với Mastery Multiplier
+            if (reward.type !== 'energy') {
+                amountAfterMastery = reward.amount * masteryMultiplier;
             }
+
+            // Logic quan trọng 2: Nhân với Ads Multiplier (x1 hoặc x2)
+            const finalAmount = amountAfterMastery * adsMultiplier;
 
             // Đẩy vào mảng kết quả trả về
             finalRewardItems.push({
                 ...reward,
-                amount: finalAmount,        
-                originalAmount: reward.amount, 
-                masteryMultiplier: reward.type === 'energy' ? 1 : masteryMultiplier,
-                adMultiplier: reward.type === 'energy' ? 1 : adMultiplier
+                amount: finalAmount,        // Số lượng thực nhận
+                originalAmount: reward.amount, // Số lượng gốc (để debug nếu cần)
+                multiplierApplied: reward.type === 'energy' ? adsMultiplier : (masteryMultiplier * adsMultiplier)
             });
 
-            // 6. Cộng dồn vào DB (Cập nhật field tương ứng)
+            // Cập nhật vào DB theo từng loại
             if (reward.type === 'coins') {
                 const currentCoins = updates.coins !== undefined ? updates.coins : (data.coins || 0);
                 updates.coins = currentCoins + finalAmount;
@@ -182,6 +193,10 @@ export const processDailyCheckIn = async (userId: string, adMultiplier: number =
             } else if (reward.type === 'equipmentPieces') {
                 const currentPieces = (data.equipment?.pieces || 0);
                 updates['equipment.pieces'] = currentPieces + finalAmount;
+
+            } else if (reward.type === 'cardCapacity') {
+                const currentCapacity = updates.cardCapacity !== undefined ? updates.cardCapacity : (data.cardCapacity || 100);
+                updates.cardCapacity = currentCapacity + finalAmount;
 
             } else if (reward.type === 'pickaxes') {
                 const currentPickaxes = updates.pickaxes !== undefined ? updates.pickaxes : (data.pickaxes || 0);
@@ -206,17 +221,18 @@ export const processDailyCheckIn = async (userId: string, adMultiplier: number =
             }
         });
 
-        // 7. Thực hiện update vào Firestore
+        // Thực hiện update vào Firestore
         t.update(userDocRef, updates);
         
-        // 8. Trả về kết quả
+        // Trả về kết quả để UI hiển thị
         return { 
             dailyReward: {
                 day: dailyRewardDay,
-                items: finalRewardItems // Items với số lượng ĐÃ NHÂN
+                items: finalRewardItems // Trả về mảng items với số lượng ĐÃ NHÂN
             }, 
             newStreak,
-            masteryMultiplier
+            multiplier: masteryMultiplier,
+            isDoubleApplied: isDouble
         };
     });
 };
