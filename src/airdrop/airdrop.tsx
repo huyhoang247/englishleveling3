@@ -1,0 +1,640 @@
+// --- START OF FILE airdrop.tsx ---
+
+import React, { useState, useEffect, useRef } from 'react';
+import { useGame } from './GameContext.tsx';
+import MasteryDisplay from './ui/display/mastery-display.tsx';
+import { auth } from './firebase'; // Đảm bảo import auth từ file cấu hình firebase
+import { 
+  syncAirdropProgress, 
+  startMiningSession, 
+  fetchAirdropDisplayInfo 
+} from './airdrop-service.ts'; // Import service đã tạo ở bước trước
+
+// --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
+const Icon = ({ children, size = 24, className = "" }) => (
+  <svg 
+    xmlns="http://www.w3.org/2000/svg" 
+    width={size} 
+    height={size} 
+    viewBox="0 0 24 24" 
+    fill="none" 
+    stroke="currentColor" 
+    strokeWidth="2" 
+    strokeLinecap="round" 
+    strokeLinejoin="round" 
+    className={className}
+  >
+    {children}
+  </svg>
+);
+
+const WalletIcon = (props) => (
+  <Icon {...props}>
+    <path d="M20 12V8H6a2 2 0 0 1-2-2c0-1.1.9-2 2-2h12v4" />
+    <path d="M4 6v12c0 1.1.9 2 2 2h14v-4" />
+    <path d="M18 12a2 2 0 0 0-2 2c0 1.1.9 2 2 2h4v-4h-4z" />
+  </Icon>
+);
+
+const ActivityIcon = (props) => (
+  <Icon {...props}>
+    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+  </Icon>
+);
+
+const TrendingDownIcon = (props) => (
+  <Icon {...props}>
+    <polyline points="23 18 13.5 8.5 8.5 13.5 1 6" />
+    <polyline points="17 18 23 18 23 12" />
+  </Icon>
+);
+
+const ZapIcon = (props) => (
+  <Icon {...props}>
+    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+  </Icon>
+);
+
+const PickaxeIcon = (props) => (
+  <Icon {...props}>
+    <path d="M14.5 5.5l-4 4" />
+    <path d="M3 21l6-6" />
+    <path d="M13 11l6-6" />
+    <path d="M21 3l-6 6" />
+    <path d="M9 13l-4 4" />
+    <path d="M11 5l3-3" />
+    <path d="M5 11l-3 3" />
+  </Icon>
+);
+
+const ClockIcon = (props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <polyline points="12 6 12 12 16 14" />
+  </Icon>
+);
+
+const MapPinIcon = (props) => (
+  <Icon {...props}>
+    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+    <circle cx="12" cy="10" r="3" />
+  </Icon>
+);
+
+const UsersIcon = (props) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+    <circle cx="9" cy="7" r="4" />
+    <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+  </Icon>
+);
+
+const CheckIcon = (props) => (
+  <Icon {...props}>
+    <polyline points="20 6 9 17 4 12" />
+  </Icon>
+);
+
+const LockIcon = (props) => (
+  <Icon {...props}>
+    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+  </Icon>
+);
+
+const InfoIcon = (props) => (
+  <Icon {...props}>
+    <circle cx="12" cy="12" r="10" />
+    <line x1="12" y1="16" x2="12" y2="12" />
+    <line x1="12" y1="8" x2="12.01" y2="8" />
+  </Icon>
+);
+
+const XIcon = (props) => (
+  <Icon {...props}>
+    <line x1="18" y1="6" x2="6" y2="18" />
+    <line x1="6" y1="6" x2="18" y2="18" />
+  </Icon>
+);
+
+const UserPlusIcon = (props) => (
+  <Icon {...props}>
+    <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+    <circle cx="8.5" cy="7" r="4" />
+    <line x1="20" y1="8" x2="20" y2="14" />
+    <line x1="23" y1="11" x2="17" y2="11" />
+  </Icon>
+);
+
+// --- MAIN COMPONENT ---
+const App = () => {
+  // Lấy dữ liệu Mastery Cards thực tế từ Context
+  const { masteryCards } = useGame();
+  const userMastery = masteryCards; 
+
+  const [balance, setBalance] = useState(0.0000);
+  const [miningEndTime, setMiningEndTime] = useState<number | null>(null);
+  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const [isMining, setIsMining] = useState(false);
+  const [totalUsers, setTotalUsers] = useState(1); 
+  
+  // State mới cho popup và referral
+  const [showBoostDetails, setShowBoostDetails] = useState(false);
+  const [referrals, setReferrals] = useState(0); 
+  
+  // State quản lý tốc độ thực tế từ Server
+  const [serverRate, setServerRate] = useState(0);
+
+  const halvingMilestones = [
+    { threshold: 0, rate: 1.6, label: "Phase 1", chainStatus: "Off-Chain" },
+    { threshold: 50000, rate: 0.8, label: "Phase 2", chainStatus: "Off-Chain" },
+    { threshold: 100000, rate: 0.4, label: "Phase 3", chainStatus: "Off-Chain" },
+    { threshold: 200000, rate: 0.2, label: "Phase 4", chainStatus: "Off-Chain" },
+    { threshold: 500000, rate: 0.1, label: "Phrase 5", chainStatus: "On-Chain" },
+  ];
+
+  const getCurrentPhaseIndex = () => {
+    for (let i = halvingMilestones.length - 1; i >= 0; i--) {
+      if (totalUsers >= halvingMilestones[i].threshold) return i;
+    }
+    return 0;
+  };
+
+  const currentPhaseIndex = getCurrentPhaseIndex();
+  const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
+  
+  // --- TÍNH TOÁN BOOST HIỂN THỊ (Visual Only) ---
+  // Lưu ý: Tốc độ cộng tiền thực tế dựa trên biến serverRate lấy từ backend
+  const masteryBoost = (userMastery / 100) * 0.2; 
+  const referralRate = 0.05; // 0.05 Engo/h mỗi người mời
+  const referralBoost = referrals * referralRate;
+  
+  const totalBoost = masteryBoost + referralBoost; // Tổng boost
+  // Đây là tốc độ dự kiến để hiển thị UI
+  const displayMiningRate = currentBaseRate + totalBoost; 
+
+  // --- 1. INITIAL LOAD & SYNC ---
+  useEffect(() => {
+    const initData = async () => {
+        if (!auth.currentUser) return;
+        const userId = auth.currentUser.uid;
+
+        try {
+            // Bước 1: Gọi sync để tính toán tiền đào được trong lúc offline
+            await syncAirdropProgress(userId);
+
+            // Bước 2: Lấy thông tin hiển thị mới nhất
+            const data = await fetchAirdropDisplayInfo(userId);
+
+            if (data) {
+                setBalance(data.balance);
+                setIsMining(data.isMining);
+                setMiningEndTime(data.endTime);
+                setTotalUsers(data.totalUsers);
+                setReferrals(data.referrals);
+                setServerRate(data.ratePerHour); // Lưu tốc độ chính xác từ server
+            }
+        } catch (error) {
+            console.error("Error initializing airdrop data:", error);
+        }
+    };
+
+    initData();
+  }, [userMastery]); // Re-sync khi mastery thay đổi
+
+  // --- 2. START MINING HANDLER ---
+  const handleStartMining = async () => {
+    if (!auth.currentUser || userMastery < 100) return;
+    
+    try {
+        const userId = auth.currentUser.uid;
+        // Gọi API Service để bắt đầu session trên database
+        const result = await startMiningSession(userId);
+        
+        if (result.success) {
+            setMiningEndTime(result.endTime);
+            setIsMining(true);
+            
+            // Cập nhật lại Rate sau khi start
+            const data = await fetchAirdropDisplayInfo(userId);
+            if(data) setServerRate(data.ratePerHour);
+        }
+    } catch (error) {
+        console.error("Failed to start mining:", error);
+        alert("Could not start mining session. Please try again.");
+    }
+  };
+
+  // --- 3. BACKGROUND SYNC LOOP (Lưu định kỳ) ---
+  useEffect(() => {
+    if (!isMining || !auth.currentUser) return;
+    
+    // Mỗi 1 phút gọi sync lên server để chốt số dư
+    const syncInterval = setInterval(() => {
+        syncAirdropProgress(auth.currentUser.uid)
+            .then((res) => {
+                // Đồng bộ nhẹ lại balance nếu bị lệch quá nhiều (tuỳ chọn)
+                 console.log("Auto-synced mining balance:", res.engoBalance);
+            })
+            .catch(err => console.error("Auto-sync failed:", err));
+    }, 60000); // 60s
+
+    return () => clearInterval(syncInterval);
+  }, [isMining]);
+
+
+  // --- 4. VISUAL TIMER & BALANCE INCREMENT ---
+  useEffect(() => {
+    if (!isMining || !miningEndTime) return;
+
+    // Tốc độ mỗi giây (Server Rate / 3600)
+    // Chia nhỏ cho 10 vì interval chạy 100ms
+    const ratePer100ms = (serverRate / 3600) / 10;
+
+    const interval = setInterval(() => {
+      const now = Date.now();
+      const distance = miningEndTime - now;
+      
+      // Visual Increment: Cộng ảo để tạo cảm giác realtime mượt mà
+      setBalance(prev => prev + ratePer100ms);
+
+      if (distance < 0) {
+        setIsMining(false);
+        setMiningEndTime(null);
+        setTimeLeft("00:00:00");
+        
+        // Khi hết giờ, gọi sync lần cuối để chốt sổ
+        if(auth.currentUser) syncAirdropProgress(auth.currentUser.uid);
+        
+        clearInterval(interval);
+      } else {
+        const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+        setTimeLeft(`${hours < 10 ? '0'+hours : hours}:${minutes < 10 ? '0'+minutes : minutes}:${seconds < 10 ? '0'+seconds : seconds}`);
+      }
+    }, 100);
+    return () => clearInterval(interval);
+  }, [isMining, miningEndTime, serverRate]);
+
+  return (
+    // THÊM CLASS 'scrollbar-hide' ĐỂ ẨN THANH CUỘN
+    <div className="scrollbar-hide h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
+      
+      {/* --- OPTIMIZED BACKGROUND EFFECTS (Không dùng Blur nặng) --- */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_15%_15%,rgba(88,28,135,0.15),transparent_40%)]"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_85%_85%,rgba(22,78,99,0.15),transparent_40%)]"></div>
+      </div>
+
+      {/* --- NAVIGATION BAR --- */}
+      <nav className="relative z-10 w-full px-6 py-6 flex justify-between items-start bg-transparent">
+        
+        {/* LEFT SIDE: AIRDROP & REFERRAL */}
+        <div className="flex flex-col items-start gap-3">
+             {/* Live Airdrop Badge */}
+            <div className="inline-flex items-center gap-3 px-1 py-1 pr-4 rounded-full bg-slate-900 border border-slate-700/60">
+                <div className="flex items-center gap-2 px-2.5 py-1 bg-green-500/10 border border-green-500/20 rounded-full">
+                    <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                    </span>
+                    <span className="text-[10px] font-black text-green-400 tracking-widest uppercase">LIVE</span>
+                </div>
+                <span className="text-slate-200 text-sm font-lilita tracking-wide uppercase">AIRDROP</span>
+            </div>
+
+             {/* Referral Button */}
+             <button className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-indigo-500/10 border border-indigo-500/30 hover:bg-indigo-500/20 hover:border-indigo-500/50 transition-all group cursor-pointer">
+                <UserPlusIcon size={14} className="text-indigo-400 group-hover:scale-110 transition-transform"/>
+                <span className="text-xs font-bold text-indigo-300 uppercase tracking-wider">Referral</span>
+             </button>
+        </div>
+
+        {/* RIGHT SIDE: WALLET & MASTERY */}
+        <div className="flex flex-col items-end gap-3">
+             {/* Connect Wallet Button */}
+             <button disabled className="flex items-center gap-3 px-4 py-2 rounded-xl bg-slate-900/50 border border-slate-800 cursor-not-allowed opacity-80 group">
+                <div className="flex flex-col items-end"> 
+                    <span className="text-sm font-bold text-slate-300 leading-none mb-0.5">Connect Wallet</span>
+                    <span className="text-[9px] text-slate-600 font-bold uppercase tracking-wider">Coming Soon</span>
+                </div>
+                <div className="text-slate-500 group-hover:text-cyan-400 transition-colors"><WalletIcon size={20} /></div>
+            </button>
+
+            {/* Mastery Display */}
+             <MasteryDisplay masteryCount={userMastery} />
+        </div>
+      </nav>
+
+      <main className="relative z-10 flex-1 container mx-auto px-4 py-4 flex flex-col lg:flex-row gap-8 items-start">
+        
+        {/* LEFT COLUMN: Mining Dashboard */}
+        <div className="w-full lg:w-7/12 space-y-6">
+          
+          <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
+            {/* OPTIMIZED GLOW: Dùng Radial Gradient thay cho Blur */}
+            <div 
+                className={`absolute top-[-50%] right-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(6,182,212,0.1)_0%,transparent_60%)] transition-opacity duration-1000 pointer-events-none ${isMining ? 'opacity-100' : 'opacity-0'}`}
+            ></div>
+
+            <div className="relative z-10">
+              {/* BALANCE SECTION */}
+              <div className="flex items-center gap-4 mb-5">
+                <div className={`p-2 rounded-xl transition-all duration-500 ${isMining ? 'bg-cyan-500/20 text-cyan-400' : 'bg-slate-800 text-slate-500'}`}>
+                  <ActivityIcon size={18} className={isMining ? "animate-pulse" : ""} />
+                </div>
+                <div>
+                  <div className="text-slate-400 text-[9px] uppercase tracking-[0.2em] font-bold mb-0.5 opacity-60">Mining Balance</div>
+                  <div className="flex items-baseline gap-2">
+                    {/* Hiển thị Balance với 4 số thập phân */}
+                    <span className="text-2xl md:text-4xl font-lilita text-white">{balance.toFixed(4)}</span>
+                    <span className="text-cyan-400 font-lilita text-xs md:text-sm tracking-widest opacity-80">ENGO</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* STATS GRID */}
+              <div className="grid grid-cols-2 gap-3 mb-6">
+                <div className="bg-slate-800/40 p-3.5 rounded-2xl border border-white/5">
+                  <div className="flex items-center gap-2 text-slate-400 text-[10px] font-bold uppercase mb-1"><TrendingDownIcon size={12} /> Base Rate</div>
+                  <div className="text-lg text-white font-lilita">+{currentBaseRate.toFixed(2)} <span className="text-[10px] text-slate-500 font-sans">/h</span></div>
+                </div>
+                
+                {/* --- BOOST BOX CÓ NÚT INFO --- */}
+                <div className="relative bg-gradient-to-br from-purple-900/30 to-slate-800/40 p-3.5 rounded-2xl border border-purple-500/20 group/boost">
+                  {/* Nút Chấm Than (!) hiển thị Popup */}
+                  <button 
+                    onClick={() => setShowBoostDetails(true)}
+                    className="absolute top-2 right-2 p-1 rounded-full text-purple-400/40 hover:text-purple-200 hover:bg-purple-500/20 transition-all z-20 cursor-pointer"
+                    title="View Boost Details"
+                  >
+                    <InfoIcon size={14} />
+                  </button>
+
+                  <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1"><ZapIcon size={12} /> Boost</div>
+                  {/* Hiển thị Total Boost (Mastery + Referral) */}
+                  <div className="text-lg text-purple-400 font-lilita">+{totalBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans">/h</span></div>
+                </div>
+              </div>
+
+              {/* PRODUCTION & ACTION SECTION */}
+              <div className="flex flex-col gap-5 pt-4 border-t border-white/5">
+                <div className="flex justify-between items-center">
+                   <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Production</div>
+                   <div className="text-lg text-green-400 flex items-center gap-1.5 font-lilita">
+                      <PickaxeIcon size={16} className={isMining ? "animate-bounce" : ""} /> 
+                      {/* Hiển thị tổng tốc độ (Dùng displayMiningRate để UI cập nhật ngay, serverRate sẽ catch up sau) */}
+                      {displayMiningRate.toFixed(4)} <span className="text-xs text-green-400/60 font-sans">/h</span>
+                   </div>
+                </div>
+
+                {/* --- START MINING UI --- */}
+                <div className="flex flex-col items-center gap-5">
+                  {isMining ? (
+                      <div className="w-full py-4 rounded-2xl bg-slate-800/80 border border-slate-700 flex items-center justify-between px-6 transition-all duration-300">
+                         <div className="flex items-center gap-3">
+                            <div className="relative flex items-center justify-center">
+                               <div className="w-2 h-2 bg-cyan-500 rounded-full animate-ping absolute"></div>
+                               <div className="w-2 h-2 bg-cyan-500 rounded-full relative"></div>
+                            </div>
+                            <span className="text-xs font-lilita text-cyan-400 tracking-wider uppercase">MINING...</span>
+                         </div>
+                         {/* --- ĐỒNG HỒ ĐẾM NGƯỢC --- */}
+                         <div className="font-lilita text-lg text-cyan-400 tracking-widest">{timeLeft}</div>
+                      </div>
+                  ) : (
+                      <div className="w-full flex flex-col items-center gap-5">
+                        {/* --- NÚT START MINING --- */}
+                        <button 
+                          onClick={handleStartMining}
+                          disabled={userMastery < 100}
+                          className={`
+                            relative px-12 py-3.5 rounded-2xl font-lilita text-lg tracking-[0.1em] transition-all duration-300 flex items-center justify-center overflow-hidden w-full max-w-[320px]
+                            ${userMastery >= 100 
+                              ? "bg-slate-900 border border-slate-700 text-slate-200 shadow-[0_10px_30px_rgba(0,0,0,0.5)] hover:bg-black hover:border-cyan-500/50 hover:text-white hover:shadow-cyan-500/10 active:scale-95 cursor-pointer" 
+                              : "bg-slate-900/40 border border-slate-800/50 text-slate-600 cursor-not-allowed"}
+                          `}
+                        >
+                          {userMastery >= 100 ? "START MINING" : "LOCKED"}
+                        </button>
+
+                        {/* --- MASTERY PROGRESS UI --- */}
+                        {userMastery < 100 && (
+                          <div className="w-full max-w-[280px] flex flex-col items-center">
+                             <div className="w-full flex justify-between items-center mb-2 px-1">
+                                <div className="flex items-center gap-2">
+                                   <div className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,1)]"></div>
+                                   <span className="text-[9px] font-black text-slate-500 uppercase tracking-[0.2em]">Mastery</span>
+                                </div>
+                                
+                                <div className="bg-[#0B0C15] border border-white/10 px-3 py-1 rounded-lg shadow-xl flex items-center justify-center">
+                                   <span className="text-white font-mono text-[11px] font-bold tracking-tight">
+                                      {userMastery}<span className="text-white/30 mx-0.5">/</span>100
+                                   </span>
+                                </div>
+                             </div>
+
+                             <div className="h-1.5 w-full bg-slate-800/60 rounded-full overflow-hidden border border-white/5 p-[0.5px]">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-orange-600 via-orange-400 to-yellow-400 rounded-full shadow-[0_0_12px_rgba(249,115,22,0.4)] transition-all duration-1000 ease-out"
+                                  style={{ width: `${Math.min(userMastery, 100)}%` }}
+                                />
+                             </div>
+                          </div>
+                        )}
+
+                        {userMastery >= 100 && (
+                           <div className="text-[10px] text-slate-500 flex items-center justify-center gap-2 font-bold uppercase tracking-widest opacity-60">
+                              <ClockIcon size={12} /> 24 HOURS SESSIONS READY
+                           </div>
+                        )}
+                      </div>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+          </div>
+        </div>
+
+        {/* RIGHT COLUMN: Roadmap */}
+        <div className="w-full lg:w-5/12">
+          <div className="bg-[#13141F] rounded-3xl p-6 md:p-8 border border-white/10 h-full relative overflow-hidden">
+             
+             <div className="flex justify-between items-center mb-10 relative z-10">
+                <div className="flex items-center gap-2">
+                   <MapPinIcon size={18} className="text-cyan-400" />
+                   <h3 className="text-sm font-bold text-white tracking-widest uppercase opacity-90">
+                      Roadmap
+                   </h3>
+                </div>
+
+                <div className="bg-slate-800/40 border border-slate-700/50 rounded-lg p-2.5 min-w-[140px]">
+                   <div className="flex items-center justify-between gap-3">
+                       <span className="text-[10px] text-slate-400 uppercase font-bold tracking-wider">Total Users</span>
+                       <span className="font-mono text-sm font-bold text-white leading-none">
+                          {totalUsers.toLocaleString()}
+                       </span>
+                   </div>
+                </div>
+             </div>
+
+             <div className="relative space-y-0 z-10">
+                <div className="absolute left-[19px] top-4 bottom-4 w-0.5 bg-slate-800/50"></div>
+                {halvingMilestones.map((milestone, index) => {
+                   let status = 'locked'; 
+                   if (currentPhaseIndex > index) status = 'completed';
+                   if (currentPhaseIndex === index) status = 'active';
+                   return (
+                      <div key={index} className="relative flex gap-6 pb-8 last:pb-0 group">
+                         <div className={`relative z-10 w-10 h-10 rounded-full flex items-center justify-center border-[3px] transition-all duration-300 shrink-0
+                            ${status === 'completed' ? 'bg-[#0B0C15] border-green-500 text-green-500' : 
+                              status === 'active' ? 'bg-[#0B0C15] border-cyan-400 text-cyan-400 scale-110 shadow-[0_0_15px_rgba(34,211,238,0.3)]' : 
+                              'bg-[#0B0C15] border-slate-700 text-slate-600'}`}>
+                            {status === 'completed' && <CheckIcon size={18} strokeWidth={3} />}
+                            {status === 'active' && <ZapIcon size={16} fill="currentColor" />}
+                            {status === 'locked' && <LockIcon size={16} />}
+                         </div>
+                         <div className={`flex-1 rounded-2xl p-4 border transition-all duration-300 relative overflow-hidden flex flex-col gap-2 justify-center
+                            ${status === 'active' 
+                               ? 'bg-gradient-to-r from-cyan-900/10 to-transparent border-cyan-500/30' 
+                               : 'bg-transparent border-transparent opacity-40'
+                            }`}>
+                            <div className={`absolute top-0 right-0 px-2 py-0.5 rounded-bl-lg text-[9px] font-bold uppercase tracking-wider
+                               ${milestone.chainStatus === 'On-Chain' 
+                                  ? 'bg-orange-500 text-white' 
+                                  : 'bg-slate-700/50 text-slate-400'}`}>
+                               {milestone.chainStatus}
+                            </div>
+                            <span className={`text-xs font-bold uppercase tracking-wider ${status === 'active' ? 'text-cyan-400' : 'text-slate-500'}`}>
+                                {milestone.label}
+                            </span>
+                            <div className="flex items-center gap-3 mt-1 text-[10px]">
+                               <div className="flex items-center gap-1.5 bg-slate-950/40 rounded px-2 py-1">
+                                  <UsersIcon size={12} className="text-slate-500" />
+                                  <span className="text-slate-400">{milestone.threshold.toLocaleString()}</span>
+                               </div>
+                               <span className="text-slate-500 font-medium">{milestone.rate} Engo/h</span>
+                            </div>
+                         </div>
+                      </div>
+                   );
+                })}
+             </div>
+
+             <div className="mt-8 pt-6 border-t border-white/5 flex gap-4 text-[10px] text-slate-500 uppercase font-bold tracking-wider justify-center">
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-green-500"></div>DONE</div>
+                <div className="flex items-center gap-1.5"><div className="w-2 h-2 rounded-full bg-cyan-400"></div>ACTIVE</div>
+             </div>
+
+          </div>
+        </div>
+      </main>
+
+      {/* --- BOOST BREAKDOWN POPUP (DARK OVERLAY - NO BACKDROP BLUR) --- */}
+      {showBoostDetails && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
+          
+          {/* Lớp phủ tối màu */}
+          <div 
+            className="absolute inset-0 bg-black/60 transition-opacity" 
+            onClick={() => setShowBoostDetails(false)}
+          ></div>
+          
+          {/* Popup Content */}
+          <div className="relative bg-[#13141F] border border-purple-500/30 w-full max-w-sm rounded-3xl p-6 animate-in fade-in zoom-in-95 duration-200">
+            
+            {/* Close Button */}
+            <button 
+              onClick={() => setShowBoostDetails(false)}
+              className="absolute top-4 right-4 text-slate-500 hover:text-white transition-colors cursor-pointer"
+            >
+              <XIcon size={20} />
+            </button>
+
+            {/* Header */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className="p-3 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-400">
+                <ZapIcon size={24} fill="currentColor" />
+              </div>
+              <div>
+                <h3 className="text-lg font-lilita text-white tracking-wide">Boost Details</h3>
+                <p className="text-xs text-slate-400 font-medium">Breakdown of your speed multiplier</p>
+              </div>
+            </div>
+
+            {/* List Breakdown */}
+            <div className="space-y-3">
+              {/* Mastery Row */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center text-orange-500">
+                    <CheckIcon size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Mastery Boost</span>
+                    <span className="text-[10px] text-slate-500">From Card Collection</span>
+                  </div>
+                </div>
+                <div className="font-mono text-sm font-bold text-orange-400">+{masteryBoost.toFixed(4)}/h</div>
+              </div>
+
+              {/* Referral Row */}
+              <div className="flex items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-500">
+                    <UsersIcon size={16} />
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">Referral Boost</span>
+                    <span className="text-[10px] text-slate-500">{referrals} Active Refs</span>
+                  </div>
+                </div>
+                <div className="font-mono text-sm font-bold text-indigo-400">+{referralBoost.toFixed(4)}/h</div>
+              </div>
+
+              {/* Divider */}
+              <div className="h-px bg-white/10 my-2"></div>
+
+              {/* Total Row */}
+              <div className="flex items-center justify-between px-2">
+                 <span className="text-sm font-bold text-white uppercase tracking-wider">Total Boost</span>
+                 <span className="text-lg font-lilita text-purple-400">+{totalBoost.toFixed(4)}/h</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      )}
+      
+      {/* Styles & Custom Fonts */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Lilita+One&display=swap');
+
+        .font-lilita {
+          font-family: 'Lilita One', cursive;
+        }
+
+        input[type='range']::-webkit-slider-thumb {
+          -webkit-appearance: none; appearance: none;
+          width: 14px; height: 14px; background: #a855f7;
+          cursor: pointer; border-radius: 50%; border: 2px solid white;
+          box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
+        }
+
+        /* ẨN SCROLLBAR NHƯNG VẪN CUỘN ĐƯỢC */
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+      `}</style>
+    </div>
+  );
+};
+
+export default App;
