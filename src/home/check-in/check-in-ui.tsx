@@ -1,6 +1,6 @@
 // Filename: check-in-ui.tsx
 
-import React, { memo } from 'react';
+import React, { memo, useState, useEffect } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -31,6 +31,58 @@ const formatCompactNumber = (amount: string | number): string => {
     return num.toString();
 };
 
+// --- COMPONENT MỚI: CHECK-IN TIMER ---
+// Đếm ngược đến 00:00 UTC (Giờ reset logic của server check-in)
+const CheckInTimer = memo(() => {
+    const [timeLeft, setTimeLeft] = useState('');
+
+    useEffect(() => {
+        const calculateTimeLeft = () => {
+            const now = new Date();
+            // Logic Check-in dựa trên UTC, nên ta tính mốc 00:00 UTC ngày hôm sau
+            const nextReset = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
+
+            const diff = nextReset.getTime() - now.getTime();
+
+            // Nếu đã qua giờ (trường hợp hiếm gặp do lag), hiển thị 00:00:00
+            if (diff <= 0) return "00:00:00";
+
+            const h = Math.floor((diff / (1000 * 60 * 60)) % 24);
+            const m = Math.floor((diff / (1000 * 60)) % 60);
+            const s = Math.floor((diff / 1000) % 60);
+
+            return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+        };
+
+        // Chạy ngay lần đầu
+        setTimeLeft(calculateTimeLeft());
+        
+        // Cập nhật mỗi giây
+        const timer = setInterval(() => {
+            setTimeLeft(calculateTimeLeft());
+        }, 1000);
+
+        return () => clearInterval(timer);
+    }, []);
+
+    if (!timeLeft) return null;
+
+    return (
+        <div className="flex justify-center w-full mb-2 mt-2">
+            <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full shadow-lg backdrop-blur-sm select-none animate-fadeIn">
+                <div className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                </div>
+                <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset</div>
+                <div className="font-lilita text-2xl text-purple-200 tabular-nums tracking-widest min-w-[100px] text-center">
+                    {timeLeft}
+                </div>
+            </div>
+        </div>
+    );
+});
+
 // 1. CoinWrapper
 const CoinWrapper = memo(() => {
     const { coins } = useCheckIn();
@@ -54,7 +106,7 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     };
 
     return (
-        <div className="mb-6 mt-4 flex justify-between px-1">
+        <div className="mb-6 mt-2 flex justify-between px-1">
             {dailyRewards.map((reward: any) => {
                 const status = getStatus(reward.day);
                 
@@ -200,6 +252,9 @@ const CheckInMainContent = memo(({
 }: any) => {
     return (
         <div className="px-4 pt-4 pb-24">
+            {/* --- ADDED TIMER HERE --- */}
+            <CheckInTimer />
+
             <MiniCalendar 
                 dailyRewards={dailyRewards}
                 canClaimToday={canClaimToday}
@@ -329,6 +384,8 @@ const DailyCheckInView = () => {
         .animate-float-particle-3 { animation: float-particle-1 3s ease-out forwards; }
         .animate-float-particle-4 { animation: float-particle-1 1.5s ease-out forwards; }
         .animate-float-particle-5 { animation: float-particle-1 2.2s ease-out forwards; }
+        .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
       `}</style>
     </div>
   );
