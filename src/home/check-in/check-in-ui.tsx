@@ -6,7 +6,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx'; 
-import EnergyDisplay from '../../energy-display.tsx'; // Import EnergyDisplay
+import EnergyDisplay from '../../ui/display/energy-display.tsx'; // Import EnergyDisplay
 
 // Import Ads Reward Component
 import { AdsRewardUI, FormattedRewardItem } from '../../ui/ads-reward-ui.tsx';
