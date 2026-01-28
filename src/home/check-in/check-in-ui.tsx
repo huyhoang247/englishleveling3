@@ -1,8 +1,9 @@
-// Filename: check-in-ui.tsx
+// --- START OF FILE check-in-ui.tsx ---
 
 import React, { memo, useState, useEffect } from 'react';
-import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
+import { CheckInProvider, useCheckIn, dailyRewardsUI } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
+import MasteryDisplay from '../../ui/display/mastery-display.tsx'; // <-- Import component hiển thị Mastery
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx'; 
 
@@ -41,7 +42,6 @@ const CheckInTimer = memo(() => {
             const now = new Date();
             
             // 1. Chuyển thời gian hiện tại sang giả lập giờ VN (Cộng thêm offset vào timestamp)
-            // Mục đích: Để dùng các hàm getUTC... lấy ra ngày/giờ VN hiện tại
             const vnOffsetMs = 7 * 60 * 60 * 1000; // +7 giờ
             const vnTime = new Date(now.getTime() + vnOffsetMs);
 
@@ -51,8 +51,6 @@ const CheckInTimer = memo(() => {
             const vnDay = vnTime.getUTCDate();
 
             // 3. Tạo mốc thời gian Reset tiếp theo: 00:00:00 ngày hôm sau (theo giờ VN)
-            // Lưu ý: Date.UTC sẽ tạo ra timestamp UTC thuần túy, nên ta phải trừ đi offset 
-            // để đưa nó về đúng mốc thời gian thực tế (UTC timestamp) tương ứng với 00:00 VN.
             const nextReset = new Date(Date.UTC(vnYear, vnMonth, vnDay + 1, 0, 0, 0) - vnOffsetMs);
 
             const diff = nextReset.getTime() - now.getTime();
@@ -104,7 +102,7 @@ const CoinWrapper = memo(() => {
 });
 
 // 2. MiniCalendar
-const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStreak }: any) => {
+const MiniCalendar = memo(({ dailyRewardsUI, canClaimToday, claimableDay, loginStreak }: any) => {
     const getStatus = (day: number) => {
         if (canClaimToday && day === claimableDay) return 'claimable';
         
@@ -120,7 +118,7 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
 
     return (
         <div className="mb-4 mt-4 flex justify-between px-1">
-            {dailyRewards.map((reward: any) => {
+            {dailyRewardsUI.map((reward: any) => {
                 const status = getStatus(reward.day);
                 
                 let dayClasses = "w-10 h-10 flex items-center justify-center rounded-full transition-colors duration-300 relative ";
@@ -151,26 +149,27 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     );
 });
 
-// 3. RewardItem: Grid Card
+// 3. RewardItem: Đã sửa đổi để hiển thị nhiều vật phẩm (Gold + Energy)
 const RewardItem = memo(({ 
-    reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
+    rewardData, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
 }: any) => {
     let isClaimed;
     if (canClaimToday) {
-        isClaimed = reward.day < claimableDay;
+        isClaimed = rewardData.day < claimableDay;
     } else {
         const completedDaysInCycle = loginStreak > 0 ? ((loginStreak - 1) % 7) + 1 : 0;
-        isClaimed = reward.day <= completedDaysInCycle;
+        isClaimed = rewardData.day <= completedDaysInCycle;
     }
-    const isClaimable = canClaimToday && reward.day === claimableDay;
-    // Trạng thái Locked: Không phải đã nhận, cũng không phải đang chờ nhận hôm nay (Tương lai)
+    const isClaimable = canClaimToday && rewardData.day === claimableDay;
     const isLocked = !isClaimed && !isClaimable;
     
-    const formattedAmount = formatCompactNumber(reward.amount);
+    // Tách items: Main (index 0) và Extra (index 1 - Energy)
+    const mainItem = rewardData.items[0];
+    const energyItem = rewardData.items.find((i: any) => i.name === 'Energy');
 
     const handleClaim = () => {
         if (isClaimable && !isClaiming && !isSyncingData) {
-            onClaim(reward.day);
+            onClaim(rewardData.day);
         }
     };
 
@@ -208,25 +207,47 @@ const RewardItem = memo(({
                 <div className={`w-full text-center py-1.5 text-xs font-lilita uppercase tracking-wide border-b z-10
                     ${isClaimable ? 'bg-gradient-to-r from-slate-800 via-purple-900/30 to-slate-800 text-purple-200 border-purple-500/20' : 'bg-black/20 text-slate-400 border-white/5'}
                 `}>
-                    Day {reward.day}
+                    Day {rewardData.day}
                 </div>
                 
                 {/* --- NỘI DUNG CHÍNH (Icon + Amount) --- */}
-                {/* Giữ opacity-50 cho Claimed để text trông mờ hơn một chút dưới lớp phủ đen */}
-                <div className={`flex-1 flex items-center justify-center w-full py-3 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
-                    <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                        {/* Icon Wrapper */}
-                        <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
-                            <div className="w-9 h-9">{reward.icon}</div>
-                        </div>
+                <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
+                    
+                    {/* Item Chính (Gold, Book, etc.) */}
+                    <div className="relative">
+                        <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                            {/* Icon Wrapper */}
+                            <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
+                                <div className="w-8 h-8">{mainItem.icon}</div>
+                            </div>
 
-                        {/* Số lượng */}
-                        <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
-                            <span className={`text-[11px] font-lilita leading-none pt-[2px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
-                                x{formattedAmount}
-                            </span>
+                            {/* Số lượng Item Chính */}
+                            <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
+                                <span className={`text-[10px] font-lilita leading-none pt-[2px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
+                                    x{formatCompactNumber(mainItem.amount)}
+                                </span>
+                            </div>
                         </div>
                     </div>
+
+                    {/* Item Phụ (Energy) - Chỉ hiển thị nếu có trong data */}
+                    {energyItem && (
+                         <div className="relative">
+                            <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                                {/* Icon Wrapper */}
+                                <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
+                                    <div className="w-6 h-6">{energyItem.icon}</div>
+                                </div>
+
+                                {/* Số lượng Energy */}
+                                <div className={`absolute -bottom-1.5 -right-1.5 px-1 h-[14px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
+                                    <span className={`text-[9px] font-lilita leading-none pt-[2px] text-yellow-300`}>
+                                        +{energyItem.amount}
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* --- INDICATOR: CHẤM XANH NHÁY (Khi có thể claim) --- */}
@@ -246,7 +267,7 @@ const RewardItem = memo(({
                     </div>
                 )}
 
-                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN (Nằm trên lớp phủ đen z-30) --- */}
+                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN --- */}
                 {isClaimed && (
                     <div className="absolute top-1.5 right-1.5 z-30">
                          <div className="bg-green-500 rounded-full p-0.5 shadow-lg border border-slate-900 flex items-center justify-center">
@@ -261,30 +282,30 @@ const RewardItem = memo(({
 
 // 4. CheckInMainContent
 const CheckInMainContent = memo(({ 
-    dailyRewards, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
+    dailyRewardsUI, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
     return (
         <div className="px-4 pt-2 pb-24">
             
-            {/* --- 1. MINICALENDAR (DÃY SỐ NGÀY 1,2,3...) --- */}
+            {/* --- 1. MINICALENDAR --- */}
             <MiniCalendar 
-                dailyRewards={dailyRewards}
+                dailyRewardsUI={dailyRewardsUI}
                 canClaimToday={canClaimToday}
                 claimableDay={claimableDay}
                 loginStreak={loginStreak}
             />
 
-            {/* --- 2. TIMER ĐẾM NGƯỢC --- */}
+            {/* --- 2. TIMER --- */}
             <CheckInTimer />
 
             {/* --- 3. LƯỚI DANH SÁCH QUÀ --- */}
             <div className="pb-6">
                 <div className="grid grid-cols-2 gap-3">
-                    {dailyRewards.map((reward: any) => (
+                    {dailyRewardsUI.map((reward: any) => (
                         <RewardItem 
                             key={reward.day}
-                            reward={reward}
-                            /* Ngày 7 -> col-span-2 (Full width), Chiều cao 110px bằng các ngày khác */
+                            rewardData={reward}
+                            /* Ngày 7 -> col-span-2 */
                             className={reward.day === 7 ? "col-span-2 h-[110px]" : "col-span-1 h-[110px]"}
                             canClaimToday={canClaimToday}
                             claimableDay={claimableDay}
@@ -319,7 +340,12 @@ const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, par
                     <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
                     <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
                     
-                    <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
+                    {/* Hiển thị thêm dòng text cho Energy */}
+                    <div className="text-sm text-yellow-400 mt-1 font-bold animate-pulse">
+                        +5 Energy
+                    </div>
+                    
+                    <div className="mt-4 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
                 </div>
             </div>
             
@@ -336,6 +362,7 @@ const DailyCheckInView = () => {
     loginStreak, isSyncingData, canClaimToday, claimableDay, 
     isClaiming, showRewardAnimation, animatingReward, particles, 
     claimReward, handleClose,
+    masteryCards // Lấy masteryCards từ Context
   } = useCheckIn();
 
   return (
@@ -353,17 +380,21 @@ const DailyCheckInView = () => {
       {/* 2. LỚP PHỦ MÀU ĐEN OPACITY 85% */}
       <div className="absolute inset-0 z-0 bg-black/85"></div>
 
-      {/* 3. NỘI DUNG CHÍNH */}
+      {/* 3. HEADER (Đã thêm MasteryDisplay) */}
       <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
+          {/* Component hiển thị Mastery */}
+          <MasteryDisplay masteryCount={masteryCards} />
+          
+          {/* Component hiển thị Coins */}
           <CoinWrapper />
         </div>
       </header>
       
       <div className="relative z-10 flex-1 overflow-y-auto hide-scrollbar overscroll-none" style={{ willChange: 'scroll-position' }}>
          <CheckInMainContent 
-            dailyRewards={dailyRewards}
+            dailyRewardsUI={dailyRewardsUI}
             canClaimToday={canClaimToday}
             claimableDay={claimableDay}
             loginStreak={loginStreak}
