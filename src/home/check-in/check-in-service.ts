@@ -204,8 +204,22 @@ export const processDailyCheckIn = async (userId: string, isDouble: boolean = fa
                 updates.pickaxes = currentPickaxes + finalAmount;
                 
             } else if (reward.type === 'energy') {
-                const currentEnergy = updates.energy !== undefined ? updates.energy : (data.energy || 0);
+                // --- [SỬA LỖI] LOGIC MỚI CHO ENERGY ---
+                // Nếu DB chưa có field energy, mặc định lấy 50 (giống logic GameContext) thay vì 0
+                // Điều này ngăn việc user đang 50 (mặc định) nhận quà xong tụt xuống 5/10
+                const dbEnergy = typeof data.energy === 'number' ? data.energy : 50;
+                
+                // Lấy giá trị hiện tại (có thể đã bị update bởi logic khác trong transaction, dù hiếm)
+                const currentEnergy = updates.energy !== undefined ? updates.energy : dbEnergy;
+                
+                // Cộng năng lượng mới
                 updates.energy = currentEnergy + finalAmount;
+
+                // Đồng bộ logic: Nếu năng lượng >= 50 (max mặc định), reset timestamp hồi phục
+                // để UI biết là đang đầy bình
+                if (updates.energy >= 50) {
+                    updates.lastEnergyUpdate = serverTimestamp();
+                }
 
             // --- XỬ LÝ CÁC LOẠI ĐÁ CƯỜNG HÓA ---
             } else if (reward.type === 'stone_low') {
