@@ -5,6 +5,7 @@ import { BossBattleProvider, useBossBattle } from './tower-context.tsx';
 import BOSS_DATA from './tower-data.ts';
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; 
+// UPDATED: Import resourceAssets
 import { bossBattleAssets, resourceAssets } from '../../game-assets.ts';
 import BossBattleLoader from './tower-loading.tsx';
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -196,37 +197,22 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         // Sequence Collect: Đợi Loot hiện ra rồi bay đi
         setTimeout(() => {
             newLootItems.forEach((item, index) => {
-                
-                // Lần lượt xử lý từng item dựa trên index (350ms mỗi item để nhìn rõ)
                 setTimeout(() => {
-                    // 1. Hiện chữ tên vật phẩm bay lên trước (VD: +100 COINS)
+                    // Hiện chữ tên vật phẩm
                     const label = item.type === 'coin' ? 'COINS' : item.type.toUpperCase();
+                    // Tạo text bay lên
                     addDamageText(`+${item.amount} ${label}`, "#fbbf24", "custom", 14, item.x - 8, item.y - 15, 1000, "uppercase tracking-wide font-bold shadow-black drop-shadow-md");
                     
-                    // 2. Sau một khoảnh khắc ngắn (300ms), ẩn item VÀ hiện chữ "Collected"
+                    // Ẩn item visual sau khi text hiện lên
                     setTimeout(() => {
-                         // Ẩn item visual
                          setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
-
-                         // --- HIỆN CHỮ "Collected" ---
-                         // Màu trắng (#FFFFFF), size nhỏ (12), vị trí ngay trên item
-                         addDamageText(
-                             "Collected", 
-                             "#FFFFFF", 
-                             "custom", 
-                             12,             // Size nhỏ
-                             item.x,         // Cùng vị trí X
-                             item.y - 10,    // Vị trí Y nhích lên một chút
-                             600,            // Thời gian tồn tại ngắn
-                             "italic tracking-widest opacity-90 text-shadow-sm"
-                         );
                     }, 300);
 
-                }, index * 350); // Delay lần lượt
+                }, index * 250); // Delay giữa các món đồ bay lên
             });
 
             // Kết thúc sequence
-            const totalDelay = newLootItems.length * 350 + 800; 
+            const totalDelay = newLootItems.length * 250 + 600; 
             setTimeout(() => {
                 setLootItems([]); 
                 if (onComplete) onComplete();
