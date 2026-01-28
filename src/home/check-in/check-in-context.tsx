@@ -2,7 +2,7 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
-// Import upgradeAssets để lấy icon Đá cường hóa
+// Import các assets cần thiết cho UI
 import { uiAssets, equipmentUiAssets, minerAssets, bossBattleAssets, upgradeAssets } from '../../game-assets.ts'; 
 import { auth } from '../../firebase.js';
 import { processDailyCheckIn, getCheckInMultiplier } from './check-in-service.ts';
@@ -10,8 +10,7 @@ import { processDailyCheckIn, getCheckInMultiplier } from './check-in-service.ts
 // Re-export helper để UI sử dụng mà không cần import từ service
 export { getCheckInMultiplier };
 
-// --- CẬP NHẬT DỮ LIỆU UI VỚI ENERGY VÀ ĐÁ CƯỜNG HÓA ---
-// Đã thêm trường 'type' để khớp với logic tính toán trong Service
+// --- CẤU HÌNH UI CHO PHẦN THƯỞNG (Full 7 ngày) ---
 export const dailyRewardsUI = [
   { 
       day: 1, 
@@ -37,7 +36,6 @@ export const dailyRewardsUI = [
   { 
       day: 4, 
       items: [
-          // Đã thay đổi: Card Capacity -> Basic Stone
           { name: "Basic Stone", amount: "10", type: 'stone_low', icon: <img src={upgradeAssets.stoneBasic} alt="Basic Stone" className="w-full h-full object-contain" /> },
           { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
@@ -52,7 +50,6 @@ export const dailyRewardsUI = [
   { 
       day: 6, 
       items: [
-          // Đã thay đổi: Card Capacity -> Intermediate Stone
           { name: "Inter. Stone", amount: "10", type: 'stone_medium', icon: <img src={upgradeAssets.stoneIntermediate} alt="Intermediate Stone" className="w-full h-full object-contain" /> },
           { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
@@ -61,7 +58,6 @@ export const dailyRewardsUI = [
       day: 7, 
       items: [
           { name: "Pickaxe", amount: "10", type: 'pickaxes', icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-full h-full object-contain" /> },
-          // Đã thêm: Advanced Stone
           { name: "Adv. Stone", amount: "10", type: 'stone_high', icon: <img src={upgradeAssets.stoneAdvanced} alt="Advanced Stone" className="w-full h-full object-contain" /> },
           { name: "Energy", amount: "5", type: 'energy', icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
@@ -76,17 +72,29 @@ interface Particle {
 }
 
 interface CheckInContextType {
+  // Trạng thái cơ bản
   loginStreak: number;
   isSyncingData: boolean;
   canClaimToday: boolean;
   claimableDay: number;
   isClaiming: boolean;
+
+  // Animation sau khi nhận quà
   showRewardAnimation: boolean;
-  animatingReward: any;
   particles: Particle[];
+  
+  // State quản lý Modal Ads
+  showAdsModal: boolean;
+  pendingRewardDay: number | null; // Lưu lại ngày đang chọn để claim
+
+  // Dữ liệu User
   coins: number;
-  masteryCards: number; // Thêm Mastery vào context để UI sử dụng tính toán hiển thị
-  claimReward: (day: number) => Promise<void>;
+  masteryCards: number; 
+
+  // Actions
+  openClaimModal: (day: number) => void; // Thay thế claimReward cũ
+  confirmClaim: (multiplier: 1 | 2) => Promise<void>; // Hàm gọi service
+  closeAdsModal: () => void;
   handleClose: () => void;
 }
 
@@ -100,20 +108,25 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  // Lấy masteryCards từ GameContext
+  // Lấy dữ liệu từ GameContext
   const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, coins, masteryCards } = useGame();
 
+  // States cho Animation Visual Feedback
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
-  const [animatingReward, setAnimatingReward] = useState<any>(null);
   const [particles, setParticles] = useState<Particle[]>([]);
   
+  // NEW STATES: Quản lý Modal Ads
+  const [showAdsModal, setShowAdsModal] = useState(false);
+  const [pendingRewardDay, setPendingRewardDay] = useState<number | null>(null);
+
+  // States Logic Check-in
   const [canClaimToday, setCanClaimToday] = useState(false);
   const [claimableDay, setClaimableDay] = useState(1);
   const [isClaiming, setIsClaiming] = useState(false);
 
   const particleClasses = ["animate-float-particle-1", "animate-float-particle-2", "animate-float-particle-3", "animate-float-particle-4", "animate-float-particle-5"];
 
-  // Logic xác định trạng thái Check-in (Claimable, Claimed, Locked)
+  // --- EFFECT: XÁC ĐỊNH TRẠNG THÁI CLAIM (LOCK/AVAILABLE) ---
   useEffect(() => {
     const now = new Date();
     const last = lastCheckIn;
@@ -131,7 +144,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     setCanClaimToday(!isSameDay);
 
     if (isSameDay) {
-        // Nếu đã nhận hôm nay, ngày claim tiếp theo là ngày kế tiếp trong chu kỳ
+        // Nếu đã nhận hôm nay, ngày claim tiếp theo là ngày kế tiếp
         const nextDayInCycle = (loginStreak % 7) + 1;
         setClaimableDay(nextDayInCycle);
     } else {
@@ -152,13 +165,11 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     }
   }, [lastCheckIn, loginStreak]);
 
-
-  // --- Timeout để tự động kích hoạt nút nhận quà khi qua ngày mới (00:00 UTC) ---
+  // --- EFFECT: TIMER TỰ ĐỘNG BẬT NÚT CLAIM KHI QUA 00:00 UTC ---
   useEffect(() => {
-    if (canClaimToday) return; // Nếu đã nhận được thì không cần timer
+    if (canClaimToday) return; 
     
     const now = new Date();
-    // Tính thời điểm 00:00:00 UTC ngày mai
     const nextUTCDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
     const diff = nextUTCDay.getTime() - now.getTime();
 
@@ -169,9 +180,25 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     return () => clearTimeout(timer);
   }, [canClaimToday]);
 
-  const claimReward = useCallback(async (day: number) => {
-    if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
+  // --- ACTION: MỞ MODAL XÁC NHẬN (CHƯA GỌI API) ---
+  const openClaimModal = useCallback((day: number) => {
+      // Kiểm tra điều kiện hợp lệ
+      if (!canClaimToday || day !== claimableDay || isClaiming || isSyncingData) return;
+      
+      // Set ngày đang chờ xử lý và mở Modal
+      setPendingRewardDay(day);
+      setShowAdsModal(true);
+  }, [canClaimToday, claimableDay, isClaiming, isSyncingData]);
 
+  // --- ACTION: ĐÓNG MODAL ---
+  const closeAdsModal = useCallback(() => {
+      setShowAdsModal(false);
+      setPendingRewardDay(null);
+  }, []);
+
+  // --- ACTION: XÁC NHẬN NHẬN THƯỞNG (GỌI API SERVICE) ---
+  // multiplier: 1 (Nhận thường) hoặc 2 (Xem Ads)
+  const confirmClaim = useCallback(async (multiplier: 1 | 2) => {
     const userId = auth.currentUser?.uid;
     if (!userId) {
       alert("Người dùng chưa được xác thực.");
@@ -179,30 +206,20 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     }
 
     setIsClaiming(true);
+    
+    // Đóng modal ngay lập tức để trải nghiệm mượt mà
+    setShowAdsModal(false); 
+    setPendingRewardDay(null);
+
     try {
       setIsSyncingData(true);
       
-      // Gọi service để cập nhật DB
-      // dailyReward trả về ở đây chứa items đã được nhân theo multiplier
-      const { dailyReward } = await processDailyCheckIn(userId);
+      // GỌI SERVICE: Truyền thêm tham số multiplier
+      await processDailyCheckIn(userId, multiplier);
+      
       setIsSyncingData(false);
 
-      // Tìm cấu hình UI tương ứng với ngày vừa nhận để hiển thị animation (Lấy Icon và Tên)
-      const dailyRewardUIItem = dailyRewardsUI.find(r => r.day === dailyReward.day);
-      
-      // Lấy phần thưởng chính thực tế từ server trả về (Item đầu tiên)
-      const actualReceivedMainItem = dailyReward.items[0];
-
-      // Animation hiển thị phần thưởng chính
-      // Chúng ta merge thông tin UI (Icon, Tên) với thông tin Server (Số lượng thực nhận)
-      setAnimatingReward({ 
-          daily: dailyRewardUIItem ? {
-              ...dailyRewardUIItem.items[0], // Lấy Icon và Name từ UI Config
-              amount: actualReceivedMainItem.amount // Lấy số lượng ĐÃ NHÂN từ Server
-          } : null
-      });
-
-      // Tạo hiệu ứng hạt (Particles)
+      // --- CHẠY ANIMATION PARTICLES (Feedback visual) ---
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
         const randomAnimClass = particleClasses[i % particleClasses.length];
         return {
@@ -220,31 +237,40 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
       setParticles(generatedParticles);
       setShowRewardAnimation(true);
 
-      // Tắt animation sau 3 giây
+      // Reset trạng thái sau khi animation kết thúc
       setTimeout(() => {
         setShowRewardAnimation(false);
         setIsClaiming(false);
         setParticles([]);
       }, 3000); 
+
     } catch (error: any) {
         alert(error.message || "Có lỗi xảy ra, vui lòng thử lại.");
         setIsClaiming(false);
         setIsSyncingData(false);
     }
-  }, [canClaimToday, claimableDay, isClaiming, isSyncingData, setIsSyncingData]);
+  }, [particleClasses, setIsSyncingData]);
 
+  // --- MEMOIZE CONTEXT VALUE ---
   const value = useMemo(() => ({
     loginStreak, 
     isSyncingData, 
     canClaimToday, 
     claimableDay, 
     isClaiming,
+    
     showRewardAnimation, 
-    animatingReward, 
     particles,
+    
+    showAdsModal, 
+    pendingRewardDay,
+    
     coins, 
-    masteryCards, // Pass masteryCards xuống Context Consumer
-    claimReward, 
+    masteryCards,
+    
+    openClaimModal, 
+    confirmClaim, 
+    closeAdsModal,
     handleClose: onClose,
   }), [
     loginStreak, 
@@ -253,11 +279,14 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     claimableDay, 
     isClaiming,
     showRewardAnimation, 
-    animatingReward, 
     particles,
+    showAdsModal, 
+    pendingRewardDay,
     coins,
     masteryCards,
-    claimReward, 
+    openClaimModal, 
+    confirmClaim, 
+    closeAdsModal,
     onClose
   ]);
 
