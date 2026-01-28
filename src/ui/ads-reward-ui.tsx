@@ -1,7 +1,7 @@
 // --- START OF FILE ads-reward-ui.tsx ---
 
 import React, { useState } from 'react';
-import { BotAntiVerification } from './bot-anti.tsx'; // Import BotAnti Component
+import { BotAntiVerification } from './bot-anti.tsx'; // Đảm bảo bạn đã tạo file này như hướng dẫn trước
 
 // --- TYPES ---
 export interface FormattedRewardItem {
@@ -72,13 +72,13 @@ export const AdsRewardUI = ({ rewards, adsStatus, onClaimX1, onWatchAdX2 }: AdsR
     const { watchedToday, dailyLimit, isAvailable, isWatching, timeRemaining } = adsStatus;
     const isDailyLimitReached = watchedToday >= dailyLimit;
     
-    // --- STATE FOR BOT CHECK ---
+    // --- STATE QUẢN LÝ HIỂN THỊ BOT CHECK ---
     const [showBotCheck, setShowBotCheck] = useState(false);
 
     // Tính phần trăm Progress Bar
     const progressPercent = Math.min((watchedToday / dailyLimit) * 100, 100);
 
-    // Logic màu sắc
+    // Logic màu sắc thanh tiến trình
     let statusColor = "bg-blue-500";
     let statusText = "text-blue-200";
     
@@ -91,24 +91,25 @@ export const AdsRewardUI = ({ rewards, adsStatus, onClaimX1, onWatchAdX2 }: AdsR
         statusText = "text-red-200";
     }
 
-    // --- HANDLER: CLICK WATCH AD BUTTON ---
+    // --- HANDLER: KHI BẤM NÚT XEM QUẢNG CÁO ---
     const handleWatchAdClick = () => {
-        // Mở Captcha trước khi thực sự xem quảng cáo
+        // Thay vì gọi onWatchAdX2 ngay lập tức, ta mở Captcha lên trước
         setShowBotCheck(true);
     };
 
-    // --- HANDLER: CAPTCHA SUCCESS ---
+    // --- HANDLER: KHI CAPTCHA THÀNH CÔNG ---
     const handleBotCheckSuccess = () => {
+        // Đóng Captcha
         setShowBotCheck(false);
-        // Gọi hàm xem quảng cáo thật của cha sau khi verify thành công
+        // Gọi hàm xem quảng cáo thật (logic gọi API/Server) được truyền từ cha
         onWatchAdX2();
     };
 
     return (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 animate-fade-in">
             
-            {/* --- RENDER BOT VERIFICATION IF ACTIVE --- */}
-            {/* Component này sẽ nằm đè lên Popup Ads nhờ z-index cao hơn trong file bot-anti.tsx */}
+            {/* --- RENDER BOT VERIFICATION (NẾU ĐANG BẬT) --- */}
+            {/* Component này sẽ nằm đè lên Popup Ads (z-index 60) */}
             {showBotCheck && (
                 <BotAntiVerification 
                     onSuccess={handleBotCheckSuccess} 
@@ -116,7 +117,7 @@ export const AdsRewardUI = ({ rewards, adsStatus, onClaimX1, onWatchAdX2 }: AdsR
                 />
             )}
 
-            {/* Main Container */}
+            {/* --- MAIN POPUP CONTAINER --- */}
             <div className="relative w-[360px] bg-[#1a1b26] border-2 border-slate-600 rounded-3xl shadow-2xl flex flex-col items-center overflow-hidden animate-fade-in-scale-fast">
                 
                 {/* --- HEADER --- */}
@@ -175,7 +176,8 @@ export const AdsRewardUI = ({ rewards, adsStatus, onClaimX1, onWatchAdX2 }: AdsR
 
                     {/* BUTTON 2: WATCH AD (X2) */}
                     <button 
-                        onClick={handleWatchAdClick} // Gọi handler nội bộ để mở Bot Check
+                        // SỬA ĐỔI QUAN TRỌNG: Gọi handleWatchAdClick thay vì onWatchAdX2 trực tiếp
+                        onClick={handleWatchAdClick} 
                         disabled={isWatching || !isAvailable || isDailyLimitReached}
                         className={`flex-[2] relative group py-2 rounded-xl border-b-4 transition-all flex items-center justify-center overflow-hidden shadow-lg h-14
                             ${(!isAvailable || isDailyLimitReached)
@@ -232,3 +234,5 @@ export const AdsRewardUI = ({ rewards, adsStatus, onClaimX1, onWatchAdX2 }: AdsR
         </div>
     );
 };
+
+// --- END OF FILE ads-reward-ui.tsx ---
