@@ -3,7 +3,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewardsUI } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import MasteryDisplay from '../../ui/display/mastery-display.tsx'; // <-- Import component hiển thị Mastery
+import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx'; 
 
@@ -149,7 +149,7 @@ const MiniCalendar = memo(({ dailyRewardsUI, canClaimToday, claimableDay, loginS
     );
 });
 
-// 3. RewardItem: Đã sửa đổi để hiển thị nhiều vật phẩm (Gold + Energy)
+// 3. RewardItem: Hiển thị danh sách vật phẩm đồng nhất
 const RewardItem = memo(({ 
     rewardData, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
 }: any) => {
@@ -161,12 +161,9 @@ const RewardItem = memo(({
         isClaimed = rewardData.day <= completedDaysInCycle;
     }
     const isClaimable = canClaimToday && rewardData.day === claimableDay;
+    // Trạng thái Locked: Không phải đã nhận, cũng không phải đang chờ nhận hôm nay
     const isLocked = !isClaimed && !isClaimable;
     
-    // Tách items: Main (index 0) và Extra (index 1 - Energy)
-    const mainItem = rewardData.items[0];
-    const energyItem = rewardData.items.find((i: any) => i.name === 'Energy');
-
     const handleClaim = () => {
         if (isClaimable && !isClaiming && !isSyncingData) {
             onClaim(rewardData.day);
@@ -210,44 +207,44 @@ const RewardItem = memo(({
                     Day {rewardData.day}
                 </div>
                 
-                {/* --- NỘI DUNG CHÍNH (Icon + Amount) --- */}
+                {/* --- NỘI DUNG CHÍNH (Loop qua items) --- */}
                 <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
                     
-                    {/* Item Chính (Gold, Book, etc.) */}
-                    <div className="relative">
-                        <div className={`relative w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                            {/* Icon Wrapper */}
-                            <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
-                                <div className="w-8 h-8">{mainItem.icon}</div>
-                            </div>
-
-                            {/* Số lượng Item Chính */}
-                            <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
-                                <span className={`text-[10px] font-lilita leading-none pt-[2px] ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}>
-                                    x{formatCompactNumber(mainItem.amount)}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Item Phụ (Energy) - Chỉ hiển thị nếu có trong data */}
-                    {energyItem && (
-                         <div className="relative">
-                            <div className={`relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
-                                {/* Icon Wrapper */}
-                                <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
-                                    <div className="w-6 h-6">{energyItem.icon}</div>
+                    {rewardData.items.map((item: any, index: number) => (
+                        <div key={index} className="relative">
+                            {/* 
+                                KHỐI CHỨA ICON (Container)
+                                Thiết kế giống hệt nhau cho tất cả items (Main & Energy)
+                                - isClaimable: Tím/Than gradient (Giống Main)
+                                - Default: Xám/Đen gradient
+                            */}
+                            <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 
+                                ${isClaimable 
+                                    ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' 
+                                    : 'bg-gradient-to-br from-slate-700 to-slate-900'
+                                } shadow-lg p-1`}
+                            >
+                                {/* Wrapper Icon */}
+                                <div className={`w-full h-full rounded-lg flex items-center justify-center 
+                                    ${isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}
+                                >
+                                    <div className="w-7 h-7">{item.icon}</div>
                                 </div>
 
-                                {/* Số lượng Energy */}
-                                <div className={`absolute -bottom-1.5 -right-1.5 px-1 h-[14px] flex items-center justify-center rounded-md ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}>
-                                    <span className={`text-[9px] font-lilita leading-none pt-[2px] text-yellow-300`}>
-                                        +{energyItem.amount}
+                                {/* Badge Số Lượng: Luôn dùng x5 */}
+                                <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md 
+                                    ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}
+                                >
+                                    <span className={`text-[10px] font-lilita leading-none pt-[2px] 
+                                        ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}
+                                    >
+                                        x{formatCompactNumber(item.amount)}
                                     </span>
                                 </div>
                             </div>
                         </div>
-                    )}
+                    ))}
+
                 </div>
 
                 {/* --- INDICATOR: CHẤM XANH NHÁY (Khi có thể claim) --- */}
@@ -267,7 +264,7 @@ const RewardItem = memo(({
                     </div>
                 )}
 
-                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN --- */}
+                {/* --- CLAIMED ICON: GÓC PHẢI TRÊN (Nằm trên lớp phủ đen z-30) --- */}
                 {isClaimed && (
                     <div className="absolute top-1.5 right-1.5 z-30">
                          <div className="bg-green-500 rounded-full p-0.5 shadow-lg border border-slate-900 flex items-center justify-center">
@@ -287,7 +284,7 @@ const CheckInMainContent = memo(({
     return (
         <div className="px-4 pt-2 pb-24">
             
-            {/* --- 1. MINICALENDAR --- */}
+            {/* --- 1. MINICALENDAR (DÃY SỐ NGÀY 1,2,3...) --- */}
             <MiniCalendar 
                 dailyRewardsUI={dailyRewardsUI}
                 canClaimToday={canClaimToday}
@@ -295,7 +292,7 @@ const CheckInMainContent = memo(({
                 loginStreak={loginStreak}
             />
 
-            {/* --- 2. TIMER --- */}
+            {/* --- 2. TIMER ĐẾM NGƯỢC --- */}
             <CheckInTimer />
 
             {/* --- 3. LƯỚI DANH SÁCH QUÀ --- */}
@@ -305,7 +302,7 @@ const CheckInMainContent = memo(({
                         <RewardItem 
                             key={reward.day}
                             rewardData={reward}
-                            /* Ngày 7 -> col-span-2 */
+                            /* Ngày 7 -> col-span-2 (Full width), Chiều cao 110px bằng các ngày khác */
                             className={reward.day === 7 ? "col-span-2 h-[110px]" : "col-span-1 h-[110px]"}
                             canClaimToday={canClaimToday}
                             claimableDay={claimableDay}
@@ -340,7 +337,6 @@ const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, par
                     <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
                     <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
                     
-                    {/* Hiển thị thêm dòng text cho Energy */}
                     <div className="text-sm text-yellow-400 mt-1 font-bold animate-pulse">
                         +5 Energy
                     </div>
@@ -362,7 +358,7 @@ const DailyCheckInView = () => {
     loginStreak, isSyncingData, canClaimToday, claimableDay, 
     isClaiming, showRewardAnimation, animatingReward, particles, 
     claimReward, handleClose,
-    masteryCards // Lấy masteryCards từ Context
+    masteryCards 
   } = useCheckIn();
 
   return (
@@ -380,14 +376,11 @@ const DailyCheckInView = () => {
       {/* 2. LỚP PHỦ MÀU ĐEN OPACITY 85% */}
       <div className="absolute inset-0 z-0 bg-black/85"></div>
 
-      {/* 3. HEADER (Đã thêm MasteryDisplay) */}
+      {/* 3. NỘI DUNG CHÍNH */}
       <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
-          {/* Component hiển thị Mastery */}
           <MasteryDisplay masteryCount={masteryCards} />
-          
-          {/* Component hiển thị Coins */}
           <CoinWrapper />
         </div>
       </header>
