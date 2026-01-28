@@ -81,12 +81,9 @@ const CheckInTimer = memo(() => {
     return (
         <div className="flex justify-center w-full mb-4 mt-2">
             <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full shadow-lg backdrop-blur-sm select-none animate-fadeIn">
-                <div className="relative flex h-3 w-3">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
-                </div>
                 <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset</div>
-                <div className="font-lilita text-2xl text-purple-200 tabular-nums tracking-widest min-w-[100px] text-center">
+                {/* Đã chỉnh sửa: text-xl, w-[90px] cố định, tabular-nums */}
+                <div className="font-lilita text-xl text-purple-200 tabular-nums tracking-widest w-[90px] text-center">
                     {timeLeft}
                 </div>
             </div>
