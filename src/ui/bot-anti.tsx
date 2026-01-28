@@ -144,8 +144,9 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
+      {/* Đã xóa backdrop-blur-md để giảm lag */}
       <div 
-        className="absolute inset-0 bg-black/80 backdrop-blur-md"
+        className="absolute inset-0 bg-black/80"
         onClick={onClose}
       />
 
@@ -211,7 +212,8 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
                 }}
               >
                 <div className="absolute top-2 left-2 w-3 h-1.5 bg-white/40 rounded-full rotate-[-45deg] blur-[0.5px]"></div>
-                <span className="text-white font-lilita text-xl drop-shadow-md pt-1 select-none">
+                {/* Thay pt-1 bằng pb-1 để cân bằng font Lilita */}
+                <span className="text-white font-lilita text-xl drop-shadow-md pb-1 select-none">
                   {bubble.char}
                 </span>
               </div>
@@ -219,7 +221,8 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
           ))}
 
           {status === 'success' && (
-            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-sm animate-fadeIn">
+            // Cũng loại bỏ backdrop-blur ở đây cho đồng bộ hiệu năng
+            <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/90 animate-fadeIn">
               <div className="bg-green-500 rounded-full p-3 mb-2 animate-bounce shadow-[0_0_20px_rgba(34,197,94,0.6)]">
                 <IconShieldCheck size={32} className="text-white" />
               </div>
@@ -257,5 +260,3 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
 });
 
 export default BotAntiVerification;
-
-// --- END OF FILE bot-anti.tsx ---
