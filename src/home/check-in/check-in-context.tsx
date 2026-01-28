@@ -1,20 +1,63 @@
-// Filename: check-in-context.tsx
+// --- START OF FILE check-in-context.tsx ---
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
-import { uiAssets, equipmentUiAssets, minerAssets } from '../../game-assets.ts';
+import { uiAssets, equipmentUiAssets, minerAssets, bossBattleAssets } from '../../game-assets.ts'; // Import bossBattleAssets cho Energy Icon
 import { auth } from '../../firebase.js';
 import { processDailyCheckIn } from './check-in-service.ts';
 
-// --- BƯỚC 2: CẬP NHẬT DỮ LIỆU PHẦN THƯỞNG VỚI ICON TỪ game-assets ---
-export const dailyRewards = [
-  { day: 1, name: "Gold", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-  { day: 2, name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-10 h-10 object-contain" /> },
-  { day: 3, name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-10 h-10 object-contain" /> },
-  { day: 4, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
-  { day: 5, name: "Pickaxe", amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-10 h-10 object-contain" /> },
-  { day: 6, name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-10 h-10 object-contain" /> },
-  { day: 7, name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
+// --- CẬP NHẬT DỮ LIỆU UI VỚI ENERGY ---
+// Mỗi ngày giờ đây chứa mảng 'items', trong đó item thứ 2 luôn là Energy x5
+export const dailyRewardsUI = [
+  { 
+      day: 1, 
+      items: [
+          { name: "Gold", amount: "1000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
+  { 
+      day: 2, 
+      items: [
+          { name: "Ancient Book", amount: "10", icon: <img src={uiAssets.bookIcon} alt="Ancient Book" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
+  { 
+      day: 3, 
+      items: [
+          { name: "Equipment Piece", amount: "10", icon: <img src={equipmentUiAssets.equipmentPieceIcon} alt="Equipment Piece" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
+  { 
+      day: 4, 
+      items: [
+          { name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
+  { 
+      day: 5, 
+      items: [
+          { name: "Pickaxe", amount: "5", icon: <img src={minerAssets.pickaxeIcon} alt="Pickaxe" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
+  { 
+      day: 6, 
+      items: [
+          { name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
+  { 
+      day: 7, 
+      items: [
+          { name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-full h-full object-contain" /> },
+          { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
+      ]
+  },
 ];
 
 // --- ĐỊNH NGHĨA TYPES ---
@@ -34,6 +77,7 @@ interface CheckInContextType {
   animatingReward: any;
   particles: Particle[];
   coins: number;
+  masteryCards: number; // Thêm Mastery vào context để UI sử dụng
   claimReward: (day: number) => Promise<void>;
   handleClose: () => void;
 }
@@ -48,7 +92,8 @@ interface CheckInProviderProps {
 }
 
 export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => {
-  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, coins } = useGame();
+  // Lấy masteryCards từ GameContext
+  const { loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, coins, masteryCards } = useGame();
 
   const [showRewardAnimation, setShowRewardAnimation] = useState(false);
   const [animatingReward, setAnimatingReward] = useState<any>(null);
@@ -60,6 +105,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
 
   const particleClasses = ["animate-float-particle-1", "animate-float-particle-2", "animate-float-particle-3", "animate-float-particle-4", "animate-float-particle-5"];
 
+  // Logic xác định trạng thái Check-in (Claimable, Claimed, Locked)
   useEffect(() => {
     const now = new Date();
     const last = lastCheckIn;
@@ -77,9 +123,11 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     setCanClaimToday(!isSameDay);
 
     if (isSameDay) {
+        // Nếu đã nhận hôm nay, ngày claim tiếp theo là ngày kế tiếp trong chu kỳ
         const nextDayInCycle = (loginStreak % 7) + 1;
         setClaimableDay(nextDayInCycle);
     } else {
+        // Kiểm tra xem có phải là ngày liên tiếp không
         const yesterday = new Date(now);
         yesterday.setUTCDate(now.getUTCDate() - 1);
         const isConsecutive = last.getUTCFullYear() === yesterday.getUTCFullYear() &&
@@ -90,13 +138,14 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
             const dayToClaim = (loginStreak % 7) + 1;
             setClaimableDay(dayToClaim);
         } else {
+            // Mất chuỗi -> Reset về ngày 1
             setClaimableDay(1);
         }
     }
   }, [lastCheckIn, loginStreak]);
 
 
-  // --- Timeout để kích hoạt nút nhận quà khi qua ngày mới ---
+  // --- Timeout để tự động kích hoạt nút nhận quà khi qua ngày mới (00:00 UTC) ---
   useEffect(() => {
     if (canClaimToday) return; // Nếu đã nhận được thì không cần timer
     
@@ -125,16 +174,20 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     try {
       setIsSyncingData(true);
       
-      // Gọi service, chỉ lấy dailyReward vì đã bỏ streakReward
+      // Gọi service để cập nhật DB
       const { dailyReward } = await processDailyCheckIn(userId);
       setIsSyncingData(false);
 
-      const dailyRewardForAnimation = dailyRewards.find(r => r.day === dailyReward.day);
+      // Tìm cấu hình UI tương ứng với ngày vừa nhận để hiển thị animation
+      const dailyRewardUIItem = dailyRewardsUI.find(r => r.day === dailyReward.day);
       
+      // Animation hiển thị phần thưởng chính (Item đầu tiên trong mảng items)
+      // Phần UI Overlay sẽ chịu trách nhiệm hiển thị thêm dòng "+5 Energy"
       setAnimatingReward({ 
-          daily: { ...dailyRewardForAnimation, amount: dailyReward.amount }
+          daily: dailyRewardUIItem ? dailyRewardUIItem.items[0] : null
       });
 
+      // Tạo hiệu ứng hạt (Particles)
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
         const randomAnimClass = particleClasses[i % particleClasses.length];
         return {
@@ -152,6 +205,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
       setParticles(generatedParticles);
       setShowRewardAnimation(true);
 
+      // Tắt animation sau 3 giây
       setTimeout(() => {
         setShowRewardAnimation(false);
         setIsClaiming(false);
@@ -174,6 +228,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     animatingReward, 
     particles,
     coins, 
+    masteryCards, // Pass masteryCards xuống Context Consumer
     claimReward, 
     handleClose: onClose,
   }), [
@@ -186,6 +241,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     animatingReward, 
     particles,
     coins,
+    masteryCards,
     claimReward, 
     onClose
   ]);
