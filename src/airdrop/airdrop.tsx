@@ -1,14 +1,12 @@
-// --- START OF FILE airdrop.tsx ---
-
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useGame } from '../GameContext.tsx';
-import MasteryDisplay from '../ui/display/mastery-display.tsx';
-import { auth } from '../firebase'; // Đảm bảo import auth từ file cấu hình firebase
+import MasteryDisplay from '../ui/display/mastery-display.tsx'; // Import component MasteryDisplay
+import { auth } from '../firebase'; // Đảm bảo import auth từ file firebase
 import { 
   syncAirdropProgress, 
   startMiningSession, 
   fetchAirdropDisplayInfo 
-} from './airdrop-service.ts'; // Import service đã tạo ở bước trước
+} from './airdrop-service.ts'; // Import service
 
 // --- ICON COMPONENTS (Inline SVG replacement for Lucide - Đầy đủ không rút gọn) ---
 const Icon = ({ children, size = 24, className = "" }) => (
@@ -133,17 +131,18 @@ const App = () => {
   const { masteryCards } = useGame();
   const userMastery = masteryCards; 
 
+  // State
   const [balance, setBalance] = useState(0.0000);
-  const [miningEndTime, setMiningEndTime] = useState<number | null>(null);
-  const [timeLeft, setTimeLeft] = useState<string | null>(null);
+  const [miningEndTime, setMiningEndTime] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
   const [isMining, setIsMining] = useState(false);
   const [totalUsers, setTotalUsers] = useState(1); 
   
   // State mới cho popup và referral
   const [showBoostDetails, setShowBoostDetails] = useState(false);
   const [referrals, setReferrals] = useState(0); 
-  
-  // State quản lý tốc độ thực tế từ Server
+
+  // State tốc độ thực tế từ server (để tính visual increment)
   const [serverRate, setServerRate] = useState(0);
 
   const halvingMilestones = [
@@ -164,27 +163,27 @@ const App = () => {
   const currentPhaseIndex = getCurrentPhaseIndex();
   const currentBaseRate = halvingMilestones[currentPhaseIndex].rate;
   
-  // --- TÍNH TOÁN BOOST HIỂN THỊ (Visual Only) ---
-  // Lưu ý: Tốc độ cộng tiền thực tế dựa trên biến serverRate lấy từ backend
+  // --- TÍNH TOÁN BOOST ĐỂ HIỂN THỊ UI ---
   const masteryBoost = (userMastery / 100) * 0.2; 
-  const referralRate = 0.05; // 0.05 Engo/h mỗi người mời
+  const referralRate = 0.05; 
   const referralBoost = referrals * referralRate;
   
   const totalBoost = masteryBoost + referralBoost; // Tổng boost
-  // Đây là tốc độ dự kiến để hiển thị UI
+  // Đây là tốc độ dự kiến hiển thị trên UI, tốc độ thật `serverRate` sẽ được sync từ DB
   const displayMiningRate = currentBaseRate + totalBoost; 
 
   // --- 1. INITIAL LOAD & SYNC ---
+  // Chỉ gọi 1 lần khi component mount để tiết kiệm Read/Write
   useEffect(() => {
     const initData = async () => {
         if (!auth.currentUser) return;
         const userId = auth.currentUser.uid;
 
         try {
-            // Bước 1: Gọi sync để tính toán tiền đào được trong lúc offline
+            // Bước 1: Gọi sync để tính toán tiền đào được trong lúc offline (Write duy nhất khi mở)
             await syncAirdropProgress(userId);
 
-            // Bước 2: Lấy thông tin hiển thị mới nhất
+            // Bước 2: Lấy thông tin hiển thị (Read)
             const data = await fetchAirdropDisplayInfo(userId);
 
             if (data) {
@@ -201,7 +200,7 @@ const App = () => {
     };
 
     initData();
-  }, [userMastery]); // Re-sync khi mastery thay đổi
+  }, [userMastery]); 
 
   // --- 2. START MINING HANDLER ---
   const handleStartMining = async () => {
@@ -209,7 +208,7 @@ const App = () => {
     
     try {
         const userId = auth.currentUser.uid;
-        // Gọi API Service để bắt đầu session trên database
+        // Gọi API Service để bắt đầu session (Write)
         const result = await startMiningSession(userId);
         
         if (result.success) {
@@ -226,37 +225,18 @@ const App = () => {
     }
   };
 
-  // --- 3. BACKGROUND SYNC LOOP (Lưu định kỳ) ---
-  useEffect(() => {
-    if (!isMining || !auth.currentUser) return;
-    
-    // Mỗi 1 phút gọi sync lên server để chốt số dư
-    const syncInterval = setInterval(() => {
-        syncAirdropProgress(auth.currentUser.uid)
-            .then((res) => {
-                // Đồng bộ nhẹ lại balance nếu bị lệch quá nhiều (tuỳ chọn)
-                 console.log("Auto-synced mining balance:", res.engoBalance);
-            })
-            .catch(err => console.error("Auto-sync failed:", err));
-    }, 60000); // 60s
-
-    return () => clearInterval(syncInterval);
-  }, [isMining]);
-
-
-  // --- 4. VISUAL TIMER & BALANCE INCREMENT ---
+  // --- 3. VISUAL TIMER (Tối ưu chi phí: Chạy local, không gọi API) ---
   useEffect(() => {
     if (!isMining || !miningEndTime) return;
 
-    // Tốc độ mỗi giây (Server Rate / 3600)
-    // Chia nhỏ cho 10 vì interval chạy 100ms
+    // Tốc độ mỗi 100ms dựa trên serverRate
     const ratePer100ms = (serverRate / 3600) / 10;
 
     const interval = setInterval(() => {
       const now = Date.now();
       const distance = miningEndTime - now;
       
-      // Visual Increment: Cộng ảo để tạo cảm giác realtime mượt mà
+      // Visual Increment: Cộng ảo để tạo cảm giác realtime
       setBalance(prev => prev + ratePer100ms);
 
       if (distance < 0) {
@@ -264,7 +244,7 @@ const App = () => {
         setMiningEndTime(null);
         setTimeLeft("00:00:00");
         
-        // Khi hết giờ, gọi sync lần cuối để chốt sổ
+        // Khi hết giờ, gọi sync 1 lần cuối để chốt số chính xác trên server
         if(auth.currentUser) syncAirdropProgress(auth.currentUser.uid);
         
         clearInterval(interval);
@@ -282,7 +262,7 @@ const App = () => {
     // THÊM CLASS 'scrollbar-hide' ĐỂ ẨN THANH CUỘN
     <div className="scrollbar-hide h-full min-h-screen w-full bg-[#0B0C15] text-white font-sans selection:bg-cyan-500 selection:text-black relative overflow-y-auto flex flex-col pb-32">
       
-      {/* --- OPTIMIZED BACKGROUND EFFECTS (Không dùng Blur nặng) --- */}
+      {/* --- OPTIMIZED BACKGROUND EFFECTS --- */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
         <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_15%_15%,rgba(88,28,135,0.15),transparent_40%)]"></div>
         <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_85%_85%,rgba(22,78,99,0.15),transparent_40%)]"></div>
@@ -334,7 +314,7 @@ const App = () => {
         <div className="w-full lg:w-7/12 space-y-6">
           
           <div className="relative bg-[#13141F] rounded-3xl p-6 md:p-7 border border-white/10 overflow-hidden group shadow-2xl">
-            {/* OPTIMIZED GLOW: Dùng Radial Gradient thay cho Blur */}
+            {/* OPTIMIZED GLOW */}
             <div 
                 className={`absolute top-[-50%] right-[-50%] w-[200%] h-[200%] bg-[radial-gradient(circle,rgba(6,182,212,0.1)_0%,transparent_60%)] transition-opacity duration-1000 pointer-events-none ${isMining ? 'opacity-100' : 'opacity-0'}`}
             ></div>
@@ -348,7 +328,6 @@ const App = () => {
                 <div>
                   <div className="text-slate-400 text-[9px] uppercase tracking-[0.2em] font-bold mb-0.5 opacity-60">Mining Balance</div>
                   <div className="flex items-baseline gap-2">
-                    {/* Hiển thị Balance với 4 số thập phân */}
                     <span className="text-2xl md:text-4xl font-lilita text-white">{balance.toFixed(4)}</span>
                     <span className="text-cyan-400 font-lilita text-xs md:text-sm tracking-widest opacity-80">ENGO</span>
                   </div>
@@ -374,7 +353,6 @@ const App = () => {
                   </button>
 
                   <div className="flex items-center gap-2 text-purple-300 text-[10px] font-bold uppercase mb-1"><ZapIcon size={12} /> Boost</div>
-                  {/* Hiển thị Total Boost (Mastery + Referral) */}
                   <div className="text-lg text-purple-400 font-lilita">+{totalBoost.toFixed(4)} <span className="text-[10px] text-purple-300/50 font-sans">/h</span></div>
                 </div>
               </div>
@@ -385,7 +363,6 @@ const App = () => {
                    <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Production</div>
                    <div className="text-lg text-green-400 flex items-center gap-1.5 font-lilita">
                       <PickaxeIcon size={16} className={isMining ? "animate-bounce" : ""} /> 
-                      {/* Hiển thị tổng tốc độ (Dùng displayMiningRate để UI cập nhật ngay, serverRate sẽ catch up sau) */}
                       {displayMiningRate.toFixed(4)} <span className="text-xs text-green-400/60 font-sans">/h</span>
                    </div>
                 </div>
