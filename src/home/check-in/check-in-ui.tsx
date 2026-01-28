@@ -1,7 +1,7 @@
 // --- START OF FILE check-in-ui.tsx ---
 
 import React, { memo, useState, useEffect } from 'react';
-import { CheckInProvider, useCheckIn, dailyRewardsUI } from './check-in-context.tsx'; 
+import { CheckInProvider, useCheckIn, dailyRewardsUI, getCheckInMultiplier } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
@@ -81,9 +81,12 @@ const CheckInTimer = memo(() => {
     return (
         <div className="flex justify-center w-full mb-4 mt-2">
             <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full shadow-lg backdrop-blur-sm select-none animate-fadeIn">
+                <div className="relative flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-purple-500"></span>
+                </div>
                 <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Daily Reset</div>
-                {/* Đã chỉnh sửa: text-xl, w-[90px] cố định, tabular-nums */}
-                <div className="font-lilita text-xl text-purple-200 tabular-nums tracking-widest w-[90px] text-center">
+                <div className="font-lilita text-2xl text-purple-200 tabular-nums tracking-widest min-w-[100px] text-center">
                     {timeLeft}
                 </div>
             </div>
@@ -147,9 +150,13 @@ const MiniCalendar = memo(({ dailyRewardsUI, canClaimToday, claimableDay, loginS
 });
 
 // 3. RewardItem: Hiển thị danh sách vật phẩm đồng nhất
+// Đã cập nhật logic hiển thị Multiplier dựa trên Mastery
 const RewardItem = memo(({ 
-    rewardData, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
+    rewardData, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className, masteryCards 
 }: any) => {
+    // Tính toán Multiplier
+    const currentMultiplier = getCheckInMultiplier(masteryCards);
+
     let isClaimed;
     if (canClaimToday) {
         isClaimed = rewardData.day < claimableDay;
@@ -186,63 +193,74 @@ const RewardItem = memo(({
             `}>
                 
                 {/* --- LỚP PHỦ NỀN ĐEN --- */}
-                
-                {/* 1. Lớp phủ cho ngày chưa check-in (Locked - Tương lai) */}
-                {/* Đã chỉnh: bg-black/40 (Rõ hơn) */}
                 {isLocked && (
                     <div className="absolute inset-0 bg-black/40 z-20 pointer-events-none"></div>
                 )}
-
-                {/* 2. Lớp phủ cho ngày ĐÃ check-in (Claimed - Quá khứ) */}
-                {/* Đã chỉnh: bg-black/70 (Đậm hơn) */}
                 {isClaimed && (
                     <div className="absolute inset-0 bg-black/70 z-20 pointer-events-none"></div>
                 )}
 
-                {/* --- HEADER NGÀY --- */}
-                <div className={`w-full text-center py-1.5 text-xs font-lilita uppercase tracking-wide border-b z-10
+                {/* --- HEADER NGÀY + TAG BONUS --- */}
+                <div className={`w-full text-center py-1.5 px-2 flex items-center justify-between text-xs font-lilita uppercase tracking-wide border-b z-10
                     ${isClaimable ? 'bg-gradient-to-r from-slate-800 via-purple-900/30 to-slate-800 text-purple-200 border-purple-500/20' : 'bg-black/20 text-slate-400 border-white/5'}
                 `}>
-                    Day {rewardData.day}
+                    <span className="flex-1 text-center">Day {rewardData.day}</span>
+                    
+                    {/* Hiển thị Tag Bonus nếu có Multiplier > 1 và chưa nhận */}
+                    {!isClaimed && currentMultiplier > 1 && (
+                         <span className="absolute right-2 text-[10px] bg-yellow-500/20 text-yellow-300 px-1 rounded border border-yellow-500/30 scale-90 origin-right">
+                            x{currentMultiplier}
+                         </span>
+                    )}
                 </div>
                 
                 {/* --- NỘI DUNG CHÍNH (Loop qua items) --- */}
                 <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
                     
-                    {rewardData.items.map((item: any, index: number) => (
-                        <div key={index} className="relative">
-                            {/* 
-                                KHỐI CHỨA ICON (Container)
-                                Thiết kế giống hệt nhau cho tất cả items (Main & Energy)
-                                - isClaimable: Tím/Than gradient (Giống Main)
-                                - Default: Xám/Đen gradient
-                            */}
-                            <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 
-                                ${isClaimable 
-                                    ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' 
-                                    : 'bg-gradient-to-br from-slate-700 to-slate-900'
-                                } shadow-lg p-1`}
-                            >
-                                {/* Wrapper Icon */}
-                                <div className={`w-full h-full rounded-lg flex items-center justify-center 
-                                    ${isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}
-                                >
-                                    <div className="w-7 h-7">{item.icon}</div>
-                                </div>
+                    {rewardData.items.map((item: any, index: number) => {
+                        // LOGIC HIỂN THỊ SỐ LƯỢNG:
+                        // 1. Lấy số lượng gốc
+                        let displayAmount = parseFloat(item.amount);
+                        
+                        // 2. Nếu chưa nhận thưởng VÀ Item không phải là Energy -> Nhân với hệ số
+                        // (Lưu ý: item.name phải khớp với config trong context)
+                        if (!isClaimed && item.name !== "Energy") {
+                            displayAmount = displayAmount * currentMultiplier;
+                        }
 
-                                {/* Badge Số Lượng: Luôn dùng x5 */}
-                                <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md 
-                                    ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm`}
+                        // Kiểm tra nếu là Energy thì không đổi màu text
+                        const isBonusItem = !isClaimed && currentMultiplier > 1 && item.name !== "Energy";
+
+                        return (
+                            <div key={index} className="relative">
+                                {/* KHỐI CHỨA ICON */}
+                                <div className={`relative w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 
+                                    ${isClaimable 
+                                        ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' 
+                                        : 'bg-gradient-to-br from-slate-700 to-slate-900'
+                                    } shadow-lg p-1`}
                                 >
-                                    <span className={`text-[10px] font-lilita leading-none pt-[2px] 
-                                        ${isClaimable ? 'text-white/90' : 'text-slate-400'}`}
+                                    {/* Wrapper Icon */}
+                                    <div className={`w-full h-full rounded-lg flex items-center justify-center 
+                                        ${isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}
                                     >
-                                        x{formatCompactNumber(item.amount)}
-                                    </span>
+                                        <div className="w-7 h-7">{item.icon}</div>
+                                    </div>
+
+                                    {/* Badge Số Lượng */}
+                                    <div className={`absolute -bottom-1.5 -right-1.5 px-1.5 h-[16px] flex items-center justify-center rounded-md 
+                                        ${isClaimable ? 'bg-slate-900/60' : 'bg-slate-950/60'} shadow-sm border border-white/5`}
+                                    >
+                                        <span className={`text-[10px] font-lilita leading-none pt-[2px] 
+                                            ${isBonusItem ? 'text-yellow-400' : (isClaimable ? 'text-white/90' : 'text-slate-400')}
+                                        `}>
+                                            x{formatCompactNumber(displayAmount)}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
+                        );
+                    })}
 
                 </div>
 
@@ -278,7 +296,7 @@ const RewardItem = memo(({
 
 // 4. CheckInMainContent
 const CheckInMainContent = memo(({ 
-    dailyRewardsUI, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
+    dailyRewardsUI, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, masteryCards 
 }: any) => {
     return (
         <div className="px-4 pt-2 pb-24">
@@ -309,6 +327,7 @@ const CheckInMainContent = memo(({
                             isClaiming={isClaiming}
                             isSyncingData={isSyncingData}
                             onClaim={onClaim}
+                            masteryCards={masteryCards} // Pass masteryCards xuống RewardItem
                         />
                     ))}
                 </div>
@@ -334,6 +353,8 @@ const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, par
                 <div className="mt-14 text-center">
                     <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
                     <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
+                    
+                    {/* Số lượng hiển thị ở đây lấy từ animatingReward (đã được nhân từ backend trả về) */}
                     <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
                     
                     <div className="text-sm text-yellow-400 mt-1 font-bold animate-pulse">
@@ -393,6 +414,7 @@ const DailyCheckInView = () => {
             isClaiming={isClaiming}
             isSyncingData={isSyncingData}
             onClaim={claimReward}
+            masteryCards={masteryCards} // Pass MasteryCards xuống
          />
       </div>
 
