@@ -1,3 +1,5 @@
+// --- START OF FILE market-timer.tsx ---
+
 import React, { useState, useEffect, memo } from 'react';
 
 const MarketTimer = memo(() => {
@@ -40,12 +42,16 @@ const MarketTimer = memo(() => {
 
     return (
         <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full mx-auto w-fit mb-4 animate-fadeIn select-none">
-            <div className="relative flex h-3 w-3">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                <span className="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-            </div>
+            {/* Đã loại bỏ chấm xanh nhấp nháy ở đây */}
+            
             <div className="text-sm uppercase tracking-widest text-slate-400 font-lilita">Market Reset</div>
-            <div className="font-lilita text-2xl text-amber-100 tabular-nums tracking-widest min-w-[100px] text-center">
+            
+            {/* 
+                - text-xl: Size chữ nhỏ hơn (trước là 2xl)
+                - text-white: Màu trắng
+                - min-w-[90px]: Điều chỉnh lại chiều rộng tối thiểu cho cân đối
+            */}
+            <div className="font-lilita text-xl text-white tabular-nums tracking-widest min-w-[90px] text-center">
                 {timeLeft}
             </div>
         </div>
