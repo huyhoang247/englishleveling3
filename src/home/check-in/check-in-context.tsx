@@ -17,24 +17,11 @@ export const dailyRewards = [
   { day: 7, name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-10 h-10 object-contain" /> },
 ];
 
-// --- THÊM MỚI: ĐỊNH NGHĨA PHẦN THƯỞNG MỐC STREAK CHO UI ---
-export const streakMilestoneRewards = [
-    { streakGoal: 7, name: "Gold", amount: "5,000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-    { streakGoal: 14, name: "Gold", amount: "10,000", icon: <img src={uiAssets.goldIcon} alt="Gold" className="w-10 h-10 object-contain" /> },
-];
-
 // --- ĐỊNH NGHĨA TYPES ---
 interface Particle {
   id: number;
   style: React.CSSProperties;
   className: string;
-}
-
-interface StreakMilestone {
-    streakGoal: number;
-    name: string;
-    amount: string;
-    icon: React.ReactNode;
 }
 
 interface CheckInContextType {
@@ -47,7 +34,6 @@ interface CheckInContextType {
   animatingReward: any;
   particles: Particle[];
   coins: number;
-  nextStreakGoal: StreakMilestone | null; 
   claimReward: (day: number) => Promise<void>;
   handleClose: () => void;
 }
@@ -110,7 +96,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
   }, [lastCheckIn, loginStreak]);
 
 
-  // --- SỬA ĐỔI: Thay thế đồng hồ đếm ngược bằng timeout để kích hoạt nút nhận quà ---
+  // --- Timeout để kích hoạt nút nhận quà khi qua ngày mới ---
   useEffect(() => {
     if (canClaimToday) return; // Nếu đã nhận được thì không cần timer
     
@@ -119,8 +105,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     const nextUTCDay = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1, 0, 0, 0));
     const diff = nextUTCDay.getTime() - now.getTime();
 
-    // Thay vì nhảy số mỗi giây, ta chỉ đặt lịch hẹn giờ đến lúc qua ngày mới
-    // để bật nút nhận thưởng
     const timer = setTimeout(() => {
         setCanClaimToday(true);
     }, diff);
@@ -140,18 +124,15 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     setIsClaiming(true);
     try {
       setIsSyncingData(true);
-      const { dailyReward, streakReward } = await processDailyCheckIn(userId);
+      
+      // Gọi service, chỉ lấy dailyReward vì đã bỏ streakReward
+      const { dailyReward } = await processDailyCheckIn(userId);
       setIsSyncingData(false);
 
       const dailyRewardForAnimation = dailyRewards.find(r => r.day === dailyReward.day);
-      let streakRewardForAnimation = null;
-      if (streakReward) {
-          streakRewardForAnimation = streakMilestoneRewards.find(r => r.streakGoal === streakReward.streakGoal);
-      }
       
       setAnimatingReward({ 
-          daily: { ...dailyRewardForAnimation, amount: dailyReward.amount },
-          streak: streakReward ? { ...streakRewardForAnimation, amount: streakReward.amount } : null
+          daily: { ...dailyRewardForAnimation, amount: dailyReward.amount }
       });
 
       const generatedParticles: Particle[] = Array.from({ length: 20 }).map((_, i) => {
@@ -183,10 +164,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     }
   }, [canClaimToday, claimableDay, isClaiming, isSyncingData, setIsSyncingData]);
 
-  const nextStreakGoal = useMemo(() => {
-    return streakMilestoneRewards.find(milestone => milestone.streakGoal > loginStreak) || null;
-  }, [loginStreak]);
-
   const value = useMemo(() => ({
     loginStreak, 
     isSyncingData, 
@@ -197,7 +174,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     animatingReward, 
     particles,
     coins, 
-    nextStreakGoal, 
     claimReward, 
     handleClose: onClose,
   }), [
@@ -210,7 +186,6 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     animatingReward, 
     particles,
     coins,
-    nextStreakGoal, 
     claimReward, 
     onClose
   ]);
