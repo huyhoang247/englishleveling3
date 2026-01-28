@@ -208,7 +208,15 @@ const RewardItem = memo(({
                 </div>
                 
                 {/* --- NỘI DUNG CHÍNH (Loop qua items) --- */}
-                <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
+                {/* 
+                   THAY ĐỔI TẠI ĐÂY:
+                   - isClaimed (Đã nhận): opacity-60
+                   - isLocked (Chưa tới): opacity-40
+                   - Default (Đang nhận): opacity-100
+                */}
+                <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity 
+                    ${isClaimed ? 'opacity-60' : isLocked ? 'opacity-40' : 'opacity-100'}
+                `}> 
                     
                     {rewardData.items.map((item: any, index: number) => (
                         <div key={index} className="relative">
