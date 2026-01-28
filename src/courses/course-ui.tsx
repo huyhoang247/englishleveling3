@@ -235,8 +235,9 @@ export default function QuizAppHome({ hideNavBar, showNavBar }: QuizAppHomeProps
   };
 
   return (
-    <div className="h-svh overflow-hidden bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      <div className="w-full h-full bg-white flex flex-col">
+    // THAY ĐỔI Ở ĐÂY: Dùng bg-gray-50 thay vì gradient, và bỏ bg-white ở div con
+    <div className="h-svh overflow-hidden bg-gray-50">
+      <div className="w-full h-full flex flex-col">
         <AppHeader />
         <main className="flex-grow overflow-y-auto">
           <div className={`p-6 max-w-screen-xl mx-auto ${currentView === 'main' ? 'pb-24' : 'pb-6'}`}>
