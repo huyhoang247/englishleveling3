@@ -1,3 +1,4 @@
+// Filename: check-in-service.ts
 
 import { db } from '../../firebase';
 import { 
@@ -14,14 +15,6 @@ export const CHECK_IN_REWARDS = [
     { day: 6, type: 'cardCapacity', amount: 50, name: "Dung Lượng Thẻ" },
     { day: 7, type: 'pickaxes', amount: 10, name: "Cúp" },
 ];
-
-// --- THÊM MỚI: ĐỊNH NGHĨA PHẦN THƯỞNG MỐC STREAK ---
-export const STREAK_MILESTONE_REWARDS = [
-    { streakGoal: 7, type: 'coins', amount: 5000, name: "Thưởng 7 Ngày" },
-    { streakGoal: 14, type: 'coins', amount: 10000, name: "Thưởng 14 Ngày" },
-    // Thêm các mốc khác ở đây nếu muốn, ví dụ: { streakGoal: 21, ... }
-];
-
 
 export const processDailyCheckIn = async (userId: string) => {
     const userDocRef = doc(db, 'users', userId);
@@ -43,7 +36,7 @@ export const processDailyCheckIn = async (userId: string) => {
             throw new Error("Bạn đã điểm danh hôm nay rồi.");
         }
         
-        // --- SỬA ĐỔI: LOGIC TÍNH STREAK MỚI ---
+        // --- LOGIC TÍNH STREAK ---
         let newStreak = 1; // Mặc định reset streak
         if (lastCheckIn) {
             const yesterday = new Date(now);
@@ -61,9 +54,6 @@ export const processDailyCheckIn = async (userId: string) => {
         const dailyRewardDay = (newStreak - 1) % 7 + 1;
         const dailyReward = CHECK_IN_REWARDS.find(r => r.day === dailyRewardDay);
         if (!dailyReward) throw new Error("Lỗi cấu hình phần thưởng hàng ngày.");
-
-        // --- THÊM MỚI: KIỂM TRA PHẦN THƯỞNG MỐC STREAK ---
-        const streakReward = STREAK_MILESTONE_REWARDS.find(r => r.streakGoal === newStreak);
         
         const updates: { [key: string]: any } = {
             loginStreak: newStreak,
@@ -88,17 +78,11 @@ export const processDailyCheckIn = async (userId: string) => {
         // Thêm phần thưởng hàng ngày
         addRewardToUpdates(dailyReward);
 
-        // Thêm phần thưởng mốc streak nếu có
-        if (streakReward) {
-            addRewardToUpdates(streakReward);
-        }
-
         t.update(userDocRef, updates);
         
-        // --- SỬA ĐỔI: Trả về cả hai loại phần thưởng ---
+        // Trả về kết quả
         return { 
             dailyReward: { ...dailyReward, day: dailyRewardDay }, // Đảm bảo trả về đúng day trong chu kỳ
-            streakReward: streakReward || null, // Trả về null nếu không có
             newStreak 
         };
     });
