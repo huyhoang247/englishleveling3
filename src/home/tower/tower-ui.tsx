@@ -197,22 +197,37 @@ const BossBattleView = ({ onClose }: { onClose: () => void }) => {
         // Sequence Collect: Đợi Loot hiện ra rồi bay đi
         setTimeout(() => {
             newLootItems.forEach((item, index) => {
+                // Delay theo index để tạo hiệu ứng lần lượt (Sequential)
                 setTimeout(() => {
-                    // Hiện chữ tên vật phẩm
+                    // 1. Hiện chữ tên vật phẩm + số lượng bay lên trước
                     const label = item.type === 'coin' ? 'COINS' : item.type.toUpperCase();
                     // Tạo text bay lên
                     addDamageText(`+${item.amount} ${label}`, "#fbbf24", "custom", 14, item.x - 8, item.y - 15, 1000, "uppercase tracking-wide font-bold shadow-black drop-shadow-md");
                     
-                    // Ẩn item visual sau khi text hiện lên
+                    // 2. Sau 300ms: Ẩn item visual VÀ Hiện chữ "Collected"
                     setTimeout(() => {
-                         setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
+                        // Ẩn vật phẩm
+                        setLootItems(prev => prev.map(i => i.id === item.id ? { ...i, isVisible: false } : i));
+                        
+                        // NEW: Hiện chữ Collected màu trắng, nhỏ, thiết kế giống HP
+                        addDamageText(
+                             "Collected", 
+                             "#FFFFFF", // Màu trắng
+                             "custom", 
+                             12, // Size nhỏ hơn (12px)
+                             item.x, // Vị trí X ngay tại vật phẩm
+                             item.y - 20, // Vị trí Y cao hơn vật phẩm một chút
+                             600, // Thời gian tồn tại ngắn
+                             "font-bold text-shadow-sm tracking-wider opacity-90" // Style
+                        );
+
                     }, 300);
 
-                }, index * 250); // Delay giữa các món đồ bay lên
+                }, index * 350); // Tăng delay (350ms) để nhìn rõ từng cái biến mất lần lượt
             });
 
             // Kết thúc sequence
-            const totalDelay = newLootItems.length * 250 + 600; 
+            const totalDelay = newLootItems.length * 350 + 800; 
             setTimeout(() => {
                 setLootItems([]); 
                 if (onComplete) onComplete();
