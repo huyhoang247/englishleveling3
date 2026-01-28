@@ -31,7 +31,7 @@ const formatCompactNumber = (amount: string | number): string => {
     return num.toString();
 };
 
-// --- COMPONENT MỚI: CHECK-IN TIMER ---
+// --- COMPONENT: CHECK-IN TIMER (MỚI) ---
 // Đếm ngược đến 00:00 UTC (Giờ reset logic của server check-in)
 const CheckInTimer = memo(() => {
     const [timeLeft, setTimeLeft] = useState('');
@@ -68,7 +68,7 @@ const CheckInTimer = memo(() => {
     if (!timeLeft) return null;
 
     return (
-        <div className="flex justify-center w-full mb-2 mt-2">
+        <div className="flex justify-center w-full mb-4 mt-2">
             <div className="flex items-center gap-3 bg-slate-900/80 border border-slate-600 px-5 py-2 rounded-full shadow-lg backdrop-blur-sm select-none animate-fadeIn">
                 <div className="relative flex h-3 w-3">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
@@ -106,7 +106,7 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     };
 
     return (
-        <div className="mb-6 mt-2 flex justify-between px-1">
+        <div className="mb-6 flex justify-between px-1">
             {dailyRewards.map((reward: any) => {
                 const status = getStatus(reward.day);
                 
@@ -251,8 +251,13 @@ const CheckInMainContent = memo(({
     dailyRewards, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
     return (
-        <div className="px-4 pt-4 pb-24">
-            {/* --- ADDED TIMER HERE --- */}
+        <div className="px-4 pt-2 pb-24">
+            {/* 
+               --- VỊ TRÍ TIMER --- 
+               Đặt timer ở đây sẽ nằm ngay dưới Header (số coin) vì CheckInMainContent 
+               được render ngay dưới Header trong DailyCheckInView.
+               Và nó nằm trên MiniCalendar (Day 1, 2...)
+            */}
             <CheckInTimer />
 
             <MiniCalendar 
@@ -263,8 +268,6 @@ const CheckInMainContent = memo(({
             />
         
             <div className="pb-6">
-                {/* Đã xóa NextGoalCard */}
-
                 {/* GRID LAYOUT: 2 Columns */}
                 <div className="grid grid-cols-2 gap-3">
                     {dailyRewards.map((reward: any) => (
