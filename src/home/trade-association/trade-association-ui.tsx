@@ -95,7 +95,8 @@ const StepSelectBtn = ({ label, isSelected, onClick }: { label: string, isSelect
         className={`
             px-1 py-1 text-[10px] sm:text-xs font-lilita rounded border transition-all duration-200 flex-1 tracking-wide
             ${isSelected 
-                ? 'bg-amber-600 border-amber-500 text-white shadow-lg shadow-amber-900/50 scale-105 z-10' 
+                // THAY ĐỔI: Màu tối hơn, đẹp hơn (Cyan Dark) thay vì Amber sáng
+                ? 'bg-cyan-950 border-cyan-700 text-cyan-400 shadow-lg shadow-cyan-900/20 scale-105 z-10' 
                 : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700 hover:text-slate-200'
             }
         `}
@@ -301,7 +302,8 @@ const TradeOptionCard = memo(({
                                     px-2 py-1 text-[10px] sm:text-xs font-lilita rounded border transition-colors flex-1
                                     ${maxAffordable === 0 
                                         ? 'bg-slate-800 border-slate-700 text-slate-600' 
-                                        : 'bg-indigo-900 border-indigo-700 text-indigo-200 hover:bg-indigo-800 hover:text-white'
+                                        // THAY ĐỔI: Loại bỏ màu tím (Indigo), dùng Slate để đồng bộ
+                                        : 'bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600 hover:text-white'
                                     }
                                 `}
                             >
@@ -314,7 +316,6 @@ const TradeOptionCard = memo(({
                     <button
                         onClick={() => onExchange(option, quantity)}
                         disabled={isDisabled}
-                        // Thêm mt-2 để tạo khoảng cách nhẹ
                         className={`
                             mt-2 transition-all duration-300 ease-in-out
                             ${isProcessing 
