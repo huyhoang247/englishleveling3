@@ -1,9 +1,9 @@
 // --- START OF FILE airdrop.tsx ---
 
 import React, { useState, useEffect, useRef } from 'react';
-import { useGame } from './GameContext.tsx';
-import MasteryDisplay from './ui/display/mastery-display.tsx';
-import { auth } from './firebase'; // Đảm bảo import auth từ file cấu hình firebase
+import { useGame } from '../GameContext.tsx';
+import MasteryDisplay from '../ui/display/mastery-display.tsx';
+import { auth } from '../firebase'; // Đảm bảo import auth từ file cấu hình firebase
 import { 
   syncAirdropProgress, 
   startMiningSession, 
