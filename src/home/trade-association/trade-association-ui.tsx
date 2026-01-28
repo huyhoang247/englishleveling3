@@ -16,7 +16,7 @@ import RateLimitToast from '../../ui/notification.tsx';
 
 // Import Components từ file riêng
 import NumpadModal from './numpad-modal.tsx';
-import MarketTimer from './market-timer.tsx'; // Import component MarketTimer mới tách
+import MarketTimer from './market-timer.tsx'; 
 
 // Import Service và Types từ file service
 import { 
@@ -25,6 +25,9 @@ import {
     TradeOption, 
     ResourceType 
 } from './trade-service.ts';
+
+// --- CONSTANTS ---
+const EXCHANGE_ICON_URL = "https://raw.githubusercontent.com/huyhoang247/englishleveling3/refs/heads/main/src/assets/images/exchange-icon.webp";
 
 // --- UTILS: NUMBER FORMATTING ---
 const formatNumber = (num: number): string => {
@@ -146,10 +149,10 @@ const TradeOptionCard = memo(({
         return [1000, 10000];
     }, [maxAffordable]);
 
-    // Current Step State (default to the first available dynamic step if current step is weird, else keep 1)
+    // Current Step State
     const [step, setStep] = useState(dynamicSteps[0]);
 
-    // Update step if the dynamic range changes drastically and current step becomes too small
+    // Update step if the dynamic range changes drastically
     useEffect(() => {
         if (!dynamicSteps.includes(step)) {
             setStep(dynamicSteps[0]);
@@ -161,8 +164,10 @@ const TradeOptionCard = memo(({
         if ((resources[ing.type] || 0) < ing.amount * quantity) canAffordAll = false;
     });
 
+    // Xác định trạng thái disable
+    const isDisabled = !canAffordAll || quantity <= 0 || isProcessing;
+
     return (
-        // UPDATED: bg-slate-900/80 for opacity 80% without backdrop blur
         <div className="relative bg-slate-900/80 rounded-2xl border border-slate-700 overflow-hidden">
             <div className="p-6 md:p-8 flex flex-col lg:flex-row items-center gap-2 lg:gap-6">
                 
@@ -305,20 +310,26 @@ const TradeOptionCard = memo(({
                         </div>
                     </div>
 
-                    {/* Exchange Button */}
+                    {/* Exchange Button (Image) */}
                     <button
                         onClick={() => onExchange(option, quantity)}
-                        disabled={!canAffordAll || isProcessing || quantity <= 0}
+                        disabled={isDisabled}
                         className={`
-                            w-full max-w-[250px] py-2 px-4 rounded-xl font-lilita text-lg uppercase tracking-wider transition-transform duration-100
-                            flex items-center justify-center gap-2 active:scale-95 border mt-1
-                            ${canAffordAll && quantity > 0
-                                ? 'bg-emerald-700 border-emerald-600 text-white hover:bg-emerald-600' 
-                                : 'bg-slate-800 border-slate-700 text-slate-600 cursor-not-allowed'
+                            mt-2 transition-all duration-300 ease-in-out
+                            ${isProcessing 
+                                ? 'scale-75 grayscale opacity-70 cursor-wait' // Processing: Thu nhỏ + Đen trắng
+                                : isDisabled
+                                    ? 'grayscale opacity-50 cursor-not-allowed' // Disabled: Đen trắng
+                                    : 'hover:scale-105 active:scale-95 cursor-pointer hover:drop-shadow-[0_0_15px_rgba(255,255,255,0.3)]' // Normal
                             }
                         `}
+                        title={isProcessing ? "Processing..." : isDisabled ? "Insufficient resources" : "Exchange"}
                     >
-                        {isProcessing ? 'Processing...' : 'Exchange'}
+                        <img 
+                            src={EXCHANGE_ICON_URL}
+                            alt="Exchange"
+                            className="w-20 h-20 md:w-24 md:h-24 object-contain drop-shadow-xl"
+                        />
                     </button>
                 </div>
             </div>
@@ -462,7 +473,6 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                     alt="Background" 
                     className="w-full h-full object-cover opacity-30" 
                 />
-                {/* UPDATED: Dark overlay to cover background slightly more */}
                 <div className="absolute inset-0 bg-black/50"></div>
             </div>
 
@@ -500,7 +510,7 @@ const TradeAssociationModalV2 = memo(({ isOpen, onClose }: TradeAssociationModal
                 </div>
             </div>
             
-            {/* NUMPAD OVERLAY (Sử dụng component import từ file riêng) */}
+            {/* NUMPAD OVERLAY */}
             <NumpadModal 
                 isOpen={numpadState.isOpen}
                 initialValue={numpadState.currentValue}
