@@ -86,44 +86,7 @@ const MiniCalendar = memo(({ dailyRewards, canClaimToday, claimableDay, loginStr
     );
 });
 
-// 3. NextGoalCard
-const NextGoalCard = memo(({ nextStreakGoal, loginStreak }: any) => {
-    if (!nextStreakGoal) return null;
-    
-    const percentage = Math.min((loginStreak / nextStreakGoal.streakGoal) * 100, 100);
-    const formattedAmount = formatCompactNumber(nextStreakGoal.amount);
-
-    return (
-        <div className="group relative rounded-xl overflow-hidden bg-slate-800/85 border border-slate-700 shadow-lg p-4 mb-4">
-            <div className="flex items-center gap-4">
-                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-gradient-to-br from-slate-700 to-slate-900 shadow-lg p-1">
-                    <div className="w-full h-full rounded-lg flex items-center justify-center bg-slate-800/80">
-                        <div className="w-10 h-10">{nextStreakGoal.icon}</div>
-                    </div>
-                </div>
-                <div className="flex-1">
-                    <div className="mb-2 flex items-center gap-3">
-                        <div className="w-full h-3.5 bg-slate-900/50 rounded-full overflow-hidden shadow-inner p-0.5">
-                            <div 
-                                className="relative h-full bg-gradient-to-r from-purple-400 to-indigo-500 rounded-full transition-all duration-500 ease-out" 
-                                style={{ width: `${percentage}%` }}
-                            >
-                                <div className="absolute top-0 left-0 w-full h-1/2 bg-white/20 rounded-full"></div>
-                            </div>
-                        </div>
-                        <div className="bg-slate-900/50 border border-slate-700 rounded-md px-2 py-0.5 flex items-baseline">
-                            <span className="text-base font-bold text-white">{loginStreak}</span>
-                            <span className="text-xs text-slate-400 font-mono">/{nextStreakGoal.streakGoal}</span>
-                        </div>
-                    </div>
-                    <p className="text-indigo-300 text-lg font-bold font-lilita">x{formattedAmount}</p>
-                </div>
-            </div>
-        </div>
-    );
-});
-
-// 4. RewardItem: Grid Card
+// 3. RewardItem: Grid Card
 const RewardItem = memo(({ 
     reward, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className 
 }: any) => {
@@ -231,9 +194,9 @@ const RewardItem = memo(({
     );
 });
 
-// 5. CheckInMainContent
+// 4. CheckInMainContent
 const CheckInMainContent = memo(({ 
-    dailyRewards, canClaimToday, claimableDay, loginStreak, nextStreakGoal, isClaiming, isSyncingData, onClaim 
+    dailyRewards, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim 
 }: any) => {
     return (
         <div className="px-4 pt-4 pb-24">
@@ -245,7 +208,7 @@ const CheckInMainContent = memo(({
             />
         
             <div className="pb-6">
-                <NextGoalCard nextStreakGoal={nextStreakGoal} loginStreak={loginStreak} />
+                {/* Đã xóa NextGoalCard */}
 
                 {/* GRID LAYOUT: 2 Columns */}
                 <div className="grid grid-cols-2 gap-3">
@@ -253,8 +216,8 @@ const CheckInMainContent = memo(({
                         <RewardItem 
                             key={reward.day}
                             reward={reward}
-                            /* Ngày 7 -> col-span-2 (Full width) */
-                            className={reward.day === 7 ? "col-span-2 h-[100px]" : "col-span-1 h-[110px]"}
+                            /* Ngày 7 -> col-span-2 (Full width), Chiều cao 110px bằng các ngày khác */
+                            className={reward.day === 7 ? "col-span-2 h-[110px]" : "col-span-1 h-[110px]"}
                             canClaimToday={canClaimToday}
                             claimableDay={claimableDay}
                             loginStreak={loginStreak}
@@ -269,7 +232,7 @@ const CheckInMainContent = memo(({
     );
 });
 
-// 6. RewardAnimationOverlay
+// 5. RewardAnimationOverlay
 const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, particles }: any) => {
     if (!showRewardAnimation || !animatingReward) return null;
 
@@ -287,13 +250,7 @@ const RewardAnimationOverlay = memo(({ showRewardAnimation, animatingReward, par
                     <div className="text-indigo-400 text-lg font-bold mb-1">Nhận Thưởng Thành Công!</div>
                     <div className="text-white text-xl font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.daily?.name}</div>
                     <div className="text-indigo-200 text-3xl font-bold mb-4 font-lilita">x{animatingReward.daily?.amount}</div>
-                    {animatingReward.streak && (
-                        <div className="border-t border-slate-700 pt-4 mt-4">
-                            <div className="text-green-400 text-sm font-bold mb-1">Thưởng Chuỗi Đăng Nhập!</div>
-                            <div className="text-white text-lg font-bold mb-1 font-lilita tracking-wide uppercase">{animatingReward.streak?.name}</div>
-                            <div className="text-green-200 text-2xl font-bold font-lilita">+{animatingReward.streak?.amount}</div>
-                        </div>
-                    )}
+                    
                     <div className="mt-6 text-sm text-slate-400">Phần thưởng đã được thêm vào kho đồ</div>
                 </div>
             </div>
@@ -310,7 +267,6 @@ const DailyCheckInView = () => {
   const {
     loginStreak, isSyncingData, canClaimToday, claimableDay, 
     isClaiming, showRewardAnimation, animatingReward, particles, 
-    nextStreakGoal, 
     claimReward, handleClose,
   } = useCheckIn();
 
@@ -343,7 +299,6 @@ const DailyCheckInView = () => {
             canClaimToday={canClaimToday}
             claimableDay={claimableDay}
             loginStreak={loginStreak}
-            nextStreakGoal={nextStreakGoal}
             isClaiming={isClaiming}
             isSyncingData={isSyncingData}
             onClaim={claimReward}
