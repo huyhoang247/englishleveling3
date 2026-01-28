@@ -3,7 +3,7 @@
 import React, { memo, useState, useEffect } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewardsUI, getCheckInMultiplier } from './check-in-context.tsx'; 
 import CoinDisplay from '../../ui/display/coin-display.tsx';
-import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
+// import MasteryDisplay from '../../ui/display/mastery-display.tsx'; // Đã ẩn import theo yêu cầu
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx'; 
 import EnergyDisplay from '../../ui/display/energy-display.tsx'; // Import EnergyDisplay
@@ -396,7 +396,9 @@ const DailyCheckInView = () => {
           {/* HIỂN THỊ ENERGY */}
           <EnergyWrapper />
           
-          <MasteryDisplay masteryCount={masteryCards} />
+          {/* Đã ẩn hiển thị Mastery Display */}
+          {/* <MasteryDisplay masteryCount={masteryCards} /> */}
+          
           <CoinWrapper />
         </div>
       </header>
