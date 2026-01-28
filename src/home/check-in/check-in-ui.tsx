@@ -191,13 +191,15 @@ const RewardItem = memo(({
                 {/* --- LỚP PHỦ NỀN ĐEN --- */}
                 
                 {/* 1. Lớp phủ cho ngày chưa check-in (Locked - Tương lai) */}
+                {/* Đã chỉnh: bg-black/40 (Rõ hơn) */}
                 {isLocked && (
-                    <div className="absolute inset-0 bg-black/60 z-20 pointer-events-none"></div>
+                    <div className="absolute inset-0 bg-black/40 z-20 pointer-events-none"></div>
                 )}
 
                 {/* 2. Lớp phủ cho ngày ĐÃ check-in (Claimed - Quá khứ) */}
+                {/* Đã chỉnh: bg-black/70 (Đậm hơn) */}
                 {isClaimed && (
-                    <div className="absolute inset-0 bg-black/50 z-20 pointer-events-none"></div>
+                    <div className="absolute inset-0 bg-black/70 z-20 pointer-events-none"></div>
                 )}
 
                 {/* --- HEADER NGÀY --- */}
@@ -208,15 +210,7 @@ const RewardItem = memo(({
                 </div>
                 
                 {/* --- NỘI DUNG CHÍNH (Loop qua items) --- */}
-                {/* 
-                   THAY ĐỔI TẠI ĐÂY:
-                   - isClaimed (Đã nhận): opacity-60
-                   - isLocked (Chưa tới): opacity-40
-                   - Default (Đang nhận): opacity-100
-                */}
-                <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity 
-                    ${isClaimed ? 'opacity-60' : isLocked ? 'opacity-40' : 'opacity-100'}
-                `}> 
+                <div className={`flex-1 flex items-center justify-center w-full py-2 gap-2 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
                     
                     {rewardData.items.map((item: any, index: number) => (
                         <div key={index} className="relative">
