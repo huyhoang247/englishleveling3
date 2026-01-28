@@ -84,7 +84,7 @@ export const getCheckInMultiplier = (mastery: number): number => {
  * Áp dụng Multiplier cho rewards (trừ Energy).
  * 
  * @param userId ID của người dùng
- * @param isDouble Boolean - Nếu true thì nhân đôi TẤT CẢ phần thưởng (bao gồm Energy)
+ * @param isDouble (Mới) Nếu true nghĩa là người dùng đã xem quảng cáo để x2 quà
  * @returns Object chứa thông tin phần thưởng đã nhận (đã nhân) và streak mới
  */
 export const processDailyCheckIn = async (userId: string, isDouble: boolean = false) => {
@@ -150,11 +150,10 @@ export const processDailyCheckIn = async (userId: string, isDouble: boolean = fa
         };
 
         // --- TÍNH TOÁN MULTIPLIER ---
-        // 1. Hệ số Mastery (chỉ áp dụng cho tài nguyên, không áp dụng cho Energy)
         const masteryMultiplier = getCheckInMultiplier(currentMastery);
         
-        // 2. Hệ số Quảng Cáo (x2) (áp dụng cho TOÀN BỘ, kể cả Energy)
-        const adsMultiplier = isDouble ? 2 : 1;
+        // Nếu người chơi xem quảng cáo, nhân thêm 2, ngược lại là 1
+        const adMultiplier = isDouble ? 2 : 1;
 
         // Mảng chứa các item thực tế sau khi đã nhân (dùng để trả về cho UI hiển thị)
         const finalRewardItems: any[] = [];
@@ -163,25 +162,27 @@ export const processDailyCheckIn = async (userId: string, isDouble: boolean = fa
         // Lặp qua danh sách items của ngày hôm đó
         rewardConfig.items.forEach(reward => {
             
-            let amountAfterMastery = reward.amount;
+            let finalAmount = 0;
 
-            // Logic quan trọng: Nếu KHÔNG phải là Energy thì mới nhân với Mastery Multiplier
-            if (reward.type !== 'energy') {
-                amountAfterMastery = reward.amount * masteryMultiplier;
+            // Logic quan trọng: 
+            // - Energy: KHÔNG nhân theo Mastery, nhưng CÓ nhân theo Ads (x2).
+            // - Các loại khác: Nhân theo Mastery VÀ nhân theo Ads.
+            if (reward.type === 'energy') {
+                finalAmount = reward.amount * adMultiplier;
+            } else {
+                finalAmount = reward.amount * masteryMultiplier * adMultiplier;
             }
 
-            // Logic quan trọng 2: Nhân với Ads Multiplier (x1 hoặc x2)
-            const finalAmount = amountAfterMastery * adsMultiplier;
-
-            // Đẩy vào mảng kết quả trả về
+            // Đẩy vào mảng kết quả trả về cho UI
             finalRewardItems.push({
                 ...reward,
                 amount: finalAmount,        // Số lượng thực nhận
-                originalAmount: reward.amount, // Số lượng gốc (để debug nếu cần)
-                multiplierApplied: reward.type === 'energy' ? adsMultiplier : (masteryMultiplier * adsMultiplier)
+                originalAmount: reward.amount, // Số lượng gốc
+                masteryMultiplier: reward.type === 'energy' ? 1 : masteryMultiplier,
+                adMultiplier: adMultiplier
             });
 
-            // Cập nhật vào DB theo từng loại
+            // Cập nhật vào DB
             if (reward.type === 'coins') {
                 const currentCoins = updates.coins !== undefined ? updates.coins : (data.coins || 0);
                 updates.coins = currentCoins + finalAmount;
@@ -228,11 +229,10 @@ export const processDailyCheckIn = async (userId: string, isDouble: boolean = fa
         return { 
             dailyReward: {
                 day: dailyRewardDay,
-                items: finalRewardItems // Trả về mảng items với số lượng ĐÃ NHÂN
+                items: finalRewardItems // Trả về mảng items với số lượng ĐÃ NHÂN TOÀN BỘ
             }, 
             newStreak,
-            multiplier: masteryMultiplier,
-            isDoubleApplied: isDouble
+            masteryMultiplier // Trả về multiplier để debug nếu cần
         };
     });
 };
