@@ -6,8 +6,11 @@ import {
 } from 'firebase/firestore';
 
 // --- ĐỊNH NGHĨA CẤU TRÚC PHẦN THƯỞNG ---
-// Bây giờ mỗi ngày sẽ chứa một mảng 'items' thay vì một vật phẩm đơn lẻ
-// Đã thêm Energy (Năng lượng) vào tất cả các ngày từ 1 đến 7
+// Mỗi ngày chứa một mảng 'items'.
+// Cập nhật:
+// - Ngày 4: Card Capacity -> Đá Sơ Cấp x10
+// - Ngày 6: Card Capacity -> Đá Trung Cấp x10
+// - Ngày 7: Thêm Đá Cao Cấp x10
 export const CHECK_IN_REWARDS = [
     { 
         day: 1, 
@@ -33,7 +36,7 @@ export const CHECK_IN_REWARDS = [
     { 
         day: 4, 
         items: [
-            { type: 'cardCapacity', amount: 50, name: "Dung Lượng Thẻ" },
+            { type: 'stone_low', amount: 10, name: "Đá Sơ Cấp" },
             { type: 'energy', amount: 5, name: "Năng lượng" }
         ] 
     },
@@ -47,7 +50,7 @@ export const CHECK_IN_REWARDS = [
     { 
         day: 6, 
         items: [
-            { type: 'cardCapacity', amount: 50, name: "Dung Lượng Thẻ" },
+            { type: 'stone_medium', amount: 10, name: "Đá Trung Cấp" },
             { type: 'energy', amount: 5, name: "Năng lượng" }
         ] 
     },
@@ -55,6 +58,7 @@ export const CHECK_IN_REWARDS = [
         day: 7, 
         items: [
             { type: 'pickaxes', amount: 10, name: "Cúp" },
+            { type: 'stone_high', amount: 10, name: "Đá Cao Cấp" },
             { type: 'energy', amount: 5, name: "Năng lượng" }
         ] 
     },
@@ -135,7 +139,7 @@ export const processDailyCheckIn = async (userId: string) => {
         // Lặp qua danh sách items của ngày hôm đó (bao gồm cả Gold/Item chính và Energy)
         rewardConfig.items.forEach(reward => {
             if (reward.type === 'coins') {
-                // Lấy giá trị hiện tại từ DB hoặc giá trị đã set trong updates (nếu có logic cộng dồn khác)
+                // Lấy giá trị hiện tại từ DB hoặc giá trị đã set trong updates
                 const currentCoins = updates.coins !== undefined ? updates.coins : (data.coins || 0);
                 updates.coins = currentCoins + reward.amount;
 
@@ -160,6 +164,22 @@ export const processDailyCheckIn = async (userId: string) => {
                 // Logic Energy: Cho phép cộng vượt quá giới hạn (overflow) khi nhận thưởng
                 const currentEnergy = updates.energy !== undefined ? updates.energy : (data.energy || 0);
                 updates.energy = currentEnergy + reward.amount;
+
+            // --- XỬ LÝ CÁC LOẠI ĐÁ CƯỜNG HÓA ---
+            } else if (reward.type === 'stone_low') {
+                // Đá sơ cấp: nằm trong object equipment.stones.low
+                const currentLow = data.equipment?.stones?.low || 0;
+                updates['equipment.stones.low'] = currentLow + reward.amount;
+
+            } else if (reward.type === 'stone_medium') {
+                // Đá trung cấp
+                const currentMedium = data.equipment?.stones?.medium || 0;
+                updates['equipment.stones.medium'] = currentMedium + reward.amount;
+
+            } else if (reward.type === 'stone_high') {
+                // Đá cao cấp
+                const currentHigh = data.equipment?.stones?.high || 0;
+                updates['equipment.stones.high'] = currentHigh + reward.amount;
             }
         });
 
