@@ -5,12 +5,8 @@ import {
   doc, runTransaction, serverTimestamp
 } from 'firebase/firestore';
 
-// --- ĐỊNH NGHĨA CẤU TRÚC PHẦN THƯỞNG ---
-// Mỗi ngày chứa một mảng 'items'.
-// Cập nhật:
-// - Ngày 4: Card Capacity -> Đá Sơ Cấp x10
-// - Ngày 6: Card Capacity -> Đá Trung Cấp x10
-// - Ngày 7: Thêm Đá Cao Cấp x10
+// --- ĐỊNH NGHĨA CẤU TRÚC PHẦN THƯỞNG GỐC (BASE) ---
+// Đây là số lượng cơ bản, sẽ được nhân lên theo hệ số Mastery (trừ Energy)
 export const CHECK_IN_REWARDS = [
     { 
         day: 1, 
@@ -68,11 +64,27 @@ export const CHECK_IN_REWARDS = [
 const VN_TIMEZONE_OFFSET = 7 * 60 * 60 * 1000;
 
 /**
+ * Hàm tính hệ số nhân dựa trên số lượng Mastery Cards
+ * @param mastery Số lượng Mastery Cards hiện có
+ * @returns Hệ số nhân (1, 2, 3, 4, 5, 6, 7)
+ */
+export const getCheckInMultiplier = (mastery: number): number => {
+    if (mastery >= 8000) return 7;
+    if (mastery >= 4000) return 6;
+    if (mastery >= 2000) return 5;
+    if (mastery >= 1000) return 4;
+    if (mastery >= 500) return 3;
+    if (mastery >= 200) return 2;
+    return 1; // Mặc định x1 nếu dưới 200
+};
+
+/**
  * Xử lý logic điểm danh hàng ngày.
- * Tính toán streak dựa trên múi giờ Việt Nam và cộng dồn phần thưởng (bao gồm cả items phụ).
+ * Tính toán streak dựa trên múi giờ Việt Nam và cộng dồn phần thưởng.
+ * Áp dụng Multiplier cho rewards (trừ Energy).
  * 
  * @param userId ID của người dùng
- * @returns Object chứa thông tin phần thưởng đã nhận và streak mới
+ * @returns Object chứa thông tin phần thưởng đã nhận (đã nhân) và streak mới
  */
 export const processDailyCheckIn = async (userId: string) => {
     const userDocRef = doc(db, 'users', userId);
@@ -84,6 +96,7 @@ export const processDailyCheckIn = async (userId: string) => {
         const data = userDoc.data();
         const lastCheckIn = data.lastCheckIn?.toDate();
         const loginStreak = data.loginStreak || 0;
+        const currentMastery = data.masteryCards || 0; // Lấy mastery hiện tại để tính multiplier
         
         // Thời gian hiện tại thực tế (UTC timestamp)
         const now = new Date(); 
@@ -135,51 +148,63 @@ export const processDailyCheckIn = async (userId: string) => {
             lastCheckIn: serverTimestamp(),
         };
 
+        // --- TÍNH TOÁN MULTIPLIER ---
+        const multiplier = getCheckInMultiplier(currentMastery);
+
+        // Mảng chứa các item thực tế sau khi đã nhân (dùng để trả về cho UI hiển thị)
+        const finalRewardItems: any[] = [];
+
         // --- HÀM CỘNG DỒN PHẦN THƯỞNG ---
-        // Lặp qua danh sách items của ngày hôm đó (bao gồm cả Gold/Item chính và Energy)
+        // Lặp qua danh sách items của ngày hôm đó
         rewardConfig.items.forEach(reward => {
+            
+            // Logic quan trọng: Nếu là Energy thì KHÔNG nhân, còn lại thì nhân với Multiplier
+            const finalAmount = reward.type === 'energy' ? reward.amount : reward.amount * multiplier;
+
+            // Đẩy vào mảng kết quả trả về
+            finalRewardItems.push({
+                ...reward,
+                amount: finalAmount,        // Số lượng thực nhận
+                originalAmount: reward.amount, // Số lượng gốc (để debug nếu cần)
+                multiplier: reward.type === 'energy' ? 1 : multiplier // Hệ số áp dụng
+            });
+
             if (reward.type === 'coins') {
-                // Lấy giá trị hiện tại từ DB hoặc giá trị đã set trong updates
                 const currentCoins = updates.coins !== undefined ? updates.coins : (data.coins || 0);
-                updates.coins = currentCoins + reward.amount;
+                updates.coins = currentCoins + finalAmount;
 
             } else if (reward.type === 'ancientBooks') {
                 const currentBooks = updates.ancientBooks !== undefined ? updates.ancientBooks : (data.ancientBooks || 0);
-                updates.ancientBooks = currentBooks + reward.amount;
+                updates.ancientBooks = currentBooks + finalAmount;
 
             } else if (reward.type === 'equipmentPieces') {
-                // Lưu ý: Key là 'equipment.pieces' vì đây là field lồng nhau trong Firestore object
                 const currentPieces = (data.equipment?.pieces || 0);
-                updates['equipment.pieces'] = currentPieces + reward.amount;
+                updates['equipment.pieces'] = currentPieces + finalAmount;
 
             } else if (reward.type === 'cardCapacity') {
                 const currentCapacity = updates.cardCapacity !== undefined ? updates.cardCapacity : (data.cardCapacity || 100);
-                updates.cardCapacity = currentCapacity + reward.amount;
+                updates.cardCapacity = currentCapacity + finalAmount;
 
             } else if (reward.type === 'pickaxes') {
                 const currentPickaxes = updates.pickaxes !== undefined ? updates.pickaxes : (data.pickaxes || 0);
-                updates.pickaxes = currentPickaxes + reward.amount;
+                updates.pickaxes = currentPickaxes + finalAmount;
                 
             } else if (reward.type === 'energy') {
-                // Logic Energy: Cho phép cộng vượt quá giới hạn (overflow) khi nhận thưởng
                 const currentEnergy = updates.energy !== undefined ? updates.energy : (data.energy || 0);
-                updates.energy = currentEnergy + reward.amount;
+                updates.energy = currentEnergy + finalAmount;
 
             // --- XỬ LÝ CÁC LOẠI ĐÁ CƯỜNG HÓA ---
             } else if (reward.type === 'stone_low') {
-                // Đá sơ cấp: nằm trong object equipment.stones.low
                 const currentLow = data.equipment?.stones?.low || 0;
-                updates['equipment.stones.low'] = currentLow + reward.amount;
+                updates['equipment.stones.low'] = currentLow + finalAmount;
 
             } else if (reward.type === 'stone_medium') {
-                // Đá trung cấp
                 const currentMedium = data.equipment?.stones?.medium || 0;
-                updates['equipment.stones.medium'] = currentMedium + reward.amount;
+                updates['equipment.stones.medium'] = currentMedium + finalAmount;
 
             } else if (reward.type === 'stone_high') {
-                // Đá cao cấp
                 const currentHigh = data.equipment?.stones?.high || 0;
-                updates['equipment.stones.high'] = currentHigh + reward.amount;
+                updates['equipment.stones.high'] = currentHigh + finalAmount;
             }
         });
 
@@ -188,8 +213,12 @@ export const processDailyCheckIn = async (userId: string) => {
         
         // Trả về kết quả để UI hiển thị
         return { 
-            dailyReward: rewardConfig, // Trả về toàn bộ config (chứa mảng items)
-            newStreak 
+            dailyReward: {
+                day: dailyRewardDay,
+                items: finalRewardItems // Trả về mảng items với số lượng ĐÃ NHÂN
+            }, 
+            newStreak,
+            multiplier // Trả về multiplier để UI hiển thị nếu cần
         };
     });
 };
