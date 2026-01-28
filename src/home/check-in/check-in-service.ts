@@ -1,4 +1,4 @@
-// Filename: check-in-service.ts
+// --- START OF FILE check-in-service.ts ---
 
 import { db } from '../../firebase';
 import { 
@@ -6,14 +6,15 @@ import {
 } from 'firebase/firestore';
 
 // PHẦN THƯỞNG CHU KỲ 7 NGÀY
+// Đã thêm trường 'energy: 5' vào tất cả các ngày
 export const CHECK_IN_REWARDS = [
-    { day: 1, type: 'coins', amount: 1000, name: "Vàng" },
-    { day: 2, type: 'ancientBooks', amount: 10, name: "Sách Cổ" },
-    { day: 3, type: 'equipmentPieces', amount: 10, name: "Mảnh Trang Bị" },
-    { day: 4, type: 'cardCapacity', amount: 50, name: "Dung Lượng Thẻ" },
-    { day: 5, type: 'pickaxes', amount: 5, name: "Cúp" },
-    { day: 6, type: 'cardCapacity', amount: 50, name: "Dung Lượng Thẻ" },
-    { day: 7, type: 'pickaxes', amount: 10, name: "Cúp" },
+    { day: 1, type: 'coins', amount: 1000, energy: 5, name: "Vàng" },
+    { day: 2, type: 'ancientBooks', amount: 10, energy: 5, name: "Sách Cổ" },
+    { day: 3, type: 'equipmentPieces', amount: 10, energy: 5, name: "Mảnh Trang Bị" },
+    { day: 4, type: 'cardCapacity', amount: 50, energy: 5, name: "Dung Lượng Thẻ" },
+    { day: 5, type: 'pickaxes', amount: 5, energy: 5, name: "Cúp" },
+    { day: 6, type: 'cardCapacity', amount: 50, energy: 5, name: "Dung Lượng Thẻ" },
+    { day: 7, type: 'pickaxes', amount: 10, energy: 5, name: "Cúp" },
 ];
 
 // Múi giờ Việt Nam: UTC + 7
@@ -82,7 +83,8 @@ export const processDailyCheckIn = async (userId: string) => {
         };
 
         // Hàm trợ giúp để cộng dồn phần thưởng
-        const addRewardToUpdates = (reward: { type: string, amount: number }) => {
+        const addRewardToUpdates = (reward: { type: string, amount: number, energy?: number }) => {
+            // Cập nhật Item chính
             if (reward.type === 'coins') {
                 updates.coins = (data.coins || 0) + reward.amount;
             } else if (reward.type === 'ancientBooks') {
@@ -93,6 +95,11 @@ export const processDailyCheckIn = async (userId: string) => {
                 updates.cardCapacity = (data.cardCapacity || 100) + reward.amount;
             } else if (reward.type === 'pickaxes') {
                 updates.pickaxes = (data.pickaxes || 0) + reward.amount;
+            }
+
+            // Cập nhật Energy (Cho phép vượt quá giới hạn 50 khi nhận thưởng)
+            if (reward.energy && reward.energy > 0) {
+                updates.energy = (data.energy || 0) + reward.energy;
             }
         };
 
