@@ -6,6 +6,7 @@ import CoinDisplay from '../../ui/display/coin-display.tsx';
 import MasteryDisplay from '../../ui/display/mastery-display.tsx'; 
 import { useAnimateValue } from '../../ui/useAnimateValue.ts';
 import HomeButton from '../../ui/home-button.tsx'; 
+import EnergyDisplay from '../../energy-display.tsx'; // Import EnergyDisplay
 
 // Import Ads Reward Component
 import { AdsRewardUI, FormattedRewardItem } from '../../ui/ads-reward-ui.tsx';
@@ -173,7 +174,14 @@ const CoinWrapper = memo(() => {
     return <CoinDisplay displayedCoins={animatedCoins} isStatsFullscreen={false} />;
 });
 
-// 2. MiniCalendar
+// 2. EnergyWrapper (NEW COMPONENT)
+const EnergyWrapper = memo(() => {
+    const { energy } = useCheckIn();
+    // Giả định maxEnergy là 50 (hoặc lấy từ constant nếu có)
+    return <EnergyDisplay currentEnergy={energy} maxEnergy={50} isStatsFullscreen={false} />;
+});
+
+// 3. MiniCalendar
 const MiniCalendar = memo(({ dailyRewardsUI, canClaimToday, claimableDay, loginStreak }: any) => {
     const getStatus = (day: number) => {
         if (canClaimToday && day === claimableDay) return 'claimable';
@@ -219,7 +227,7 @@ const MiniCalendar = memo(({ dailyRewardsUI, canClaimToday, claimableDay, loginS
     );
 });
 
-// 3. RewardItem
+// 4. RewardItem
 const RewardItem = memo(({ 
     rewardData, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, onClaim, className, masteryCards 
 }: any) => {
@@ -326,7 +334,7 @@ const RewardItem = memo(({
     );
 });
 
-// 4. CheckInMainContent
+// 5. CheckInMainContent
 const CheckInMainContent = memo(({ 
     dailyRewardsUI, canClaimToday, claimableDay, loginStreak, isClaiming, isSyncingData, initiateClaim, masteryCards 
 }: any) => {
@@ -385,6 +393,9 @@ const DailyCheckInView = () => {
       <header className="relative z-10 flex-shrink-0 w-full box-border flex items-center justify-between bg-slate-900 border-b border-white/10 pt-2 pb-2 px-4 shadow-md">
         <HomeButton onClick={handleClose} />
         <div className="flex items-center gap-3">
+          {/* HIỂN THỊ ENERGY */}
+          <EnergyWrapper />
+          
           <MasteryDisplay masteryCount={masteryCards} />
           <CoinWrapper />
         </div>
