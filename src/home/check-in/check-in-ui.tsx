@@ -186,7 +186,7 @@ const RewardItem = memo(({
                 {/* --- NỘI DUNG CHÍNH (Icon + Amount) --- */}
                 {/* Giữ opacity-50 cho Claimed để text trông mờ hơn một chút dưới lớp phủ đen */}
                 <div className={`flex-1 flex items-center justify-center w-full py-3 transition-opacity ${isClaimed ? 'opacity-50' : 'opacity-100'}`}> 
-                    <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 border border-slate-600' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
+                    <div className={`relative w-14 h-14 rounded-xl flex items-center justify-center flex-shrink-0 ${ isClaimable ? 'bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900' : 'bg-gradient-to-br from-slate-700 to-slate-900'} shadow-lg p-1`}>
                         {/* Icon Wrapper */}
                         <div className={`w-full h-full rounded-lg flex items-center justify-center ${ isClaimable ? 'bg-slate-800/80' : 'bg-slate-800'}`}>
                             <div className="w-9 h-9">{reward.icon}</div>
