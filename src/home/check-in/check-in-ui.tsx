@@ -1,4 +1,4 @@
-pp// Filename: check-in-ui.tsx
+// Filename: check-in-ui.tsx
 
 import React, { memo, useState, useEffect } from 'react';
 import { CheckInProvider, useCheckIn, dailyRewards } from './check-in-context.tsx'; 
