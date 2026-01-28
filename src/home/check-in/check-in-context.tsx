@@ -74,7 +74,8 @@ interface CheckInContextType {
   isClaiming: boolean;
   
   coins: number;
-  masteryCards: number; // Để UI tính toán hiển thị số lượng x Multiplier
+  masteryCards: number; 
+  energy: number; // --- THÊM TRƯỜNG ENERGY VÀO TYPE ---
 
   // --- State mới cho Ads Popup ---
   pendingReward: any | null;       // Dữ liệu ngày đang được chọn để nhận
@@ -102,7 +103,8 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
   // Lấy dữ liệu từ GameContext
   const { 
       loginStreak, lastCheckIn, isSyncingData, setIsSyncingData, 
-      coins, masteryCards, adsData, handleRegisterAdWatch 
+      coins, masteryCards, adsData, handleRegisterAdWatch,
+      energy // --- LẤY ENERGY TỪ GAME CONTEXT ---
   } = useGame();
 
   // State logic Check-in cơ bản
@@ -224,6 +226,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     isClaiming,
     coins, 
     masteryCards,
+    energy, // --- ĐƯA ENERGY VÀO VALUE ---
     
     // Ads UI Props
     pendingReward,
@@ -242,6 +245,7 @@ export const CheckInProvider = ({ children, onClose }: CheckInProviderProps) => 
     isClaiming,
     coins,
     masteryCards,
+    energy, // --- THÊM ENERGY VÀO DEPENDENCY ARRAY ---
     
     pendingReward,
     showAdsPopup,
