@@ -61,7 +61,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
       let attempt = 0;
 
       while (!placed && attempt < maxAttempts) {
-        // Giới hạn vùng spawn để bong bóng không bị cắt (padding 10%)
         const x = random(10, 85); 
         const y = random(15, 75);
 
@@ -104,8 +103,8 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
       y: positions[index].y,
       duration: random(4, 7),
       delay: random(0, 2),
-      colorFrom: `hsl(${random(240, 280)}, 85%, 65%)`, // Blue/Purple range
-      colorTo: `hsl(${random(280, 320)}, 85%, 65%)`,   // Purple/Pink range
+      colorFrom: `hsl(${random(240, 280)}, 85%, 65%)`,
+      colorTo: `hsl(${random(280, 320)}, 85%, 65%)`,
       isPopped: false
     }));
     
@@ -145,7 +144,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
-      {/* Backdrop */}
       <div 
         className="absolute inset-0 bg-black/80 backdrop-blur-md"
         onClick={onClose}
@@ -153,7 +151,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
 
       <div className={`relative w-full max-w-[340px] bg-[#1e1b2e] border-2 border-slate-600 rounded-3xl shadow-2xl overflow-hidden flex flex-col transition-transform duration-300 ${shake ? 'animate-shake' : ''}`}>
         
-        {/* Close Button */}
         <button 
             onClick={onClose}
             className="absolute top-3 right-3 z-30 p-1.5 bg-black/40 rounded-full text-slate-400 hover:text-white hover:bg-black/60 transition-all"
@@ -161,7 +158,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
             <IconX size={16} />
         </button>
 
-        {/* Header */}
         <div className="pt-5 pb-2 px-4 flex flex-col items-center border-b border-white/5 bg-gradient-to-b from-[#2a2640] to-[#1e1b2e]">
           <h2 className="text-base font-lilita text-white flex items-center gap-2 tracking-wide">
             <IconShieldCheck className="text-purple-400" size={18} />
@@ -173,9 +169,7 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
           </div>
         </div>
 
-        {/* Play Area */}
         <div className="relative h-[280px] w-full bg-[#151320] overflow-hidden select-none">
-          {/* Grid Background */}
           <div className="absolute inset-0 opacity-20" 
                style={{ 
                  backgroundImage: 'radial-gradient(#4f46e5 1px, transparent 1px)', 
@@ -183,7 +177,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
                }} 
           />
 
-          {/* Progress Slots */}
           <div className="absolute top-3 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none">
             {targetWord.split('').map((char, index) => (
               <div 
@@ -202,7 +195,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
             ))}
           </div>
 
-          {/* Render Bubbles */}
           {bubbles.map((bubble) => (
             !bubble.isPopped && (
               <div
@@ -226,7 +218,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
             )
           ))}
 
-          {/* Success Overlay */}
           {status === 'success' && (
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/90 backdrop-blur-sm animate-fadeIn">
               <div className="bg-green-500 rounded-full p-3 mb-2 animate-bounce shadow-[0_0_20px_rgba(34,197,94,0.6)]">
@@ -237,7 +228,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
           )}
         </div>
 
-        {/* Footer */}
         <div className="p-3 bg-[#1e1b2e] border-t border-white/5 flex justify-between items-center">
             <span className="text-[10px] text-slate-500 font-bold uppercase">Security Check</span>
              <button onClick={initGame} className="p-1.5 hover:bg-slate-700 rounded-full text-slate-500 hover:text-white transition-colors" title="Refresh">
