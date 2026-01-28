@@ -2,12 +2,13 @@
 
 import React, { createContext, useState, useEffect, useContext, ReactNode, useCallback, useMemo } from 'react';
 import { useGame } from '../../GameContext.tsx';
-import { uiAssets, equipmentUiAssets, minerAssets, bossBattleAssets } from '../../game-assets.ts'; // Import bossBattleAssets cho Energy Icon
+// Import upgradeAssets để lấy icon Đá cường hóa
+import { uiAssets, equipmentUiAssets, minerAssets, bossBattleAssets, upgradeAssets } from '../../game-assets.ts'; 
 import { auth } from '../../firebase.js';
 import { processDailyCheckIn } from './check-in-service.ts';
 
-// --- CẬP NHẬT DỮ LIỆU UI VỚI ENERGY ---
-// Mỗi ngày giờ đây chứa mảng 'items', trong đó item thứ 2 luôn là Energy x5
+// --- CẬP NHẬT DỮ LIỆU UI VỚI ENERGY VÀ ĐÁ CƯỜNG HÓA ---
+// Mỗi ngày giờ đây chứa mảng 'items', trong đó item thứ 2 luôn là Energy x5 (trừ ngày 7 có 3 món)
 export const dailyRewardsUI = [
   { 
       day: 1, 
@@ -33,7 +34,8 @@ export const dailyRewardsUI = [
   { 
       day: 4, 
       items: [
-          { name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-full h-full object-contain" /> },
+          // Đã thay đổi: Card Capacity -> Basic Stone
+          { name: "Basic Stone", amount: "10", icon: <img src={upgradeAssets.stoneBasic} alt="Basic Stone" className="w-full h-full object-contain" /> },
           { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
@@ -47,7 +49,8 @@ export const dailyRewardsUI = [
   { 
       day: 6, 
       items: [
-          { name: "Card Capacity", amount: "50", icon: <img src={uiAssets.cardCapacityIcon} alt="Card Capacity" className="w-full h-full object-contain" /> },
+          // Đã thay đổi: Card Capacity -> Intermediate Stone
+          { name: "Inter. Stone", amount: "10", icon: <img src={upgradeAssets.stoneIntermediate} alt="Intermediate Stone" className="w-full h-full object-contain" /> },
           { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
@@ -55,6 +58,8 @@ export const dailyRewardsUI = [
       day: 7, 
       items: [
           { name: "Pickaxe", amount: "10", icon: <img src={minerAssets.pickaxeIcon} alt="Special Pickaxe" className="w-full h-full object-contain" /> },
+          // Đã thêm: Advanced Stone
+          { name: "Adv. Stone", amount: "10", icon: <img src={upgradeAssets.stoneAdvanced} alt="Advanced Stone" className="w-full h-full object-contain" /> },
           { name: "Energy", amount: "5", icon: <img src={bossBattleAssets.energyIcon} alt="Energy" className="w-full h-full object-contain" /> }
       ]
   },
