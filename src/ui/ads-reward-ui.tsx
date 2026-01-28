@@ -1,7 +1,7 @@
 // --- START OF FILE ads-reward-ui.tsx ---
 
 import React, { useState } from 'react';
-import { BotAntiVerification } from '../bot-anti.tsx'; // Đảm bảo bạn đã tạo file này như hướng dẫn trước
+import { BotAntiVerification } from './bot-anti.tsx'; // Đảm bảo bạn đã tạo file này như hướng dẫn trước
 
 // --- TYPES ---
 export interface FormattedRewardItem {
