@@ -1,6 +1,7 @@
 // --- START OF FILE bot-anti.tsx ---
 
 import React, { useState, useEffect, useCallback, memo } from 'react';
+import { useQuizApp } from '../courses/course-context.tsx';
 
 // --- ICONS ---
 const IconShieldCheck = ({ size = 24, className = "" }: any) => (
@@ -26,12 +27,7 @@ const IconX = ({ size = 24, className = "" }: any) => (
     </svg>
 );
 
-// --- LOGIC ---
-const VOCABULARY = [
-  "GAME", "LUCK", "GOLD", "HERO", "ITEM", 
-  "BOSS", "WIND", "FIRE", "RANK", "STAR"
-];
-
+// --- LOGIC HELPER ---
 const random = (min: number, max: number) => Math.random() * (max - min) + min;
 
 const getDistance = (x1: number, y1: number, x2: number, y2: number) => {
@@ -44,13 +40,17 @@ interface BotAntiProps {
 }
 
 export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) => {
+  // Lấy dữ liệu từ vựng và định nghĩa từ Context
+  const { defaultVocabulary, definitionsMap } = useQuizApp();
+
   const [targetWord, setTargetWord] = useState("");
+  const [targetMeaning, setTargetMeaning] = useState(""); // State lưu nghĩa tiếng Việt
   const [bubbles, setBubbles] = useState<any[]>([]);
   const [currentInput, setCurrentInput] = useState("");
   const [status, setStatus] = useState<"playing" | "success" | "error">("playing");
   const [shake, setShake] = useState(false);
 
-  // Logic sinh vị trí không trùng lặp
+  // Logic sinh vị trí không trùng lặp cho các bong bóng
   const generateNonOverlappingPositions = (count: number) => {
     const positions: {x: number, y: number}[] = [];
     const minDistance = 18; 
@@ -87,13 +87,33 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
   };
 
   const initGame = useCallback(() => {
-    const word = VOCABULARY[Math.floor(Math.random() * VOCABULARY.length)];
-    setTargetWord(word);
+    // 1. Lọc từ vựng phù hợp từ danh sách (độ dài 3-6 ký tự và có định nghĩa)
+    const suitableWords = defaultVocabulary.filter(word => {
+        const len = word.length;
+        // Kiểm tra xem có definition trong map không
+        const hasDef = definitionsMap[word.toLowerCase()];
+        return len >= 3 && len <= 6 && hasDef;
+    });
+
+    // Fallback danh sách cứng nếu không tìm thấy từ phù hợp (tránh crash)
+    const wordPool = suitableWords.length > 0 ? suitableWords : ["GAME", "LUCK", "GOLD"];
+    
+    // Chọn từ ngẫu nhiên
+    const rawWord = wordPool[Math.floor(Math.random() * wordPool.length)];
+    const wordUpper = rawWord.toUpperCase();
+    
+    // Lấy nghĩa tiếng Việt từ definitionsMap
+    const definition = definitionsMap[rawWord.toLowerCase()];
+    const meaning = definition ? definition.vietnamese : "";
+
+    setTargetWord(wordUpper);
+    setTargetMeaning(meaning);
     setCurrentInput("");
     setStatus("playing");
     setShake(false);
 
-    const letters = word.split('');
+    // Tạo các bong bóng ký tự
+    const letters = wordUpper.split('');
     const positions = generateNonOverlappingPositions(letters.length);
 
     const newBubbles = letters.map((char, index) => ({
@@ -108,8 +128,9 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
       isPopped: false
     }));
     
+    // Xáo trộn thứ tự hiển thị bong bóng
     setBubbles(newBubbles.sort(() => Math.random() - 0.5));
-  }, []);
+  }, [defaultVocabulary, definitionsMap]);
 
   useEffect(() => {
     initGame();
@@ -144,7 +165,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-fadeIn">
-      {/* Đã xóa backdrop-blur-md để giảm lag */}
       <div 
         className="absolute inset-0 bg-black/80"
         onClick={onClose}
@@ -159,14 +179,25 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
             <IconX size={16} />
         </button>
 
-        <div className="pt-5 pb-2 px-4 flex flex-col items-center border-b border-white/5 bg-gradient-to-b from-[#2a2640] to-[#1e1b2e]">
-          <h2 className="text-base font-lilita text-white flex items-center gap-2 tracking-wide">
+        <div className="pt-5 pb-3 px-4 flex flex-col items-center border-b border-white/5 bg-gradient-to-b from-[#2a2640] to-[#1e1b2e]">
+          <h2 className="text-base font-lilita text-white flex items-center gap-2 tracking-wide mb-2">
             <IconShieldCheck className="text-purple-400" size={18} />
             ANTI-BOT CHECK
           </h2>
-          <div className="mt-2 flex items-center gap-3 bg-black/30 px-4 py-1.5 rounded-full border border-white/10">
-             <span className="text-[10px] text-slate-400 font-bold uppercase">Tap order:</span>
-             <span className="text-yellow-400 font-lilita text-lg tracking-widest">{targetWord}</span>
+          
+          {/* Container hiển thị từ tiếng Anh và nghĩa tiếng Việt */}
+          <div className="flex flex-col items-center gap-1">
+            <div className="flex items-center gap-3 bg-black/30 px-4 py-1.5 rounded-full border border-white/10">
+                <span className="text-[10px] text-slate-400 font-bold uppercase">Tap order:</span>
+                <span className="text-yellow-400 font-lilita text-lg tracking-widest">{targetWord}</span>
+            </div>
+            
+            {/* Hàng mới: Hiển thị nghĩa Tiếng Việt */}
+            {targetMeaning && (
+                <span className="text-slate-300 text-xs italic font-medium opacity-90 animate-fadeIn mt-1 text-center px-4">
+                    {targetMeaning}
+                </span>
+            )}
           </div>
         </div>
 
@@ -178,6 +209,7 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
                }} 
           />
 
+          {/* Hiển thị các ô chữ đã nhập */}
           <div className="absolute top-3 left-0 right-0 flex justify-center gap-2 z-10 pointer-events-none">
             {targetWord.split('').map((char, index) => (
               <div 
@@ -196,6 +228,7 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
             ))}
           </div>
 
+          {/* Các bong bóng chữ cái */}
           {bubbles.map((bubble) => (
             !bubble.isPopped && (
               <div
@@ -212,7 +245,6 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
                 }}
               >
                 <div className="absolute top-2 left-2 w-3 h-1.5 bg-white/40 rounded-full rotate-[-45deg] blur-[0.5px]"></div>
-                {/* Thay pt-1 bằng pb-1 để cân bằng font Lilita */}
                 <span className="text-white font-lilita text-xl drop-shadow-md pb-1 select-none">
                   {bubble.char}
                 </span>
@@ -220,8 +252,8 @@ export const BotAntiVerification = memo(({ onSuccess, onClose }: BotAntiProps) =
             )
           ))}
 
+          {/* Màn hình thành công */}
           {status === 'success' && (
-            // Cũng loại bỏ backdrop-blur ở đây cho đồng bộ hiệu năng
             <div className="absolute inset-0 z-30 flex flex-col items-center justify-center bg-slate-900/90 animate-fadeIn">
               <div className="bg-green-500 rounded-full p-3 mb-2 animate-bounce shadow-[0_0_20px_rgba(34,197,94,0.6)]">
                 <IconShieldCheck size={32} className="text-white" />
