@@ -190,10 +190,8 @@ export const ItemDetailModal = memo(({
                                 </button>
                             )}
                         </div>
-
-                        <div className="w-full p-4 bg-[#1a1c2e]/85 rounded-lg border border-slate-700 text-left">
-                            <p className="text-slate-300 text-sm leading-relaxed">{itemDef.description}</p>
-                        </div>
+                        
+                        {/* Đã xóa phần mô tả trang bị (description) ở đây */}
                         
                         {hasStats && (
                             <div className="w-full space-y-2">
@@ -283,8 +281,7 @@ export const CraftingSuccessModal = memo(({ ownedItem, onClose }: { ownedItem: O
                             <h3 className={`text-xl font-bold ${rarityTextColor}`}>{itemDef.name}</h3>
                             <p className={`font-semibold ${rarityTextColor} opacity-80 capitalize text-sm`}>{itemDef.rarity} Rank</p>
                         </div>
-                        <hr className="border-slate-700/50 my-1" />
-                        <p className="text-sm text-slate-300 leading-relaxed">{itemDef.description}</p>
+                        {/* Đã xóa thẻ <hr> và thẻ <p> chứa description ở đây */}
                     </div>
 
                 </div> 
